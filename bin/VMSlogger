@@ -22,7 +22,8 @@
 import signal
 import sys
 
-from VMSCache import *
+from lsst.ts.salobj import Domain, Remote
+from lsst.ts.cRIOpy.VMSCache import *
 
 import argparse
 import asyncio
@@ -31,7 +32,6 @@ from datetime import datetime
 import numpy as np
 import logging
 
-from lsst.ts.salobj import Domain, Remote
 
 try:
     import h5py
