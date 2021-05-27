@@ -88,7 +88,7 @@ class VMSChartView(TimeChartView):
                 action.setCheckable(True)
                 action.setChecked(self.chart().findSerie(name) is not None)
 
-        if type(self._serieType).isinstance(type(QtCharts.QLineSeries)):
+        if isinstance(self._serieType, QtCharts.QLineSeries):
             contextMenu.addSeparator()
             logX = contextMenu.addAction("Log X")
             logX.setCheckable(True)
