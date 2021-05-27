@@ -1,0 +1,233 @@
+#!/usr/bin/env python3.8
+
+# Save VMS data to a file.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
+import signal
+import sys
+
+from VMSCache import *
+
+import argparse
+import asyncio
+import click
+from datetime import datetime
+import numpy as np
+import logging
+
+from lsst.ts.salobj import Domain, Remote
+
+try:
+    import h5py
+
+    has_h5py = True
+except ModuleNotFoundError:
+    has_h5py = False
+
+
+devices = ["M1M3", "M2", "Rotator"]
+
+parser = argparse.ArgumentParser(description="Save VMS data to a file")
+parser.add_argument(
+    "devices", type=str, nargs="+", help="name or index of CSC", choices=devices
+)
+parser.add_argument(
+    "-5",
+    dest="h5py",
+    action="store_true",
+    help="save into HDF 5. Requires h5py (pip install h5py)",
+)
+parser.add_argument("--chunk-size", dest="chunk_size", default=300000, type=int)
+parser.add_argument(
+    "-d", dest="debug", default=0, action="count", help="increase debug level"
+)
+parser.add_argument(
+    "--header", dest="header", action="store_true", help="adds header with column names"
+)
+parser.add_argument(
+    "-s", type=int, dest="size", default=None, help="number of records to save"
+)
+parser.add_argument(
+    "-z", action="store_true", dest="zip_file", help="gzip output files"
+)
+
+device_sensors = [3, 6, 3]
+
+logger = logging.getLogger("VMSlogger")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+
+
+class Collector:
+    def __init__(self, index, filename, size, file_type, header, chunk_size):
+        self.index = index
+        self.size = size
+        self.file_type = file_type
+        self.header = header
+        self.h5file = None
+
+        logger.debug(
+            f"Creating cache: index={self.index+1} device={device_sensors[self.index]} type={self.file_type}"
+        )
+
+        if "5" in file_type:
+            self.chunk_size = min(chunk_size, self.size)
+            self.cache_size = self.chunk_size + 50000
+
+            self.cache = VMSCache(self.cache_size, device_sensors[self.index])
+
+            self.h5file = h5py.File(filename, "a")
+            group_args = {"chunks": (self.chunk_size)}
+            if "z" in self.file_type:
+                group_args["compression"] = "gzip"
+            self.cache.create_hdf5_datasets(self.size, self.h5file, group_args)
+        else:
+            self.chunk_size = self.size
+            self.cache = VMSCache(self.size, device_sensors[self.index])
+            self.filename = filename
+
+    def _save_hdf5(self):
+        if self.h5file is not None and len(self.cache) >= self.chunk_size:
+            logger.info(
+                f"Device {devices[self.index]} Saving to {self.h5file.file.filename} from {self.cache.hdf5_index}"
+            )
+            self.cache.savehdf5(self.chunk_size)
+            self.h5file.flush()
+            return True
+        return False
+
+    def close(self):
+        if self.h5file is not None:
+            logger.info(f"Closing HDF5 {self.h5file.file.filename}")
+            self.h5file.close()
+
+    async def collect_data(self):
+        async with Domain() as domain:
+            remote = Remote(domain, "MTVMS", index=self.index + 1)
+            remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
+            if logger.getEffectiveLevel() == logging.DEBUG:
+                while not (self.cache.filled):
+                    await asyncio.sleep(0.5)
+                    logger.debug(
+                        f"Waiting {devices[self.index]}..{100 * len(self.cache)/self.size:.02f}% {len(self.cache)} of {self.size}"
+                    )
+                    self._save_hdf5()
+                    if self.cache.h5_filled():
+                        break
+            else:
+
+                async def collect_it():
+                    with click.progressbar(
+                        length=self.chunk_size,
+                        label=f"Getting data {devices[self.index]}",
+                        show_eta=True,
+                        show_percent=True,
+                        width=0,
+                    ) as bar:
+                        current = 0
+                        while not (self.cache.filled):
+                            l = len(self.cache)
+                            bar.update(l - current)
+                            current = l
+                            await asyncio.sleep(0.1)
+                            if self._save_hdf5():
+                                break
+                        bar.update(len(self.cache) - current)
+
+                if self.h5file is None:
+                    await collect_it()
+                else:
+                    while True:
+                        await collect_it()
+                        if self.cache.h5_filled():
+                            break
+
+            if self.h5file is None:
+                logger.info(f"Saving CVS to {self.filename}")
+                kwargs = {"delimiter": ","}
+                if self.header:
+                    kwargs["header"] = ",".join(self.cache.columns())
+                self.cache.savetxt(self.filename, **kwargs)
+
+
+async def main():
+    args = parser.parse_args()
+    if args.debug > 0:
+        ch.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+        ch.setLevel(logging.INFO)
+    logger.addHandler(ch)
+
+    tasks = []
+    collectors = []
+
+    def cancel_all(signum, frame):
+        logger.info(f"Canceling after {signum}")
+        for t in tasks:
+            t.cancel()
+
+    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+        signal.signal(signum, cancel_all)
+
+    file_type = ""
+    if args.zip_file:
+        file_type += "z"
+    if args.h5py:
+        if has_h5py is False:
+            print(
+                "Python is missing h5py module, saving HDF 5 file is not supported. Please install h5py first (pip install h5py)."
+            )
+            sys.exit(1)
+        file_type += "5"
+        if args.size is None:
+            args.size = 86400000
+    else:
+        if args.size is None:
+            args.size = 50000
+
+    for d in args.devices:
+        fn = d + datetime.strftime(datetime.now(), "_%Y-%m-%dT%H:%M:%S")
+        if "5" in file_type:
+            fn += ".hdf"
+        else:
+            fn += ".csv"
+            if "z" in file_type:
+                fn += ".gz"
+
+        logger.info(f"Collecting {d} to {fn}")
+        c = Collector(
+            devices.index(d), fn, args.size, file_type, args.header, args.chunk_size
+        )
+        collectors.append(c)
+        tasks.append(asyncio.create_task(c.collect_data()))
+    try:
+        await asyncio.gather(*tasks)
+        logger.info("Done")
+    except asyncio.exceptions.CancelledError:
+        logger.info("Canceled")
+
+    for c in collectors:
+        c.close()
+
+
+asyncio.run(main())

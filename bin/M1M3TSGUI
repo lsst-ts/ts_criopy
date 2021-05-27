@@ -1,0 +1,88 @@
+#!/usr/bin/env python3.8
+
+import signal
+import sys
+
+import SALLog
+from SALStatusBar import SALStatusBar
+import ThermalValuePageWidget
+
+import SALComm
+
+from PySide2.QtCore import QSettings, QCommandLineParser, Qt
+from PySide2.QtWidgets import QApplication, QMainWindow
+
+from asyncqt import QEventLoop, asyncClose
+import asyncio
+import numpy as np
+
+
+class EUI(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.m1m3ts = SALComm.create("MTM1M3TS")
+
+        self.setStatusBar(SALStatusBar([self.m1m3ts]))
+
+        thermalValues = ThermalValuePageWidget.ThermalValuePageWidget(self.m1m3ts)
+        logDock = SALLog.Dock(self.m1m3ts)
+
+        menuBar = self.menuBar()
+
+        viewMenu = menuBar.addMenu("&Views")
+        viewMenu.addAction(thermalValues.toggleViewAction())
+        viewMenu.addSeparator()
+        viewMenu.addAction(logDock.toggleViewAction())
+
+        settings = QSettings("LSST.TS", "M1M3TSGUI")
+        try:
+            self.restoreGeometry(settings.value("geometry"))
+            self.restoreState(settings.value("windowState"))
+        except AttributeError:
+            self.resize(1000, 700)
+
+        self.addDockWidget(Qt.TopDockWidgetArea, thermalValues)
+        self.addDockWidget(Qt.BottomDockWidgetArea, logDock)
+
+    @asyncClose
+    async def closeEvent(self, event):
+        settings = QSettings("LSST.TS", "M1M3TSGUI")
+        settings.setValue("geometry", self.saveGeometry())
+        settings.setValue("windowState", self.saveState())
+        await self.m1m3ts.close()
+        super().closeEvent(event)
+
+
+if __name__ == "__main__":
+    # Create the Qt Application
+    app = QApplication(sys.argv)
+
+    parser = QCommandLineParser()
+    parser.addHelpOption()
+    parser.addVersionOption()
+    parser.process(app)
+
+    args = parser.positionalArguments()
+    app.setApplicationName(f"M1M3TSGUI")
+
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    # Create EUI
+    eui = EUI()
+    eui.show()
+
+    def handler(signum, frame):
+        print(f"Catching signal {signum}, exiting")
+        loop.call_soon(eui.close)
+
+    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+        signal.signal(signum, handler)
+
+    # Run the main Qt loop
+    with loop:
+        loop.run_forever()
+
+    # Close application
+    sys.exit()

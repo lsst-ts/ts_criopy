@@ -1,0 +1,50 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: ts-cRIOpy
+  version: {{ data.get('version') }}
+
+source:
+  path: ../
+
+build:
+  noarch: generic
+  script: python -m pip install --no-deps --ignore-installed .
+  script_env:
+    - PATH
+    - PYTHONPATH
+    - LD_LIBRARY_PATH
+    - OSPL_HOME
+    - PYTHON_BUILD_VERSION
+    - PYTHON_BUILD_LOCATION
+    - TS_CONFIG_OCS_DIR
+
+test:
+  requires:
+    - ts-conda-build =0.3
+    - ts-salobj
+  source_files:
+    - python
+    - bin
+    - tests
+    - schema
+    - setup.cfg
+    - .git
+  commands:
+    - pytest --ignore tests/test_salpy_to_either.py --ignore tests/test_salobj_to_either.py
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools_scm
+    - setuptools
+    - pytest-runner
+    - pytest-asyncio
+    - pytest-flake8
+  run:
+    - python
+    - numpy
+    - astropy
+    - ts-salobj
+    - h5py
