@@ -3,11 +3,7 @@
 import signal
 import sys
 
-import SALLog
-from SALStatusBar import SALStatusBar
-import ThermalValuePageWidget
-
-import SALComm
+from lsst.ts.cRIOpy.GUI import SALStatusBar, ThermalValuePageWidget, SALComm, SALLog
 
 from PySide2.QtCore import QSettings, QCommandLineParser, Qt
 from PySide2.QtWidgets import QApplication, QMainWindow
@@ -25,7 +21,7 @@ class EUI(QMainWindow):
 
         self.setStatusBar(SALStatusBar([self.m1m3ts]))
 
-        thermalValues = ThermalValuePageWidget.ThermalValuePageWidget(self.m1m3ts)
+        thermalValues = ThermalValuePageWidget(self.m1m3ts)
         logDock = SALLog.Dock(self.m1m3ts)
 
         menuBar = self.menuBar()
