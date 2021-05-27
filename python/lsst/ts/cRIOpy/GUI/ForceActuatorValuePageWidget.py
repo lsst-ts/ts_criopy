@@ -1,6 +1,7 @@
 from PySide2.QtWidgets import QWidget, QGridLayout, QLabel
 
-from lsst.ts.cRIOpy.M1M3FATable import *
+from lsst.ts.cRIOpy.FATABLE import FATABLE
+
 from .ForceActuatorWidget import ForceActuatorWidget
 
 
@@ -144,17 +145,14 @@ class ForceActuatorValuePageWidget(ForceActuatorWidget):
 
     def updateValues(self, data):
         if data is None:
-            for l in self.dataWidget.forceActuatorLabels:
-                l.setText("UNKNOWN")
+            for label in self.dataWidget.forceActuatorLabels:
+                label.setText("UNKNOWN")
             return
 
         i = -1
         for row in FATABLE:
             i += 1
             index = row[self.fieldDataIndex]
-            # warning = False
-            # if self.actuatorWarningData is not None:
-            #    warning = self.actuatorWarningData.forceActuatorFlags[row[FATABLE_INDEX]] != 0
             if index is None:
                 self.dataWidget.forceActuatorLabels[i].setText("UNKNOWN")
             elif data is not None:

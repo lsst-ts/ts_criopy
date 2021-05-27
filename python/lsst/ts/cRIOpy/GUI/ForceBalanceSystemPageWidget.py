@@ -1,6 +1,6 @@
-from .QTHelpers import setBoolLabelYesNo
+# from .QTHelpers import setBoolLabelYesNo
 from .SALComm import SALCommand
-from .TimeChart import *
+from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
     QWidget,
     QLabel,

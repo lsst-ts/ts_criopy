@@ -28,11 +28,10 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-from .CustomLabels import *
+from .CustomLabels import Force, Moment, Mm, UnitLabel, WarningLabel
 import copy
 
-from lsst.ts.salobj import base
-from lsst.ts.idl.enums.MTM1M3 import *
+from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
 
 
 class HardpointsWidget(QWidget):
@@ -68,9 +67,9 @@ class HardpointsWidget(QWidget):
             ret = []
             dataLayout.addWidget(QLabel(textValue[0]), row, 0)
             for hp in range(6):
-                l = copy.copy(textValue[1])
-                dataLayout.addWidget(l, row, 1 + hp)
-                ret.append(l)
+                label = copy.copy(textValue[1])
+                dataLayout.addWidget(label, row, 1 + hp)
+                ret.append(label)
             return ret
 
         for k, v in self.variables.items():
@@ -136,9 +135,9 @@ class HardpointsWidget(QWidget):
             "fx": ("Force X", Force()),
             "fy": ("Force Y", Force()),
             "fz": ("Force Z", Force()),
-            "mx": ("Moment X", Force()),
-            "my": ("Moment Y", Force()),
-            "mz": ("Moment Z", Force()),
+            "mx": ("Moment X", Moment()),
+            "my": ("Moment Y", Moment()),
+            "mz": ("Moment Z", Moment()),
         }
 
         dataLayout.addWidget(QLabel(), row, 0)

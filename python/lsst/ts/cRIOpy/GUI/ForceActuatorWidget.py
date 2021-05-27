@@ -23,7 +23,6 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QWidget,
     QLabel,
-    QPushButton,
     QHBoxLayout,
     QVBoxLayout,
     QFormLayout,

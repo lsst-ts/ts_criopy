@@ -23,7 +23,6 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QLabel,
     QWidget,
-    QPushButton,
     QHBoxLayout,
     QVBoxLayout,
     QFormLayout,
@@ -170,7 +169,7 @@ class TopicWindow(DockWindow):
 
         self.selectedActuatorIdLabel.setText(str(s.id))
         self.selectedActuatorValueLabel.setText(str(s.data))
-        QTHelpers.setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
+        setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
 
     def _changeField(self, topicIndex, fieldIndex):
         """

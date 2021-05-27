@@ -1,5 +1,4 @@
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
-from .CustomLabels import DockWindow
 from .TopicWindow import TopicWindow
 from .ThermalData import Thermals
 

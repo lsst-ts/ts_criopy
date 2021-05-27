@@ -1,4 +1,9 @@
-from lsst.ts.cRIOpy.M1M3FATable import *
+from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE_XINDEX,
+    FATABLE_YINDEX,
+    FATABLE_ZINDEX,
+    FATABLE_SINDEX,
+)
 
 __all__ = ["Topics", "TopicData"]
 

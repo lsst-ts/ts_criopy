@@ -1,5 +1,5 @@
 from .QTHelpers import setWarningLabel
-from .TimeChart import *
+from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 

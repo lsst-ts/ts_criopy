@@ -28,9 +28,9 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
-from .CustomLabels import *
-from .UnitsConversions import *
-from .DirectionPadWidget import *
+from .CustomLabels import Force, Moment, Mm, MmWarning, Arcsec, ArcsecWarning
+from .UnitsConversions import MM2M, ARCSEC2D
+from .DirectionPadWidget import DirectionPadWidget
 from .SALComm import SALCommand
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
@@ -271,7 +271,6 @@ class OffsetsWidget(QWidget):
         """
         args = {}
         for p in self.POSITIONS:
-            scale = MM2M if p[1:] == "Position" else ARCSEC2D
             args[p] = getattr(self, "target_" + p).value() * self._getScale(p)
         return args
 

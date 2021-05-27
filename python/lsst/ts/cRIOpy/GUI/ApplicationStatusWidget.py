@@ -93,17 +93,6 @@ class ApplicationStatusWidget(QWidget):
             # raised when disconnecting not connected slot - ignore it, as the code might try to disconnect not connected slot
             pass
 
-    def _connectRaiseLowering(self):
-        self.m1m3.forceActuatorState.connect(
-            self.forceActuatorState, Qt.UniqueConnection
-        )
-
-    def _disconnectRaiseLowering(self):
-        try:
-            self.m1m3.forceActuatorState.disconnect(self.forceActuatorState)
-        except RuntimeError:
-            pass
-
     @Slot(map)
     def processEventDetailedState(self, data):
         modeStateText = "Unknown"

@@ -19,11 +19,9 @@
 
 from PySide2.QtWidgets import (
     QWidget,
-    QLabel,
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
-    QMessageBox,
     QProgressBar,
     QLCDNumber,
     QFormLayout,
@@ -34,7 +32,6 @@ from PySide2.QtGui import QColor
 from .SALComm import warning
 
 from asyncqt import asyncSlot
-import asyncio
 
 from lsst.ts.salobj import base
 from lsst.ts.idl.enums.MTM1M3 import DetailedState

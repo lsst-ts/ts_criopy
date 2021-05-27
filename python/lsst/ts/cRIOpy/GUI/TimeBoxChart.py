@@ -21,8 +21,7 @@
 
 __all__ = ["TimeBoxChart"]
 
-from PySide2.QtCore import Qt, QDateTime, QPointF, Slot
-from PySide2.QtGui import QPainter
+from PySide2.QtCore import Qt, Slot
 from PySide2.QtCharts import QtCharts
 import time
 import numpy as np

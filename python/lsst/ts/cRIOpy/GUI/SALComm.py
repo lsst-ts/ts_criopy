@@ -20,7 +20,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
-import abc
 from PySide2.QtCore import QObject, Signal
 from PySide2.QtWidgets import QMessageBox
 from lsst.ts.salobj import Domain, Remote, base

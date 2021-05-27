@@ -21,19 +21,14 @@ __all__ = ["BoxChartWidget", "PSDWidget"]
 
 from .TimeChart import TimeChartView, AbstractChart
 from .TimeBoxChart import TimeBoxChart
-from .VMSGUI import ToolBar
 from .VMSUnit import menuUnits, units, coefficients
 from .CustomLabels import DockWindow
 
-from PySide2.QtCore import Qt, Slot, Signal, QPointF, QSettings
+from PySide2.QtCore import Qt, Slot, Signal, QPointF
 from PySide2.QtWidgets import QMenu
 from PySide2.QtCharts import QtCharts
-from asyncqt import asyncSlot
 
-import abc
-import asyncio
 import concurrent.futures
-from datetime import datetime
 import numpy as np
 import time
 from lsst.ts.salobj import make_done_future
@@ -93,7 +88,7 @@ class VMSChartView(TimeChartView):
                 action.setCheckable(True)
                 action.setChecked(self.chart().findSerie(name) is not None)
 
-        if type(self._serieType) == type(QtCharts.QLineSeries):
+        if type(self._serieType).isinstance(type(QtCharts.QLineSeries)):
             contextMenu.addSeparator()
             logX = contextMenu.addAction("Log X")
             logX.setCheckable(True)

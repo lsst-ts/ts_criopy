@@ -17,12 +17,18 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .TimeChart import *
-from lsst.ts.cRIOpy.M1M3FATable import *
+from .TimeChart import TimeChart, TimeChartView
+from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE,
+    FATABLE_ID,
+    FATABLE_XINDEX,
+    FATABLE_YINDEX,
+    FATABLE_SINDEX,
+    actuatorIDToIndex,
+)
 from lsst.ts.cRIOpy.GUI import SALLog
 
 from PySide2.QtCore import Slot, Qt
-from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
     QWidget,
     QLabel,
@@ -31,7 +37,6 @@ from PySide2.QtWidgets import (
     QTableWidgetItem,
     QTableWidgetSelectionRange,
     QHeaderView,
-    QCheckBox,
     QSizePolicy,
     QVBoxLayout,
     QHBoxLayout,
@@ -388,7 +393,7 @@ class ForceActuatorBumpTestPageWidget(QWidget):
             selected = self.actuatorsTable.selectedItems()
             if len(selected) > 0:
                 await self._testItem(selected[0])
-            elif self._testRunning == True:
+            elif self._testRunning:
                 self.bumpTestAllButton.setEnabled(True)
                 self.bumpTestButton.setEnabled(
                     self.actuatorsTable.currentItem() is not None

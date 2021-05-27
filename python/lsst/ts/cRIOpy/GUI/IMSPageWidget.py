@@ -1,6 +1,6 @@
 from .QTHelpers import setWarningLabel
-from .TimeChart import *
-from .UnitsConversions import *
+from .TimeChart import TimeChart, TimeChartView
+from .UnitsConversions import M2MM, D2ARCSEC
 from .CustomLabels import Mm, Arcsec
 
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QGridLayout

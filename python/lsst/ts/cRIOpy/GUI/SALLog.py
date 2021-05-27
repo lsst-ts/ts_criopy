@@ -33,7 +33,7 @@ from PySide2.QtWidgets import (
     QDockWidget,
     QStyle,
 )
-from .SALComm import SALCommand, SALListCommand
+from .SALComm import SALListCommand
 from asyncqt import asyncSlot
 from datetime import datetime
 from .CustomLabels import DockWindow

@@ -22,7 +22,6 @@
 from .ForceActuator import ForceActuator
 
 from PySide2.QtWidgets import QGraphicsScene
-import numpy as np
 
 
 class Mirror(QGraphicsScene):

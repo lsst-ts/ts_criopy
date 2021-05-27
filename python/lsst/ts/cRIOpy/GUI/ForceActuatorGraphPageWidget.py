@@ -1,5 +1,12 @@
 from .QTHelpers import setWarningLabel
-from lsst.ts.cRIOpy.M1M3FATable import *
+from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE,
+    FATABLE_ID,
+    FATABLE_INDEX,
+    FATABLE_XPOSITION,
+    FATABLE_YPOSITION,
+    FATABLE_ORIENTATION,
+)
 from .ForceActuatorWidget import ForceActuatorWidget
 from .ActuatorsDisplay import MirrorWidget, ForceActuator
 
@@ -19,7 +26,6 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
     def updateValues(self, data):
         warningData = self.m1m3.remote.evt_forceActuatorWarning.get()
-        points = []
 
         if data is None:
             values = None
@@ -67,7 +73,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
                     str(values[self.mirrorWidget.mirrorView.selected.dataIndex])
                 )
             if warningData is not None:
-                QTHelpers.setWarningLabel(
+                setWarningLabel(
                     self.selectedActuatorWarningLabel,
                     getWarning(self.mirrorWidgets.mirrorView.selected.id),
                 )

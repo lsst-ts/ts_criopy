@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot, QRect, QTimer, Qt
+from PySide2.QtCore import Slot, QTimer, Qt
 from PySide2.QtWidgets import (
     QFrame,
     QWidget,
@@ -27,7 +27,6 @@ from PySide2.QtWidgets import (
     QSizePolicy,
     QDockWidget,
 )
-from PySide2.QtGui import QPainter, QColor, QPalette, QBrush
 import astropy.units as u
 from datetime import datetime
 
@@ -253,9 +252,9 @@ class WarningLabel(QLabel):
             Current (=to be displayed) variable value. True means warning/error is raised.
         """
         if value:
-            self.setText(f"<font color='red'>On</font>")
+            self.setText("<font color='red'>On</font>")
         else:
-            self.setText(f"<font color='green'>Off</font>")
+            self.setText("<font color='green'>Off</font>")
 
 
 class Heartbeat(QWidget):

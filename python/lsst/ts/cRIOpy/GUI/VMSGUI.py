@@ -21,7 +21,6 @@ __all__ = ["ToolBar", "StatusBar"]
 
 from PySide2.QtCore import Slot, Signal, QSettings
 from PySide2.QtWidgets import (
-    QWidget,
     QLabel,
     QToolBar,
     QStyle,
@@ -109,9 +108,9 @@ class StatusBar(QStatusBar):
         self.cacheStatus = []
         for system in systems:
             self.addWidget(QLabel(system))
-            l = QLabel("Size: 0 --- - ---")
-            self.cacheStatus.append(l)
-            self.addWidget(l)
+            label = QLabel("Size: 0 --- - ---")
+            self.cacheStatus.append(label)
+            self.addWidget(label)
 
     @Slot(int, float, float)
     def cacheUpdated(self, index, length, start, end):

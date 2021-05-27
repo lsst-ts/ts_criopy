@@ -1,7 +1,6 @@
 from .QTHelpers import setWarningLabel
-from .CustomLabels import *
+from .CustomLabels import Force, Moment, Arcsec, Mm, LogEventWarning, Heartbeat
 
-from datetime import datetime
 from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 
@@ -65,8 +64,8 @@ class OverviewPageWidget(QWidget):
             }
 
         def addLabelRow(labels, row, col):
-            for l in labels:
-                dataLayout.addWidget(QLabel(f"<b>{l}</b>"), row, col)
+            for label in labels:
+                dataLayout.addWidget(QLabel(f"<b>{label}</b>"), row, col)
                 col += 1
 
         def addDataRow(variables, row, col):
