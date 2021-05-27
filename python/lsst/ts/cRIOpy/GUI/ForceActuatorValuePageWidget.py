@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QWidget, QGridLayout, QLabel
 
-from lsst.ts.cRIOpy.FATABLE import FATABLE
+from lsst.ts.cRIOpy.M1M3FATable import FATABLE
 
 from .ForceActuatorWidget import ForceActuatorWidget
 
