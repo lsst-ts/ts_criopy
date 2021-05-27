@@ -21,9 +21,8 @@
 
 __all__ = ["VMSCache"]
 
-from .TimeCache import *
+from .TimeCache import TimeCache
 
-import astropy.units as u
 import numpy as np
 
 
@@ -100,31 +99,31 @@ class VMSCache(TimeCache):
             dl = len(data.accelerationX)
             timestamps = np.arange(r[0], r[0] + sample_period * dl, sample_period)
 
-            def copy_data(start, l):
+            def copy_data(start, lenght):
                 self.data["timestamp"][
-                    self.current_index : self.current_index + l
-                ] = timestamps[start : start + l]
+                    self.current_index : self.current_index + lenght
+                ] = timestamps[start : start + lenght]
                 for s in range(1, self._sensors + 1):
                     self.data[f"{s} X"][
-                        self.current_index : self.current_index + l
-                    ] = r[1][s - 1].accelerationX[start : start + l]
+                        self.current_index : self.current_index + lenght
+                    ] = r[1][s - 1].accelerationX[start : start + lenght]
                     self.data[f"{s} Y"][
-                        self.current_index : self.current_index + l
-                    ] = r[1][s - 1].accelerationY[start : start + l]
+                        self.current_index : self.current_index + lenght
+                    ] = r[1][s - 1].accelerationY[start : start + lenght]
                     self.data[f"{s} Z"][
-                        self.current_index : self.current_index + l
-                    ] = r[1][s - 1].accelerationZ[start : start + l]
+                        self.current_index : self.current_index + lenght
+                    ] = r[1][s - 1].accelerationZ[start : start + lenght]
 
-            l = min(dl, self._size - self.current_index)
-            if l > 0:
-                copy_data(0, l)
-                self.current_index += l
-                dl -= l
+            lenght = min(dl, self._size - self.current_index)
+            if lenght > 0:
+                copy_data(0, lenght)
+                self.current_index += lenght
+                dl -= lenght
 
             if dl > 0:
                 self.current_index = 0
                 self.filled = True
-                copy_data(l, dl)
+                copy_data(lenght, dl)
                 self.current_index = dl
 
             self._receiving.remove(r)
