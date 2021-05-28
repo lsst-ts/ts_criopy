@@ -2,6 +2,9 @@ import sys
 import pathlib
 import setuptools
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 install_requires = [
     "numpy",
     "astropy",
@@ -32,6 +35,8 @@ def local_scheme(version):
 setuptools.setup(
     name="ts_criopy",
     description="GUIs, Python packages and utilities for NI cRIO.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     use_scm_version={
         "write_to": "python/lsst/ts/cRIOpy/version.py",
         "write_to_template": scm_version_template,
