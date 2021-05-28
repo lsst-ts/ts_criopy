@@ -6,6 +6,8 @@ install_requires = [
     "numpy",
     "astropy",
     "ts-salobj",
+    "PySide2",
+    "asyncqt",
 ]
 tests_require = install_requires + [
     "pytest",
