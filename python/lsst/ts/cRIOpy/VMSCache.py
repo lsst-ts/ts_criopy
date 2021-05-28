@@ -43,13 +43,14 @@ class VMSCache(TimeCache):
 
     def __init__(self, size, sensors, window=3):
         self._sensors = sensors
+        self._window = window
         items = [("timestamp", "f8")] + [
             (f"{s} {a}", "f8")
             for s in range(1, self._sensors + 1)
             for a in ["X", "Y", "Z"]
         ]
 
-        super().__init__(size, items, window)
+        super().__init__(size, items)
 
     def clear(self):
         """Clear cache."""

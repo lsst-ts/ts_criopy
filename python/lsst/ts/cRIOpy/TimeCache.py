@@ -35,13 +35,10 @@ class TimeCache:
         Cache size.
     items : [(`str`,`str`)]
         Items stored in the cache.
-    window : `int`, optional
-        Receiving window size. Defaults to 3.
     """
 
-    def __init__(self, size, items, window=3):
+    def __init__(self, size, items):
         self._size = size
-        self._window = window
         self.data = np.zeros((self._size), items, order="F")
         self.clear()
 
@@ -212,7 +209,7 @@ class TimeCache:
 
     def __getitem__(self, key):
         if self.filled:
-            return list(self.data[self.current_index + 1 :][key]) + list(
+            return list(self.data[self.current_index :][key]) + list(
                 self.data[: self.current_index][key]
             )
         else:

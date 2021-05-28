@@ -39,14 +39,29 @@ class TimeCacheTestCase(unittest.TestCase):
         self.assertEqual(cache.startTime(), 1)
         self.assertEqual(cache.endTime(), 1)
 
-        self.assertEqual(cache['timestamp'], [1])
-        self.assertEqual(cache['df'], [0.5])
-        self.assertEqual(cache['di'], [2])
+        self.assertEqual(cache["timestamp"], [1])
+        self.assertEqual(cache["df"], [0.5])
+        self.assertEqual(cache["di"], [2])
 
         cache.clear()
         self.assertEqual(len(cache), 0)
         self.assertIsNone(cache.startTime())
         self.assertIsNone(cache.endTime())
+
+    def test_append(self):
+        cache = TimeCache(5, [("timestamp", "i4"), ("data1", "i4"), ("data2", "i4")])
+
+        self.assertEqual(cache.columns(), ("timestamp", "data1", "data2"))
+
+        for i in range(103):
+            cache.append((i, i * 2, i ** 2))
+
+        self.assertEqual(len(cache), 5)
+        for i in range(5):
+            testValue = i + 98
+            self.assertEqual(cache["timestamp"][i], testValue)
+            self.assertEqual(cache["data1"][i], testValue * 2)
+            self.assertEqual(cache["data2"][i], testValue ** 2)
 
 
 if __name__ == "__main__":
