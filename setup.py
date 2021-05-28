@@ -21,7 +21,6 @@ __version__ = "{version}"
 
 tools_path = pathlib.Path(setuptools.__path__[0])
 base_prefix = pathlib.Path(sys.base_prefix)
-data_files_path = tools_path.relative_to(base_prefix).parents[1]
 
 
 def local_scheme(version):
@@ -36,12 +35,12 @@ setuptools.setup(
         "write_to_template": scm_version_template,
         "local_scheme": local_scheme,
     },
-    include_package_data=True,
     setup_requires=["setuptools_scm", "pytest-runner"],
     install_requires=install_requires,
     package_dir={"": "python"},
     packages=setuptools.find_namespace_packages(where="python"),
     package_data={"": ["*.rst", "*.yaml"]},
+    python_requires=">=3.8",
     scripts=["bin/M1M3GUI", "bin/M1M3TSGUI", "bin/VMSGUI", "bin/VMSlogger"],
     tests_require=tests_require,
     extras_require={"dev": dev_requires},
