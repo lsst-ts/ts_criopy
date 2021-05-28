@@ -26,6 +26,7 @@ from lsst.ts.cRIOpy.GUI import (
     PowerPageWidget,
     SALLog,
     SALErrorCodeWidget,
+    SplashScreen,
 )
 
 from lsst.ts.cRIOpy.GUI import SALComm, SALStatusBar
@@ -51,12 +52,10 @@ import asyncio
 
 
 class EUI(QMainWindow):
-    def __init__(self, loop, parent=None):
-        super().__init__(parent)
-        self.m1m3 = SALComm.create("MTM1M3")
-        self.mtmount = SALComm.create(
-            "MTMount", include=["azimuth", "elevation", "heartbeat"]
-        )
+    def __init__(self, m1m3, mtmount):
+        super().__init__()
+        self.m1m3 = m1m3
+        self.mtmount = mtmount
 
         controlWidget = QGroupBox("Application Control")
         applicationControl = ApplicationControlWidget(self.m1m3)
@@ -137,19 +136,37 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
+eui = None
+
+
+class M1M3Splash(SplashScreen):
+    def setup(self):
+        return [
+            SALComm.create("MTM1M3"),
+            SALComm.create("MTMount", include=["azimuth", "elevation", "heartbeat"]),
+        ]
+
+    def started(self, m1m3, mtmount):
+        global eui
+        eui = EUI(m1m3, mtmount)
+        self.finish(eui)
+        eui.show()
+
+
 if __name__ == "__main__":
     # Create the Qt Application
     app = QApplication(sys.argv)
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    # Create EUI
-    eui = EUI(loop)
-    eui.show()
+    splash = M1M3Splash()
+    splash.show()
 
     def handler(signum, frame):
         print(f"Catching signal {signum}, exiting")
-        loop.call_soon(eui.close)
+        global eui
+        if eui is not None:
+            loop.call_soon(eui.close)
 
     for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
         signal.signal(signum, handler)

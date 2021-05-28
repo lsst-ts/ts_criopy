@@ -45,6 +45,10 @@ def _levelToIndex(level):
     return min(int(level / 10), 5)
 
 
+def _isCommArray(comms):
+    return isinstance(comms, tuple)
+
+
 class ToolBar(QWidget):
     """Toolbar for DockWidget. Can handle messages coming from multiple CSC.
 
@@ -88,7 +92,7 @@ class ToolBar(QWidget):
                 lambda data: currentLevel.setText(LEVELS[_levelToIndex(data.level)])
             )
 
-        if type(comms) == list:
+        if _isCommArray(comms):
             for comm in comms:
                 addLevelLabel(comm)
         else:
@@ -155,7 +159,7 @@ class Messages(QPlainTextEdit):
         font.setStyleHint(QFont.TypeWriter)
         self.setFont(font)
 
-        if type(comms) == list:
+        if _isCommArray(comms):
             for comm in comms:
                 comm.logMessage.connect(self.logMessage)
         else:
@@ -177,7 +181,7 @@ class Object(QObject):
     """Construct and populate toolbar and messages."""
 
     def __init__(self, comms, toolbar, messages):
-        if type(comms) == list:
+        if _isCommArray(comms):
             self.comms = comms
         else:
             self.comms = [comms]

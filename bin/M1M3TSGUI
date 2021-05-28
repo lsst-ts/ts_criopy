@@ -3,7 +3,13 @@
 import signal
 import sys
 
-from lsst.ts.cRIOpy.GUI import SALStatusBar, ThermalValuePageWidget, SALComm, SALLog
+from lsst.ts.cRIOpy.GUI import (
+    SALStatusBar,
+    ThermalValuePageWidget,
+    SALComm,
+    SALLog,
+    SplashScreen,
+)
 
 from PySide2.QtCore import QSettings, QCommandLineParser, Qt
 from PySide2.QtWidgets import QApplication, QMainWindow
@@ -14,7 +20,7 @@ import numpy as np
 
 
 class EUI(QMainWindow):
-    def __init__(self):
+    def __init__(self, m1m3ts):
         super().__init__()
 
         self.m1m3ts = SALComm.create("MTM1M3TS")
@@ -50,6 +56,20 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
+eui = None
+
+
+class M1M3TSSplash(SplashScreen):
+    def setup(self):
+        return [SALComm.create("MTM1M3TS")]
+
+    def started(self, m1m3ts):
+        global eui
+        eui = EUI(m1m3ts)
+        self.finish(eui)
+        eui.show()
+
+
 if __name__ == "__main__":
     # Create the Qt Application
     app = QApplication(sys.argv)
@@ -65,13 +85,14 @@ if __name__ == "__main__":
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    # Create EUI
-    eui = EUI()
-    eui.show()
+    splash = M1M3TSSplash()
+    splash.show()
 
     def handler(signum, frame):
         print(f"Catching signal {signum}, exiting")
-        loop.call_soon(eui.close)
+        global eui
+        if eui is not None:
+            loop.call_soon(eui.close)
 
     for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
         signal.signal(signum, handler)

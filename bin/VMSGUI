@@ -3,7 +3,7 @@
 import signal
 import sys
 
-from lsst.ts.cRIOpy.GUI import SALLog, SALComm
+from lsst.ts.cRIOpy.GUI import SALLog, SALComm, SplashScreen
 from lsst.ts.cRIOpy.GUI.VMSChartWidgets import *
 from lsst.ts.cRIOpy.GUI.VMSGUI import *
 from lsst.ts.cRIOpy.VMSCache import *
@@ -26,13 +26,10 @@ class EUI(QMainWindow):
 
     cacheUpdated = Signal(int, int, float, float)
 
-    def __init__(self):
+    def __init__(self, comms):
         super().__init__()
 
-        self.comms = [
-            SALComm.create("MTVMS", index=index, manual={"data": {"queue_len": 400}})
-            for index in range(1, 4)
-        ]
+        self.comms = comms
 
         for comm in self.comms:
             comm.data.connect(self.data)
@@ -147,6 +144,23 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
+eui = None
+
+
+class VMSSplash(SplashScreen):
+    def setup(self):
+        return [
+            SALComm.create("MTVMS", index=index, manual={"data": {"queue_len": 400}})
+            for index in range(1, 4)
+        ]
+
+    def started(self, *args):
+        global eui
+        eui = EUI(args)
+        self.finish(eui)
+        eui.show()
+
+
 if __name__ == "__main__":
     # Create the Qt Application
     app = QApplication(sys.argv)
@@ -162,13 +176,14 @@ if __name__ == "__main__":
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
 
-    # Create EUI
-    eui = EUI()
-    eui.show()
+    splash = VMSSplash()
+    splash.show()
 
     def handler(signum, frame):
         print(f"Catching signal {signum}, exiting")
-        loop.call_soon(eui.close)
+        global eui
+        if eui is not None:
+            loop.call_soon(eui.close)
 
     for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
         signal.signal(signum, handler)
