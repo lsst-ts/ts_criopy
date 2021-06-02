@@ -109,7 +109,7 @@ class MetaSAL(type(QObject)):
         return newclass
 
 
-def create(name, manual=None, **kvargs):
+def create(name, manual=None, **kwargs):
     """Creates SALComm instance for given remote(s). The returned object
     contains PySide2.QtCore.Signal class variables. Those signals are emitted
     when SAL callback occurs, effectively linking SAL/DDS and Qt world. Signals
@@ -126,7 +126,7 @@ def create(name, manual=None, **kvargs):
         Events and telemetry topics created with optional arguments. Keys are
         events and telemetry names, values is a hash of additional arguments.
 
-    **kvargs : `dict`
+    **kwargs : `dict`
         Optional parameters passed to remote.
 
     Usage
@@ -180,7 +180,7 @@ def create(name, manual=None, **kvargs):
         SAL proxy. Set callback to emit Qt signals.
         """
 
-        _args = kvargs
+        _args = kwargs
         _args["name"] = name
         _manual = manual
 

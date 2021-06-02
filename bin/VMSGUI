@@ -3,17 +3,16 @@
 import signal
 import sys
 
-from lsst.ts.cRIOpy.GUI import SALLog, SALComm, SplashScreen
+from lsst.ts.cRIOpy.GUI import SALLog, SALComm, Application
 from lsst.ts.cRIOpy.GUI.VMSChartWidgets import *
 from lsst.ts.cRIOpy.GUI.VMSGUI import *
 from lsst.ts.cRIOpy.VMSCache import *
 
-from PySide2.QtCore import Slot, Signal, QSettings, QCommandLineParser, Qt
-from PySide2.QtWidgets import QApplication, QMainWindow, QDockWidget
+from PySide2.QtCore import Slot, Signal, QSettings, Qt
+from PySide2.QtWidgets import QMainWindow, QDockWidget
 
 import astropy.units as u
-from asyncqt import QEventLoop, asyncClose
-import asyncio
+from asyncqt import asyncClose
 from functools import partial
 import numpy as np
 
@@ -26,7 +25,7 @@ class EUI(QMainWindow):
 
     cacheUpdated = Signal(int, int, float, float)
 
-    def __init__(self, comms):
+    def __init__(self, *comms):
         super().__init__()
 
         self.comms = comms
@@ -144,51 +143,9 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-eui = None
-
-
-class VMSSplash(SplashScreen):
-    def started(self, *args):
-        global eui
-        eui = EUI(args)
-        self.finish(eui)
-        eui.show()
-
-
 if __name__ == "__main__":
     # Create the Qt Application
-    app = QApplication(sys.argv)
-
-    parser = QCommandLineParser()
-    parser.addHelpOption()
-    parser.addVersionOption()
-    parser.process(app)
-
-    args = parser.positionalArguments()
-    app.setApplicationName(f"VMSGUI")
-
-    loop = QEventLoop(app)
-    asyncio.set_event_loop(loop)
-
-    splash = VMSSplash(
-        *[
-            SALComm.create("MTVMS", index=index, manual={"data": {"queue_len": 400}})
-            for index in range(1, 4)
-        ]
-    )
-    splash.show()
-
-    def handler(signum, frame):
-        print(f"Catching signal {signum}, exiting")
-        loop.call_soon(splash.stop)
-        loop.call_soon(app.closeAllWindows)
-
-    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
-        signal.signal(signum, handler)
-
-    # Run the main Qt loop
-    with loop:
-        loop.run_forever()
-
-    # Close application
-    sys.exit()
+    app = Application(EUI)
+    for index in range(1, 4):
+        app.addComm("MTVMS", index=index, manual={"data": {"queue_len": 400}})
+    app.run()

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3.8
 # -'''- coding: utf-8 -'''-
 
-import signal
-import sys
 import time
 
 from lsst.ts.cRIOpy.GUI import (
+    Application,
     ApplicationControlWidget,
     ActuatorOverviewPageWidget,
     AirPageWidget,
@@ -26,16 +25,15 @@ from lsst.ts.cRIOpy.GUI import (
     PowerPageWidget,
     SALLog,
     SALErrorCodeWidget,
-    SplashScreen,
+    SALStatusBar,
 )
 
 from lsst.ts.cRIOpy.GUI import SALComm, SALStatusBar
 
 from lsst.ts.cRIOpy.GUI.M1M3GUI import detailedStateString
 
-from PySide2.QtCore import QSettings, Slot
+from PySide2.QtCore import QSettings, Slot, QCommandLineParser, QCommandLineOption
 from PySide2.QtWidgets import (
-    QApplication,
     QWidget,
     QVBoxLayout,
     QMainWindow,
@@ -47,7 +45,7 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtGui import QFont
 
-from asyncqt import QEventLoop, asyncClose
+from asyncqt import asyncClose
 import asyncio
 
 
@@ -135,40 +133,10 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-eui = None
-
-
-class M1M3Splash(SplashScreen):
-    def started(self, m1m3, mtmount):
-        global eui
-        eui = EUI(m1m3, mtmount)
-        self.finish(eui)
-        eui.show()
-
-
 if __name__ == "__main__":
     # Create the Qt Application
-    app = QApplication(sys.argv)
-    loop = QEventLoop(app)
-    asyncio.set_event_loop(loop)
+    app = Application(EUI)
+    app.addComm("MTM1M3")
+    app.addComm("MTMount", include=["azimuth", "elevation", "heartbeat"])
 
-    splash = M1M3Splash(
-        SALComm.create("MTM1M3"),
-        SALComm.create("MTMount", include=["azimuth", "elevation", "heartbeat"]),
-    )
-    splash.show()
-
-    def handler(signum, frame):
-        print(f"Catching signal {signum}, exiting")
-        loop.call_soon(splash.stop)
-        loop.call_soon(app.closeAllWindows)
-
-    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
-        signal.signal(signum, handler)
-
-    # Run the main Qt loop
-    with loop:
-        loop.run_forever()
-
-    # Close application
-    sys.exit()
+    app.run()

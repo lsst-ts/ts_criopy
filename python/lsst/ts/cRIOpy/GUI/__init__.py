@@ -1,5 +1,6 @@
 from .ActuatorOverviewPageWidget import ActuatorOverviewPageWidget
 from .AirPageWidget import AirPageWidget
+from .Application import Application
 from .ApplicationControlWidget import ApplicationControlWidget
 from .ApplicationStatusWidget import ApplicationStatusWidget
 from .CellLightPageWidget import CellLightPageWidget
