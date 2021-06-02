@@ -16,8 +16,8 @@ properties(
 pipeline {
     agent {
         docker { 
-            image 'centos/python-38-centos7'
-            args '-u root'
+            image 'lsstts/develop-env:develop'
+            args '--entrypoint ""'
         }
     }
 
@@ -28,22 +28,15 @@ pipeline {
             }
         }
 
-        stage("Installing modules") {
-            steps {
-                sh """
-                    pip install pytest-flake8 numpy astropy
-                """
-            }
-        }
-
-
         stage("Running tests") {
             steps {
                 sh """
-                    PYTHONPATH=\$(pwd)/python pytest --junitxml=tests/.tests/junit.xml tests || true
+                    export HOME=/tmp
+                    source \$WORKDIR/loadLSST.bash
+                    PYTHONPATH=\$(pwd)/python pytest --junitxml=/tmp/junit.xml -o cache_dir=/tmp/.cache tests || true
                 """
 
-                junit 'tests/.tests/junit.xml'
+                junit '/tmp/junit.xml'
             }
         }
     }
