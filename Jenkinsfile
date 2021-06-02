@@ -33,7 +33,7 @@ pipeline {
                 sh """
                     export HOME=/tmp
                     source \$WORKDIR/loadLSST.bash
-                    PYTHONPATH=\$(pwd)/python pytest --junitxml=/tmp/junit.xml -o cache_dir=/tmp/.cache tests || true
+                    PYTHONPATH=\$(pwd)/python pytest -p no:cacheprovide --junitxml=/tmp/junit.xml tests || true
                 """
 
                 junit '/tmp/junit.xml'
