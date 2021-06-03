@@ -142,7 +142,6 @@ class BoxChartWidget(DockWindow):
 
     def __init__(self, title, comm, channels):
         super().__init__(title)
-        self.setObjectName(title)
         self.channels = channels
         self.chart = TimeBoxChart()
         self.chartView = VMSChartView(self.chart, QtCharts.QBoxPlotSeries)

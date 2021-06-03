@@ -401,11 +401,12 @@ class DockWindow(QDockWidget):
     Parameters
     ----------
     title : `str`
-        Dock title.
+        Dock title and object name.
     """
 
     def __init__(self, title):
         super().__init__(title)
+        self.setObjectName(title)
         self.topLevelChanged.connect(self._topLevelChanged)
 
     @Slot(bool)
