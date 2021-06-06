@@ -17,14 +17,31 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["ThermalStatesDock"]
+__all__ = ["summaryStateString", "ThermalStatesDock"]
 
 from .CustomLabels import DockWindow
 from .SALComm import SALCommand
 
-from PySide2.QtWidgets import QPushButton, QWidget, QVBoxLayout
+from lsst.ts.salobj import State
+
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QLabel, QPushButton, QWidget, QVBoxLayout, QFormLayout
 
 from asyncqt import asyncSlot
+
+
+def summaryStateString(summaryState):
+    _map = {
+        State.OFFLINE: "<font color='red'>Offline</font>",
+        State.STANDBY: "Standby",
+        State.DISABLED: "Disabled",
+        State.ENABLED: "<font color='green'>Enabled</font>",
+        State.FAULT: "<font color='red'>Fault</font>",
+    }
+    try:
+        return _map[summaryState]
+    except KeyError:
+        return f"<font color='red'>Unknow : {summaryState}</font>"
 
 
 class ThermalStatesDock(DockWindow):
@@ -36,6 +53,12 @@ class ThermalStatesDock(DockWindow):
         self.setMaximumWidth(100)
 
         layout = QVBoxLayout()
+
+        formLayout = QFormLayout()
+        self.stateLabel = QLabel("---")
+        formLayout.addRow("State", self.stateLabel)
+
+        layout.addLayout(formLayout)
 
         def _addButton(text, onClick, default=False):
             button = QPushButton(text)
@@ -51,6 +74,8 @@ class ThermalStatesDock(DockWindow):
 
         widget = QWidget()
         widget.setLayout(layout)
+
+        m1m3ts.summaryState.connect(self.summaryState)
 
         self.setWidget(widget)
 
@@ -77,3 +102,7 @@ class ThermalStatesDock(DockWindow):
     @asyncSlot()
     async def exitControl(self):
         await self._exitControl()
+
+    @Slot(map)
+    def summaryState(self, data):
+        self.stateLabel.setText(summaryStateString(data.summaryState))
