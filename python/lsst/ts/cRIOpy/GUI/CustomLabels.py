@@ -353,13 +353,13 @@ class Heartbeat(QWidget):
         if abs(diff) > self.difftime_error:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='red'>%H:%M:%S ({diff:0.3f})</font>"
+                    f"<font color='red'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         elif abs(diff) > self.difftime_warning:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='{WARNING}'>%H:%M:%S ({diff:0.3f})</font>"
+                    f"<font color='{WARNING}'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         else:
