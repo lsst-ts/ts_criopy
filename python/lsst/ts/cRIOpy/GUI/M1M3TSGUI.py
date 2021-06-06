@@ -60,15 +60,20 @@ class ThermalStatesDock(DockWindow):
 
         layout.addLayout(formLayout)
 
+        self._controlButtons = []
+
         def _addButton(text, onClick, default=False):
             button = QPushButton(text)
             button.clicked.connect(onClick)
-            # button.setEnabled(False)
+            button.setEnabled(False)
             button.setAutoDefault(default)
             layout.addWidget(button)
+            self._controlButtons.append(button)
             return button
 
         _addButton("Start", self.start, True)
+        _addButton("Enable", self.enable)
+        _addButton("Disable", self.disable)
         _addButton("Standby", self.standby)
         _addButton("Exit Control", self.exitControl)
 
@@ -79,6 +84,21 @@ class ThermalStatesDock(DockWindow):
 
         self.setWidget(widget)
 
+    def setButtonsToState(self, state):
+        _bm = {
+            State.OFFLINE: [False, False, False, False, False],
+            State.STANDBY: [True, False, False, False, True],
+            State.DISABLED: [False, True, False, True, False],
+            State.ENABLED: [False, False, True, False, False],
+            State.FAULT: [False, False, False, True, False],
+        }
+        try:
+            bs = _bm[state]
+            for bi in range(len(self._controlButtons)):
+                self._controlButtons[bi].setEnabled(bs[bi])
+        except KeyError as ke:
+            print(f"Undefined buttonstate: {state} - {str(ke)}")
+
     @SALCommand
     def _start(self, **kwargs):
         return self.m1m3ts.remote.cmd_start
@@ -86,6 +106,22 @@ class ThermalStatesDock(DockWindow):
     @asyncSlot()
     async def start(self):
         await self._start(settingsToApply="Default")
+
+    @SALCommand
+    def _enable(self, **kwargs):
+        return self.m1m3ts.remote.cmd_enable
+
+    @asyncSlot()
+    async def enable(self):
+        await self._enable()
+
+    @SALCommand
+    def _disable(self, **kwargs):
+        return self.m1m3ts.remote.cmd_disable
+
+    @asyncSlot()
+    async def disable(self):
+        await self._disable()
 
     @SALCommand
     def _standby(self, **kwargs):
@@ -106,3 +142,4 @@ class ThermalStatesDock(DockWindow):
     @Slot(map)
     def summaryState(self, data):
         self.stateLabel.setText(summaryStateString(data.summaryState))
+        self.setButtonsToState(data.summaryState)
