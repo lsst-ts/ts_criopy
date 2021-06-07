@@ -31,6 +31,18 @@ from asyncqt import asyncSlot
 
 
 def summaryStateString(summaryState):
+    """Returns HTML string sumarizing device state.
+
+    Parameters
+    ----------
+    summaryState : `int`
+        Current device summary state.
+
+    Returns
+    -------
+    string : `str`
+        HTML text (including color) of device state.
+    """
     _map = {
         State.OFFLINE: "<font color='red'>Offline</font>",
         State.STANDBY: "Standby",
@@ -45,7 +57,13 @@ def summaryStateString(summaryState):
 
 
 class ThermalStatesDock(DockWindow):
-    """Widget to display and manipulate M1M3 TS states."""
+    """DockWidget to display and manipulate M1M3 TS states.
+
+    Paramaters
+    ----------
+    m1m3ts : `SALComm`
+        SALComm object, connection to M1M3 TS.
+    """
 
     def __init__(self, m1m3ts):
         super().__init__("Status")
