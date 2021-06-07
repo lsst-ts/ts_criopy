@@ -103,6 +103,13 @@ class ThermalStatesDock(DockWindow):
         self.setWidget(widget)
 
     def setButtonsToState(self, state):
+        """Sets button for given state. Changes button enabled/disabled to
+        actions allowed at the given state.
+
+        Parameters
+        ----------
+        state : `int`
+            Current CSC state."""
         _bm = {
             State.OFFLINE: [False, False, False, False, False],
             State.STANDBY: [True, False, False, False, True],
