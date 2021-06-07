@@ -230,7 +230,6 @@ class Dock(DockWindow, Object):
 
     def __init__(self, comms):
         super().__init__("SAL Log")
-        self.setObjectName("SAL Log")
 
         messages = Messages(comms)
         toolbar = ToolBar(comms, self)

@@ -63,7 +63,6 @@ class TopicWindow(DockWindow):
 
     def __init__(self, title, comm, topics, userWidget):
         super().__init__(title)
-        self.setObjectName(title)
 
         self.comm = comm
         self.topics = topics

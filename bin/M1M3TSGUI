@@ -10,6 +10,8 @@ from lsst.ts.cRIOpy.GUI import (
     SALLog,
 )
 
+from lsst.ts.cRIOpy.GUI.M1M3TSGUI import ThermalStatesDock
+
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QMainWindow
 
@@ -22,11 +24,12 @@ class EUI(QMainWindow):
     def __init__(self, m1m3ts):
         super().__init__()
 
-        self.m1m3ts = SALComm.create("MTM1M3TS")
+        self.m1m3ts = m1m3ts
 
         self.setStatusBar(SALStatusBar([self.m1m3ts]))
 
         thermalValues = ThermalValuePageWidget(self.m1m3ts)
+        stateDock = ThermalStatesDock(self.m1m3ts)
         logDock = SALLog.Dock(self.m1m3ts)
 
         menuBar = self.menuBar()
@@ -34,6 +37,7 @@ class EUI(QMainWindow):
         viewMenu = menuBar.addMenu("&Views")
         viewMenu.addAction(thermalValues.toggleViewAction())
         viewMenu.addSeparator()
+        viewMenu.addAction(stateDock.toggleViewAction())
         viewMenu.addAction(logDock.toggleViewAction())
 
         settings = QSettings("LSST.TS", "M1M3TSGUI")
@@ -44,7 +48,10 @@ class EUI(QMainWindow):
             self.resize(1000, 700)
 
         self.addDockWidget(Qt.TopDockWidgetArea, thermalValues)
+        self.addDockWidget(Qt.LeftDockWidgetArea, stateDock)
         self.addDockWidget(Qt.BottomDockWidgetArea, logDock)
+
+        self.setCorner(Qt.TopLeftCorner, Qt.LeftDockWidgetArea)
 
     @asyncClose
     async def closeEvent(self, event):
@@ -57,5 +64,5 @@ class EUI(QMainWindow):
 
 if __name__ == "__main__":
     app = Application(EUI)
-    app.addComm("M1M3TSGUI")
+    app.addComm("MTM1M3TS")
     app.run()

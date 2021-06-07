@@ -353,13 +353,13 @@ class Heartbeat(QWidget):
         if abs(diff) > self.difftime_error:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='red'>%H:%M:%S ({diff:0.3f})</font>"
+                    f"<font color='red'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         elif abs(diff) > self.difftime_warning:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='{WARNING}'>%H:%M:%S ({diff:0.3f})</font>"
+                    f"<font color='{WARNING}'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         else:
@@ -401,11 +401,12 @@ class DockWindow(QDockWidget):
     Parameters
     ----------
     title : `str`
-        Dock title.
+        Dock title and object name.
     """
 
     def __init__(self, title):
         super().__init__(title)
+        self.setObjectName(title)
         self.topLevelChanged.connect(self._topLevelChanged)
 
     @Slot(bool)
