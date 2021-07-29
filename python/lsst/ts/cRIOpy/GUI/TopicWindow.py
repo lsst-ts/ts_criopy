@@ -68,7 +68,7 @@ class TopicWindow(DockWindow):
 
         splitter = QSplitter()
 
-        self.fieldDataIndex = None
+        self.field = None
 
         plotLayout = QVBoxLayout()
         selectionLayout = QVBoxLayout()
@@ -174,9 +174,7 @@ class TopicWindow(DockWindow):
         Redraw actuators with new values.
         """
         topic = self.topics.topics[topicIndex]
-        field = topic.fields[fieldIndex]
-        self.fieldGetter = field.value
-        self.fieldDataIndex = field.index()
+        self.field = topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.comm)
 

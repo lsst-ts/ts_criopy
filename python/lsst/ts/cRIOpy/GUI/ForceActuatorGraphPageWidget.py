@@ -30,7 +30,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
         if data is None:
             values = None
         else:
-            values = self.fieldGetter(data)
+            values = self.field.getValue(data)
 
         self.mirrorWidget.mirrorView.clear()
 
@@ -43,7 +43,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
         for row in FATABLE:
             id = row[FATABLE_ID]
-            index = row[self.fieldDataIndex]
+            index = self.field.index
             if values is None or index is None:
                 state = ForceActuator.STATE_INACTIVE
             elif warningData is not None:
