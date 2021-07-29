@@ -10,6 +10,7 @@ from lsst.ts.cRIOpy.GUI import (
     AirPageWidget,
     CellLightPageWidget,
     DCAccelerometerPageWidget,
+    EnabledForceActuators,
     ForceActuatorGraphPageWidget,
     ForceActuatorValuePageWidget,
     ForceBalanceSystemPageWidget,
@@ -84,6 +85,7 @@ class EUI(QMainWindow):
         self.addPage(
             "Force Actuator Bump Test", ForceActuatorBumpTestPageWidget(self.m1m3)
         )
+        self.addPage("Enabled Force Actuators", EnabledForceActuators(self.m1m3))
         self.addPage("Force Actuator Graph", ForceActuatorGraphPageWidget(self.m1m3))
         self.addPage("Force Actuator Value", ForceActuatorValuePageWidget(self.m1m3))
         self.addPage("SAL Log", SALLog.Widget(self.m1m3))

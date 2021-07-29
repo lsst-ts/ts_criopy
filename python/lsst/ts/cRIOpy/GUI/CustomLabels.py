@@ -39,6 +39,7 @@ __all__ = [
     "Arcsec",
     "ArcsecWarning",
     "MmWarning",
+    "OnOffLabel",
     "WarningLabel",
     "Heartbeat",
     "LogEventWarning",
@@ -234,14 +235,14 @@ class ArcsecWarning(Arcsec):
         )
 
 
-class WarningLabel(QLabel):
+class OnOffLabel(QLabel):
     """Displays on/off warnings"""
 
     def __init__(self):
         super().__init__()
 
     def __copy__(self):
-        return WarningLabel()
+        return OnOffLabel()
 
     def setValue(self, value):
         """Sets formatted value. Color codes On (red)/Off (green).
@@ -255,6 +256,29 @@ class WarningLabel(QLabel):
             self.setText("<font color='red'>On</font>")
         else:
             self.setText("<font color='green'>Off</font>")
+
+
+class WarningLabel(QLabel):
+    """Displays WARNING/OK"""
+
+    def __init__(self):
+        super().__init__()
+
+    def __copy__(self):
+        return WarningLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        if value:
+            self.setText("<font color='red'>WARNING</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
 
 
 class Heartbeat(QWidget):

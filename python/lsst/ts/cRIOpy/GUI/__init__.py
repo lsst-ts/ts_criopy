@@ -7,6 +7,7 @@ from .CellLightPageWidget import CellLightPageWidget
 from .CustomLabels import *
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget
+from .EnabledForceActuators import EnabledForceActuators
 from .ForceActuatorBumpTestPageWidget import ForceActuatorBumpTestPageWidget
 from .ForceActuatorGraphPageWidget import ForceActuatorGraphPageWidget
 from .ForceActuatorValuePageWidget import ForceActuatorValuePageWidget

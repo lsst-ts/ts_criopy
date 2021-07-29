@@ -28,7 +28,7 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-from .CustomLabels import Force, Moment, Mm, UnitLabel, WarningLabel
+from .CustomLabels import Force, Moment, Mm, UnitLabel, OnOffLabel
 import copy
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
@@ -110,13 +110,13 @@ class HardpointsWidget(QWidget):
             row += 1
 
         self.warnings = {
-            "majorFault": ("Major fault", WarningLabel()),
-            "minorFault": ("Minor fault", WarningLabel()),
-            "faultOverride": ("Fault override", WarningLabel()),
-            "mainCalibrationError": ("Main calibration error", WarningLabel()),
-            "backupCalibrationError": ("Backup calibration error", WarningLabel()),
-            "limitSwitch1Operated": ("Limit switch 1", WarningLabel()),
-            "limitSwitch2Operated": ("Limit switch 2", WarningLabel()),
+            "majorFault": ("Major fault", OnOffLabel()),
+            "minorFault": ("Minor fault", OnOffLabel()),
+            "faultOverride": ("Fault override", OnOffLabel()),
+            "mainCalibrationError": ("Main calibration error", OnOffLabel()),
+            "backupCalibrationError": ("Backup calibration error", OnOffLabel()),
+            "limitSwitch1Operated": ("Limit switch 1", OnOffLabel()),
+            "limitSwitch2Operated": ("Limit switch 2", OnOffLabel()),
         }
 
         for k, v in self.warnings.items():

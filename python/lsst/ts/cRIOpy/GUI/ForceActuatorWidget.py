@@ -114,7 +114,7 @@ class ForceActuatorWidget(QWidget):
 
         self.fieldList.clear()
         for field in self.topics.topics[topicIndex].fields:
-            self.fieldList.addItem(field[0])
+            self.fieldList.addItem(field.name)
 
         fieldIndex = self.topics.topics[topicIndex].selectedField
         if fieldIndex < 0:
@@ -162,8 +162,8 @@ class ForceActuatorWidget(QWidget):
         """
         topic = self.topics.topics[topicIndex]
         field = topic.fields[fieldIndex]
-        self.fieldGetter = field[1]
-        self.fieldDataIndex = field[2]()
+        self.fieldGetter = field.value
+        self.fieldDataIndex = field.index()
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
 
