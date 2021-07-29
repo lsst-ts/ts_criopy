@@ -150,14 +150,13 @@ class ForceActuatorValuePageWidget(ForceActuatorWidget):
             return
 
         i = -1
+        values = self.field.getValue(data)
         for row in FATABLE:
             i += 1
             index = row[self.field.index]
             if index is None:
                 self.dataWidget.forceActuatorLabels[i].setText("UNKNOWN")
             elif data is not None:
-                self.dataWidget.forceActuatorLabels[i].setText(
-                    "%0.1f" % self.field.getValue(data)
-                )
+                self.dataWidget.forceActuatorLabels[i].setText(f"{values[index]:.1f}")
             else:
                 self.dataWidget.forceActuatorLabels[i].setText("")

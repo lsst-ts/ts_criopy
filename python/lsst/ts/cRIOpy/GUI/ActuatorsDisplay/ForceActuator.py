@@ -49,6 +49,8 @@ class ForceActuator(QGraphicsItem):
         Data associated with the actuator (actual force, calculated force, ..).
     dataIndex : `int`
         Index in value arrays. Points to selected actuator value.
+    scale: `object`
+        Object providing getColor(value) method.
     state : `int`
         Force Actuator state. 0 for inactive/unused, 1 for active OK, 2 for
         active warning.
@@ -79,14 +81,13 @@ class ForceActuator(QGraphicsItem):
         self.dataIndex = dataIndex
         self._selected = selected
         self._state = state
-        # minimum and maximum values. Used for translating value into color code
-        self._min = None
-        self._max = None
+        # scale. Provides getColor(data) object, returning brush to fill data
+        self._color_scale = None
         # scalign factor. The actuator default size is 20x20 units. As
         # actuators are placed on mirror, the size needs to be adjusted to show
         # properly actuator on display in e.g. mm (where X and Y ranges are
         # ~-4400 .. +4400).
-        self._scale = 25
+        self._scale_factor = 25
 
     def updateData(self, data, state):
         """Updates actuator data.
@@ -130,85 +131,89 @@ class ForceActuator(QGraphicsItem):
         """If actuator is active (`bool`)."""
         return not (self._state == self.STATE_INACTIVE)
 
-    def setRange(self, minValue, maxValue):
-        """Set actuator range. This is used for setting display color."""
-        self._min = minValue
-        self._max = maxValue
+    def setScale(self, scale):
+        """Set actuator data display scale. This is used for setting display color."""
+        self._color_scale = scale
         self.update()
 
     def boundingRect(self):
         """Returns rectangle occupied by drawing. Overridden method."""
         return QRect(
-            self._center.x() - 10 * self._scale,
-            self._center.y() - 10 * self._scale,
-            20 * self._scale,
-            20 * self._scale,
+            self._center.x() - 10 * self._scale_factor,
+            self._center.y() - 10 * self._scale_factor,
+            20 * self._scale_factor,
+            20 * self._scale_factor,
         )
 
     def paint(self, painter, option, widget):
         """Paint actuator. Overridden method."""
-        # if range isn't set, don't draw
-        if self._min is None or self._max is None:
+        # if scale isn't set, don't draw
+        if self._color_scale is None:
             return
 
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         # paint grayed circle for actuators not providing the selected value
         if self._state == self.STATE_INACTIVE:
-            painter.setPen(QPen(Qt.gray, self._scale, Qt.DotLine))
-            painter.drawEllipse(self._center, 10 * self._scale, 10 * self._scale)
+            painter.setPen(QPen(Qt.gray, self._scale_factor, Qt.DotLine))
+            painter.drawEllipse(
+                self._center, 10 * self._scale_factor, 10 * self._scale_factor
+            )
             return
         # draw rectangle around selected actuator
         if self._selected:
-            painter.setPen(QPen(Qt.black, self._scale))
+            painter.setPen(QPen(Qt.black, self._scale_factor))
             painter.drawRect(self.boundingRect())
         else:
-            painter.setPen(QPen(Qt.red, self._scale))
+            painter.setPen(QPen(Qt.red, self._scale_factor))
 
         # draw selected actuator in red color
         if self._state == self.STATE_WARNING:
             painter.setBrush(Qt.red)
-        # if range span is 0, fill with dotted pattern
-        elif self._min == self._max:
-            brush = QBrush(Qt.red, Qt.DiagCrossPattern)
-            brush.setTransform(QTransform().scale(self._scale / 3, self._scale / 3))
-            painter.setBrush(brush)
-        # draw using value as index into possible colors in HSV model
         else:
-            hue = 1 - (self._data - self._min) / (self._max - self._min)
-            painter.setBrush(QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1))
+            color = self._color_scale.getColor(self._data)
+            if color is None:
+                brush = QBrush(Qt.red, Qt.DiagCrossPattern)
+                brush.setTransform(
+                    QTransform().scale(self._scale_factor / 3, self._scale_factor / 3)
+                )
+                painter.setBrush(brush)
+            else:
+                painter.setBrush(color)
         # draw actuator, write value
-        painter.drawEllipse(self._center, 10 * self._scale, 10 * self._scale)
+        painter.drawEllipse(
+            self._center, 10 * self._scale_factor, 10 * self._scale_factor
+        )
 
         painter.setPen(Qt.black)
 
         font = painter.font()
-        font.setPixelSize(6.5 * self._scale)
+        font.setPixelSize(6.5 * self._scale_factor)
         font.setItalic(True)
         painter.setFont(font)
         painter.drawText(
-            self._center.x() - 10 * self._scale,
-            self._center.y() - 10 * self._scale,
-            20 * self._scale,
-            10 * self._scale,
+            self._center.x() - 10 * self._scale_factor,
+            self._center.y() - 10 * self._scale_factor,
+            20 * self._scale_factor,
+            10 * self._scale_factor,
             Qt.AlignBottom | Qt.AlignHCenter,
             str(self.id),
         )
 
         vstr = f"{self.data:.2f}"
         if len(vstr) > 6:
-            font.setPixelSize(3.5 * self._scale)
+            font.setPixelSize(3.5 * self._scale_factor)
         elif len(vstr) > 3:
-            font.setPixelSize(4.5 * self._scale)
+            font.setPixelSize(4.5 * self._scale_factor)
 
         font.setItalic(False)
         font.setBold(True)
         painter.setFont(font)
         # draw value
         painter.drawText(
-            self._center.x() - 10 * self._scale,
+            self._center.x() - 10 * self._scale_factor,
             self._center.y(),
-            20 * self._scale,
-            10 * self._scale,
+            20 * self._scale_factor,
+            10 * self._scale_factor,
             Qt.AlignTop | Qt.AlignHCenter,
             vstr,
         )

@@ -40,5 +40,5 @@ class MirrorWidget(QWidget):
         max : `float`
            Maximal value.
         """
-        self.mirrorView.setRange(min, max)
         self.gauge.setRange(min, max)
+        self.mirrorView.setScale(self.gauge)

@@ -52,6 +52,16 @@ class Gauge(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
+    def getColor(self, value):
+        if self._min == self._max:
+            return None
+        # draw using value as index into possible colors in HSV model
+        hue = 1 - (value - self._min) / (self._max - self._min)
+        return self.getHueColor(hue)
+
+    def getHueColor(self, hue):
+        return QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1)
+
     def paintEvent(self, event):
         """Overridden method. Paint gauge as series of lines, and adds text labels."""
         painter = QPainter(self)
@@ -74,9 +84,7 @@ class Gauge(QWidget):
             return
 
         for x in range(0, sheight):
-            painter.setPen(
-                QColor.fromHsvF((x / sheight) * 0.7, min(1, 1.5 - (x / sheight)), 1)
-            )
+            painter.setPen(self.getHueColor(x / sheight))
             painter.drawLine(0, x, swidth, x)
 
         painter.setPen(Qt.black)
