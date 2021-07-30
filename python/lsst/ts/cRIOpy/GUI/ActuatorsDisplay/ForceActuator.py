@@ -199,7 +199,7 @@ class ForceActuator(QGraphicsItem):
             str(self.id),
         )
 
-        vstr = f"{self.data:.2f}"
+        vstr = self._color_scale.getValue(self.data)
         if len(vstr) > 6:
             font.setPixelSize(3.5 * self._scale_factor)
         elif len(vstr) > 3:

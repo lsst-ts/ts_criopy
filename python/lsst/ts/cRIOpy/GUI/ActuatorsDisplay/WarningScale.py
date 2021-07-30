@@ -31,24 +31,14 @@ class WarningScale(QWidget):
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
-    def setLables(self, true_text, false_text):
-        """Sets text labels for true and false values. Useful for labels on
-        colors depicting device state.
-
-        Parameters
-        ----------
-        true_text : `str`
-            Text displayed with true/1 value.
-        false_text : `str`
-            Text displayed with false/0 value.
-        """
-        self._true_text = true_text
-        self._false_text = false_text
-        self.update()
-
     def sizeHint(self):
         """Overridden method."""
         return QSize(100, 100)
+
+    def getValue(self, value):
+        if value:
+            return "Warning\nError"
+        return "OK"
 
     def getColor(self, value):
         """Returns color value.
@@ -74,8 +64,8 @@ class WarningScale(QWidget):
         swidth = max(self.width() - 100, 20)
         sheight = self.height()
 
-        def box(y, color, text):
-            painter.setBrush(color)
+        def box(y, value):
+            painter.setBrush(self.getColor(value))
             painter.drawRect(0, y, swidth, sheight / 2)
             painter.setPen(Qt.black)
             painter.drawText(
@@ -84,8 +74,8 @@ class WarningScale(QWidget):
                 self.width() - swidth,
                 sheight / 2,
                 Qt.AlignCenter,
-                text,
+                self.getValue(value),
             )
 
-        box(0, Qt.green, "OK")
-        box(sheight / 2, Qt.red, "Warning\nError")
+        box(0, False)
+        box(sheight / 2, True)

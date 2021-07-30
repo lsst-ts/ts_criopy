@@ -35,6 +35,11 @@ class OnOffScale(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
+    def getValue(self, value):
+        if value:
+            return "On"
+        return "Off"
+
     def getColor(self, value):
         """Returns color value.
 
@@ -59,8 +64,8 @@ class OnOffScale(QWidget):
         swidth = max(self.width() - 100, 20)
         sheight = self.height()
 
-        def box(y, color, text):
-            painter.setBrush(color)
+        def box(y, value):
+            painter.setBrush(self.getColor(value))
             painter.drawRect(0, y, swidth, sheight / 2)
             painter.setPen(Qt.black)
             painter.drawText(
@@ -69,8 +74,8 @@ class OnOffScale(QWidget):
                 self.width() - swidth,
                 sheight / 2,
                 Qt.AlignCenter,
-                text,
+                self.getValue(value),
             )
 
-        box(0, Qt.green, "On")
-        box(sheight / 2, Qt.red, "Off")
+        box(0, True)
+        box(sheight / 2, False)
