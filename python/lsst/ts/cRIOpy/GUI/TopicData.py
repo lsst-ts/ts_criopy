@@ -458,13 +458,13 @@ class Topics:
             TopicData(
                 "Force Actuator Warning",
                 [
-                    TopicField("Major Fault", "majorFault", FATABLE_ZINDEX, 1),
-                    TopicField("Minor Fault", "minorFault", FATABLE_ZINDEX, 1),
+                    TopicField("Major Fault", "majorFault", FATABLE_ZINDEX, 2),
+                    TopicField("Minor Fault", "minorFault", FATABLE_ZINDEX, 2),
                     TopicField(
                         "Fault Override",
                         "faultOverride",
                         FATABLE_ZINDEX,
-                        1,
+                        2,
                     ),
                     TopicField(
                         "Main Calibration Error",

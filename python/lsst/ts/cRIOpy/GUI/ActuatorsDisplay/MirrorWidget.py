@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QWidget, QHBoxLayout
 
-from . import MirrorView, Gauge, OnOff
+from . import MirrorView, GaugeScale, OnOffScale, WarningScale
 
 
 class MirrorWidget(QWidget):
@@ -18,16 +18,19 @@ class MirrorWidget(QWidget):
         super().__init__()
 
         self.mirrorView = MirrorView()
-        self.gauge = Gauge()
-        self.onoff = OnOff()
+        self._gauge = GaugeScale()
+        self._onoff = OnOffScale()
+        self._warning = WarningScale()
 
         layout = QHBoxLayout()
         layout.addWidget(self.mirrorView)
-        layout.addWidget(self.gauge)
-        layout.addWidget(self.onoff)
+        layout.addWidget(self._gauge)
+        layout.addWidget(self._onoff)
+        layout.addWidget(self._warning)
 
-        self._curentWidget = self.gauge
-        self.onoff.hide()
+        self._curentWidget = self._gauge
+        self._onoff.hide()
+        self._warning.hide()
 
         self.setLayout(layout)
 
@@ -44,9 +47,11 @@ class MirrorWidget(QWidget):
 
     def setScaleType(self, scale):
         if scale == 1:
-            self._replace(self.onoff)
+            self._replace(self._onoff)
+        if scale == 2:
+            self._replace(self._warning)
         else:
-            self._replace(self.gauge)
+            self._replace(self._gauge)
 
     def setRange(self, min, max):
         """Sets range used for color scaling.
@@ -58,5 +63,6 @@ class MirrorWidget(QWidget):
         max : `float`
            Maximal value.
         """
-        self.gauge.setRange(min, max)
+        if self._curentWidget == self._gauge:
+            self._gauge.setRange(min, max)
         self.mirrorView.setColorScale(self._curentWidget)

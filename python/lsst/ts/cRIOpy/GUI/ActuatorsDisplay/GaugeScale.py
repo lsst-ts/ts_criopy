@@ -24,7 +24,7 @@ from PySide2.QtGui import QPainter, QColor, QBrush
 from PySide2.QtWidgets import QWidget
 
 
-class Gauge(QWidget):
+class GaugeScale(QWidget):
     """Draws gauge with color scale."""
 
     def __init__(self):

@@ -23,30 +23,13 @@ from PySide2.QtGui import QPainter, QColor, QBrush
 from PySide2.QtWidgets import QWidget
 
 
-class OnOff(QWidget):
+class OnOffScale(QWidget):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
         super().__init__()
-        self._true_text = "On"
-        self._false_text = "Off"
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
-
-    def setLables(self, true_text, false_text):
-        """Sets text labels for true and false values. Useful for labels on
-        colors depicting device state.
-
-        Parameters
-        ----------
-        true_text : `str`
-            Text displayed with true/1 value.
-        false_text : `str`
-            Text displayed with false/0 value.
-        """
-        self._true_text = true_text
-        self._false_text = false_text
-        self.update()
 
     def sizeHint(self):
         """Overridden method."""
@@ -89,5 +72,5 @@ class OnOff(QWidget):
                 text,
             )
 
-        box(0, Qt.green, self._true_text)
-        box(sheight / 2, Qt.red, self._false_text)
+        box(0, Qt.green, "On")
+        box(sheight / 2, Qt.red, "Off")
