@@ -33,6 +33,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             values = self.field.getValue(data)
 
         self.mirrorWidget.mirrorView.clear()
+        self.mirrorWidget.setScaleType(self.field.scale)
 
         def getWarning(index):
             return (

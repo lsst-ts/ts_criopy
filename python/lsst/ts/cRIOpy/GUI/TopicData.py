@@ -27,10 +27,11 @@ class TopicData:
 
 
 class TopicField:
-    def __init__(self, name, value, index):
+    def __init__(self, name, value, index, scale=0):
         self.name = name
         self.value = value
         self.index = index
+        self.scale = scale
 
     def getValue(self, data):
         return getattr(data, self.value)
@@ -457,12 +458,13 @@ class Topics:
             TopicData(
                 "Force Actuator Warning",
                 [
-                    TopicField("Major Fault", "majorFault", FATABLE_ZINDEX),
-                    TopicField("Minor Fault", "minorFault", FATABLE_ZINDEX),
+                    TopicField("Major Fault", "majorFault", FATABLE_ZINDEX, 1),
+                    TopicField("Minor Fault", "minorFault", FATABLE_ZINDEX, 1),
                     TopicField(
                         "Fault Override",
                         "faultOverride",
                         FATABLE_ZINDEX,
+                        1,
                     ),
                     TopicField(
                         "Main Calibration Error",

@@ -35,8 +35,8 @@ class Mirror(QGraphicsScene):
     def __init__(self):
         super().__init__()
 
-    def setScale(self, scale):
-        """Set display scale. Provides getBrush method, returning brush to be used with value.
+    def setColorScale(self, scale):
+        """Set display color scale. Provides getColor method, returning color to be used with value.
 
         Parameters
         ----------
@@ -44,7 +44,7 @@ class Mirror(QGraphicsScene):
             Data scale.
         """
         for a in self.items():
-            a.setScale(scale)
+            a.setColorScale(scale)
 
     def addForceActuator(self, id, x, y, orientation, data, dataIndex, state, selected):
         """Adds actuator to the list.

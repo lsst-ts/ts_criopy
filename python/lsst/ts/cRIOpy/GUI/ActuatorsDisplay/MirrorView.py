@@ -60,15 +60,15 @@ class MirrorView(QGraphicsView):
         s.setSelected(True)
         self.selectionChanged.emit(s)
 
-    def setScale(self, scale):
-        """Sets range used for color scaling.
+    def setColorScale(self, scale):
+        """Sets scale used for color scaling.
 
         Parameters
         ----------
         scale : `class`
             New scale.
         """
-        self._mirror.setScale(scale)
+        self._mirror.setColorScale(scale)
 
     def clear(self):
         """Removes all actuators from the view."""

@@ -131,7 +131,7 @@ class ForceActuator(QGraphicsItem):
         """If actuator is active (`bool`)."""
         return not (self._state == self.STATE_INACTIVE)
 
-    def setScale(self, scale):
+    def setColorScale(self, scale):
         """Set actuator data display scale. This is used for setting display color."""
         self._color_scale = scale
         self.update()
