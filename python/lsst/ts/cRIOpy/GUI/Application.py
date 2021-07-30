@@ -61,7 +61,7 @@ class Application:
     def __init__(self, eui_class):
         self._eui_class = eui_class
         self._app = QApplication(sys.argv)
-        # self._app.setApplicationVersion(lsst.ts.cRIOpy.__version)
+        self._app.setApplicationVersion(lsst.ts.cRIOpy.__version__)
 
         parser = QCommandLineParser()
         parser.addHelpOption()

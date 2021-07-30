@@ -53,6 +53,18 @@ class Gauge(QWidget):
         return QSize(100, 100)
 
     def getColor(self, value):
+        """Returns color for given value.
+
+        Parameters
+        ----------
+        value : `float`
+            Value for which color shall be returned.
+
+        Returns
+        -------
+        color : `QColor`
+            QColor representing the value on scale.
+        """
         if self._min == self._max:
             return None
         # draw using value as index into possible colors in HSV model
@@ -60,6 +72,18 @@ class Gauge(QWidget):
         return self.getHueColor(hue)
 
     def getHueColor(self, hue):
+        """Returns color from "hue" (0-1 range).
+
+        Parameters
+        ----------
+        hue : `float`
+            "Hue" value (in 0.0 - 1.0 range)
+
+        Returns
+        -------
+        color : `QColor`
+            Color for hue value.
+        """
         return QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1)
 
     def paintEvent(self, event):
