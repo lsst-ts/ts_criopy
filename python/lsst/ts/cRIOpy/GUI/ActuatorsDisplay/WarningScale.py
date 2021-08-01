@@ -22,18 +22,14 @@ from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QPainter, QColor, QBrush
 from PySide2.QtWidgets import QWidget
 
+from .BipolarScale import BipolarScale
 
-class WarningScale(QWidget):
+
+class WarningScale(BipolarScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
-        super().__init__()
-        self.setMinimumSize(100, 100)
-        self.setMaximumWidth(200)
-
-    def sizeHint(self):
-        """Overridden method."""
-        return QSize(100, 100)
+        super().__init__(False)
 
     def getValue(self, value):
         if value:
@@ -56,26 +52,3 @@ class WarningScale(QWidget):
         if value:
             return Qt.red
         return Qt.green
-
-    def paintEvent(self, event):
-        """Overridden method. Paint gauge as series of lines, and adds text labels."""
-        painter = QPainter(self)
-        painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
-        swidth = max(self.width() - 100, 20)
-        sheight = self.height()
-
-        def box(y, value):
-            painter.setBrush(self.getColor(value))
-            painter.drawRect(0, y, swidth, sheight / 2)
-            painter.setPen(Qt.black)
-            painter.drawText(
-                0,
-                y,
-                self.width() - swidth,
-                sheight / 2,
-                Qt.AlignCenter,
-                self.getValue(value),
-            )
-
-        box(0, False)
-        box(sheight / 2, True)

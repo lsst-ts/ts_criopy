@@ -18,37 +18,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Qt, QSize
-from PySide2.QtGui import QPainter, QColor, QBrush
-from PySide2.QtWidgets import QWidget
-
-from .BipolarScale import BipolarScale
+import enum
 
 
-class OnOffScale(BipolarScale):
-    """Draws gauge with color scale for boolean (on/off) values."""
-
-    def __init__(self):
-        super().__init__(True)
-
-    def getValue(self, value):
-        if value:
-            return "On"
-        return "Off"
-
-    def getColor(self, value):
-        """Returns color value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
-
-        Returns
-        -------
-        color : `QColor`
-            Color for value.
-        """
-        if value:
-            return Qt.green
-        return Qt.red
+class Scales(enum.IntEnum):
+    GAUGE = 1
+    ONOFF = 2
+    WARNING = 3

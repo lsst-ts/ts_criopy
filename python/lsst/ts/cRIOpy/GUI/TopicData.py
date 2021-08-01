@@ -5,6 +5,8 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_SINDEX,
 )
 
+from .ActuatorsDisplay import Scales
+
 __all__ = ["Topics", "TopicData"]
 
 
@@ -27,7 +29,7 @@ class TopicData:
 
 
 class TopicField:
-    def __init__(self, name, value, index, scale=0):
+    def __init__(self, name, value, index, scale=Scales.GAUGE):
         self.name = name
         self.value = value
         self.index = index
@@ -35,6 +37,16 @@ class TopicField:
 
     def getValue(self, data):
         return getattr(data, self.value)
+
+
+class OnOffField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.ONOFF)
+
+
+class WarningField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.WARNING)
 
 
 class Topics:
@@ -458,140 +470,139 @@ class Topics:
             TopicData(
                 "Force Actuator Warning",
                 [
-                    TopicField("Major Fault", "majorFault", FATABLE_ZINDEX, 2),
-                    TopicField("Minor Fault", "minorFault", FATABLE_ZINDEX, 2),
-                    TopicField(
+                    WarningField("Major Fault", "majorFault", FATABLE_ZINDEX),
+                    WarningField("Minor Fault", "minorFault", FATABLE_ZINDEX),
+                    WarningField(
                         "Fault Override",
                         "faultOverride",
                         FATABLE_ZINDEX,
-                        2,
                     ),
-                    TopicField(
+                    WarningField(
                         "Main Calibration Error",
                         "mainCalibrationError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Backup Calibration Error",
                         "backupCalibrationError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Error",
                         "mezzanineError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Bootloader Active",
                         "mezzanineBootloaderActive",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Unique Id CRC Error",
                         "uniqueIdCRCError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Application Type Mismatch",
                         "applicationTypeMismatch",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Application Missing",
                         "applicationMissing",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "OneWire Mismatch",
                         "oneWireMissing",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "OneWire1 Mismatch",
                         "oneWire1Mismatch",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "OnewWire2 Mismatch",
                         "oneWire2Mismatch",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Watchdog Reset",
                         "watchdogReset",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Brownout",
                         "brownOut",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Event Trap Reset",
                         "eventTrapReset",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "SSR Power Fault",
                         "ssrPowerFault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "AUX Power Fault",
                         "auxPowerFault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Power Fault",
                         "mezzaninePowerFault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Current Ampl Fault",
                         "mezzanineCurrentAmp1Fault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Current Amp2 Fault",
                         "mezzanineCurrentAmp2Fault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Unique ID CRC Error",
                         "mezzanineUniqueIdCRCError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Main Calibration Error",
                         "mezzanineMainCalibrationError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Backup Calibration Error",
                         "mezzanineBackupCalibrationError",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Event Trap Reset",
                         "mezzanineEventTrapReset",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Application Missing",
                         "mezzanineApplicationMissing",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Mezzanine Application CRC Mismatch",
                         "mezzanineApplicationCRCMismatch",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "ILC Fault",
                         "ilcFault",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Broadcast Counter Warning",
                         "broadcastCounterWarning",
                         FATABLE_ZINDEX,
@@ -602,22 +613,22 @@ class Topics:
             TopicData(
                 "Force Actuator Force Warning",
                 [
-                    TopicField(
+                    WarningField(
                         "Primary Axis Measured Force Warning",
                         "primaryAxisMeasuredForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Secondary Axis Measured Force Warning",
                         "secondaryAxisMeasuredForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Primary Axis Following Error Warning",
                         "primaryAxisFollowingErrorWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Secondary Axis Following Error Warning",
                         "secondaryAxisFollowingErrorWarning",
                         FATABLE_ZINDEX,
@@ -628,72 +639,72 @@ class Topics:
             TopicData(
                 "FA Setpoint Warning",
                 [
-                    TopicField(
+                    WarningField(
                         "Safety limit",
                         "safetyLimitWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Near neighbor",
                         "nearNeighborWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Far neighbor",
                         "farNeighborWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Elevation force",
                         "elevationForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Azimuth force",
                         "azimuthForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Thermal force",
                         "thermalForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Balance force",
                         "balanceForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Acceleration force",
                         "accelerationForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Active optic",
                         "activeOpticForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Static force",
                         "staticForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Aberration force",
                         "aberrationForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Offset force",
                         "offsetForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Velocity force",
                         "velocityForceWarning",
                         FATABLE_ZINDEX,
                     ),
-                    TopicField(
+                    WarningField(
                         "Force setpoint",
                         "forceWarning",
                         FATABLE_ZINDEX,
@@ -726,7 +737,7 @@ class Topics:
             TopicData(
                 "FA enabled",
                 [
-                    TopicField(
+                    OnOffField(
                         "Enabled FAs",
                         "forceActuatorEnabled",
                         FATABLE_ZINDEX,

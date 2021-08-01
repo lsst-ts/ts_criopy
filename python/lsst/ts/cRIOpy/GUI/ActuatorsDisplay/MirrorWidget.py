@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QWidget, QHBoxLayout
 
-from . import MirrorView, GaugeScale, OnOffScale, WarningScale
+from . import MirrorView, GaugeScale, OnOffScale, WarningScale, Scales
 
 
 class MirrorWidget(QWidget):
@@ -46,9 +46,9 @@ class MirrorWidget(QWidget):
         self._curentWidget.show()
 
     def setScaleType(self, scale):
-        if scale == 1:
+        if scale == Scales.Scales.ONOFF:
             self._replace(self._onoff)
-        if scale == 2:
+        if scale == Scales.Scales.WARNING:
             self._replace(self._warning)
         else:
             self._replace(self._gauge)
