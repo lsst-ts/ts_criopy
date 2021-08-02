@@ -20,7 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import QRect, Qt, QPointF
-from PySide2.QtGui import QPen, QPainter, QColor, QBrush, QTransform
+from PySide2.QtGui import QPen, QPainter, QBrush, QTransform
 from PySide2.QtWidgets import QGraphicsItem
 
 
