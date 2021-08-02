@@ -29,7 +29,7 @@ class BumpTestScale(EnumScale):
     """Draws gauge with color scale for bump test progress."""
 
     def __init__(self):
-        super().__init__(True)
+        super().__init__()
 
     def getValue(self, value):
         strs = {

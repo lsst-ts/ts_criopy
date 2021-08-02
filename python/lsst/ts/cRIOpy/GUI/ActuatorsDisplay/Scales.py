@@ -22,7 +22,10 @@ import enum
 
 
 class Scales(enum.IntEnum):
+    """Scale kinds for discrete value display (EnumScale). Used to construct proper scale."""
+
     GAUGE = 1
     ONOFF = 2
     WARNING = 3
     BUMP_TEST = 4
+    ENABLED_DISABLED = 5

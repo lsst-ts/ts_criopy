@@ -27,7 +27,10 @@ class OnOffScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
-        super().__init__(True)
+        super().__init__()
+
+    def getLabels(self):
+        return [True, False]
 
     def getValue(self, value):
         if value:

@@ -1,3 +1,23 @@
+# This file is part of T&S cRIO Python library
+#
+# Developed for the LSST Telescope and Site Systems. This product includes
+# software developed by the LSST Project (https://www.lsst.org). See the
+# COPYRIGHT file at the top-level directory of this distribution for details of
+# code ownership.
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
+
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
     FATABLE_ID,
@@ -25,9 +45,18 @@ from asyncqt import asyncSlot
 
 
 class EnabledForceActuators(QWidget):
+    """Widget displaying map of the Force Actuators (FA). Enables end users to
+    select a FA and enable/disable it.
+
+    Parameters
+    ----------
+    m1m3 : `SALcomm`
+        SAL/DDS M1M3 communication.
+    """
+
     def __init__(self, m1m3):
         self.mirrorWidget = MirrorWidget()
-        self.mirrorWidget.setScaleType(Scales.ONOFF)
+        self.mirrorWidget.setScaleType(Scales.ENABLED_DISABLED)
         super().__init__()
         self.m1m3 = m1m3
 
@@ -40,11 +69,11 @@ class EnabledForceActuators(QWidget):
         self.selectedActuatorValueLabel = QLabel()
 
         self.enableButton = QPushButton("&Enable")
-        self.enableButton.clicked.connect(self.enableFA)
+        self.enableButton.clicked.connect(self._enableFA)
         self.enableAll = QPushButton("Enable &all")
-        self.enableAll.clicked.connect(self.issueCommandEnableAllForceActuators)
+        self.enableAll.clicked.connect(self._enableAllForceActuators)
         self.disableButton = QPushButton("&Disable")
-        self.disableButton.clicked.connect(self.disableFA)
+        self.disableButton.clicked.connect(self._disableFA)
 
         fLayout = QFormLayout()
         fLayout.addRow("ID:", self.selectedActuatorIdLabel)
@@ -84,14 +113,21 @@ class EnabledForceActuators(QWidget):
 
         self.selectedActuatorIdLabel.setText(str(s.id))
         self.selectedActuatorValueLabel.setText(str(s.data))
-        self.updateSelected()
+        self._updateSelected()
 
     def getSelectedID(self):
+        """Returns selected FA ID.
+
+        Returns
+        -------
+        actuatorId : `int`
+            Selected actuator ID.
+        """
         if self.selectedActuatorIdLabel.text() > "":
             return int(self.selectedActuatorIdLabel.text())
         return None
 
-    def updateSelected(self):
+    def _updateSelected(self):
         id = self.getSelectedID()
         if id is not None:
             index = actuatorIDToIndex(id)
@@ -107,7 +143,7 @@ class EnabledForceActuators(QWidget):
         self.disableButton.setEnabled(False)
 
     @asyncSlot()
-    async def issueCommandEnableAllForceActuators(self):
+    async def _enableAllForceActuators(self):
         await self._issueCommandEnableAllForceActuators()
 
     @SALCommand
@@ -115,7 +151,7 @@ class EnabledForceActuators(QWidget):
         return self.m1m3.remote.cmd_enableAllForceActuators
 
     @asyncSlot()
-    async def enableFA(self):
+    async def _enableFA(self):
         id = self.getSelectedID()
         if id is not None:
             await self._issueCommandEnable(actuatorId=id)
@@ -125,7 +161,7 @@ class EnabledForceActuators(QWidget):
         return self.m1m3.remote.cmd_enableForceActuator
 
     @asyncSlot()
-    async def disableFA(self):
+    async def _disableFA(self):
         id = self.getSelectedID()
         if id is not None:
             await self._issueCommandDisable(actuatorId=id)
@@ -136,6 +172,8 @@ class EnabledForceActuators(QWidget):
 
     @Slot(map)
     def detailedState(self, data):
+        """Callback on detailed state change. Enables control only in
+        Engineering state."""
         self.setEnabled(
             data.detailedState
             in [
@@ -148,6 +186,7 @@ class EnabledForceActuators(QWidget):
 
     @Slot(map)
     def enabledForceActuators(self, data):
+        """Callback with enabled FA data. Triggers display update."""
         self.mirrorWidget.mirrorView.clear()
 
         for row in FATABLE:
@@ -165,4 +204,4 @@ class EnabledForceActuators(QWidget):
             )
 
         self.mirrorWidget.setColorScale()
-        self.updateSelected()
+        self._updateSelected()

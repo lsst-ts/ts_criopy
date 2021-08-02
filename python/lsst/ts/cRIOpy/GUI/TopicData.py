@@ -54,6 +54,11 @@ class BumpTestField(TopicField):
         super().__init__(name, value, index, Scales.BUMP_TEST)
 
 
+class EnabledDisabledField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.ENABLED_DISABLED)
+
+
 class Topics:
     """
     Class constructing list of all available topics.
@@ -742,7 +747,7 @@ class Topics:
             TopicData(
                 "FA enabled",
                 [
-                    OnOffField(
+                    EnabledDisabledField(
                         "Enabled FAs",
                         "forceActuatorEnabled",
                         FATABLE_ZINDEX,

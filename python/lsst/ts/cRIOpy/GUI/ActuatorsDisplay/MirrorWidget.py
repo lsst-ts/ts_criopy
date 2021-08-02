@@ -1,6 +1,14 @@
 from PySide2.QtWidgets import QWidget, QHBoxLayout
 
-from . import MirrorView, BumpTestScale, GaugeScale, OnOffScale, WarningScale, Scales
+from . import (
+    MirrorView,
+    BumpTestScale,
+    GaugeScale,
+    OnOffScale,
+    EnabledDisabledScale,
+    WarningScale,
+    Scales,
+)
 
 
 class MirrorWidget(QWidget):
@@ -19,6 +27,7 @@ class MirrorWidget(QWidget):
 
         self.mirrorView = MirrorView()
         self._bumpTest = BumpTestScale()
+        self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
         self._onoff = OnOffScale()
         self._warning = WarningScale()
@@ -26,10 +35,14 @@ class MirrorWidget(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.mirrorView)
         layout.addWidget(self._gauge)
+        layout.addWidget(self._bumpTest)
+        layout.addWidget(self._enabled_disabled)
         layout.addWidget(self._onoff)
         layout.addWidget(self._warning)
 
         self._curentWidget = self._gauge
+        self._bumpTest.hide()
+        self._enabled_disabled.hide()
         self._onoff.hide()
         self._warning.hide()
 
@@ -53,6 +66,8 @@ class MirrorWidget(QWidget):
             self._replace(self._onoff)
         elif scale == Scales.Scales.WARNING:
             self._replace(self._warning)
+        elif scale == Scales.Scales.ENABLED_DISABLED:
+            self._replace(self._enabled_disabled)
         else:
             self._replace(self._gauge)
 

@@ -25,18 +25,28 @@ from PySide2.QtWidgets import QWidget
 
 class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
-    progress,..) values.  Subclasses shall implement getValue() and getColor()
-    methods."""
+    progress,..) values. Subclasses shall implement getValue() and getColor()
+    methods.
+    """
 
-    def __init__(self, reversed):
+    def __init__(self):
         super().__init__()
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
-        self._reversed = reversed
 
     def sizeHint(self):
         """Overridden method."""
         return QSize(100, 100)
+
+    def getLabels(self):
+        """Returns array of labels scale represents.
+
+        Returns
+        -------
+        labels : `[..]`
+            Array (in order labels shall be pletted) with all supported values.
+        """
+        return [False, True]
 
     def paintEvent(self, event):
         """Overridden method. Paint gauge as series of lines, and adds text labels."""
@@ -45,9 +55,11 @@ class EnumScale(QWidget):
         swidth = max(self.width() - 100, 20)
         sheight = self.height()
 
+        labels = self.getLabels()
+
         def box(y, value):
             painter.setBrush(self.getColor(value))
-            painter.drawRect(0, y, swidth, sheight / 2)
+            painter.drawRect(0, y, swidth, sheight / len(labels))
             painter.setPen(Qt.black)
             painter.drawText(
                 0,
@@ -58,9 +70,5 @@ class EnumScale(QWidget):
                 self.getValue(value),
             )
 
-        if self._reversed:
-            box(0, True)
-            box(sheight / 2, False)
-        else:
-            box(0, False)
-            box(sheight / 2, True)
+        for i in range(len(labels)):
+            box(i * sheight / len(labels), labels[i])

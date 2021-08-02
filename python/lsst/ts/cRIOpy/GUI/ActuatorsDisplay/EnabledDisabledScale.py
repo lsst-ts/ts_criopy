@@ -23,16 +23,19 @@ from PySide2.QtCore import Qt
 from .EnumScale import EnumScale
 
 
-class WarningScale(EnumScale):
-    """Draws gauge with color scale for boolean (on/off) values."""
+class EnabledDisabledScale(EnumScale):
+    """Draws gauge with color scale for boolean (enabled/disabled) values."""
 
     def __init__(self):
         super().__init__()
 
+    def getLabels(self):
+        return [True, False]
+
     def getValue(self, value):
         if value:
-            return "Warning\nError"
-        return "OK"
+            return "Enabled"
+        return "Disabled"
 
     def getColor(self, value):
         """Returns color value.
@@ -40,7 +43,7 @@ class WarningScale(EnumScale):
         Parameters
         ----------
         value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
+            Value for which color shall be returned. True is assumed to be enabled (=green).
 
         Returns
         -------
@@ -48,5 +51,5 @@ class WarningScale(EnumScale):
             Color for value.
         """
         if value:
-            return Qt.red
-        return Qt.green
+            return Qt.green
+        return Qt.gray
