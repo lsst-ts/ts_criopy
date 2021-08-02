@@ -25,3 +25,4 @@ class Scales(enum.IntEnum):
     GAUGE = 1
     ONOFF = 2
     WARNING = 3
+    BUMP_TEST = 4

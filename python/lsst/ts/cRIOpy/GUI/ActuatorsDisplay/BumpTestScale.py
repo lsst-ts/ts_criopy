@@ -24,17 +24,29 @@ from PySide2.QtWidgets import QWidget
 
 from .EnumScale import EnumScale
 
+from lsst.ts.idl.enums import MTM1M3
 
-class OnOffScale(EnumScale):
-    """Draws gauge with color scale for boolean (on/off) values."""
+
+class BumpTestScale(EnumScale):
+    """Draws gauge with color scale for bump test progress."""
 
     def __init__(self):
         super().__init__(True)
 
     def getValue(self, value):
-        if value:
-            return "On"
-        return "Off"
+        strs = {
+            MTM1M3.NOTTESTED: "Not Tested",
+            MTM1M3.TESTINGPOSITIVE: "Testing +",
+            MTM1M3.TESTINGPOSITIVEWAIT: "Testing + Wait",
+            MTM1M3.TESTINGNEGATIVE: "Testing -",
+            MTM1M3.TESTINGNEGATIVEWAIT: "Testing - Wait",
+            MTM1M3.PASSED: "Passed",
+            MTM1M3.FAILED: "Failed",
+        }
+        try:
+            return strs[value]
+        except KeyError:
+            return f"Unknown {value}"
 
     def getColor(self, value):
         """Returns color value.
@@ -49,6 +61,16 @@ class OnOffScale(EnumScale):
         color : `QColor`
             Color for value.
         """
-        if value:
-            return Qt.green
-        return Qt.red
+        cols = {
+            MTM1M3.NOTTESTED: Qt.gray,
+            MTM1M3.TESTINGPOSITIVE: Qt.blue,
+            MTM1M3.TESTINGPOSITIVEWAIT: Qt.darkBlue,
+            MTM1M3.TESTINGNEGATIVE: Qt.yellow,
+            MTM1M3.TESTINGNEGATIVEWAIT: Qt.darkYellow,
+            MTM1M3.PASSED: Qt.green,
+            MTM1M3.FAILED: Qt.red,
+        }
+        try:
+            return cols[value]
+        except KeyError:
+            return Qt.darkRed

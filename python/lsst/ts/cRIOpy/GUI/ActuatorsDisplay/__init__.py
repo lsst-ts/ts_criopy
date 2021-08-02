@@ -1,4 +1,5 @@
 from .ForceActuator import ForceActuator
+from .BumpTestScale import BumpTestScale
 from .GaugeScale import GaugeScale
 from .OnOffScale import OnOffScale
 from .WarningScale import WarningScale

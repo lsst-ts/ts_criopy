@@ -22,10 +22,10 @@ from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QPainter, QColor, QBrush
 from PySide2.QtWidgets import QWidget
 
-from .BipolarScale import BipolarScale
+from .EnumScale import EnumScale
 
 
-class WarningScale(BipolarScale):
+class WarningScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):

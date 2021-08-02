@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QWidget, QHBoxLayout
 
-from . import MirrorView, GaugeScale, OnOffScale, WarningScale, Scales
+from . import MirrorView, BumpTestScale, GaugeScale, OnOffScale, WarningScale, Scales
 
 
 class MirrorWidget(QWidget):
@@ -18,6 +18,7 @@ class MirrorWidget(QWidget):
         super().__init__()
 
         self.mirrorView = MirrorView()
+        self._bumpTest = BumpTestScale()
         self._gauge = GaugeScale()
         self._onoff = OnOffScale()
         self._warning = WarningScale()
@@ -46,9 +47,11 @@ class MirrorWidget(QWidget):
         self._curentWidget.show()
 
     def setScaleType(self, scale):
-        if scale == Scales.Scales.ONOFF:
+        if scale == Scales.Scales.BUMP_TEST:
+            self._replace(self._bumpTest)
+        elif scale == Scales.Scales.ONOFF:
             self._replace(self._onoff)
-        if scale == Scales.Scales.WARNING:
+        elif scale == Scales.Scales.WARNING:
             self._replace(self._warning)
         else:
             self._replace(self._gauge)
@@ -65,4 +68,7 @@ class MirrorWidget(QWidget):
         """
         if self._curentWidget == self._gauge:
             self._gauge.setRange(min, max)
+        self.setColorScale()
+
+    def setColorScale(self):
         self.mirrorView.setColorScale(self._curentWidget)

@@ -43,7 +43,6 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             )
 
         for row in FATABLE:
-            id = row[FATABLE_ID]
             index = row[self.field.index]
             if values is None or index is None:
                 state = ForceActuator.STATE_INACTIVE
@@ -53,7 +52,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
                 state = ForceActuator.STATE_ACTIVE
 
             self.mirrorWidget.mirrorView.addForceActuator(
-                id,
+                row[FATABLE_ID],
                 row[FATABLE_XPOSITION] * 1000,
                 row[FATABLE_YPOSITION] * 1000,
                 row[FATABLE_ORIENTATION],

@@ -49,6 +49,11 @@ class WarningField(TopicField):
         super().__init__(name, value, index, Scales.WARNING)
 
 
+class BumpTestField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.BUMP_TEST)
+
+
 class Topics:
     """
     Class constructing list of all available topics.
@@ -715,8 +720,8 @@ class Topics:
             TopicData(
                 "FA Bump Test",
                 [
-                    TopicField("Primary Test", "primaryTest", FATABLE_ZINDEX),
-                    TopicField(
+                    BumpTestField("Primary Test", "primaryTest", FATABLE_ZINDEX),
+                    BumpTestField(
                         "Secondary Test",
                         "secondaryTest",
                         FATABLE_SINDEX,
