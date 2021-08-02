@@ -40,9 +40,11 @@ class EnabledForceActuators(QWidget):
         self.selectedActuatorValueLabel = QLabel()
 
         self.enableButton = QPushButton("&Enable")
+        self.enableButton.clicked.connect(self.enableFA)
         self.enableAll = QPushButton("Enable &all")
         self.enableAll.clicked.connect(self.issueCommandEnableAllForceActuators)
         self.disableButton = QPushButton("&Disable")
+        self.disableButton.clicked.connect(self.disableFA)
 
         fLayout = QFormLayout()
         fLayout.addRow("ID:", self.selectedActuatorIdLabel)
@@ -84,11 +86,17 @@ class EnabledForceActuators(QWidget):
         self.selectedActuatorValueLabel.setText(str(s.data))
         self.updateSelected()
 
-    def updateSelected(self):
+    def getSelectedID(self):
         if self.selectedActuatorIdLabel.text() > "":
-            index = actuatorIDToIndex(int(self.selectedActuatorIdLabel.text()))
+            return int(self.selectedActuatorIdLabel.text())
+        return None
+
+    def updateSelected(self):
+        id = self.getSelectedID()
+        if id is not None:
+            index = actuatorIDToIndex(id)
             if index is not None:
-                data = self.m1m3.enabledForceActuators.get()
+                data = self.m1m3.remote.evt_enabledForceActuators.get()
                 if data is not None:
                     enabled = data.forceActuatorEnabled[index]
                     self.enableButton.setEnabled(not enabled)
@@ -104,19 +112,39 @@ class EnabledForceActuators(QWidget):
 
     @SALCommand
     def _issueCommandEnableAllForceActuators(self, **kwargs):
-        return self.m1m3.remote.cmd_enableAllForceActuators()
+        return self.m1m3.remote.cmd_enableAllForceActuators
+
+    @asyncSlot()
+    async def enableFA(self):
+        id = self.getSelectedID()
+        if id is not None:
+            await self._issueCommandEnable(actuatorId=id)
+
+    @SALCommand
+    def _issueCommandEnable(self, **kwargs):
+        return self.m1m3.remote.cmd_enableForceActuator
+
+    @asyncSlot()
+    async def disableFA(self):
+        id = self.getSelectedID()
+        if id is not None:
+            await self._issueCommandDisable(actuatorId=id)
+
+    @SALCommand
+    def _issueCommandDisable(self, **kwargs):
+        return self.m1m3.remote.cmd_disableForceActuator
 
     @Slot(map)
     def detailedState(self, data):
-        if data.detailedState in [
-            DetailedState.PARKEDENGINEERING,
-            DetailedState.RAISINGENGINEERING,
-            DetailedState.ACTIVEENGINEERING,
-            DetailedState.LOWERINGENGINEERING,
-        ]:
-            self.setEnabled(True)
-        else:
-            self.setEnabled(False)
+        self.setEnabled(
+            data.detailedState
+            in [
+                DetailedState.PARKEDENGINEERING,
+                DetailedState.RAISINGENGINEERING,
+                DetailedState.ACTIVEENGINEERING,
+                DetailedState.LOWERINGENGINEERING,
+            ]
+        )
 
     @Slot(map)
     def enabledForceActuators(self, data):
