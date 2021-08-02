@@ -85,14 +85,15 @@ class EnabledForceActuators(QWidget):
         self.updateSelected()
 
     def updateSelected(self):
-        index = actuatorIDToIndex(int(self.selectedActuatorIdLabel.text()))
-        if index is not None:
-            data = self.m1m3.enabledForceActuators.get()
-            if data is not None:
-                enabled = data.forceActuatorEnabled[index]
-                self.enableButton.setEnabled(not enabled)
-                self.disableButton.setEnabled(enabled)
-                return
+        if self.selectedActuatorIdLabel.text() > "":
+            index = actuatorIDToIndex(int(self.selectedActuatorIdLabel.text()))
+            if index is not None:
+                data = self.m1m3.enabledForceActuators.get()
+                if data is not None:
+                    enabled = data.forceActuatorEnabled[index]
+                    self.enableButton.setEnabled(not enabled)
+                    self.disableButton.setEnabled(enabled)
+                    return
 
         self.enableButton.setEnabled(False)
         self.disableButton.setEnabled(False)
