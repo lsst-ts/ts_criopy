@@ -27,26 +27,4 @@ class WarningScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
-        super().__init__()
-
-    def getValue(self, value):
-        if value:
-            return "Warning\nError"
-        return "OK"
-
-    def getColor(self, value):
-        """Returns color value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
-
-        Returns
-        -------
-        color : `QColor`
-            Color for value.
-        """
-        if value:
-            return Qt.red
-        return Qt.green
+        super().__init__({False: ("OK", Qt.green), True: ("Warning\nError", Qt.red)})

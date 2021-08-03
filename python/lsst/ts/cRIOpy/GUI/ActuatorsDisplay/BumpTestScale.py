@@ -22,53 +22,21 @@ from PySide2.QtCore import Qt
 
 from .EnumScale import EnumScale
 
-from lsst.ts.idl.enums import MTM1M3
+from lsst.ts.idl.enums.MTM1M3 import BumpTest
 
 
 class BumpTestScale(EnumScale):
     """Draws gauge with color scale for bump test progress."""
 
     def __init__(self):
-        super().__init__()
-
-    def getValue(self, value):
-        strs = {
-            MTM1M3.NOTTESTED: "Not Tested",
-            MTM1M3.TESTINGPOSITIVE: "Testing +",
-            MTM1M3.TESTINGPOSITIVEWAIT: "Testing + Wait",
-            MTM1M3.TESTINGNEGATIVE: "Testing -",
-            MTM1M3.TESTINGNEGATIVEWAIT: "Testing - Wait",
-            MTM1M3.PASSED: "Passed",
-            MTM1M3.FAILED: "Failed",
-        }
-        try:
-            return strs[value]
-        except KeyError:
-            return f"Unknown {value}"
-
-    def getColor(self, value):
-        """Returns color value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
-
-        Returns
-        -------
-        color : `QColor`
-            Color for value.
-        """
-        cols = {
-            MTM1M3.NOTTESTED: Qt.gray,
-            MTM1M3.TESTINGPOSITIVE: Qt.blue,
-            MTM1M3.TESTINGPOSITIVEWAIT: Qt.darkBlue,
-            MTM1M3.TESTINGNEGATIVE: Qt.yellow,
-            MTM1M3.TESTINGNEGATIVEWAIT: Qt.darkYellow,
-            MTM1M3.PASSED: Qt.green,
-            MTM1M3.FAILED: Qt.red,
-        }
-        try:
-            return cols[value]
-        except KeyError:
-            return Qt.darkRed
+        super().__init__(
+            {
+                BumpTest.NOTTESTED: ("Not Tested", Qt.gray),
+                BumpTest.TESTINGPOSITIVE: ("Testing +", Qt.blue),
+                BumpTest.TESTINGPOSITIVEWAIT: ("Testing + Wait", Qt.darkBlue),
+                BumpTest.TESTINGNEGATIVE: ("Testing -", Qt.yellow),
+                BumpTest.TESTINGNEGATIVEWAIT: ("Testing - Wait", Qt.darkYellow),
+                BumpTest.PASSED: ("Passed", Qt.green),
+                BumpTest.FAILED: ("Failed", Qt.red),
+            }
+        )

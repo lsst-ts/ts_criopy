@@ -27,12 +27,17 @@ class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
     progress,..) values. Subclasses shall implement getValue() and getColor()
     methods.
+
+    Parameters
+    ----------
+    levels : `{value : (name, color)}`
     """
 
-    def __init__(self):
+    def __init__(self, levels):
         super().__init__()
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
+        self._levels = levels
 
     def sizeHint(self):
         """Overridden method."""
@@ -46,29 +51,57 @@ class EnumScale(QWidget):
         labels : `[..]`
             Array (in order labels shall be pletted) with all supported values.
         """
-        return [False, True]
+        return self._levels.keys()
+
+    def getValue(self, value):
+        return self._levels[value][0]
+
+    def getColor(self, value):
+        """Returns color value.
+
+        Parameters
+        ----------
+        value : `bool`
+            Value for which color shall be returned. True is assumed to be good (=green).
+
+        Returns
+        -------
+        color : `QColor`
+            Color for value.
+        """
+        return self._levels[value][1]
 
     def paintEvent(self, event):
         """Overridden method. Paint gauge as series of lines, and adds text labels."""
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
-        swidth = max(self.width() - 100, 20)
+        swidth = self.width()
         sheight = self.height()
 
-        labels = self.getLabels()
+        labels = list(self.getLabels())
+        l_labels = len(labels)
+
+        t_height = max(5, (sheight / l_labels) / 5)
+        x_offset = 5
 
         def box(y, value):
             painter.setBrush(self.getColor(value))
-            painter.drawRect(0, y, swidth, sheight / len(labels))
+            painter.drawRect(0, y, swidth, sheight / l_labels)
+
+            painter.setBrush(Qt.white)
             painter.setPen(Qt.black)
+            painter.drawRect(
+                x_offset, y + 2 * t_height, swidth - 2 * x_offset, t_height
+            )
+
             painter.drawText(
-                0,
-                y,
-                self.width() - swidth,
-                sheight / 2,
+                x_offset,
+                y + 2 * t_height,
+                swidth - 2 * x_offset,
+                t_height,
                 Qt.AlignCenter,
                 self.getValue(value),
             )
 
-        for i in range(len(labels)):
-            box(i * sheight / len(labels), labels[i])
+        for i in range(l_labels):
+            box(i * sheight / l_labels, labels[i])

@@ -27,29 +27,4 @@ class EnabledDisabledScale(EnumScale):
     """Draws gauge with color scale for boolean (enabled/disabled) values."""
 
     def __init__(self):
-        super().__init__()
-
-    def getLabels(self):
-        return [True, False]
-
-    def getValue(self, value):
-        if value:
-            return "Enabled"
-        return "Disabled"
-
-    def getColor(self, value):
-        """Returns color value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be enabled (=green).
-
-        Returns
-        -------
-        color : `QColor`
-            Color for value.
-        """
-        if value:
-            return Qt.green
-        return Qt.gray
+        super().__init__({True: ("Enabled", Qt.green), False: ("Disabled", Qt.gray)})

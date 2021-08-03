@@ -27,29 +27,4 @@ class OnOffScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
-        super().__init__()
-
-    def getLabels(self):
-        return [True, False]
-
-    def getValue(self, value):
-        if value:
-            return "On"
-        return "Off"
-
-    def getColor(self, value):
-        """Returns color value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
-
-        Returns
-        -------
-        color : `QColor`
-            Color for value.
-        """
-        if value:
-            return Qt.green
-        return Qt.red
+        super().__init__({True: ("On", Qt.green), False: ("Off", Qt.red)})
