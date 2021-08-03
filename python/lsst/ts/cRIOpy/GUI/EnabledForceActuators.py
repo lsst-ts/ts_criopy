@@ -27,6 +27,7 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_ORIENTATION,
     actuatorIDToIndex,
 )
+from .ActuatorComboBox import ActuatorComboBox
 from .ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
 from .SALComm import SALCommand
 
@@ -65,7 +66,8 @@ class EnabledForceActuators(QWidget):
 
         self.mirrorWidget.mirrorView.selectionChanged.connect(self.selectionChanged)
 
-        self.selectedActuatorIdLabel = QLabel()
+        self.selectedActuatorId = ActuatorComboBox()
+        self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
         self.selectedActuatorValueLabel = QLabel()
 
         self.enableButton = QPushButton("&Enable")
@@ -76,7 +78,7 @@ class EnabledForceActuators(QWidget):
         self.disableButton.clicked.connect(self._disableFA)
 
         fLayout = QFormLayout()
-        fLayout.addRow("ID:", self.selectedActuatorIdLabel)
+        fLayout.addRow("ID:", self.selectedActuatorId)
         fLayout.addRow("Value:", self.selectedActuatorValueLabel)
 
         vLayout = QVBoxLayout()
@@ -105,13 +107,13 @@ class EnabledForceActuators(QWidget):
             Contains id (selected actuator ID), data (selected actuator current value) and warning (boolean, true if value is in warning).
         """
         if s is None:
-            self.selectedActuatorIdLabel.setText("not selected")
+            self.selectedActuatorId.setEditText("not selected")
             self.selectedActuatorValueLabel.setText("")
             self.enableButton.setEnabled(False)
             self.disableButton.setEnabled(False)
             return
 
-        self.selectedActuatorIdLabel.setText(str(s.id))
+        self.selectedActuatorId.setEditText(str(s.id))
         self.selectedActuatorValueLabel.setText(str(s.data))
         self._updateSelected()
 
@@ -123,8 +125,8 @@ class EnabledForceActuators(QWidget):
         actuatorId : `int`
             Selected actuator ID.
         """
-        if self.selectedActuatorIdLabel.text() > "":
-            return int(self.selectedActuatorIdLabel.text())
+        if self.selectedActuatorId.currentText() > "":
+            return int(self.selectedActuatorId.currentText())
         return None
 
     def _updateSelected(self):
@@ -141,6 +143,10 @@ class EnabledForceActuators(QWidget):
 
         self.enableButton.setEnabled(False)
         self.disableButton.setEnabled(False)
+
+    @Slot(str)
+    def _actuatorChanged(self, text):
+        self.mirrorWidget.setSelected(int(text))
 
     @asyncSlot()
     async def _enableAllForceActuators(self):

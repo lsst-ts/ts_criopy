@@ -41,13 +41,16 @@ class MirrorView(QGraphicsView):
         super().__init__(self._mirror)
         self._selectedId = None
 
+    def getForceActuator(self, id):
+        try:
+            return self._mirror.getForceActuator(id)
+        except KeyError:
+            return None
+
     @property
     def selected(self):
         """Selected actuator or None if no actuator selected (ForceActuator)."""
-        try:
-            return self._mirror.getForceActuator(self._selectedId)
-        except KeyError:
-            return None
+        return self.getForceActuator(self._selectedId)
 
     @selected.setter
     def selected(self, s):

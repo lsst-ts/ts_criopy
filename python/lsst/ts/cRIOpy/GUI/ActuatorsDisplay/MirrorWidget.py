@@ -87,3 +87,6 @@ class MirrorWidget(QWidget):
 
     def setColorScale(self):
         self.mirrorView.setColorScale(self._curentWidget)
+
+    def setSelected(self, id):
+        self.mirrorView.selected = self.mirrorView.getForceActuator(id)
