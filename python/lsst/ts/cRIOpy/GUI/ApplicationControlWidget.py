@@ -151,7 +151,7 @@ class ApplicationControlWidget(QWidget):
                 await self.m1m3.remote.cmd_disable.start()
             elif button.text() == self.TEXT_RAISE:
                 await self.m1m3.remote.cmd_raiseM1M3.set_start(
-                    raiseM1M3=True, bypassReferencePosition=False
+                    bypassReferencePosition=False
                 )
             elif button.text() == self.TEXT_ABORT_RAISE:
                 await self.m1m3.remote.cmd_abortRaiseM1M3.start()
