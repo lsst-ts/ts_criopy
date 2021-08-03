@@ -42,6 +42,18 @@ class MirrorView(QGraphicsView):
         self._selectedId = None
 
     def getForceActuator(self, id):
+        """Returns ForceActuator object with given ID.
+
+        Parameters
+        ----------
+        id : `int`
+            ID of the force actuator to retrieve.
+
+        Returns
+        -------
+        actuator : `ForceActuator`
+            Force actuator object with give ID, or None if not found.
+        """
         try:
             return self._mirror.getForceActuator(id)
         except KeyError:

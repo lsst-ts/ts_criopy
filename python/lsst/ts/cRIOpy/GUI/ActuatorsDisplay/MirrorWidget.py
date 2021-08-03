@@ -60,6 +60,13 @@ class MirrorWidget(QWidget):
         self._curentWidget.show()
 
     def setScaleType(self, scale):
+        """Sets scale type.
+
+        Parameters
+        ----------
+        scale : `Scales`
+            One of the Scales enum number.
+        """
         if scale == Scales.Scales.BUMP_TEST:
             self._replace(self._bumpTest)
         elif scale == Scales.Scales.ONOFF:
@@ -89,4 +96,11 @@ class MirrorWidget(QWidget):
         self.mirrorView.setColorScale(self._curentWidget)
 
     def setSelected(self, id):
+        """Sets current selected force actuators. Emits update signals.
+
+        Parameters
+        ----------
+        id : `int`
+            Selected actuator ID.
+        """
         self.mirrorView.selected = self.mirrorView.getForceActuator(id)

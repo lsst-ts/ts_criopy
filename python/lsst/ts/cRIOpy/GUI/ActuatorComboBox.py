@@ -19,13 +19,15 @@
 
 from ..M1M3FATable import FATABLE, FATABLE_ID
 
-from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QComboBox
 
 __all__ = ["ActuatorComboBox"]
 
 
 class ActuatorComboBox(QComboBox):
+    """Allows user to select force actuator. Either its ID can be typed, or it
+    can be selected from a listbox. See QComboBox for signals etc."""
+
     def __init__(self):
         super().__init__()
         self.setEditable(True)
