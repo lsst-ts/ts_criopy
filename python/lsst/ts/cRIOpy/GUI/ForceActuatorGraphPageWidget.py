@@ -43,21 +43,23 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             )
 
         for row in FATABLE:
-            index = row[self.field.index]
-            if values is None or index is None:
+            index = row[FATABLE_INDEX]
+            dataIndex = row[self.field.index]
+            if values is None:
                 state = ForceActuator.STATE_INACTIVE
-            elif warningData is not None:
-                state = getWarning(row[FATABLE_INDEX])
+            elif warningData is not None or dataIndex is None:
+                state = getWarning(index)
             else:
                 state = ForceActuator.STATE_ACTIVE
 
             self.mirrorWidget.mirrorView.addForceActuator(
                 row[FATABLE_ID],
+                index,
                 row[FATABLE_XPOSITION] * 1000,
                 row[FATABLE_YPOSITION] * 1000,
                 row[FATABLE_ORIENTATION],
-                None if (values is None or index is None) else values[index],
-                index,
+                None if (values is None or dataIndex is None) else values[dataIndex],
+                dataIndex,
                 state,
             )
 
@@ -68,12 +70,11 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
         self.mirrorWidget.setRange(min(values), max(values))
 
         if self.mirrorWidget.mirrorView.selected is not None:
-            if self.mirrorWidget.mirrorView.selected.dataIndex is not None:
-                self.selectedActuatorValueLabel.setText(
-                    str(values[self.mirrorWidget.mirrorView.selected.dataIndex])
-                )
+            self.selectedActuatorValueLabel.setText(
+                str(values[self.mirrorWidget.mirrorView.selected.dataIndex])
+            )
             if warningData is not None:
                 setWarningLabel(
                     self.selectedActuatorWarningLabel,
-                    getWarning(self.mirrorWidget.mirrorView.selected.id),
+                    getWarning(self.mirrorWidget.mirrorView.selected.index),
                 )

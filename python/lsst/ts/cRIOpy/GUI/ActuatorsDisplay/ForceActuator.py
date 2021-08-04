@@ -39,6 +39,8 @@ class ForceActuator(QGraphicsItem):
     id : `int`
         Force Actuator identification number. Starting with 101, the first
         number identified segment (1-4). The value ranges up to 443.
+    index : `int`
+        Force actuator index (0-155).
     x : `float`
         Force Actuator X coordinate (in mm).
     y : `float`
@@ -70,9 +72,10 @@ class ForceActuator(QGraphicsItem):
     """Force Actuator is active, but the value / actuator has some warning attached (`int`).
     """
 
-    def __init__(self, id, x, y, orientation, data, dataIndex, state, selected):
+    def __init__(self, id, index, x, y, orientation, data, dataIndex, state, selected):
         super().__init__()
         self.id = id
+        self.index = index
         # actuator position
         self._center = QPointF(x, y)
         self._orientation = orientation

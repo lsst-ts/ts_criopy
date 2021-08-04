@@ -21,6 +21,7 @@
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
     FATABLE_ID,
+    FATABLE_INDEX,
     FATABLE_ZINDEX,
     FATABLE_XPOSITION,
     FATABLE_YPOSITION,
@@ -199,6 +200,7 @@ class EnabledForceActuators(QWidget):
             index = row[FATABLE_ZINDEX]
             self.mirrorWidget.mirrorView.addForceActuator(
                 row[FATABLE_ID],
+                row[FATABLE_INDEX],
                 row[FATABLE_XPOSITION] * 1000,
                 row[FATABLE_YPOSITION] * 1000,
                 row[FATABLE_ORIENTATION],

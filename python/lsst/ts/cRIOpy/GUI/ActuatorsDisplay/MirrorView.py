@@ -94,13 +94,15 @@ class MirrorView(QGraphicsView):
         s = min(self.width() / 8600, self.height() / 8600)
         return (s, s)
 
-    def addForceActuator(self, id, x, y, orientation, data, dataIndex, state):
+    def addForceActuator(self, id, index, x, y, orientation, data, dataIndex, state):
         """Adds actuator.
 
         Parameters
         ----------
         id : `int`
             Force Actuator ID. Actuators are matched by ID.
+        index : `int`
+            Actuator index (0-155).
         x : `float`
             Force Actuator X position (in mm).
         y :  `float`
@@ -116,7 +118,7 @@ class MirrorView(QGraphicsView):
             ForceActuator.STATE_WARNING.
         """
         self._mirror.addForceActuator(
-            id, x, y, orientation, data, dataIndex, state, id == self._selectedId
+            id, index, x, y, orientation, data, dataIndex, state, id == self._selectedId
         )
 
     def updateForceActuator(self, id, data, state):
