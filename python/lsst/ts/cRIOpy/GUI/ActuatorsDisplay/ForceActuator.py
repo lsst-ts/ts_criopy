@@ -82,8 +82,8 @@ class ForceActuator(QGraphicsItem):
         # actuator data
         self._data = data
         self.dataIndex = dataIndex
-        self._selected = selected
         self._state = state
+        self._selected = selected
         # scale. Provides getColor(data) object, returning brush to fill data
         self._color_scale = None
         # scalign factor. The actuator default size is 20x20 units. As

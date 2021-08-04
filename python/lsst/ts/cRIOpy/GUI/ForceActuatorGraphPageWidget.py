@@ -45,7 +45,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
         for row in FATABLE:
             index = row[FATABLE_INDEX]
             dataIndex = row[self.field.index]
-            if values is None:
+            if values is None or dataIndex is None:
                 state = ForceActuator.STATE_INACTIVE
             elif warningData is not None or dataIndex is None:
                 state = getWarning(index)
