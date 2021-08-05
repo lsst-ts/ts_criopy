@@ -47,7 +47,7 @@ class Mirror(QGraphicsScene):
             a.setColorScale(scale)
 
     def addForceActuator(
-        self, id, index, x, y, orientation, data, dataIndex, state, selected
+        self, id, index, x, y, orientation, data, dataIndex, state, kind
     ):
         """Adds actuator to the list.
 
@@ -70,13 +70,11 @@ class Mirror(QGraphicsScene):
         state : `int`
             Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
             ForceActuator.STATE_WARNING.
-        selected : `bool`
-            True if the actuator is selected.
+        kind : `FAKind`
+            Force actuator kind - normal, selected or selected neighbour.
         """
         self.addItem(
-            ForceActuator(
-                id, index, x, y, orientation, data, dataIndex, state, selected
-            )
+            ForceActuator(id, index, x, y, orientation, data, dataIndex, state, kind)
         )
 
     def getForceActuator(self, id):

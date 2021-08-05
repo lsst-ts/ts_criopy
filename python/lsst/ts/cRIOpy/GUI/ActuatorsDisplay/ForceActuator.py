@@ -1,27 +1,34 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of M1M3 GUI.
 #
-# Developed for the LSST Telescope and Site Systems.
-# This product includes software developed by the LSST Project
-# (https://www.lsst.org).
-# See the COPYRIGHT file at the top-level directory of this distribution
-# for details of code ownership.
+# Developed for the LSST Telescope and Site Systems.  This product includes
+# software developed by the LSST Project (https://www.lsst.org).  See the
+# COPYRIGHT file at the top-level directory of this distribution for details of
+# code ownership.
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License along with
+# this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import QRect, Qt, QPointF
 from PySide2.QtGui import QPen, QPainter, QBrush, QTransform, QGuiApplication
 from PySide2.QtWidgets import QGraphicsItem
+
+import enum
+
+
+class FAKind(enum.IntEnum):
+    NORMAL = 1
+    SELECTED = 2
+    NEAR_NEIGHBOUR = 3
 
 
 class ForceActuator(QGraphicsItem):
@@ -56,8 +63,8 @@ class ForceActuator(QGraphicsItem):
     state : `int`
         Force Actuator state. 0 for inactive/unused, 1 for active OK, 2 for
         active warning.
-    selected : `bool`
-        True if the actuator is selected.
+    kind : `FAKind`
+        FA kind - normal, selected or neighbour of selected.
     """
 
     STATE_INACTIVE = 0
@@ -72,7 +79,7 @@ class ForceActuator(QGraphicsItem):
     """Force Actuator is active, but the value / actuator has some warning attached (`int`).
     """
 
-    def __init__(self, id, index, x, y, orientation, data, dataIndex, state, selected):
+    def __init__(self, id, index, x, y, orientation, data, dataIndex, state, kind):
         super().__init__()
         self.id = id
         self.index = index
@@ -83,7 +90,7 @@ class ForceActuator(QGraphicsItem):
         self._data = data
         self.dataIndex = dataIndex
         self._state = state
-        self._selected = selected
+        self._kind = kind
         # scale. Provides getColor(data) object, returning brush to fill data
         self._color_scale = None
         # scalign factor. The actuator default size is 20x20 units. As
@@ -109,9 +116,9 @@ class ForceActuator(QGraphicsItem):
             self._state = state
             self.update()
 
-    def setSelected(self, selected):
-        """Set actuator selection status."""
-        self._selected = selected
+    def setKind(self, kind):
+        """Set actuator kind."""
+        self._kind = kind
         self.update()
 
     @property
@@ -168,15 +175,11 @@ class ForceActuator(QGraphicsItem):
             return
         lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
         # draw rectangle around selected actuator
-        if self._selected:
-            painter.setPen(
-                QPen(
-                    Qt.black,
-                    self._scale_factor,
-                    lineStyle,
-                )
-            )
+        if self._kind == FAKind.SELECTED:
+            painter.setPen(QPen(Qt.black, self._scale_factor, lineStyle))
             painter.drawRect(self.boundingRect())
+        elif self._kind == FAKind.NEAR_NEIGHBOUR:
+            painter.setPen(QPen(Qt.blue, self._scale_factor * 2, lineStyle))
         else:
             painter.setPen(QPen(Qt.red, self._scale_factor, lineStyle))
 

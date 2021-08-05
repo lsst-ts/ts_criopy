@@ -21,7 +21,8 @@
 
 from PySide2.QtCore import Signal, QEvent
 from PySide2.QtWidgets import QGraphicsView
-from . import Mirror, ForceActuator
+from . import Mirror, ForceActuator, FAKind
+from ...M1M3FATable import FATABLE, FATABLE_NEAR_NEIGHBOUR_INDEX
 
 
 class MirrorView(QGraphicsView):
@@ -69,15 +70,21 @@ class MirrorView(QGraphicsView):
         """Selected actuator or None if no actuator selected (ForceActuator)."""
         return self.getForceActuator(self._selectedId)
 
+    def _setNeighbour(self, index, kind):
+        for nids in FATABLE[self.selected.index][FATABLE_NEAR_NEIGHBOUR_INDEX]:
+            self.getForceActuator(nids).setKind(kind)
+
     @selected.setter
     def selected(self, s):
         if self.selected is not None:
-            self.selected.setSelected(False)
+            self._setNeighbour(self.selected.index, FAKind.NORMAL)
+            self.selected.setKind(FAKind.NORMAL)
         if s is None:
             self._selectedId = None
             return None
         self._selectedId = s.id
-        s.setSelected(True)
+        s.setKind(FAKind.SELECTED)
+        self._setNeighbour(self.selected.index, FAKind.NEAR_NEIGHBOUR)
         self.selectionChanged.emit(s)
 
     def setColorScale(self, scale):
@@ -123,7 +130,15 @@ class MirrorView(QGraphicsView):
             ForceActuator.STATE_WARNING.
         """
         self._mirror.addForceActuator(
-            id, index, x, y, orientation, data, dataIndex, state, id == self._selectedId
+            id,
+            index,
+            x,
+            y,
+            orientation,
+            data,
+            dataIndex,
+            state,
+            FAKind.SELECTED if id == self._selectedId else FAKind.NORMAL,
         )
 
     def updateForceActuator(self, id, data, state):

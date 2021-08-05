@@ -27,7 +27,7 @@ import asyncio
 import signal
 import sys
 
-import lsst.ts.cRIOpy
+from .. import __version__
 
 
 class Application:
@@ -61,7 +61,7 @@ class Application:
     def __init__(self, eui_class):
         self._eui_class = eui_class
         self._app = QApplication(sys.argv)
-        self._app.setApplicationVersion(lsst.ts.cRIOpy.__version__)
+        self._app.setApplicationVersion(__version__)
 
         parser = QCommandLineParser()
         parser.addHelpOption()
