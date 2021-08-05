@@ -41,13 +41,28 @@ class MirrorView(QGraphicsView):
         super().__init__(self._mirror)
         self._selectedId = None
 
+    def getForceActuator(self, id):
+        """Returns ForceActuator object with given ID.
+
+        Parameters
+        ----------
+        id : `int`
+            ID of the force actuator to retrieve.
+
+        Returns
+        -------
+        actuator : `ForceActuator`
+            Force actuator object with give ID, or None if not found.
+        """
+        try:
+            return self._mirror.getForceActuator(id)
+        except KeyError:
+            return None
+
     @property
     def selected(self):
         """Selected actuator or None if no actuator selected (ForceActuator)."""
-        try:
-            return self._mirror.getForceActuator(self._selectedId)
-        except KeyError:
-            return None
+        return self.getForceActuator(self._selectedId)
 
     @selected.setter
     def selected(self, s):
@@ -60,17 +75,15 @@ class MirrorView(QGraphicsView):
         s.setSelected(True)
         self.selectionChanged.emit(s)
 
-    def setRange(self, min, max):
-        """Sets range used for color scaling.
+    def setColorScale(self, scale):
+        """Sets scale used for color scaling.
 
         Parameters
         ----------
-        min : `float`
-           Minimal value.
-        max : `float`
-           Maximal value.
+        scale : `class`
+            New scale.
         """
-        self._mirror.setRange(min, max)
+        self._mirror.setColorScale(scale)
 
     def clear(self):
         """Removes all actuators from the view."""
@@ -81,13 +94,15 @@ class MirrorView(QGraphicsView):
         s = min(self.width() / 8600, self.height() / 8600)
         return (s, s)
 
-    def addForceActuator(self, id, x, y, orientation, data, dataIndex, state):
+    def addForceActuator(self, id, index, x, y, orientation, data, dataIndex, state):
         """Adds actuator.
 
         Parameters
         ----------
         id : `int`
             Force Actuator ID. Actuators are matched by ID.
+        index : `int`
+            Actuator index (0-155).
         x : `float`
             Force Actuator X position (in mm).
         y :  `float`
@@ -103,7 +118,7 @@ class MirrorView(QGraphicsView):
             ForceActuator.STATE_WARNING.
         """
         self._mirror.addForceActuator(
-            id, x, y, orientation, data, dataIndex, state, id == self._selectedId
+            id, index, x, y, orientation, data, dataIndex, state, id == self._selectedId
         )
 
     def updateForceActuator(self, id, data, state):

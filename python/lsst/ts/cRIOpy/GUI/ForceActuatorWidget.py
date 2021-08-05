@@ -60,7 +60,7 @@ class ForceActuatorWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.fieldDataIndex = None
+        self.field = None
 
         self.layout = QHBoxLayout()
         self.plotLayout = QVBoxLayout()
@@ -114,7 +114,7 @@ class ForceActuatorWidget(QWidget):
 
         self.fieldList.clear()
         for field in self.topics.topics[topicIndex].fields:
-            self.fieldList.addItem(field[0])
+            self.fieldList.addItem(field.name)
 
         fieldIndex = self.topics.topics[topicIndex].selectedField
         if fieldIndex < 0:
@@ -161,9 +161,7 @@ class ForceActuatorWidget(QWidget):
         Redraw actuators with new values.
         """
         topic = self.topics.topics[topicIndex]
-        field = topic.fields[fieldIndex]
-        self.fieldGetter = field[1]
-        self.fieldDataIndex = field[2]()
+        self.field = topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
 

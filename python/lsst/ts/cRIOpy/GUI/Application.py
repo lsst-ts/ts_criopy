@@ -27,6 +27,8 @@ import asyncio
 import signal
 import sys
 
+import lsst.ts.cRIOpy
+
 
 class Application:
     """cRIO GUI application class. Parses command line arguments. Runs
@@ -59,18 +61,27 @@ class Application:
     def __init__(self, eui_class):
         self._eui_class = eui_class
         self._app = QApplication(sys.argv)
+        self._app.setApplicationVersion(lsst.ts.cRIOpy.__version__)
 
         parser = QCommandLineParser()
         parser.addHelpOption()
         parser.addVersionOption()
+
         noSplash = QCommandLineOption(["n", "no-splash"], "don't show splash screen")
         parser.addOption(noSplash)
+
+        salInfo = QCommandLineOption(
+            ["s", "SAL-info"], "show SAL info (including methods checksums) and exits"
+        )
+        parser.addOption(salInfo)
+
         parser.process(self._app)
 
         self._loop = QEventLoop(self._app)
         asyncio.set_event_loop(self._loop)
 
         self._comms = []
+        self._salInfo = parser.isSet(salInfo)
         self._splash = not (parser.isSet(noSplash))
         self._eui = None
 
@@ -93,6 +104,17 @@ class Application:
     def run(self):
         """Runs the application. Creates splash screen, display it if requested.
         Creates and display main window after SAL/DDS is initialized."""
+
+        if self._salInfo:
+            for c in self._comms:
+                for m in dir(c.remote):
+                    if (
+                        m.startswith("cmd_")
+                        or m.startswith("tel_")
+                        or m.startswith("evt_")
+                    ):
+                        print(getattr(c.remote, m).dds_name)
+            sys.exit(0)
 
         class AppSplashScreen(SplashScreen):
             def started(splash, *comms):

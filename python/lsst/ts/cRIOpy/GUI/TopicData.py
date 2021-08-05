@@ -5,10 +5,16 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_SINDEX,
 )
 
+from .ActuatorsDisplay import Scales
+
 __all__ = ["Topics", "TopicData"]
 
 
 class TopicData:
+    """
+    Helper class. Used together with TopicField to construct topics.
+    """
+
     def __init__(self, name, fields, topic, isEvent=True):
         self.name = name
         self.fields = fields
@@ -22,6 +28,37 @@ class TopicData:
         return "tel_" + self.topic
 
 
+class TopicField:
+    def __init__(self, name, value, index, scale=Scales.GAUGE):
+        self.name = name
+        self.value = value
+        self.index = index
+        self.scale = scale
+
+    def getValue(self, data):
+        return getattr(data, self.value)
+
+
+class OnOffField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.ONOFF)
+
+
+class WarningField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.WARNING)
+
+
+class BumpTestField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.BUMP_TEST)
+
+
+class EnabledDisabledField(TopicField):
+    def __init__(self, name, value, index):
+        super().__init__(name, value, index, Scales.ENABLED_DISABLED)
+
+
 class Topics:
     """
     Class constructing list of all available topics.
@@ -33,246 +70,246 @@ class Topics:
         self.topics = [
             TopicData(
                 "Applied Aberration Forces",
-                [["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX]],
+                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
                 "appliedAberrationForces",
             ),
             TopicData(
                 "Applied Acceleration Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAccelerationForces",
             ),
             TopicData(
                 "Applied Active Optic Forces",
-                [["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX]],
+                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
                 "appliedActiveOpticForces",
             ),
             TopicData(
                 "Applied Azimuth Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAzimuthForces",
             ),
             TopicData(
                 "Applied Balance Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedBalanceForces",
             ),
             TopicData(
                 "Applied Cylinder Forces",
                 [
-                    [
+                    TopicField(
                         "Primary Cylinder Forces",
-                        lambda x: x.primaryCylinderForces,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryCylinderForces",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Cylinder Forces",
-                        lambda x: x.secondaryCylinderForces,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "secondaryCylinderForces",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "appliedCylinderForces",
             ),
             TopicData(
                 "Applied Elevation Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedElevationForces",
             ),
             TopicData(
                 "Applied Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedForces",
             ),
             TopicData(
                 "Applied Offset Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedOffsetForces",
             ),
             TopicData(
                 "Applied Static Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedStaticForces",
             ),
             TopicData(
                 "Applied Thermal Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedThermalForces",
             ),
             TopicData(
                 "Applied Velocity Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedVelocityForces",
             ),
             TopicData(
                 "Pre-clipped Aberration Forces",
-                [["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX]],
+                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
                 "preclippedAberrationForces",
             ),
             TopicData(
                 "Pre-clipped Acceleration Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedAccelerationForces",
             ),
             TopicData(
                 "Pre-clipped Active Optic Forces",
-                [["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX]],
+                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
                 "preclippedActiveOpticForces",
             ),
             TopicData(
                 "Pre-clipped Azimuth Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedAzimuthForces",
             ),
             TopicData(
                 "Pre-clipped Balance Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedBalanceForces",
             ),
             TopicData(
                 "Pre-clipped Cylinder Forces",
                 [
-                    [
+                    TopicField(
                         "Primary Cylinder Forces",
-                        lambda x: x.primaryCylinderForces,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryCylinderForces",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Cylinder Forces",
-                        lambda x: x.secondaryCylinderForces,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "secondaryCylinderForces",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "preclippedCylinderForces",
             ),
             TopicData(
                 "Pre-clipped Elevation Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedElevationForces",
             ),
             TopicData(
                 "Pre-clipped Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedForces",
             ),
             TopicData(
                 "Pre-clipped Offset Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedOffsetForces",
             ),
             TopicData(
                 "Pre-clipped Static Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedStaticForces",
             ),
             TopicData(
                 "Pre-clipped Thermal Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedThermalForces",
             ),
             TopicData(
                 "Pre-clipped Velocity Forces",
                 [
-                    ["Z Forces", lambda x: x.zForces, lambda: FATABLE_ZINDEX],
-                    ["Y Forces", lambda x: x.yForces, lambda: FATABLE_YINDEX],
-                    ["X Forces", lambda x: x.xForces, lambda: FATABLE_XINDEX],
+                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
+                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
+                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "preclippedVelocityForces",
             ),
             TopicData(
                 "Measured forces",
                 [
-                    [
+                    TopicField(
                         "Primary Cylinder Forces",
-                        lambda x: x.primaryCylinderForce,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryCylinderForce",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Cylinder Forces",
-                        lambda x: x.secondaryCylinderForce,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "secondaryCylinderForce",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Z Forces",
-                        lambda x: x.zForce,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "zForce",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Y Forces",
-                        lambda x: x.yForce,
-                        lambda: FATABLE_YINDEX,
-                    ],
-                    [
+                        "yForce",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
                         "X Forces",
-                        lambda x: x.xForce,
-                        lambda: FATABLE_XINDEX,
-                    ],
+                        "xForce",
+                        FATABLE_XINDEX,
+                    ),
                 ],
                 "forceActuatorData",
                 False,
@@ -280,420 +317,443 @@ class Topics:
             TopicData(
                 "Force Actuator ILC Info",
                 [
-                    ["Subnet", lambda x: x.modbusSubnet, lambda: FATABLE_ZINDEX],
-                    ["Address", lambda x: x.modbusAddress, lambda: FATABLE_ZINDEX],
-                    ["Major Revision", lambda x: x.majorRevision],
-                    ["Minor Revision", lambda x: x.minorRevision],
-                    ["ADC Scan Rate", lambda x: x.adcScanRate, lambda: FATABLE_ZINDEX],
+                    TopicField("Subnet", "modbusSubnet", FATABLE_ZINDEX),
+                    TopicField("Address", "modbusAddress", FATABLE_ZINDEX),
+                    TopicField(
+                        "Major Revision",
+                        "majorRevision",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Minor Revision",
+                        "minorRevision",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField("ADC Scan Rate", "adcScanRate", FATABLE_ZINDEX),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator Id Info",
                 [
-                    [
+                    TopicField(
                         "X Data Reference Id",
-                        lambda x: x.xDataReferenceId,
-                        lambda: FATABLE_XINDEX,
-                    ],
-                    [
+                        "xDataReferenceId",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
                         "Y Data Reference Id",
-                        lambda x: x.yDataReferenceId,
-                        lambda: FATABLE_YINDEX,
-                    ],
-                    [
+                        "yDataReferenceId",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
                         "Z Data Reference Id",
-                        lambda x: x.zDataReferenceId,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "zDataReferenceId",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "S Data Reference Id",
-                        lambda x: x.sDataReferenceId,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    ["ILC Unique Id", lambda x: x.ilcUniqueId, lambda: FATABLE_ZINDEX],
-                    [
+                        "sDataReferenceId",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField("ILC Unique Id", "ilcUniqueId", FATABLE_ZINDEX),
+                    TopicField(
                         "Mezzanine Unique Id",
-                        lambda x: x.xDataReferenceId,
-                        lambda: FATABLE_ZINDEX,
-                    ],
+                        "xDataReferenceId",
+                        FATABLE_ZINDEX,
+                    ),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator Main Calibration Info",
                 [
-                    [
+                    TopicField(
                         "Primary Coefficient",
-                        lambda x: x.mainPrimaryCylinderCoefficient,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mainPrimaryCylinderCoefficient",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Primary Offset",
-                        lambda x: x.mainPrimaryCylinderLoadCellOffset,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mainPrimaryCylinderLoadCellOffset",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Primary Sensitivity",
-                        lambda x: x.mainPrimaryCylinderLoadCellSensitivity,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mainPrimaryCylinderLoadCellSensitivity",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Coefficient",
-                        lambda x: x.mainSecondaryCylinderCoefficient,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "mainSecondaryCylinderCoefficient",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Secondary Offset",
-                        lambda x: x.mainSecondaryCylinderLoadCellOffset,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "mainSecondaryCylinderLoadCellOffset",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Secondary Sensitivity",
-                        lambda x: x.mainSecondaryLoadCellSensitivity,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "mainSecondaryLoadCellSensitivity",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator Backup Calibration Info",
                 [
-                    [
+                    TopicField(
                         "Primary Coefficient",
-                        lambda x: x.backupPrimaryCylinderCoefficient,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "backupPrimaryCylinderCoefficient",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Primary Offset",
-                        lambda x: x.backupPrimaryCylinderLoadCellOffset,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "backupPrimaryCylinderLoadCellOffset",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Primary Sensitivity",
-                        lambda x: x.backupPrimaryCylinderLoadCellSensitivity,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "backupPrimaryCylinderLoadCellSensitivity",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Coefficient",
-                        lambda x: x.backupSecondaryCylinderCoefficient,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "backupSecondaryCylinderCoefficient",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Secondary Offset",
-                        lambda x: x.backupSecondaryCylinderLoadCellOffset,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "backupSecondaryCylinderLoadCellOffset",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Secondary Sensitivity",
-                        lambda x: x.backupSecondaryLoadCellSensitivity,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "backupSecondaryLoadCellSensitivity",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator Mezzanine Calibration Info",
                 [
-                    [
+                    TopicField(
                         "Primary Cylinder Gain",
-                        lambda x: x.mezzaninePrimaryCylinderGain,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzaninePrimaryCylinderGain",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Cylinder Gain",
-                        lambda x: x.mezzanineSecondaryCylinderGain,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "mezzanineSecondaryCylinderGain",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator Position Info",
                 [
-                    ["Actuator Type", lambda x: x.actuatorType, lambda: FATABLE_ZINDEX],
-                    [
+                    TopicField(
+                        "Actuator Type",
+                        "actuatorType",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Actuator Orientation",
-                        lambda x: x.actuatorOrientation,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    ["X Position", lambda x: x.xPosition, lambda: FATABLE_ZINDEX],
-                    ["Y Position", lambda x: x.yPosition, lambda: FATABLE_ZINDEX],
-                    ["Z Position", lambda x: x.zPosition, lambda: FATABLE_ZINDEX],
+                        "actuatorOrientation",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField("X Position", "xPosition", FATABLE_ZINDEX),
+                    TopicField("Y Position", "yPosition", FATABLE_ZINDEX),
+                    TopicField("Z Position", "zPosition", FATABLE_ZINDEX),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "Force Actuator State",
-                [["ILC State", lambda x: x.ilcState, lambda: FATABLE_ZINDEX]],
+                [TopicField("ILC State", "ilcState", FATABLE_ZINDEX)],
                 "forceActuatorState",
             ),
             TopicData(
                 "Force Actuator Warning",
                 [
-                    ["Major Fault", lambda x: x.majorFault, lambda: FATABLE_ZINDEX],
-                    ["Minor Fault", lambda x: x.minorFault, lambda: FATABLE_ZINDEX],
-                    [
+                    WarningField("Major Fault", "majorFault", FATABLE_ZINDEX),
+                    WarningField("Minor Fault", "minorFault", FATABLE_ZINDEX),
+                    WarningField(
                         "Fault Override",
-                        lambda x: x.faultOverride,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "faultOverride",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Main Calibration Error",
-                        lambda x: x.mainCalibrationError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mainCalibrationError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Backup Calibration Error",
-                        lambda x: x.backupCalibrationError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "backupCalibrationError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Error",
-                        lambda x: x.mezzanineError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Bootloader Active",
-                        lambda x: x.mezzanineBootloaderActive,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineBootloaderActive",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Unique Id CRC Error",
-                        lambda x: x.uniqueIdCRCError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "uniqueIdCRCError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Application Type Mismatch",
-                        lambda x: x.applicationTypeMismatch,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "applicationTypeMismatch",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Application Missing",
-                        lambda x: x.applicationMissing,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "applicationMissing",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "OneWire Mismatch",
-                        lambda x: x.oneWireMissing,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "oneWireMissing",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "OneWire1 Mismatch",
-                        lambda x: x.oneWire1Mismatch,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "oneWire1Mismatch",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "OnewWire2 Mismatch",
-                        lambda x: x.oneWire2Mismatch,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "oneWire2Mismatch",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Watchdog Reset",
-                        lambda x: x.watchdogReset,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "watchdogReset",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Brownout",
-                        lambda x: x.brownOut,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "brownOut",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Event Trap Reset",
-                        lambda x: x.eventTrapReset,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "eventTrapReset",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "SSR Power Fault",
-                        lambda x: x.ssrPowerFault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "ssrPowerFault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "AUX Power Fault",
-                        lambda x: x.auxPowerFault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "auxPowerFault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Power Fault",
-                        lambda x: x.mezzaninePowerFault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzaninePowerFault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Current Ampl Fault",
-                        lambda x: x.mezzanineCurrentAmp1Fault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineCurrentAmp1Fault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Current Amp2 Fault",
-                        lambda x: x.mezzanineCurrentAmp2Fault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineCurrentAmp2Fault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Unique ID CRC Error",
-                        lambda x: x.mezzanineUniqueIdCRCError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineUniqueIdCRCError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Main Calibration Error",
-                        lambda x: x.mezzanineMainCalibrationError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineMainCalibrationError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Backup Calibration Error",
-                        lambda x: x.mezzanineBackupCalibrationError,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineBackupCalibrationError",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Event Trap Reset",
-                        lambda x: x.mezzanineEventTrapReset,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineEventTrapReset",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Application Missing",
-                        lambda x: x.mezzanineApplicationMissing,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineApplicationMissing",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Mezzanine Application CRC Mismatch",
-                        lambda x: x.mezzanineApplicationCRCMismatch,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "mezzanineApplicationCRCMismatch",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "ILC Fault",
-                        lambda x: x.ilcFault,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "ilcFault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Broadcast Counter Warning",
-                        lambda x: x.broadcastCounterWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
+                        "broadcastCounterWarning",
+                        FATABLE_ZINDEX,
+                    ),
                 ],
                 "forceActuatorWarning",
             ),
             TopicData(
                 "Force Actuator Force Warning",
                 [
-                    [
+                    WarningField(
                         "Primary Axis Measured Force Warning",
-                        lambda x: x.primaryAxisMeasuredForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryAxisMeasuredForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Secondary Axis Measured Force Warning",
-                        lambda x: x.secondaryAxisMeasuredForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "secondaryAxisMeasuredForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Primary Axis Following Error Warning",
-                        lambda x: x.primaryAxisFollowingErrorWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryAxisFollowingErrorWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Secondary Axis Following Error Warning",
-                        lambda x: x.secondaryAxisFollowingErrorWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
+                        "secondaryAxisFollowingErrorWarning",
+                        FATABLE_ZINDEX,
+                    ),
                 ],
                 "forceActuatorForceWarning",
             ),
             TopicData(
                 "FA Setpoint Warning",
                 [
-                    [
+                    WarningField(
                         "Safety limit",
-                        lambda x: x.safetyLimitWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "safetyLimitWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Near neighbor",
-                        lambda x: x.nearNeighborWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "nearNeighborWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Far neighbor",
-                        lambda x: x.farNeighborWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "farNeighborWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Elevation force",
-                        lambda x: x.elevationForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "elevationForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Azimuth force",
-                        lambda x: x.azimuthForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "azimuthForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Thermal force",
-                        lambda x: x.thermalForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "thermalForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Balance force",
-                        lambda x: x.balanceForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "balanceForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Acceleration force",
-                        lambda x: x.accelerationForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "accelerationForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Active optic",
-                        lambda x: x.activeOpticForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "activeOpticForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Static force",
-                        lambda x: x.staticForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "staticForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Aberration force",
-                        lambda x: x.aberrationForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "aberrationForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Offset force",
-                        lambda x: x.offsetForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "offsetForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Velocity force",
-                        lambda x: x.velocityForceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "velocityForceWarning",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
                         "Force setpoint",
-                        lambda x: x.forceWarning,
-                        lambda: FATABLE_ZINDEX,
-                    ],
+                        "forceWarning",
+                        FATABLE_ZINDEX,
+                    ),
                 ],
                 "forceSetpointWarning",
             ),
             TopicData(
                 "FA Bump Test",
                 [
-                    ["Primary Test", lambda x: x.primaryTest, lambda: FATABLE_ZINDEX],
-                    [
+                    BumpTestField("Primary Test", "primaryTest", FATABLE_ZINDEX),
+                    BumpTestField(
                         "Secondary Test",
-                        lambda x: x.secondaryTest,
-                        lambda: FATABLE_SINDEX,
-                    ],
-                    [
+                        "secondaryTest",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "Primary Timestamps",
-                        lambda x: x.primaryTestTimestamps,
-                        lambda: FATABLE_ZINDEX,
-                    ],
-                    [
+                        "primaryTestTimestamps",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
                         "Secondary Timestamps",
-                        lambda x: x.secondaryTestTimestamps,
-                        lambda: FATABLE_SINDEX,
-                    ],
+                        "secondaryTestTimestamps",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorBumpTestStatus",
+            ),
+            TopicData(
+                "FA enabled",
+                [
+                    EnabledDisabledField(
+                        "Enabled FAs",
+                        "forceActuatorEnabled",
+                        FATABLE_ZINDEX,
+                    ),
+                ],
+                "enabledForceActuators",
             ),
         ]
 

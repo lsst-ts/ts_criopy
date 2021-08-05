@@ -1,3 +1,4 @@
+from .ActuatorComboBox import ActuatorComboBox
 from .ActuatorOverviewPageWidget import ActuatorOverviewPageWidget
 from .AirPageWidget import AirPageWidget
 from .Application import Application
@@ -7,6 +8,7 @@ from .CellLightPageWidget import CellLightPageWidget
 from .CustomLabels import *
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget
+from .EnabledForceActuators import EnabledForceActuators
 from .ForceActuatorBumpTestPageWidget import ForceActuatorBumpTestPageWidget
 from .ForceActuatorGraphPageWidget import ForceActuatorGraphPageWidget
 from .ForceActuatorValuePageWidget import ForceActuatorValuePageWidget

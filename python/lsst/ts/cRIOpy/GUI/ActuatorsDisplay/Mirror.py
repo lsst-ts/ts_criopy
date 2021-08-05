@@ -35,26 +35,28 @@ class Mirror(QGraphicsScene):
     def __init__(self):
         super().__init__()
 
-    def setRange(self, minValue, maxValue):
-        """Set display range. Display range is used for colors displayed by the actuator.
+    def setColorScale(self, scale):
+        """Set display color scale. Provides getColor method, returning color to be used with value.
 
         Parameters
         ----------
-        minValue : `float`
-                   Minimal data range.
-        maxValue : `float`
-                   Maximal data range.
+        scale : `class`
+            Data scale.
         """
         for a in self.items():
-            a.setRange(minValue, maxValue)
+            a.setColorScale(scale)
 
-    def addForceActuator(self, id, x, y, orientation, data, dataIndex, state, selected):
+    def addForceActuator(
+        self, id, index, x, y, orientation, data, dataIndex, state, selected
+    ):
         """Adds actuator to the list.
 
         Parameters
         ----------
         id : `int`
             Force Actuator ID. Actuators are matched by ID.
+        index : `int`
+            Force Actuator index (0-155).
         x : `float`
             Force Actuator X position (in mm).
         y :  `float`
@@ -72,7 +74,9 @@ class Mirror(QGraphicsScene):
             True if the actuator is selected.
         """
         self.addItem(
-            ForceActuator(id, x, y, orientation, data, dataIndex, state, selected)
+            ForceActuator(
+                id, index, x, y, orientation, data, dataIndex, state, selected
+            )
         )
 
     def getForceActuator(self, id):

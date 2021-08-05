@@ -24,7 +24,7 @@ from PySide2.QtGui import QPainter, QColor, QBrush
 from PySide2.QtWidgets import QWidget
 
 
-class Gauge(QWidget):
+class GaugeScale(QWidget):
     """Draws gauge with color scale."""
 
     def __init__(self):
@@ -52,6 +52,43 @@ class Gauge(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
+    def getValue(self, value):
+        return f"{value:.2f}"
+
+    def getColor(self, value):
+        """Returns color for given value.
+
+        Parameters
+        ----------
+        value : `float`
+            Value for which color shall be returned.
+
+        Returns
+        -------
+        color : `QColor`
+            QColor representing the value on scale.
+        """
+        if self._min == self._max:
+            return None
+        # draw using value as index into possible colors in HSV model
+        hue = 1 - (value - self._min) / (self._max - self._min)
+        return self.getHueColor(hue)
+
+    def getHueColor(self, hue):
+        """Returns color from "hue" (0-1 range).
+
+        Parameters
+        ----------
+        hue : `float`
+            "Hue" value (in 0.0 - 1.0 range)
+
+        Returns
+        -------
+        color : `QColor`
+            Color for hue value.
+        """
+        return QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1)
+
     def paintEvent(self, event):
         """Overridden method. Paint gauge as series of lines, and adds text labels."""
         painter = QPainter(self)
@@ -74,19 +111,12 @@ class Gauge(QWidget):
             return
 
         for x in range(0, sheight):
-            painter.setPen(
-                QColor.fromHsvF((x / sheight) * 0.7, min(1, 1.5 - (x / sheight)), 1)
-            )
+            painter.setPen(self.getHueColor(x / sheight))
             painter.drawLine(0, x, swidth, x)
 
         painter.setPen(Qt.black)
         painter.drawText(
-            0,
-            0,
-            self.width() - swidth,
-            30,
-            Qt.AlignCenter,
-            "{0:.2f}".format(self._max),
+            0, 0, self.width() - swidth, 30, Qt.AlignCenter, self.getValue(self._max)
         )
         painter.drawText(
             0,
@@ -94,5 +124,5 @@ class Gauge(QWidget):
             self.width() - swidth,
             30,
             Qt.AlignCenter,
-            "{0:.2f}".format(self._min),
+            self.getValue(self._min),
         )

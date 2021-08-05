@@ -29,8 +29,7 @@ from PySide2.QtWidgets import (
     QListWidget,
     QSplitter,
 )
-from .QTHelpers import setWarningLabel
-from .CustomLabels import DockWindow
+from .CustomLabels import DockWindow, WarningLabel
 from .TimeDeltaLabel import TimeDeltaLabel
 
 
@@ -69,7 +68,7 @@ class TopicWindow(DockWindow):
 
         splitter = QSplitter()
 
-        self.fieldDataIndex = None
+        self.field = None
 
         plotLayout = QVBoxLayout()
         selectionLayout = QVBoxLayout()
@@ -93,7 +92,7 @@ class TopicWindow(DockWindow):
 
         self.selectedActuatorIdLabel = QLabel("")
         self.selectedActuatorValueLabel = QLabel("")
-        self.selectedActuatorWarningLabel = QLabel("")
+        self.selectedActuatorWarningLabel = WarningLabel("")
         self.lastUpdatedLabel = TimeDeltaLabel()
 
         self.topicList = QListWidget()
@@ -128,7 +127,7 @@ class TopicWindow(DockWindow):
 
         self.fieldList.clear()
         for field in self.topics.topics[topicIndex].fields:
-            self.fieldList.addItem(field[0])
+            self.fieldList.addItem(field.name)
 
         fieldIndex = self.topics.topics[topicIndex].selectedField
         if fieldIndex < 0:
@@ -168,16 +167,14 @@ class TopicWindow(DockWindow):
 
         self.selectedActuatorIdLabel.setText(str(s.id))
         self.selectedActuatorValueLabel.setText(str(s.data))
-        setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
+        self.selectedActuatorWarningLabel.setValue(s.warning)
 
     def _changeField(self, topicIndex, fieldIndex):
         """
         Redraw actuators with new values.
         """
         topic = self.topics.topics[topicIndex]
-        field = topic.fields[fieldIndex]
-        self.fieldGetter = field[1]
-        self.fieldDataIndex = field[2]()
+        self.field = topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.comm)
 
