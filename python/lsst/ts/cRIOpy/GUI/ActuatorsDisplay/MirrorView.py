@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Signal
+from PySide2.QtCore import Signal, QEvent
 from PySide2.QtWidgets import QGraphicsView
 from . import Mirror, ForceActuator
 
@@ -58,6 +58,11 @@ class MirrorView(QGraphicsView):
             return self._mirror.getForceActuator(id)
         except KeyError:
             return None
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.EnabledChange:
+            for i in self._mirror.items():
+                i.setEnabled(self.isEnabled())
 
     @property
     def selected(self):

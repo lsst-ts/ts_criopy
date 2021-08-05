@@ -20,7 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import QRect, Qt, QPointF
-from PySide2.QtGui import QPen, QPainter, QBrush, QTransform
+from PySide2.QtGui import QPen, QPainter, QBrush, QTransform, QGuiApplication
 from PySide2.QtWidgets import QGraphicsItem
 
 
@@ -154,6 +154,10 @@ class ForceActuator(QGraphicsItem):
         if self._color_scale is None:
             return
 
+        palette = QGuiApplication.palette()
+        if not self.isEnabled():
+            palette.setCurrentColorGroup(palette.Inactive)
+
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         # paint grayed circle for actuators not providing the selected value
         if self._state == self.STATE_INACTIVE:
@@ -162,14 +166,21 @@ class ForceActuator(QGraphicsItem):
                 self._center, 10 * self._scale_factor, 10 * self._scale_factor
             )
             return
+        lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
         # draw rectangle around selected actuator
         if self._selected:
-            painter.setPen(QPen(Qt.black, self._scale_factor))
+            painter.setPen(
+                QPen(
+                    Qt.black,
+                    self._scale_factor,
+                    lineStyle,
+                )
+            )
             painter.drawRect(self.boundingRect())
         else:
-            painter.setPen(QPen(Qt.red, self._scale_factor))
+            painter.setPen(QPen(Qt.red, self._scale_factor, lineStyle))
 
-        # draw selected actuator in red color
+        # draw actuator with warning in red color
         if self._state == self.STATE_WARNING:
             painter.setBrush(Qt.red)
         else:
@@ -181,13 +192,17 @@ class ForceActuator(QGraphicsItem):
                 )
                 painter.setBrush(brush)
             else:
-                painter.setBrush(color)
+                painter.setBrush(
+                    QBrush(
+                        color, Qt.SolidPattern if self.isEnabled() else Qt.Dense4Pattern
+                    )
+                )
         # draw actuator, write value
         painter.drawEllipse(
             self._center, 10 * self._scale_factor, 10 * self._scale_factor
         )
 
-        painter.setPen(Qt.black)
+        painter.setPen(palette.color(palette.ButtonText))
 
         font = painter.font()
         font.setPixelSize(6.5 * self._scale_factor)
