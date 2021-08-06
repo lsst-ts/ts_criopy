@@ -25,7 +25,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
-    QFormLayout,
+    QGridLayout,
     QListWidget,
 )
 from .QTHelpers import setWarningLabel
@@ -62,22 +62,27 @@ class ForceActuatorWidget(QWidget):
 
         self.field = None
 
-        self.layout = QHBoxLayout()
-        self.plotLayout = QVBoxLayout()
-        self.selectionLayout = QVBoxLayout()
-        self.detailsLayout = QFormLayout()
-        self.filterLayout = QHBoxLayout()
-        self.layout.addLayout(self.plotLayout)
-        self.layout.addLayout(self.selectionLayout)
-        self.selectionLayout.addLayout(self.detailsLayout)
-        self.selectionLayout.addWidget(QLabel("Filter Data"))
-        self.selectionLayout.addLayout(self.filterLayout)
-        self.setLayout(self.layout)
+        layout = QHBoxLayout()
+        plotLayout = QVBoxLayout()
+        selectionLayout = QVBoxLayout()
+        detailsLayout = QGridLayout()
+        filterLayout = QHBoxLayout()
+        layout.addLayout(plotLayout)
+        layout.addLayout(selectionLayout)
+        selectionLayout.addLayout(detailsLayout)
+        selectionLayout.addWidget(QLabel("Filter Data"))
+        selectionLayout.addLayout(filterLayout)
+        self.setLayout(layout)
 
-        self.selectedActuatorIdLabel = QLabel("")
-        self.selectedActuatorValueLabel = QLabel("")
-        self.selectedActuatorWarningLabel = QLabel("")
+        self.selectedActuatorIdLabel = QLabel()
+        self.selectedActuatorValueLabel = QLabel()
+        self.selectedActuatorWarningLabel = QLabel()
         self.lastUpdatedLabel = TimeDeltaLabel()
+
+        self.nearSelectedIdsLabel = QLabel()
+        self.nearSelectedValueLabel = QLabel()
+        self.nearSelectedWarningLabel = QLabel()
+        self.nearSelectedUpdateLabel = QLabel()
 
         self.topicList = QListWidget()
         self.topicList.setFixedWidth(256)
@@ -89,20 +94,30 @@ class ForceActuatorWidget(QWidget):
         self.fieldList.setFixedWidth(256)
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
 
-        self.plotLayout.addWidget(userWidget)
+        plotLayout.addWidget(userWidget)
 
-        self.detailsLayout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-        self.detailsLayout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
-        self.detailsLayout.addRow(
-            QLabel("Actuator Value"), self.selectedActuatorValueLabel
-        )
-        self.detailsLayout.addRow(
-            QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
-        )
-        self.detailsLayout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+        def addDetails(row, name, label, nears):
+            detailsLayout.addWidget(QLabel(name), row, 0)
+            detailsLayout.addWidget(label, row, 1)
+            detailsLayout.addWidget(nears, row, 2)
 
-        self.filterLayout.addWidget(self.topicList)
-        self.filterLayout.addWidget(self.fieldList)
+        addDetails(0, "Variable", QLabel("Selected"), QLabel("Neighbours"))
+        addDetails(1, "Id", self.selectedActuatorIdLabel, self.nearSelectedIdsLabel)
+        addDetails(
+            2, "Value", self.selectedActuatorValueLabel, self.nearSelectedValueLabel
+        )
+        addDetails(
+            3,
+            "Warning",
+            self.selectedActuatorWarningLabel,
+            self.nearSelectedWarningLabel,
+        )
+        addDetails(
+            4, "Last Updated", self.lastUpdatedLabel, self.nearSelectedUpdateLabel
+        )
+
+        filterLayout.addWidget(self.topicList)
+        filterLayout.addWidget(self.fieldList)
 
         self.topicList.setCurrentRow(0)
 
