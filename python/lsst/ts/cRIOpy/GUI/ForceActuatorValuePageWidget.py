@@ -143,7 +143,7 @@ class ForceActuatorValuePageWidget(ForceActuatorWidget):
 
         super().__init__(m1m3, self.dataWidget)
 
-    def updateValues(self, data):
+    def updateValues(self, data, changed):
         if data is None:
             for label in self.dataWidget.forceActuatorLabels:
                 label.setText("UNKNOWN")

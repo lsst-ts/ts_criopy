@@ -197,7 +197,7 @@ class ForceActuatorWidget(QWidget):
         self.field = self._topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
-            self.dataChanged(self._getData())
+            self.updateValues(self._getData(), True)
         except RuntimeError as err:
             print("ForceActuatorWidget._changeField", err)
             self._topic = None
@@ -213,7 +213,7 @@ class ForceActuatorWidget(QWidget):
         data : `class`
             Class holding data. See SALComm for details.
         """
-        self.updateValues(data)
+        self.updateValues(data, False)
         if data is None:
             self._setUnknown()
         else:

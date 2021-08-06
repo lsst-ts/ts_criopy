@@ -194,22 +194,34 @@ class EnabledForceActuators(QWidget):
     @Slot(map)
     def enabledForceActuators(self, data):
         """Callback with enabled FA data. Triggers display update."""
-        self.mirrorWidget.mirrorView.clear()
+        if len(self.mirrorWidget.mirrorView.items()) == 0:
+            new = True
+            self.mirrorWidget.mirrorView.clear()
+        else:
+            new = False
 
         for row in FATABLE:
             index = row[FATABLE_ZINDEX]
-            self.mirrorWidget.mirrorView.addForceActuator(
-                row[FATABLE_ID],
-                row[FATABLE_INDEX],
-                row[FATABLE_XPOSITION] * 1000,
-                row[FATABLE_YPOSITION] * 1000,
-                row[FATABLE_ORIENTATION],
-                None if data is None else data.forceActuatorEnabled[index],
-                index,
+            id = row[FATABLE_ID]
+            value = None if data is None else data.forceActuatorEnabled[index]
+            state = (
                 ForceActuator.STATE_INACTIVE
                 if data is None
-                else ForceActuator.STATE_ACTIVE,
+                else ForceActuator.STATE_ACTIVE
             )
+            if new:
+                self.mirrorWidget.mirrorView.addForceActuator(
+                    id,
+                    row[FATABLE_INDEX],
+                    row[FATABLE_XPOSITION] * 1000,
+                    row[FATABLE_YPOSITION] * 1000,
+                    row[FATABLE_ORIENTATION],
+                    value,
+                    index,
+                    state,
+                )
+            else:
+                self.mirrorWidget.mirrorView.updateForceActuator(id, value, state)
 
         self.mirrorWidget.setColorScale()
         self._updateSelected()
