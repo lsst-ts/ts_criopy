@@ -31,6 +31,8 @@ from PySide2.QtWidgets import (
 from .QTHelpers import setWarningLabel
 from .TopicData import Topics
 from .TimeDeltaLabel import TimeDeltaLabel
+from ..M1M3FATable import FATABLE, FATABLE_NEAR_NEIGHBOUR_INDEX, nearNeighborIndices
+import numpy
 
 
 class ForceActuatorWidget(QWidget):
@@ -61,6 +63,7 @@ class ForceActuatorWidget(QWidget):
         self.m1m3 = m1m3
 
         self.field = None
+        self._topic = None
 
         layout = QHBoxLayout()
         plotLayout = QVBoxLayout()
@@ -151,6 +154,12 @@ class ForceActuatorWidget(QWidget):
     def _setUnknown(self):
         self.lastUpdatedLabel.setUnknown()
 
+    def _getData(self):
+        return getattr(self.m1m3.remote, self._topic.getTopic()).get()
+
+    def _getFieldData(self):
+        return self.field.getValue(self._getData())
+
     def updateSelectedActuator(self, s):
         """
         Called from childrens to update currently selected actuator display.
@@ -171,19 +180,27 @@ class ForceActuatorWidget(QWidget):
         self.selectedActuatorValueLabel.setText(str(s.data))
         setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
 
+        # neir neighbour
+        nearIDs = FATABLE[s.index][FATABLE_NEAR_NEIGHBOUR_INDEX]
+        nearIndices = nearNeighborIndices(s.index)
+        field = self._getFieldData()
+        self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
+        self.nearSelectedValueLabel.setText(
+            f"{numpy.average([field[i] for i in nearIndices])}"
+        )
+
     def _changeField(self, topicIndex, fieldIndex):
         """
         Redraw actuators with new values.
         """
-        topic = self.topics.topics[topicIndex]
-        self.field = topic.fields[fieldIndex]
+        self._topic = self.topics.topics[topicIndex]
+        self.field = self._topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
-
-            data = getattr(self.m1m3.remote, topic.getTopic()).get()
-            self.dataChanged(data)
+            self.dataChanged(self._getData())
         except RuntimeError as err:
             print("ForceActuatorWidget._changeField", err)
+            self._topic = None
             pass
 
     @Slot(map)
@@ -193,7 +210,8 @@ class ForceActuatorWidget(QWidget):
 
         Parameters
         ----------
-
+        data : `class`
+            Class holding data. See SALComm for details.
         """
         self.updateValues(data)
         if data is None:
