@@ -246,9 +246,9 @@ class TimeChartWidget(TimeChartView):
     -------
     """
 
-    def __init__(self, fields):
+    def __init__(self, fields, **kwargs):
         self.chart = TimeChart(
-            dict([(i[0][0], [v[1] for v in i[1]]) for i in fields.items()])
+            dict([(i[0][0], [v[1] for v in i[1]]) for i in fields.items()]), **kwargs
         )
         super().__init__(self.chart)
 

@@ -108,14 +108,16 @@ class ActuatorOverviewPageWidget(QWidget):
         self.velocityMagLabel = QLabel("UNKNOWN")
 
         chartForces = TimeChartWidget(
-            {("Force (N)", self.m1m3.appliedForces): [("Total Mag", "forceMagnitude")]}
+            {("Force (N)", self.m1m3.appliedForces): [("Total Mag", "forceMagnitude")]},
+            maxItems=50 * 5,
         )
         chartPercentage = TimeChartWidget(
             {
                 ("Percentage", self.m1m3.forceActuatorState): [
                     ("Support Percentage", "supportPercentage")
                 ]
-            }
+            },
+            maxItems=50 * 5,
         )
 
         row = 0
