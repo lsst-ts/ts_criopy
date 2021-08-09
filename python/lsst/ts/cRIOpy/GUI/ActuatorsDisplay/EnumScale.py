@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QWidget
 
 class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
-    progress,..) values. Subclasses shall implement getValue() and getColor()
+    progress,..) values. Subclasses shall implement formatValue() and getColor()
     methods.
 
     Parameters
@@ -53,7 +53,7 @@ class EnumScale(QWidget):
         """
         return self._levels.keys()
 
-    def getValue(self, value):
+    def formatValue(self, value):
         return self._levels[value][0]
 
     def getColor(self, value):
@@ -105,7 +105,7 @@ class EnumScale(QWidget):
                 swidth - 2 * x_offset,
                 t_height,
                 Qt.AlignCenter,
-                self.getValue(value),
+                self.formatValue(value),
             )
 
         for i in range(l_labels):

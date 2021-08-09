@@ -155,6 +155,13 @@ class ForceActuator(QGraphicsItem):
             20 * self._scale_factor,
         )
 
+    def getValue(self):
+        """Returns current value, string formated to scale."""
+        return self.formatValue(self.data)
+
+    def formatValue(self, v):
+        return self._color_scale.formatValue(v)
+
     def paint(self, painter, option, widget):
         """Paint actuator. Overridden method."""
         # if scale isn't set, don't draw
@@ -220,7 +227,7 @@ class ForceActuator(QGraphicsItem):
             str(self.id),
         )
 
-        vstr = self._color_scale.getValue(self.data)
+        vstr = self.getValue()
         if len(vstr) > 6:
             font.setPixelSize(3.5 * self._scale_factor)
         elif len(vstr) > 3:

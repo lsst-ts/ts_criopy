@@ -167,7 +167,7 @@ class ForceActuatorWidget(QWidget):
         Parameters
         ----------
 
-        s : `map`
+        s : `ForceActuator`
             Contains id (selected actuator ID), data (selected actuator current value) and warning (boolean, true if value is in warning).
         """
         if s is None:
@@ -177,7 +177,7 @@ class ForceActuatorWidget(QWidget):
             return
 
         self.selectedActuatorIdLabel.setText(str(s.id))
-        self.selectedActuatorValueLabel.setText(str(s.data))
+        self.selectedActuatorValueLabel.setText(s.getValue())
         setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
 
         # near neighbour
@@ -186,7 +186,7 @@ class ForceActuatorWidget(QWidget):
         field = self._getFieldData()
         self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
         self.nearSelectedValueLabel.setText(
-            f"{numpy.average([field[i] for i in nearIndices])}"
+            f"{s.formatValue(numpy.average([field[i] for i in nearIndices]))}"
         )
 
     def _changeField(self, topicIndex, fieldIndex):
