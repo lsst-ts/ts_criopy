@@ -2540,7 +2540,10 @@ def actuatorIDToIndex(actuatorId, valueIndex=FATABLE_INDEX):
 
 
 def nearNeighborIndices(index, valueIndex=FATABLE_INDEX):
-    return map(
-        lambda f: actuatorIDToIndex(f, valueIndex),
-        FATABLE[index][FATABLE_NEAR_NEIGHBOUR_INDEX],
+    return filter(
+        lambda n: n is not None,
+        map(
+            lambda f: actuatorIDToIndex(f, valueIndex),
+            FATABLE[index][FATABLE_NEAR_NEIGHBOUR_INDEX],
+        ),
     )

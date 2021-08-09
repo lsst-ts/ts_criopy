@@ -76,12 +76,12 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
         self.mirrorWidget.setRange(min(values), max(values))
 
-        if self.mirrorWidget.mirrorView.selected is not None:
-            self.selectedActuatorValueLabel.setText(
-                self.mirrorWidget.mirrorView.selected.getValue()
-            )
+        selected = self.mirrorWidget.mirrorView.selected
+        if selected is not None:
+            if selected.data is not None:
+                self.selectedActuatorValueLabel.setText(selected.getValue())
             if warningData is not None:
                 setWarningLabel(
                     self.selectedActuatorWarningLabel,
-                    getWarning(self.mirrorWidget.mirrorView.selected.index),
+                    getWarning(selected.index),
                 )
