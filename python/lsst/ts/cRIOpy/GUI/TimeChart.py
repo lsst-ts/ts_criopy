@@ -28,8 +28,9 @@ from lsst.ts.cRIOpy import TimeCache
 import time
 
 import concurrent.futures
+from functools import partial
 
-__all__ = ["TimeChart", "TimeChartView"]
+__all__ = ["TimeChart", "TimeChartView", "TimeChartWidget"]
 
 
 class AbstractChart(QtCharts.QChart):
@@ -232,3 +233,32 @@ class TimeChartView(QtCharts.QChartView):
             super().__init__(chart)
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
+
+
+class TimeChartWidget(TimeChartView):
+    """
+    Parameters
+    ----------
+    fields : `dict`
+        Key is tuple of (axis, signal). Values are arrays of tuples (name, signal).
+
+    Example
+    -------
+    """
+
+    def __init__(self, fields):
+        self.chart = TimeChart(
+            dict([(i[0][0], [v[1] for v in i[1]]) for i in fields.items()])
+        )
+        super().__init__(self.chart)
+
+        axis_index = 0
+
+        for ((axis, signal), f) in fields.items():
+            signal.connect(partial(self._append, axis_index=axis_index, fields=f))
+            axis_index += 1
+
+    def _append(self, data, axis_index, fields):
+        self.chart.append(
+            data.timestamp, [getattr(data, f[1]) for f in fields], axis_index=axis_index
+        )
