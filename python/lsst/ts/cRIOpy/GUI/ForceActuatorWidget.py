@@ -180,9 +180,9 @@ class ForceActuatorWidget(QWidget):
         self.selectedActuatorValueLabel.setText(str(s.data))
         setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
 
-        # neir neighbour
+        # near neighbour
         nearIDs = FATABLE[s.index][FATABLE_NEAR_NEIGHBOUR_INDEX]
-        nearIndices = nearNeighborIndices(s.index)
+        nearIndices = nearNeighborIndices(s.index, self.field.valueIndex)
         field = self._getFieldData()
         self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
         self.nearSelectedValueLabel.setText(

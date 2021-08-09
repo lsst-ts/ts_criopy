@@ -2535,9 +2535,12 @@ FATABLE = [
 ]
 
 
-def actuatorIDToIndex(actuatorId):
-    return next(f for f in FATABLE if f[FATABLE_ID] == actuatorId)[FATABLE_INDEX]
+def actuatorIDToIndex(actuatorId, valueIndex=FATABLE_INDEX):
+    return next(f for f in FATABLE if f[FATABLE_ID] == actuatorId)[valueIndex]
 
 
-def nearNeighborIndices(index):
-    return map(actuatorIDToIndex, FATABLE[index][FATABLE_NEAR_NEIGHBOUR_INDEX])
+def nearNeighborIndices(index, valueIndex=FATABLE_INDEX):
+    return map(
+        lambda f: actuatorIDToIndex(f, valueIndex),
+        FATABLE[index][FATABLE_NEAR_NEIGHBOUR_INDEX],
+    )

@@ -29,10 +29,10 @@ class TopicData:
 
 
 class TopicField:
-    def __init__(self, name, value, index, scale=Scales.GAUGE):
+    def __init__(self, name, value, valueIndex, scale=Scales.GAUGE):
         self.name = name
         self.value = value
-        self.index = index
+        self.valueIndex = valueIndex
         self.scale = scale
 
     def getValue(self, data):
@@ -40,23 +40,23 @@ class TopicField:
 
 
 class OnOffField(TopicField):
-    def __init__(self, name, value, index):
-        super().__init__(name, value, index, Scales.ONOFF)
+    def __init__(self, name, value, valueIndex):
+        super().__init__(name, value, valueIndex, Scales.ONOFF)
 
 
 class WarningField(TopicField):
-    def __init__(self, name, value, index):
-        super().__init__(name, value, index, Scales.WARNING)
+    def __init__(self, name, value, valueIndex):
+        super().__init__(name, value, valueIndex, Scales.WARNING)
 
 
 class BumpTestField(TopicField):
-    def __init__(self, name, value, index):
-        super().__init__(name, value, index, Scales.BUMP_TEST)
+    def __init__(self, name, value, valueIndex):
+        super().__init__(name, value, valueIndex, Scales.BUMP_TEST)
 
 
 class EnabledDisabledField(TopicField):
-    def __init__(self, name, value, index):
-        super().__init__(name, value, index, Scales.ENABLED_DISABLED)
+    def __init__(self, name, value, valueIndex):
+        super().__init__(name, value, valueIndex, Scales.ENABLED_DISABLED)
 
 
 class Topics:
