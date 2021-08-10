@@ -30,7 +30,7 @@ import time
 import concurrent.futures
 from functools import partial
 
-__all__ = ["TimeChart", "TimeChartView", "TimeChartWidget"]
+__all__ = ["TimeChart", "TimeChartView", "SALAxis", "SALChartWidget"]
 
 
 class AbstractChart(QtCharts.QChart):
@@ -235,30 +235,60 @@ class TimeChartView(QtCharts.QChartView):
         self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
 
 
-class TimeChartWidget(TimeChartView):
+class SALAxis:
+    def __init__(self, title, signal):
+        self.title = title
+        self.signal = signal
+        self.fields = {}
+
+    def addValue(self, name, field):
+        self.fields[name] = field
+        return self
+
+    def addValues(self, fields):
+        self.fields = {**self.fields, **fields}
+        return self
+
+
+class SALChartWidget(TimeChartView):
     """
+    Widget plotting SAL data. Connects to SAL signal triggered when new data
+    arrives and redraw graph.
+
     Parameters
     ----------
-    fields : `dict`
-        Key is tuple of (axis, signal). Values are arrays of tuples (name, signal).
+    fields : `[SALAxis]` or `SALAxis`
+        Array of axis to plot.
 
     Example
     -------
+        a1 = SALAxis("Measured Forces (N)", m1m3.measuredForces)
+        a1.addValue("X", "xForce")
+        a1.addValue("Y", "yForce")
+        a1.addValue("Z", "zForce")
+
+        a2 = SALAxis("Applied Forces (N)", m1m3.appliedForces)
+        a2.addValues({"X" : "xForce", "Y" : "yForce", "Z" : "zForce"})
+
+        chart = SALChartWidget(a1, a2, SALAxis("Pre-clipped Forces (N)", m1m3.preclippedForces).addValue("X", "xForce"))
     """
 
-    def __init__(self, fields, **kwargs):
+    def __init__(self, *values, **kwargs):
         self.chart = TimeChart(
-            dict([(i[0][0], [v[1] for v in i[1]]) for i in fields.items()]), **kwargs
+            dict([(v.title, v.fields.keys()) for v in values]), **kwargs
         )
-        super().__init__(self.chart)
-
         axis_index = 0
-
-        for ((axis, signal), f) in fields.items():
-            signal.connect(partial(self._append, axis_index=axis_index, fields=f))
+        for v in values:
+            v.signal.connect(
+                partial(self._append, axis_index=axis_index, fields=v.fields)
+            )
             axis_index += 1
+
+        super().__init__(self.chart)
 
     def _append(self, data, axis_index, fields):
         self.chart.append(
-            data.timestamp, [getattr(data, f[1]) for f in fields], axis_index=axis_index
+            data.timestamp,
+            [getattr(data, f) for f in fields.values()],
+            axis_index=axis_index,
         )

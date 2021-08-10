@@ -1,4 +1,4 @@
-from .TimeChart import TimeChartWidget
+from .TimeChart import SALAxis, SALChartWidget
 
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
@@ -107,16 +107,16 @@ class ActuatorOverviewPageWidget(QWidget):
         self.velocityMzLabel = QLabel("UNKNOWN")
         self.velocityMagLabel = QLabel("UNKNOWN")
 
-        chartForces = TimeChartWidget(
-            {("Force (N)", self.m1m3.appliedForces): [("Total Mag", "forceMagnitude")]},
+        chartForces = SALChartWidget(
+            SALAxis("Force (N)", self.m1m3.appliedForces).addValue(
+                "Total Mag", "forceMagnitude"
+            ),
             maxItems=50 * 5,
         )
-        chartPercentage = TimeChartWidget(
-            {
-                ("Percentage", self.m1m3.forceActuatorState): [
-                    ("Support Percentage", "supportPercentage")
-                ]
-            },
+        chartPercentage = SALChartWidget(
+            SALAxis("Percentage", self.m1m3.forceActuatorState).addValue(
+                "Support Percentage", "supportPercentage"
+            ),
             maxItems=50 * 5,
         )
 
