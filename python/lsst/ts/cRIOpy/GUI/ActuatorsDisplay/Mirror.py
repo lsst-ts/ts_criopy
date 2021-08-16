@@ -70,7 +70,7 @@ class Mirror(QGraphicsScene):
         state : `int`
             Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
             ForceActuator.STATE_WARNING.
-        kind : `FAKind`
+        kind : `FASelection`
             Force actuator kind - normal, selected or selected neighbour.
         """
         self.addItem(

@@ -25,10 +25,11 @@ from PySide2.QtWidgets import QGraphicsItem
 import enum
 
 
-class FAKind(enum.IntEnum):
+class FASelection(enum.IntEnum):
     NORMAL = 1
     SELECTED = 2
-    NEAR_NEIGHBOUR = 3
+    NEAR_NEIGHBOR = 3
+    FAR_NEIGHBOR = 4
 
 
 class ForceActuator(QGraphicsItem):
@@ -63,7 +64,7 @@ class ForceActuator(QGraphicsItem):
     state : `int`
         Force Actuator state. 0 for inactive/unused, 1 for active OK, 2 for
         active warning.
-    kind : `FAKind`
+    kind : `FASelection`
         FA kind - normal, selected or neighbour of selected.
     """
 
@@ -182,10 +183,12 @@ class ForceActuator(QGraphicsItem):
             return
         lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
         # draw rectangle around selected actuator
-        if self._kind == FAKind.SELECTED:
+        if self._kind == FASelection.SELECTED:
             painter.setPen(QPen(Qt.black, self._scale_factor, lineStyle))
             painter.drawRect(self.boundingRect())
-        elif self._kind == FAKind.NEAR_NEIGHBOUR:
+        elif self._kind == FASelection.NEAR_NEIGHBOR:
+            painter.setPen(QPen(Qt.darkBlue, self._scale_factor * 2, lineStyle))
+        elif self._kind == FASelection.FAR_NEIGHBOR:
             painter.setPen(QPen(Qt.blue, self._scale_factor * 2, lineStyle))
         else:
             painter.setPen(QPen(Qt.red, self._scale_factor, lineStyle))
