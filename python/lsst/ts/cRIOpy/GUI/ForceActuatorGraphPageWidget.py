@@ -25,6 +25,16 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
         )
 
     def updateValues(self, data, changed):
+        """Called when new data are available through SAL callback.
+
+        Parameters
+        ----------
+        data : `object`
+            New data structure, passed from SAL handler.
+        changed : `bool`
+            True when data shall be added as a new value selection. Mirror View
+            is cleared when true, and new FA items are created.
+        """
         warningData = self.m1m3.remote.evt_forceActuatorWarning.get()
 
         if data is None:

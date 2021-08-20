@@ -118,7 +118,13 @@ class ForceActuator(QGraphicsItem):
             self.update()
 
     def setKind(self, kind):
-        """Set actuator kind."""
+        """Set actuator kind (selection status).
+
+        Parameters
+        ----------
+        kind : `FASelection`
+            New selection status.
+        """
         self._kind = kind
         self.update()
 
@@ -143,7 +149,14 @@ class ForceActuator(QGraphicsItem):
         return not (self._state == self.STATE_INACTIVE)
 
     def setColorScale(self, scale):
-        """Set actuator data display scale. This is used for setting display color."""
+        """Set actuator data display scale. This is used for setting display
+        color and formatting values.
+
+        Parameters
+        ----------
+        scale : `object`
+            Scaling object. Should provide formatValue() and getColor()
+            methods."""
         self._color_scale = scale
         self.update()
 
@@ -157,10 +170,27 @@ class ForceActuator(QGraphicsItem):
         )
 
     def getValue(self):
-        """Returns current value, string formated to scale."""
+        """Returns current value, string formated to scale.
+
+        Returns
+        -------
+        formatValue : `str`
+           Current value formatted by the currently used color scale."""
         return self.formatValue(self.data)
 
     def formatValue(self, v):
+        """Returns
+
+        Parameters
+        ----------
+        v : `scalar`
+            Value to format. Type can vary depending on which value is being formated (boolean, float, int,..).
+
+        Returns
+        -------
+        formattedValue : `str`
+            Value formatted by the currently used color scale.
+        """
         return self._color_scale.formatValue(v)
 
     def paint(self, painter, option, widget):

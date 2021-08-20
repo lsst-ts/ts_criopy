@@ -195,7 +195,7 @@ class EnabledForceActuators(QWidget):
     def enabledForceActuators(self, data):
         """Callback with enabled FA data. Triggers display update."""
         if len(self.mirrorWidget.mirrorView.items()) == 0:
-            new = True
+            new = True  # need to add force actuators
             self.mirrorWidget.mirrorView.clear()
         else:
             new = False
