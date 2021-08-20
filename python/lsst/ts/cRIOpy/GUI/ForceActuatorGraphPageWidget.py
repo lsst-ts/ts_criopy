@@ -24,7 +24,17 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             self.updateSelectedActuator
         )
 
-    def updateValues(self, data):
+    def updateValues(self, data, changed):
+        """Called when new data are available through SAL callback.
+
+        Parameters
+        ----------
+        data : `object`
+            New data structure, passed from SAL handler.
+        changed : `bool`
+            True when data shall be added as a new value selection. Mirror View
+            is cleared when true, and new FA items are created.
+        """
         warningData = self.m1m3.remote.evt_forceActuatorWarning.get()
 
         if data is None:
@@ -32,8 +42,9 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
         else:
             values = self.field.getValue(data)
 
-        self.mirrorWidget.mirrorView.clear()
-        self.mirrorWidget.setScaleType(self.field.scale)
+        if changed:
+            self.mirrorWidget.mirrorView.clear()
+            self.mirrorWidget.setScaleType(self.field.scale)
 
         def getWarning(index):
             return (
@@ -44,7 +55,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
         for row in FATABLE:
             index = row[FATABLE_INDEX]
-            dataIndex = row[self.field.index]
+            dataIndex = row[self.field.valueIndex]
             if values is None or dataIndex is None:
                 state = ForceActuator.STATE_INACTIVE
             elif warningData is not None or dataIndex is None:
@@ -52,16 +63,22 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             else:
                 state = ForceActuator.STATE_ACTIVE
 
-            self.mirrorWidget.mirrorView.addForceActuator(
-                row[FATABLE_ID],
-                index,
-                row[FATABLE_XPOSITION] * 1000,
-                row[FATABLE_YPOSITION] * 1000,
-                row[FATABLE_ORIENTATION],
-                None if (values is None or dataIndex is None) else values[dataIndex],
-                dataIndex,
-                state,
-            )
+            id = row[FATABLE_ID]
+            value = None if (values is None or dataIndex is None) else values[dataIndex]
+
+            if changed:
+                self.mirrorWidget.mirrorView.addForceActuator(
+                    id,
+                    index,
+                    row[FATABLE_XPOSITION] * 1000,
+                    row[FATABLE_YPOSITION] * 1000,
+                    row[FATABLE_ORIENTATION],
+                    value,
+                    dataIndex,
+                    state,
+                )
+            else:
+                self.mirrorWidget.mirrorView.updateForceActuator(id, value, state)
 
         if values is None:
             self.mirrorWidget.setRange(0, 0)
@@ -69,12 +86,12 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
         self.mirrorWidget.setRange(min(values), max(values))
 
-        if self.mirrorWidget.mirrorView.selected is not None:
-            self.selectedActuatorValueLabel.setText(
-                str(values[self.mirrorWidget.mirrorView.selected.dataIndex])
-            )
+        selected = self.mirrorWidget.mirrorView.selected
+        if selected is not None:
+            if selected.data is not None:
+                self.selectedActuatorValueLabel.setText(selected.getValue())
             if warningData is not None:
                 setWarningLabel(
                     self.selectedActuatorWarningLabel,
-                    getWarning(self.mirrorWidget.mirrorView.selected.index),
+                    getWarning(selected.index),
                 )

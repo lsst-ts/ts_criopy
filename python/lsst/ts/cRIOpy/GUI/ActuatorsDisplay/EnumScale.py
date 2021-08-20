@@ -19,13 +19,13 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Qt, QSize
-from PySide2.QtGui import QPainter
+from PySide2.QtGui import QPainter, QGuiApplication
 from PySide2.QtWidgets import QWidget
 
 
 class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
-    progress,..) values. Subclasses shall implement getValue() and getColor()
+    progress,..) values. Subclasses shall implement formatValue() and getColor()
     methods.
 
     Parameters
@@ -53,7 +53,7 @@ class EnumScale(QWidget):
         """
         return self._levels.keys()
 
-    def getValue(self, value):
+    def formatValue(self, value):
         return self._levels[value][0]
 
     def getColor(self, value):
@@ -75,6 +75,11 @@ class EnumScale(QWidget):
         """Overridden method. Paint gauge as series of lines, and adds text labels."""
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        palette = QGuiApplication.palette()
+        palette.setCurrentColorGroup(
+            palette.Active if self.isEnabled() else palette.Inactive
+        )
+
         swidth = self.width()
         sheight = self.height()
 
@@ -88,8 +93,8 @@ class EnumScale(QWidget):
             painter.setBrush(self.getColor(value))
             painter.drawRect(0, y, swidth, sheight / l_labels)
 
-            painter.setBrush(Qt.white)
-            painter.setPen(Qt.black)
+            painter.setBrush(palette.window())
+            painter.setPen(palette.color(palette.WindowText))
             painter.drawRect(
                 x_offset, y + 2 * t_height, swidth - 2 * x_offset, t_height
             )
@@ -100,7 +105,7 @@ class EnumScale(QWidget):
                 swidth - 2 * x_offset,
                 t_height,
                 Qt.AlignCenter,
-                self.getValue(value),
+                self.formatValue(value),
             )
 
         for i in range(l_labels):

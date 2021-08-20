@@ -52,7 +52,7 @@ class GaugeScale(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
-    def getValue(self, value):
+    def formatValue(self, value):
         return f"{value:.2f}"
 
     def getColor(self, value):
@@ -116,7 +116,7 @@ class GaugeScale(QWidget):
 
         painter.setPen(Qt.black)
         painter.drawText(
-            0, 0, self.width() - swidth, 30, Qt.AlignCenter, self.getValue(self._max)
+            0, 0, self.width() - swidth, 30, Qt.AlignCenter, self.formatValue(self._max)
         )
         painter.drawText(
             0,
@@ -124,5 +124,5 @@ class GaugeScale(QWidget):
             self.width() - swidth,
             30,
             Qt.AlignCenter,
-            self.getValue(self._min),
+            self.formatValue(self._min),
         )

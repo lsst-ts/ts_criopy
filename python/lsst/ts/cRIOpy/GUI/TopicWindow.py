@@ -90,9 +90,9 @@ class TopicWindow(DockWindow):
         selectionLayout.addWidget(QLabel("Filter Data"))
         selectionLayout.addLayout(filterLayout)
 
-        self.selectedActuatorIdLabel = QLabel("")
-        self.selectedActuatorValueLabel = QLabel("")
-        self.selectedActuatorWarningLabel = WarningLabel("")
+        self.selectedActuatorIdLabel = QLabel()
+        self.selectedActuatorValueLabel = QLabel()
+        self.selectedActuatorWarningLabel = WarningLabel()
         self.lastUpdatedLabel = TimeDeltaLabel()
 
         self.topicList = QListWidget()
@@ -166,7 +166,7 @@ class TopicWindow(DockWindow):
             return
 
         self.selectedActuatorIdLabel.setText(str(s.id))
-        self.selectedActuatorValueLabel.setText(str(s.data))
+        self.selectedActuatorValueLabel.setText(s.getValue())
         self.selectedActuatorWarningLabel.setValue(s.warning)
 
     def _changeField(self, topicIndex, fieldIndex):

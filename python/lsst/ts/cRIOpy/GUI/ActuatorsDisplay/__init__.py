@@ -1,4 +1,4 @@
-from .ForceActuator import ForceActuator
+from .ForceActuator import ForceActuator, FASelection
 from .BumpTestScale import BumpTestScale
 from .EnabledDisabledScale import EnabledDisabledScale
 from .GaugeScale import GaugeScale

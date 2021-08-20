@@ -30,7 +30,7 @@ from .SplashScreen import SplashScreen
 from .ThermalValuePageWidget import ThermalValuePageWidget
 from .TimeBoxChart import TimeBoxChart
 from .TimeDeltaLabel import TimeDeltaLabel
-from .TimeChart import TimeChart
+from .TimeChart import TimeChart, SALAxis, SALChartWidget
 from .TopicData import TopicData
 from .TopicWindow import TopicWindow
 from .VMSChartWidgets import *

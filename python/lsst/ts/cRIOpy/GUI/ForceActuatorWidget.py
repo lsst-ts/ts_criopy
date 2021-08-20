@@ -25,12 +25,20 @@ from PySide2.QtWidgets import (
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
-    QFormLayout,
+    QGridLayout,
     QListWidget,
 )
 from .QTHelpers import setWarningLabel
 from .TopicData import Topics
 from .TimeDeltaLabel import TimeDeltaLabel
+from ..M1M3FATable import (
+    FATABLE,
+    FATABLE_NEAR_NEIGHBOR_INDEX,
+    FATABLE_FAR_NEIGHBOR_INDEX,
+    nearNeighborIndices,
+    onlyFarNeighborIndices,
+)
+import numpy
 
 
 class ForceActuatorWidget(QWidget):
@@ -61,23 +69,34 @@ class ForceActuatorWidget(QWidget):
         self.m1m3 = m1m3
 
         self.field = None
+        self._topic = None
 
-        self.layout = QHBoxLayout()
-        self.plotLayout = QVBoxLayout()
-        self.selectionLayout = QVBoxLayout()
-        self.detailsLayout = QFormLayout()
-        self.filterLayout = QHBoxLayout()
-        self.layout.addLayout(self.plotLayout)
-        self.layout.addLayout(self.selectionLayout)
-        self.selectionLayout.addLayout(self.detailsLayout)
-        self.selectionLayout.addWidget(QLabel("Filter Data"))
-        self.selectionLayout.addLayout(self.filterLayout)
-        self.setLayout(self.layout)
+        layout = QHBoxLayout()
+        plotLayout = QVBoxLayout()
+        selectionLayout = QVBoxLayout()
+        detailsLayout = QGridLayout()
+        filterLayout = QHBoxLayout()
+        layout.addLayout(plotLayout)
+        layout.addLayout(selectionLayout)
+        selectionLayout.addLayout(detailsLayout)
+        selectionLayout.addWidget(QLabel("Filter Data"))
+        selectionLayout.addLayout(filterLayout)
+        self.setLayout(layout)
 
-        self.selectedActuatorIdLabel = QLabel("")
-        self.selectedActuatorValueLabel = QLabel("")
-        self.selectedActuatorWarningLabel = QLabel("")
+        self.selectedActuatorIdLabel = QLabel()
+        self.selectedActuatorValueLabel = QLabel()
+        self.selectedActuatorWarningLabel = QLabel()
         self.lastUpdatedLabel = TimeDeltaLabel()
+
+        self.nearSelectedIdsLabel = QLabel()
+        self.nearSelectedValueLabel = QLabel()
+        self.nearSelectedWarningLabel = QLabel()
+        self.nearSelectedUpdateLabel = QLabel()
+
+        self.farSelectedIdsLabel = QLabel()
+        self.farSelectedValueLabel = QLabel()
+        self.farSelectedWarningLabel = QLabel()
+        self.farSelectedUpdateLabel = QLabel()
 
         self.topicList = QListWidget()
         self.topicList.setFixedWidth(256)
@@ -89,20 +108,52 @@ class ForceActuatorWidget(QWidget):
         self.fieldList.setFixedWidth(256)
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
 
-        self.plotLayout.addWidget(userWidget)
+        plotLayout.addWidget(userWidget)
 
-        self.detailsLayout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-        self.detailsLayout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
-        self.detailsLayout.addRow(
-            QLabel("Actuator Value"), self.selectedActuatorValueLabel
-        )
-        self.detailsLayout.addRow(
-            QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
-        )
-        self.detailsLayout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+        def addDetails(row, name, label, nears, fars):
+            detailsLayout.addWidget(QLabel(name), row, 0)
+            detailsLayout.addWidget(label, row, 1)
+            detailsLayout.addWidget(nears, row, 2)
+            detailsLayout.addWidget(fars, row, 3)
 
-        self.filterLayout.addWidget(self.topicList)
-        self.filterLayout.addWidget(self.fieldList)
+        addDetails(
+            0,
+            "Variable",
+            QLabel("Selected"),
+            QLabel("Near Neighbors"),
+            QLabel("Far Neighbors"),
+        )
+        addDetails(
+            1,
+            "Id",
+            self.selectedActuatorIdLabel,
+            self.nearSelectedIdsLabel,
+            self.farSelectedIdsLabel,
+        )
+        addDetails(
+            2,
+            "Value",
+            self.selectedActuatorValueLabel,
+            self.nearSelectedValueLabel,
+            self.farSelectedValueLabel,
+        )
+        addDetails(
+            3,
+            "Warning",
+            self.selectedActuatorWarningLabel,
+            self.nearSelectedWarningLabel,
+            self.farSelectedWarningLabel,
+        )
+        addDetails(
+            4,
+            "Last Updated",
+            self.lastUpdatedLabel,
+            self.nearSelectedUpdateLabel,
+            self.farSelectedUpdateLabel,
+        )
+
+        filterLayout.addWidget(self.topicList)
+        filterLayout.addWidget(self.fieldList)
 
         self.topicList.setCurrentRow(0)
 
@@ -136,6 +187,12 @@ class ForceActuatorWidget(QWidget):
     def _setUnknown(self):
         self.lastUpdatedLabel.setUnknown()
 
+    def _getData(self):
+        return getattr(self.m1m3.remote, self._topic.getTopic()).get()
+
+    def _getFieldData(self):
+        return self.field.getValue(self._getData())
+
     def updateSelectedActuator(self, s):
         """
         Called from childrens to update currently selected actuator display.
@@ -143,7 +200,7 @@ class ForceActuatorWidget(QWidget):
         Parameters
         ----------
 
-        s : `map`
+        s : `ForceActuator`
             Contains id (selected actuator ID), data (selected actuator current value) and warning (boolean, true if value is in warning).
         """
         if s is None:
@@ -153,22 +210,39 @@ class ForceActuatorWidget(QWidget):
             return
 
         self.selectedActuatorIdLabel.setText(str(s.id))
-        self.selectedActuatorValueLabel.setText(str(s.data))
+        self.selectedActuatorValueLabel.setText(s.getValue())
         setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
+
+        # near neighbour
+        nearIDs = FATABLE[s.index][FATABLE_NEAR_NEIGHBOR_INDEX]
+        nearIndices = nearNeighborIndices(s.index, self.field.valueIndex)
+        field = self._getFieldData()
+        self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
+        self.nearSelectedValueLabel.setText(
+            f"{s.formatValue(numpy.average([field[i] for i in nearIndices]))}"
+        )
+
+        farIDs = filter(
+            lambda f: f not in nearIDs, FATABLE[s.index][FATABLE_FAR_NEIGHBOR_INDEX]
+        )
+        farIndices = onlyFarNeighborIndices(s.index, self.field.valueIndex)
+        self.farSelectedIdsLabel.setText(",".join(map(str, farIDs)))
+        self.farSelectedValueLabel.setText(
+            f"{s.formatValue(numpy.average([field[i] for i in farIndices]))}"
+        )
 
     def _changeField(self, topicIndex, fieldIndex):
         """
         Redraw actuators with new values.
         """
-        topic = self.topics.topics[topicIndex]
-        self.field = topic.fields[fieldIndex]
+        self._topic = self.topics.topics[topicIndex]
+        self.field = self._topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
-
-            data = getattr(self.m1m3.remote, topic.getTopic()).get()
-            self.dataChanged(data)
+            self.updateValues(self._getData(), True)
         except RuntimeError as err:
             print("ForceActuatorWidget._changeField", err)
+            self._topic = None
             pass
 
     @Slot(map)
@@ -178,9 +252,10 @@ class ForceActuatorWidget(QWidget):
 
         Parameters
         ----------
-
+        data : `class`
+            Class holding data. See SALComm for details.
         """
-        self.updateValues(data)
+        self.updateValues(data, False)
         if data is None:
             self._setUnknown()
         else:
