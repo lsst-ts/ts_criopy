@@ -88,7 +88,7 @@ class OverviewPageWidget(QWidget):
         self.velocityZLabel = QLabel("UNKNOWN")
         self.airCommandLabel = QLabel("UNKNOWN")
         self.airValveLabel = QLabel("UNKNOWN")
-        self.inclinometerLabel = QLabel("UNKNOWN")
+        self.inclinometerElevationLabel = QLabel("UNKNOWN")
         self.tmaAzimuthLabel = QLabel("UNKNOWN")
         self.tmaElevationLabel = QLabel("UNKNOWN")
 
@@ -202,8 +202,12 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.airCommandLabel, row, col + 1)
         dataLayout.addWidget(self.airValveLabel, row, col + 2)
         row += 1
-        dataLayout.addWidget(QLabel("M1M3"), row, col + 1)
-        dataLayout.addWidget(QLabel("TMA"), row, col + 2)
+        self.inclinometerTMALabel = QLabel("---")
+        dataLayout.addWidget(self.inclinometerTMALabel, row, col)
+        self.inclinometerLabel = QLabel("M1M3")
+        self.tmaLabel = QLabel("TMA")
+        dataLayout.addWidget(self.inclinometerLabel, row, col + 1)
+        dataLayout.addWidget(self.tmaLabel, row, col + 2)
         row += 1
         dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
         dataLayout.addWidget(QLabel("-"), row, col + 1)
@@ -214,7 +218,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(QLabel("<b>OSPL</b>"), row, col + 7)
         row += 1
         dataLayout.addWidget(QLabel("Elevation (deg)"), row, col)
-        dataLayout.addWidget(self.inclinometerLabel, row, col + 1)
+        dataLayout.addWidget(self.inclinometerElevationLabel, row, col + 1)
         dataLayout.addWidget(self.tmaElevationLabel, row, col + 2)
         dataLayout.addWidget(QLabel("<b>Version</b>"), row, col + 3)
         dataLayout.addWidget(self.cscVersion, row, col + 4)
@@ -244,6 +248,7 @@ class OverviewPageWidget(QWidget):
         m1m3.imsData.connect(self.imsData)
         m1m3.inclinometerData.connect(self.inclinometerData)
         m1m3.softwareVersions.connect(self.softwareVersions)
+        m1m3.forceActuatorSettings.connect(self.forceActuatorSettings)
 
         mtmount.azimuth.connect(self.azimuth)
         mtmount.elevation.connect(self.elevation)
@@ -351,7 +356,7 @@ class OverviewPageWidget(QWidget):
 
     @Slot(map)
     def inclinometerData(self, data):
-        self.inclinometerLabel.setText("%0.3f" % (data.inclinometerAngle))
+        self.inclinometerElevationLabel.setText("%0.3f" % (data.inclinometerAngle))
 
     @Slot(map)
     def softwareVersions(self, data):
@@ -359,6 +364,20 @@ class OverviewPageWidget(QWidget):
         self.salVersion.setText(data.salVersion)
         self.xmlVersion.setText(data.xmlVersion)
         self.osplVersion.setText(data.openSpliceVersion)
+
+    @Slot(map)
+    def forceActuatorSettings(self, data):
+        self.inclinometerLabel.setEnabled(data.useInclinometer)
+        self.inclinometerElevationLabel.setEnabled(data.useInclinometer)
+
+        self.tmaLabel.setDisabled(data.useInclinometer)
+        self.tmaAzimuthLabel.setDisabled(data.useInclinometer)
+        self.tmaElevationLabel.setDisabled(data.useInclinometer)
+
+        if data.useInclinometer:
+            self.inclinometerTMALabel.setText("<b>Inclinometeri</b>")
+        else:
+            self.inclinometerTMALabel.setText("<b>TMA</b>")
 
     @Slot(map)
     def azimuth(self, data):
