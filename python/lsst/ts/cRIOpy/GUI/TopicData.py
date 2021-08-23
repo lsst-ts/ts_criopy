@@ -366,6 +366,15 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
+                "Force Actuator Settings",
+                [
+                    EnabledDisabledField(
+                        "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
+                    ),
+                ],
+                "forceActuatorSettings",
+            ),
+            TopicData(
                 "Force Actuator Main Calibration Info",
                 [
                     TopicField(
