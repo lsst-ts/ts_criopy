@@ -375,7 +375,7 @@ class OverviewPageWidget(QWidget):
         self.tmaElevationLabel.setDisabled(data.useInclinometer)
 
         if data.useInclinometer:
-            self.inclinometerTMALabel.setText("<b>Inclinometeri</b>")
+            self.inclinometerTMALabel.setText("<b>Inclinometer</b>")
         else:
             self.inclinometerTMALabel.setText("<b>TMA</b>")
 
