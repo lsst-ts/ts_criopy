@@ -1,4 +1,4 @@
-from .TopicData import TopicData
+from .TopicData import TopicData, TopicField
 
 __all__ = ["Thermals"]
 
@@ -15,17 +15,11 @@ class Thermals:
             TopicData(
                 "Thermal Data",
                 [
-                    [
-                        "Differential temperature",
-                        lambda x: x.differentialTemperature,
-                        lambda: None,
-                    ],
-                    ["Fan RPM", lambda x: x.fanRPM, lambda: None],
-                    [
-                        "Absolute temperature",
-                        lambda x: x.absoluteTemperature,
-                        lambda: None,
-                    ],
+                    TopicField(
+                        "Differential temperature", "differentialTemperature", None
+                    ),
+                    TopicField("Fan RPM", "fanRPM", None),
+                    TopicField("Absolute temperature", "absoluteTemperature", None),
                 ],
                 "thermalData",
                 False,

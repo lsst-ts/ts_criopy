@@ -7,7 +7,7 @@ from lsst.ts.cRIOpy.M1M3FATable import (
 
 from .ActuatorsDisplay import Scales
 
-__all__ = ["Topics", "TopicData"]
+__all__ = ["Topics", "TopicData", "TopicField"]
 
 
 class TopicData:
