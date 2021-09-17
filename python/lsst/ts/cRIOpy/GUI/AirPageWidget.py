@@ -5,8 +5,6 @@ from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 
 class AirPageWidget(QWidget):
     def __init__(self, m1m3):

@@ -24,6 +24,18 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 
 class StateEnabledButton(QPushButton):
+    """Push button enabled by state.
+
+    Parameters
+    ----------
+    title : `str`
+        Button title. Passed to QPushButton.
+    m1m3 : `SALComm`
+        SALComm. It's detailed state is connected to a handler enabling/disabling the button.
+    enabledStates : `[DetailedState.*]`
+        States in which button shall be enabled. It will be disabled in all other states.
+    """
+
     def __init__(
         self,
         title,
