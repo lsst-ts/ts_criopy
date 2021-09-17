@@ -47,7 +47,7 @@ class EUI(QMainWindow):
         except AttributeError:
             self.resize(1000, 700)
 
-        self.addDockWidget(Qt.TopDockWidgetArea, thermalValues)
+        self.addDockWidget(Qt.RightDockWidgetArea, thermalValues)
         self.addDockWidget(Qt.LeftDockWidgetArea, stateDock)
         self.addDockWidget(Qt.BottomDockWidgetArea, logDock)
 
