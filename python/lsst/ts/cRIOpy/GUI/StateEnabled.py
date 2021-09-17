@@ -31,7 +31,7 @@ class StateEnabledButton(QPushButton):
     title : `str`
         Button title. Passed to QPushButton.
     m1m3 : `SALComm`
-        SALComm. It's detailed state is connected to a handler enabling/disabling the button.
+        SALComm. Its detailed state is connected to a handler enabling/disabling the button.
     enabledStates : `[DetailedState.*]`
         States in which button shall be enabled. It will be disabled in all other states.
     """
@@ -53,6 +53,16 @@ class StateEnabledButton(QPushButton):
 
 
 class EngineeringButton(StateEnabledButton):
+    """Push button enabled only in mirror engineering states.
+
+    Parameters
+    ----------
+    title : `str`
+        Button title. Passed to QPushButton.
+    m1m3 : `SALComm`
+        SALComm. When detailed state is in one of the engineering states,
+        button is enabled. It is disabled otherwise.
+    """
     def __init__(self, title, m1m3):
         super().__init__(
             title,
@@ -67,6 +77,16 @@ class EngineeringButton(StateEnabledButton):
 
 
 class StateEnabledWidget(QWidget):
+    """Widget linked to mirror detailed state, enabled only when mirror is in specified state(s).
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        SALComm. When detailed state is in one of the enabledStates, widget is
+        enabled. It is disabled otehrwise.
+    enabledStates : `[DetailedState]`
+        States in which the widget is enabled.
+    """
     def __init__(
         self,
         m1m3,
