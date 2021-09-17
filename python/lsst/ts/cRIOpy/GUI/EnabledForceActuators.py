@@ -31,12 +31,12 @@ from lsst.ts.cRIOpy.M1M3FATable import (
 from .ActuatorComboBox import ActuatorComboBox
 from .ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
 from .SALComm import SALCommand
+from .StateEnabledWidget import StateEnabledWidget
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QWidget,
     QLabel,
     QPushButton,
     QHBoxLayout,
@@ -46,7 +46,7 @@ from PySide2.QtWidgets import (
 from asyncqt import asyncSlot
 
 
-class EnabledForceActuators(QWidget):
+class EnabledForceActuators(StateEnabledWidget):
     """Widget displaying map of the Force Actuators (FA). Enables end users to
     select a FA and enable/disable it.
 
@@ -59,10 +59,17 @@ class EnabledForceActuators(QWidget):
     def __init__(self, m1m3):
         self.mirrorWidget = MirrorWidget()
         self.mirrorWidget.setScaleType(Scales.ENABLED_DISABLED)
-        super().__init__()
+        super().__init__(
+            m1m3,
+            [
+                DetailedState.PARKEDENGINEERING,
+                DetailedState.RAISINGENGINEERING,
+                DetailedState.ACTIVEENGINEERING,
+                DetailedState.LOWERINGENGINEERING,
+            ],
+        )
         self.m1m3 = m1m3
 
-        self.m1m3.detailedState.connect(self.detailedState)
         self.m1m3.enabledForceActuators.connect(self.enabledForceActuators)
 
         self.mirrorWidget.mirrorView.selectionChanged.connect(self.selectionChanged)
@@ -176,20 +183,6 @@ class EnabledForceActuators(QWidget):
     @SALCommand
     def _issueCommandDisable(self, **kwargs):
         return self.m1m3.remote.cmd_disableForceActuator
-
-    @Slot(map)
-    def detailedState(self, data):
-        """Callback on detailed state change. Enables control only in
-        Engineering state."""
-        self.setEnabled(
-            data.detailedState
-            in [
-                DetailedState.PARKEDENGINEERING,
-                DetailedState.RAISINGENGINEERING,
-                DetailedState.ACTIVEENGINEERING,
-                DetailedState.LOWERINGENGINEERING,
-            ]
-        )
 
     @Slot(map)
     def enabledForceActuators(self, data):
