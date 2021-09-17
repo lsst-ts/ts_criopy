@@ -72,12 +72,6 @@ class ThermalStatesDock(DockWindow):
 
         layout = QVBoxLayout()
 
-        formLayout = QFormLayout()
-        self.stateLabel = QLabel("---")
-        formLayout.addRow("State", self.stateLabel)
-
-        layout.addLayout(formLayout)
-
         self._controlButtons = []
 
         def _addButton(text, onClick, default=False):
@@ -94,6 +88,12 @@ class ThermalStatesDock(DockWindow):
         _addButton("Disable", self.disable)
         _addButton("Standby", self.standby)
         _addButton("Exit Control", self.exitControl)
+
+        formLayout = QFormLayout()
+        self.stateLabel = QLabel("---")
+        formLayout.addRow("State", self.stateLabel)
+
+        layout.addLayout(formLayout)
 
         widget = QWidget()
         widget.setLayout(layout)

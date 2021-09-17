@@ -29,8 +29,10 @@ class ThermalValuePageWidget(TopicWindow):
             self.dataWidget.empty()
             return
 
+        values = self.field.getValue(data)
+
         for r in range(0, 10):
             for c in range(0, 10):
                 index = r * 10 + c
                 if index < 96:
-                    self.dataWidget.item(r, c).setText(str(self.field.getValue(data)))
+                    self.dataWidget.item(r, c).setText(str(values[index]))
