@@ -40,6 +40,20 @@ class StateEnabledButton(QPushButton):
         self.setEnabled(data.detailedState in self._enabledStates)
 
 
+class EngineeringButton(StateEnabledButton):
+    def __init__(self, title, m1m3):
+        super().__init__(
+            title,
+            m1m3,
+            [
+                DetailedState.PARKEDENGINEERING,
+                DetailedState.RAISINGENGINEERING,
+                DetailedState.ACTIVEENGINEERING,
+                DetailedState.LOWERINGENGINEERING,
+            ],
+        )
+
+
 class StateEnabledWidget(QWidget):
     def __init__(
         self,
