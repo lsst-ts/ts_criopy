@@ -1,8 +1,9 @@
 from .QTHelpers import setWarningLabel, setBoolLabelOnOff
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
+from .StateEnabled import EngineeringButton
 
-from PySide2.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
@@ -24,37 +25,37 @@ class PowerPageWidget(QWidget):
         self.layout.addLayout(self.plotLayout)
         self.setLayout(self.layout)
 
-        self.turnMainAOnButton = QPushButton("Turn Main A On")
+        self.turnMainAOnButton = EngineeringButton("Turn Main A On", m1m3)
         self.turnMainAOnButton.clicked.connect(self.issueCommandTurnMainAOn)
-        self.turnMainAOffButton = QPushButton("Turn Main A Off")
+        self.turnMainAOffButton = EngineeringButton("Turn Main A Off", m1m3)
         self.turnMainAOffButton.clicked.connect(self.issueCommandTurnMainAOff)
-        self.turnMainBOnButton = QPushButton("Turn Main B On")
+        self.turnMainBOnButton = EngineeringButton("Turn Main B On", m1m3)
         self.turnMainBOnButton.clicked.connect(self.issueCommandTurnMainBOn)
-        self.turnMainBOffButton = QPushButton("Turn Main B Off")
+        self.turnMainBOffButton = EngineeringButton("Turn Main B Off", m1m3)
         self.turnMainBOffButton.clicked.connect(self.issueCommandTurnMainBOff)
-        self.turnMainCOnButton = QPushButton("Turn Main C On")
+        self.turnMainCOnButton = EngineeringButton("Turn Main C On", m1m3)
         self.turnMainCOnButton.clicked.connect(self.issueCommandTurnMainCOn)
-        self.turnMainCOffButton = QPushButton("Turn Main C Off")
+        self.turnMainCOffButton = EngineeringButton("Turn Main C Off", m1m3)
         self.turnMainCOffButton.clicked.connect(self.issueCommandTurnMainCOff)
-        self.turnMainDOnButton = QPushButton("Turn Main D On")
+        self.turnMainDOnButton = EngineeringButton("Turn Main D On", m1m3)
         self.turnMainDOnButton.clicked.connect(self.issueCommandTurnMainDOn)
-        self.turnMainDOffButton = QPushButton("Turn Main D Off")
+        self.turnMainDOffButton = EngineeringButton("Turn Main D Off", m1m3)
         self.turnMainDOffButton.clicked.connect(self.issueCommandTurnMainDOff)
-        self.turnAuxAOnButton = QPushButton("Turn Aux A On")
+        self.turnAuxAOnButton = EngineeringButton("Turn Aux A On", m1m3)
         self.turnAuxAOnButton.clicked.connect(self.issueCommandTurnAuxAOn)
-        self.turnAuxAOffButton = QPushButton("Turn Aux A Off")
+        self.turnAuxAOffButton = EngineeringButton("Turn Aux A Off", m1m3)
         self.turnAuxAOffButton.clicked.connect(self.issueCommandTurnAuxAOff)
-        self.turnAuxBOnButton = QPushButton("Turn Aux B On")
+        self.turnAuxBOnButton = EngineeringButton("Turn Aux B On", m1m3)
         self.turnAuxBOnButton.clicked.connect(self.issueCommandTurnAuxBOn)
-        self.turnAuxBOffButton = QPushButton("Turn Aux B Off")
+        self.turnAuxBOffButton = EngineeringButton("Turn Aux B Off", m1m3)
         self.turnAuxBOffButton.clicked.connect(self.issueCommandTurnAuxBOff)
-        self.turnAuxCOnButton = QPushButton("Turn Aux C On")
+        self.turnAuxCOnButton = EngineeringButton("Turn Aux C On", m1m3)
         self.turnAuxCOnButton.clicked.connect(self.issueCommandTurnAuxCOn)
-        self.turnAuxCOffButton = QPushButton("Turn Aux C Off")
+        self.turnAuxCOffButton = EngineeringButton("Turn Aux C Off", m1m3)
         self.turnAuxCOffButton.clicked.connect(self.issueCommandTurnAuxCOff)
-        self.turnAuxDOnButton = QPushButton("Turn Aux D On")
+        self.turnAuxDOnButton = EngineeringButton("Turn Aux D On", m1m3)
         self.turnAuxDOnButton.clicked.connect(self.issueCommandTurnAuxDOn)
-        self.turnAuxDOffButton = QPushButton("Turn Aux D Off")
+        self.turnAuxDOffButton = EngineeringButton("Turn Aux D Off", m1m3)
         self.turnAuxDOffButton.clicked.connect(self.issueCommandTurnAuxDOff)
 
         self.anyWarningLabel = QLabel("UNKNOWN")

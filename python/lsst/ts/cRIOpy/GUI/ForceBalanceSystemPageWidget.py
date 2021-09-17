@@ -1,10 +1,10 @@
 # from .QTHelpers import setBoolLabelYesNo
 from .SALComm import SALCommand
+from .StateEnabled import StateEnabledButton
 from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
     QWidget,
     QLabel,
-    QPushButton,
     QHBoxLayout,
     QVBoxLayout,
     QGridLayout,
@@ -35,15 +35,15 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.layout.addLayout(self.plotLayout)
         self.setLayout(self.layout)
 
-        self.enableHardpointCorrectionsButton = QPushButton(
-            "Enable Hardpoint Corrections"
+        self.enableHardpointCorrectionsButton = StateEnabledButton(
+            "Enable Hardpoint Corrections", m1m3
         )
         self.enableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandEnableHardpointCorrections
         )
         self.enableHardpointCorrectionsButton.setFixedWidth(256)
-        self.disableHardpointCorrectionsButton = QPushButton(
-            "Disable Hardpoint Corrections"
+        self.disableHardpointCorrectionsButton = StateEnabledButton(
+            "Disable Hardpoint Corrections", m1m3
         )
         self.disableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandDisableHardpointCorrections
