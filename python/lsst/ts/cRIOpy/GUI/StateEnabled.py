@@ -18,9 +18,26 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget
+from PySide2.QtWidgets import QWidget, QPushButton
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
+
+
+class StateEnabledButton(QPushButton):
+    def __init__(
+        self,
+        title,
+        m1m3,
+        enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
+    ):
+        super().__init__(title)
+        self._enabledStates = enabledStates
+
+        m1m3.detailedState.connect(self.detailedState)
+
+    @Slot(map)
+    def detailedState(self, data):
+        self.setEnabled(data.detailedState in self._enabledStates)
 
 
 class StateEnabledWidget(QWidget):

@@ -1,8 +1,11 @@
 from .QTHelpers import setWarningLabel, setBoolLabelHighLow, setBoolLabelOnOff
 from .SALComm import SALCommand
+from .StateEnabled import StateEnabledButton
 from PySide2.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 
 class AirPageWidget(QWidget):
@@ -22,10 +25,28 @@ class AirPageWidget(QWidget):
         self.setLayout(self.layout)
         self.setFixedHeight(300)
 
-        self.turnAirOnButton = QPushButton("Turn Air On")
+        self.turnAirOnButton = StateEnabledButton(
+            "Turn Air On",
+            m1m3,
+            [
+                DetailedState.PARKEDENGINEERING,
+                DetailedState.RAISINGENGINEERING,
+                DetailedState.ACTIVEENGINEERING,
+                DetailedState.LOWERINGENGINEERING,
+            ],
+        )
         self.turnAirOnButton.clicked.connect(self.issueCommandTurnAirOn)
         self.turnAirOnButton.setFixedWidth(256)
-        self.turnAirOffButton = QPushButton("Turn Air Off")
+        self.turnAirOffButton = StateEnabledButton(
+            "Turn Air Off",
+            m1m3,
+            [
+                DetailedState.PARKEDENGINEERING,
+                DetailedState.RAISINGENGINEERING,
+                DetailedState.ACTIVEENGINEERING,
+                DetailedState.LOWERINGENGINEERING,
+            ],
+        )
         self.turnAirOffButton.clicked.connect(self.issueCommandTurnAirOff)
         self.turnAirOffButton.setFixedWidth(256)
 

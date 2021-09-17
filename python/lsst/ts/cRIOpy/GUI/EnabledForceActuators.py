@@ -31,7 +31,7 @@ from lsst.ts.cRIOpy.M1M3FATable import (
 from .ActuatorComboBox import ActuatorComboBox
 from .ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
 from .SALComm import SALCommand
-from .StateEnabledWidget import StateEnabledWidget
+from .StateEnabled import StateEnabledWidget
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
