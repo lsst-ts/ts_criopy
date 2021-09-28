@@ -3,14 +3,16 @@ from .SALComm import SALCommand
 from .StateEnabled import StateEnabledButton
 from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
-    QWidget,
     QLabel,
+    QWidget,
     QHBoxLayout,
     QVBoxLayout,
     QGridLayout,
 )
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+from lsst.QtAddons import SwitchButton
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 
 class ForceBalanceSystemPageWidget(QWidget):
@@ -21,29 +23,29 @@ class ForceBalanceSystemPageWidget(QWidget):
         self._balanceData = None
         self._hardpointData = None
 
-        self.layout = QVBoxLayout()
-        self.dataLayout = QGridLayout()
-        self.warningLayout = QGridLayout()
-        self.commandLayout = QVBoxLayout()
-        self.plotLayout = QHBoxLayout()
-        self.layout.addLayout(self.commandLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.dataLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.warningLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.plotLayout)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        dataLayout = QGridLayout()
+        warningLayout = QGridLayout()
+        commandLayout = QVBoxLayout()
+        plotLayout = QHBoxLayout()
+        layout.addLayout(commandLayout)
+        layout.addWidget(QLabel(" "))
+        layout.addLayout(dataLayout)
+        layout.addWidget(QLabel(" "))
+        layout.addLayout(warningLayout)
+        layout.addWidget(QLabel(" "))
+        layout.addLayout(plotLayout)
+        self.setLayout(layout)
 
         self.enableHardpointCorrectionsButton = StateEnabledButton(
-            "Enable Hardpoint Corrections", m1m3
+            "Enable Hardpoint Corrections", m1m3, [DetailedState.ACTIVE],
         )
         self.enableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandEnableHardpointCorrections
         )
         self.enableHardpointCorrectionsButton.setFixedWidth(256)
         self.disableHardpointCorrectionsButton = StateEnabledButton(
-            "Disable Hardpoint Corrections", m1m3
+            "Disable Hardpoint Corrections", m1m3, [DetailedState.ACTIVE],
         )
         self.disableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandDisableHardpointCorrections
@@ -89,73 +91,74 @@ class ForceBalanceSystemPageWidget(QWidget):
         )
         self.balanceChartView = TimeChartView(self.balanceChart)
 
-        self.commandLayout.addWidget(self.enableHardpointCorrectionsButton)
-        self.commandLayout.addWidget(self.disableHardpointCorrectionsButton)
+        commandLayout.addWidget(self.enableHardpointCorrectionsButton)
+        commandLayout.addWidget(self.disableHardpointCorrectionsButton)
 
         row = 0
         col = 0
-        self.dataLayout.addWidget(QLabel("Fx (N)"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("Fy (N)"), row, col + 2)
-        self.dataLayout.addWidget(QLabel("Fz (N)"), row, col + 3)
-        self.dataLayout.addWidget(QLabel("Mx (Nm)"), row, col + 4)
-        self.dataLayout.addWidget(QLabel("My (Nm)"), row, col + 5)
-        self.dataLayout.addWidget(QLabel("Mz (Nm)"), row, col + 6)
-        self.dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
+        dataLayout.addWidget(QLabel("Fx (N)"), row, col + 1)
+        dataLayout.addWidget(QLabel("Fy (N)"), row, col + 2)
+        dataLayout.addWidget(QLabel("Fz (N)"), row, col + 3)
+        dataLayout.addWidget(QLabel("Mx (Nm)"), row, col + 4)
+        dataLayout.addWidget(QLabel("My (Nm)"), row, col + 5)
+        dataLayout.addWidget(QLabel("Mz (Nm)"), row, col + 6)
+        dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel("Total"), row, col)
-        self.dataLayout.addWidget(self.totalFxLabel, row, col + 1)
-        self.dataLayout.addWidget(self.totalFyLabel, row, col + 2)
-        self.dataLayout.addWidget(self.totalFzLabel, row, col + 3)
-        self.dataLayout.addWidget(self.totalMxLabel, row, col + 4)
-        self.dataLayout.addWidget(self.totalMyLabel, row, col + 5)
-        self.dataLayout.addWidget(self.totalMzLabel, row, col + 6)
-        self.dataLayout.addWidget(self.totalMagLabel, row, col + 7)
+        dataLayout.addWidget(QLabel("Total"), row, col)
+        dataLayout.addWidget(self.totalFxLabel, row, col + 1)
+        dataLayout.addWidget(self.totalFyLabel, row, col + 2)
+        dataLayout.addWidget(self.totalFzLabel, row, col + 3)
+        dataLayout.addWidget(self.totalMxLabel, row, col + 4)
+        dataLayout.addWidget(self.totalMyLabel, row, col + 5)
+        dataLayout.addWidget(self.totalMzLabel, row, col + 6)
+        dataLayout.addWidget(self.totalMagLabel, row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel("Corrected"), row, col)
-        self.dataLayout.addWidget(self.balanceFxLabel, row, col + 1)
-        self.dataLayout.addWidget(self.balanceFyLabel, row, col + 2)
-        self.dataLayout.addWidget(self.balanceFzLabel, row, col + 3)
-        self.dataLayout.addWidget(self.balanceMxLabel, row, col + 4)
-        self.dataLayout.addWidget(self.balanceMyLabel, row, col + 5)
-        self.dataLayout.addWidget(self.balanceMzLabel, row, col + 6)
-        self.dataLayout.addWidget(self.balanceMagLabel, row, col + 7)
+        dataLayout.addWidget(QLabel("Corrected"), row, col)
+        dataLayout.addWidget(self.balanceFxLabel, row, col + 1)
+        dataLayout.addWidget(self.balanceFyLabel, row, col + 2)
+        dataLayout.addWidget(self.balanceFzLabel, row, col + 3)
+        dataLayout.addWidget(self.balanceMxLabel, row, col + 4)
+        dataLayout.addWidget(self.balanceMyLabel, row, col + 5)
+        dataLayout.addWidget(self.balanceMzLabel, row, col + 6)
+        dataLayout.addWidget(self.balanceMagLabel, row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel("Remaining"), row, col)
-        self.dataLayout.addWidget(self.hardpointFxLabel, row, col + 1)
-        self.dataLayout.addWidget(self.hardpointFyLabel, row, col + 2)
-        self.dataLayout.addWidget(self.hardpointFzLabel, row, col + 3)
-        self.dataLayout.addWidget(self.hardpointMxLabel, row, col + 4)
-        self.dataLayout.addWidget(self.hardpointMyLabel, row, col + 5)
-        self.dataLayout.addWidget(self.hardpointMzLabel, row, col + 6)
-        self.dataLayout.addWidget(self.hardpointMagLabel, row, col + 7)
+        dataLayout.addWidget(QLabel("Remaining"), row, col)
+        dataLayout.addWidget(self.hardpointFxLabel, row, col + 1)
+        dataLayout.addWidget(self.hardpointFyLabel, row, col + 2)
+        dataLayout.addWidget(self.hardpointFzLabel, row, col + 3)
+        dataLayout.addWidget(self.hardpointMxLabel, row, col + 4)
+        dataLayout.addWidget(self.hardpointMyLabel, row, col + 5)
+        dataLayout.addWidget(self.hardpointMzLabel, row, col + 6)
+        dataLayout.addWidget(self.hardpointMagLabel, row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel(" "), row, col)
+        dataLayout.addWidget(QLabel(" "), row, col)
         row += 1
-        self.dataLayout.addWidget(QLabel("HP1 (N)"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("HP2 (N)"), row, col + 2)
-        self.dataLayout.addWidget(QLabel("HP3 (N)"), row, col + 3)
-        self.dataLayout.addWidget(QLabel("HP4 (N)"), row, col + 4)
-        self.dataLayout.addWidget(QLabel("HP5 (N)"), row, col + 5)
-        self.dataLayout.addWidget(QLabel("HP6 (N)"), row, col + 6)
-        self.dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
+        dataLayout.addWidget(QLabel("HP1 (N)"), row, col + 1)
+        dataLayout.addWidget(QLabel("HP2 (N)"), row, col + 2)
+        dataLayout.addWidget(QLabel("HP3 (N)"), row, col + 3)
+        dataLayout.addWidget(QLabel("HP4 (N)"), row, col + 4)
+        dataLayout.addWidget(QLabel("HP5 (N)"), row, col + 5)
+        dataLayout.addWidget(QLabel("HP6 (N)"), row, col + 6)
+        dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel("Measured Force"), row, col)
-        self.dataLayout.addWidget(self.hardpoint1ForceLabel, row, col + 1)
-        self.dataLayout.addWidget(self.hardpoint2ForceLabel, row, col + 2)
-        self.dataLayout.addWidget(self.hardpoint3ForceLabel, row, col + 3)
-        self.dataLayout.addWidget(self.hardpoint4ForceLabel, row, col + 4)
-        self.dataLayout.addWidget(self.hardpoint5ForceLabel, row, col + 5)
-        self.dataLayout.addWidget(self.hardpoint6ForceLabel, row, col + 6)
-        self.dataLayout.addWidget(self.hardpointMagForceLabel, row, col + 7)
+        dataLayout.addWidget(QLabel("Measured Force"), row, col)
+        dataLayout.addWidget(self.hardpoint1ForceLabel, row, col + 1)
+        dataLayout.addWidget(self.hardpoint2ForceLabel, row, col + 2)
+        dataLayout.addWidget(self.hardpoint3ForceLabel, row, col + 3)
+        dataLayout.addWidget(self.hardpoint4ForceLabel, row, col + 4)
+        dataLayout.addWidget(self.hardpoint5ForceLabel, row, col + 5)
+        dataLayout.addWidget(self.hardpoint6ForceLabel, row, col + 6)
+        dataLayout.addWidget(self.hardpointMagForceLabel, row, col + 7)
 
         row = 0
         col = 0
-        self.warningLayout.addWidget(QLabel("Balance Forces Clipped"), row, col)
-        self.warningLayout.addWidget(self.balanceForcesClippedLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("Balance Forces Clipped"), row, col)
+        warningLayout.addWidget(self.balanceForcesClippedLabel, row, col + 1)
 
-        self.plotLayout.addWidget(self.balanceChartView)
+        plotLayout.addWidget(self.balanceChartView)
 
         self.m1m3.appliedBalanceForces.connect(self.appliedBalanceForces)
+        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
         self.m1m3.forceActuatorWarning.connect(self.forceActuatorWarning)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
@@ -180,6 +183,11 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         self._balanceData = data
         self._setTotalForces()
+
+    @Slot(map)
+    def forceActuatorState(self, data):
+        self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
+        self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
 
     @Slot(map)
     def forceActuatorWarning(self, data):

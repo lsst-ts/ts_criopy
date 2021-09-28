@@ -43,6 +43,7 @@ class StateEnabledButton(QPushButton):
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
     ):
         super().__init__(title)
+        self.setEnabled(False)
         self._enabledStates = enabledStates
 
         m1m3.detailedState.connect(self.detailedState)
@@ -93,6 +94,7 @@ class StateEnabledWidget(QWidget):
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
     ):
         super().__init__()
+        self.setEnabled(False)
         self._enabledStates = enabledStates
 
         m1m3.detailedState.connect(self.detailedState)
