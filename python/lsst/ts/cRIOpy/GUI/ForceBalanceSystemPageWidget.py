@@ -56,14 +56,6 @@ class ForceBalanceSystemPageWidget(QWidget):
         )
         self.disableHardpointCorrectionsButton.setFixedWidth(256)
 
-        self.hardpoint1ForceLabel = QLabel("0.0")
-        self.hardpoint2ForceLabel = QLabel("0.0")
-        self.hardpoint3ForceLabel = QLabel("0.0")
-        self.hardpoint4ForceLabel = QLabel("0.0")
-        self.hardpoint5ForceLabel = QLabel("0.0")
-        self.hardpoint6ForceLabel = QLabel("0.0")
-        self.hardpointMagForceLabel = QLabel("0.0")
-
         self.balanceForcesClipped = Clipped("Balance")
 
         self.balanceChart = TimeChart(
@@ -129,23 +121,18 @@ class ForceBalanceSystemPageWidget(QWidget):
         dataLayout.addWidget(QLabel(" "), row, 0)
         row += 1
 
-        col = 0
-        dataLayout.addWidget(QLabel("HP1 (N)"), row, col + 1)
-        dataLayout.addWidget(QLabel("HP2 (N)"), row, col + 2)
-        dataLayout.addWidget(QLabel("HP3 (N)"), row, col + 3)
-        dataLayout.addWidget(QLabel("HP4 (N)"), row, col + 4)
-        dataLayout.addWidget(QLabel("HP5 (N)"), row, col + 5)
-        dataLayout.addWidget(QLabel("HP6 (N)"), row, col + 6)
-        dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
+        hardpoints = [f"HP{x}" for x in range(1, 7)] + ["Mag"]
+
+        for d in range(7):
+            dataLayout.addWidget(QLabel(f"<b>{hardpoints[d]}</b>"), row, d + 1)
+
         row += 1
-        dataLayout.addWidget(QLabel("Measured Force"), row, col)
-        dataLayout.addWidget(self.hardpoint1ForceLabel, row, col + 1)
-        dataLayout.addWidget(self.hardpoint2ForceLabel, row, col + 2)
-        dataLayout.addWidget(self.hardpoint3ForceLabel, row, col + 3)
-        dataLayout.addWidget(self.hardpoint4ForceLabel, row, col + 4)
-        dataLayout.addWidget(self.hardpoint5ForceLabel, row, col + 5)
-        dataLayout.addWidget(self.hardpoint6ForceLabel, row, col + 6)
-        dataLayout.addWidget(self.hardpointMagForceLabel, row, col + 7)
+
+        dataLayout.addWidget(QLabel("<b>Measured Force</b>"), row, 0)
+
+        self.hardpoints = [Force() for x in range(7)]
+        for c in range(7):
+            dataLayout.addWidget(self.hardpoints[c], row, c + 1)
 
         warningLayout.addWidget(self.balanceForcesClipped)
         warningLayout.addStretch()
@@ -196,13 +183,9 @@ class ForceBalanceSystemPageWidget(QWidget):
 
     @Slot(map)
     def hardpointActuatorData(self, data):
-        self.hardpoint1ForceLabel.setText("%0.1f" % data.measuredForce[0])
-        self.hardpoint2ForceLabel.setText("%0.1f" % data.measuredForce[1])
-        self.hardpoint3ForceLabel.setText("%0.1f" % data.measuredForce[2])
-        self.hardpoint4ForceLabel.setText("%0.1f" % data.measuredForce[3])
-        self.hardpoint5ForceLabel.setText("%0.1f" % data.measuredForce[4])
-        self.hardpoint6ForceLabel.setText("%0.1f" % data.measuredForce[5])
-        self.hardpointMagForceLabel.setText("%0.1f" % (sum(data.measuredForce)))
+        for hp in range(6):
+            self.hardpoints[hp].setValue(data.measuredForce[hp])
+        self.hardpoints[6].setValue(sum(data.measuredForce))
 
         self._fillRow(self.remaing, data)
 
