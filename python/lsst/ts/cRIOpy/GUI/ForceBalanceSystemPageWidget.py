@@ -1,6 +1,6 @@
 # from .QTHelpers import setBoolLabelYesNo
 from .SALComm import SALCommand
-from .CustomLabels import Clipped
+from .CustomLabels import Force, Moment, Clipped
 from .StateEnabled import StateEnabledButton
 from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
@@ -99,24 +99,46 @@ class ForceBalanceSystemPageWidget(QWidget):
         commandLayout.addWidget(self.disableHardpointCorrectionsButton)
 
         row = 0
+
+        values = [
+            "Fx (N)",
+            "Fy (N)",
+            "Fz (N)",
+            "Mx (Nm)",
+            "My (Nm)",
+            "Mz (Nm)",
+            "Mag (N)",
+        ]
+
+        for d in range(7):
+            dataLayout.addWidget(QLabel(f"<b>{values[d]}</b>"), row, d + 1)
+
+        row += 1
+
+        def createXYZ():
+            return {
+                "fx": Force(),
+                "fy": Force(),
+                "fz": Force(),
+                "mx": Moment(),
+                "my": Moment(),
+                "mz": Moment(),
+                "forceMagnitude": Force(),
+            }
+
+        dataLayout.addWidget(QLabel("<b>Total</b>"), row, 0)
+
+        self.totals = createXYZ()
+
+        def addDataRow(variables, row, col=1):
+            for k, v in variables.items():
+                dataLayout.addWidget(v, row, col)
+                col += 1
+
+        addDataRow(self.totals, row)
+
+        row += 1
         col = 0
-        dataLayout.addWidget(QLabel("Fx (N)"), row, col + 1)
-        dataLayout.addWidget(QLabel("Fy (N)"), row, col + 2)
-        dataLayout.addWidget(QLabel("Fz (N)"), row, col + 3)
-        dataLayout.addWidget(QLabel("Mx (Nm)"), row, col + 4)
-        dataLayout.addWidget(QLabel("My (Nm)"), row, col + 5)
-        dataLayout.addWidget(QLabel("Mz (Nm)"), row, col + 6)
-        dataLayout.addWidget(QLabel("Mag (N)"), row, col + 7)
-        row += 1
-        dataLayout.addWidget(QLabel("Total"), row, col)
-        dataLayout.addWidget(self.totalFxLabel, row, col + 1)
-        dataLayout.addWidget(self.totalFyLabel, row, col + 2)
-        dataLayout.addWidget(self.totalFzLabel, row, col + 3)
-        dataLayout.addWidget(self.totalMxLabel, row, col + 4)
-        dataLayout.addWidget(self.totalMyLabel, row, col + 5)
-        dataLayout.addWidget(self.totalMzLabel, row, col + 6)
-        dataLayout.addWidget(self.totalMagLabel, row, col + 7)
-        row += 1
         dataLayout.addWidget(QLabel("Corrected"), row, col)
         dataLayout.addWidget(self.balanceFxLabel, row, col + 1)
         dataLayout.addWidget(self.balanceFyLabel, row, col + 2)
@@ -241,29 +263,12 @@ class ForceBalanceSystemPageWidget(QWidget):
     def _issueCommandDisableHardpointCorrections(self, **kwargs):
         return self.m1m3.remote.cmd_disableHardpointCorrections
 
+    def _fillAddRow(self, variables, d1, d2):
+        for k, v in variables.items():
+            v.setValue(getattr(d1, k) + getattr(d2, k))
+
     def _setTotalForces(self):
         if self._balanceData is None or self._hardpointData is None:
             return
 
-        self.totalFxLabel.setText(
-            "%0.1f" % (self._balanceData.fx + self._hardpointData.fx)
-        )
-        self.totalFyLabel.setText(
-            "%0.1f" % (self._balanceData.fy + self._hardpointData.fy)
-        )
-        self.totalFzLabel.setText(
-            "%0.1f" % (self._balanceData.fz + self._hardpointData.fz)
-        )
-        self.totalMxLabel.setText(
-            "%0.1f" % (self._balanceData.mx + self._hardpointData.mx)
-        )
-        self.totalMyLabel.setText(
-            "%0.1f" % (self._balanceData.my + self._hardpointData.my)
-        )
-        self.totalMzLabel.setText(
-            "%0.1f" % (self._balanceData.mz + self._hardpointData.mz)
-        )
-        self.totalMagLabel.setText(
-            "%0.1f"
-            % (self._balanceData.forceMagnitude + self._hardpointData.forceMagnitude)
-        )
+        self._fillAddRow(self.totals, self._balanceData, self._hardpointData)
