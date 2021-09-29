@@ -41,6 +41,7 @@ __all__ = [
     "MmWarning",
     "OnOffLabel",
     "WarningLabel",
+    "Clipped",
     "Heartbeat",
     "LogEventWarning",
     "DockWindow",
@@ -279,6 +280,20 @@ class WarningLabel(QLabel):
             self.setText("<font color='red'>WARNING</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class Clipped(QLabel):
+    "Display clipped/not clipped"
+
+    def __init__(self, force):
+        super().__init__()
+        self._force = force
+
+    def setClipped(self, clipped):
+        if clipped:
+            self.setText(f"<font color='red'>{self._force} forces clipped</font>")
+        else:
+            self.setText(f"<font color='green'>{self._force} forces not clipped</font>")
 
 
 class Heartbeat(QWidget):

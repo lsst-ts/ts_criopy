@@ -1,5 +1,6 @@
 # from .QTHelpers import setBoolLabelYesNo
 from .SALComm import SALCommand
+from .CustomLabels import Clipped
 from .StateEnabled import StateEnabledButton
 from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
@@ -11,7 +12,6 @@ from PySide2.QtWidgets import (
 )
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-from lsst.QtAddons import SwitchButton
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 
@@ -25,27 +25,31 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         layout = QVBoxLayout()
         dataLayout = QGridLayout()
-        warningLayout = QGridLayout()
+        warningLayout = QHBoxLayout()
         commandLayout = QVBoxLayout()
         plotLayout = QHBoxLayout()
         layout.addLayout(commandLayout)
-        layout.addWidget(QLabel(" "))
+        layout.addSpacing(20)
         layout.addLayout(dataLayout)
-        layout.addWidget(QLabel(" "))
+        layout.addSpacing(20)
         layout.addLayout(warningLayout)
-        layout.addWidget(QLabel(" "))
+        layout.addSpacing(20)
         layout.addLayout(plotLayout)
         self.setLayout(layout)
 
         self.enableHardpointCorrectionsButton = StateEnabledButton(
-            "Enable Hardpoint Corrections", m1m3, [DetailedState.ACTIVE],
+            "Enable Hardpoint Corrections",
+            m1m3,
+            [DetailedState.ACTIVE],
         )
         self.enableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandEnableHardpointCorrections
         )
         self.enableHardpointCorrectionsButton.setFixedWidth(256)
         self.disableHardpointCorrectionsButton = StateEnabledButton(
-            "Disable Hardpoint Corrections", m1m3, [DetailedState.ACTIVE],
+            "Disable Hardpoint Corrections",
+            m1m3,
+            [DetailedState.ACTIVE],
         )
         self.disableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandDisableHardpointCorrections
@@ -81,7 +85,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.totalMzLabel = QLabel("0.0")
         self.totalMagLabel = QLabel("0.0")
 
-        self.balanceForcesClippedLabel = QLabel("UNKNOWN")
+        self.balanceForcesClipped = Clipped("Balance")
 
         self.balanceChart = TimeChart(
             {
@@ -152,14 +156,14 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         row = 0
         col = 0
-        warningLayout.addWidget(QLabel("Balance Forces Clipped"), row, col)
-        warningLayout.addWidget(self.balanceForcesClippedLabel, row, col + 1)
+        warningLayout.addWidget(self.balanceForcesClipped)
+        warningLayout.addStretch()
 
         plotLayout.addWidget(self.balanceChartView)
 
         self.m1m3.appliedBalanceForces.connect(self.appliedBalanceForces)
+        self.m1m3.preclippedBalanceForces.connect(self.preclippedBalanceForces)
         self.m1m3.forceActuatorState.connect(self.forceActuatorState)
-        self.m1m3.forceActuatorWarning.connect(self.forceActuatorWarning)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
     @Slot(map)
@@ -184,15 +188,22 @@ class ForceBalanceSystemPageWidget(QWidget):
         self._balanceData = data
         self._setTotalForces()
 
+        self.preclippedBalanceForces(data)
+
+    @Slot(map)
+    def preclippedBalanceForces(self, data):
+        try:
+            self.balanceForcesClipped.setClipped(
+                self.m1m3.remote.evt_balanceForcesApplied.get().timestamp
+                == self.m1m3.remote.evt_preclippedBalanceForces.get().timestamp
+            )
+        except AttributeError:
+            self.balanceForcesClipped.setClipped(False)
+
     @Slot(map)
     def forceActuatorState(self, data):
         self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
         self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
-
-    @Slot(map)
-    def forceActuatorWarning(self, data):
-        # TODO setBoolLabelYesNo(self.balanceForcesClippedLabel, BitHelper.get(data.anyForceActuatorFlags, ForceActuatorFlags.ForceSetpointBalanceForceClipped))
-        pass
 
     @Slot(map)
     def hardpointActuatorData(self, data):
