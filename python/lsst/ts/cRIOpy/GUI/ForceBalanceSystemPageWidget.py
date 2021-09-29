@@ -63,27 +63,6 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.hardpoint5ForceLabel = QLabel("0.0")
         self.hardpoint6ForceLabel = QLabel("0.0")
         self.hardpointMagForceLabel = QLabel("0.0")
-        self.hardpointFxLabel = QLabel("0.0")
-        self.hardpointFyLabel = QLabel("0.0")
-        self.hardpointFzLabel = QLabel("0.0")
-        self.hardpointMxLabel = QLabel("0.0")
-        self.hardpointMyLabel = QLabel("0.0")
-        self.hardpointMzLabel = QLabel("0.0")
-        self.hardpointMagLabel = QLabel("0.0")
-        self.balanceFxLabel = QLabel("0.0")
-        self.balanceFyLabel = QLabel("0.0")
-        self.balanceFzLabel = QLabel("0.0")
-        self.balanceMxLabel = QLabel("0.0")
-        self.balanceMyLabel = QLabel("0.0")
-        self.balanceMzLabel = QLabel("0.0")
-        self.balanceMagLabel = QLabel("0.0")
-        self.totalFxLabel = QLabel("0.0")
-        self.totalFyLabel = QLabel("0.0")
-        self.totalFzLabel = QLabel("0.0")
-        self.totalMxLabel = QLabel("0.0")
-        self.totalMyLabel = QLabel("0.0")
-        self.totalMzLabel = QLabel("0.0")
-        self.totalMagLabel = QLabel("0.0")
 
         self.balanceForcesClipped = Clipped("Balance")
 
@@ -101,13 +80,13 @@ class ForceBalanceSystemPageWidget(QWidget):
         row = 0
 
         values = [
-            "Fx (N)",
-            "Fy (N)",
-            "Fz (N)",
-            "Mx (Nm)",
-            "My (Nm)",
-            "Mz (Nm)",
-            "Mag (N)",
+            "Fx",
+            "Fy",
+            "Fz",
+            "Mx",
+            "My",
+            "Mz",
+            "Mag",
         ]
 
         for d in range(7):
@@ -126,39 +105,31 @@ class ForceBalanceSystemPageWidget(QWidget):
                 "forceMagnitude": Force(),
             }
 
-        dataLayout.addWidget(QLabel("<b>Total</b>"), row, 0)
-
-        self.totals = createXYZ()
-
         def addDataRow(variables, row, col=1):
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
 
+        self.totals = createXYZ()
+
+        dataLayout.addWidget(QLabel("<b>Total</b>"), row, 0)
         addDataRow(self.totals, row)
 
         row += 1
+        self.corrected = createXYZ()
+        dataLayout.addWidget(QLabel("<b>Corrected</b>"), row, 0)
+        addDataRow(self.corrected, row)
+
+        row += 1
+        self.remaing = createXYZ()
+        dataLayout.addWidget(QLabel("<b>Remaining</b>"), row, 0)
+        addDataRow(self.remaing, row)
+
+        row += 1
+        dataLayout.addWidget(QLabel(" "), row, 0)
+        row += 1
+
         col = 0
-        dataLayout.addWidget(QLabel("Corrected"), row, col)
-        dataLayout.addWidget(self.balanceFxLabel, row, col + 1)
-        dataLayout.addWidget(self.balanceFyLabel, row, col + 2)
-        dataLayout.addWidget(self.balanceFzLabel, row, col + 3)
-        dataLayout.addWidget(self.balanceMxLabel, row, col + 4)
-        dataLayout.addWidget(self.balanceMyLabel, row, col + 5)
-        dataLayout.addWidget(self.balanceMzLabel, row, col + 6)
-        dataLayout.addWidget(self.balanceMagLabel, row, col + 7)
-        row += 1
-        dataLayout.addWidget(QLabel("Remaining"), row, col)
-        dataLayout.addWidget(self.hardpointFxLabel, row, col + 1)
-        dataLayout.addWidget(self.hardpointFyLabel, row, col + 2)
-        dataLayout.addWidget(self.hardpointFzLabel, row, col + 3)
-        dataLayout.addWidget(self.hardpointMxLabel, row, col + 4)
-        dataLayout.addWidget(self.hardpointMyLabel, row, col + 5)
-        dataLayout.addWidget(self.hardpointMzLabel, row, col + 6)
-        dataLayout.addWidget(self.hardpointMagLabel, row, col + 7)
-        row += 1
-        dataLayout.addWidget(QLabel(" "), row, col)
-        row += 1
         dataLayout.addWidget(QLabel("HP1 (N)"), row, col + 1)
         dataLayout.addWidget(QLabel("HP2 (N)"), row, col + 2)
         dataLayout.addWidget(QLabel("HP3 (N)"), row, col + 3)
@@ -176,8 +147,6 @@ class ForceBalanceSystemPageWidget(QWidget):
         dataLayout.addWidget(self.hardpoint6ForceLabel, row, col + 6)
         dataLayout.addWidget(self.hardpointMagForceLabel, row, col + 7)
 
-        row = 0
-        col = 0
         warningLayout.addWidget(self.balanceForcesClipped)
         warningLayout.addStretch()
 
@@ -188,15 +157,13 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.m1m3.forceActuatorState.connect(self.forceActuatorState)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
+    def _fillRow(self, variables, data):
+        for k, v in variables.items():
+            v.setValue(getattr(data, k))
+
     @Slot(map)
     def appliedBalanceForces(self, data):
-        self.balanceFxLabel.setText("%0.1f" % data.fx)
-        self.balanceFyLabel.setText("%0.1f" % data.fy)
-        self.balanceFzLabel.setText("%0.1f" % data.fz)
-        self.balanceMxLabel.setText("%0.1f" % data.mx)
-        self.balanceMyLabel.setText("%0.1f" % data.my)
-        self.balanceMzLabel.setText("%0.1f" % data.mz)
-        self.balanceMagLabel.setText("%0.1f" % data.forceMagnitude)
+        self._fillRow(self.corrected, data)
 
         self.balanceChart.append(
             data.timestamp,
@@ -236,13 +203,8 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.hardpoint5ForceLabel.setText("%0.1f" % data.measuredForce[4])
         self.hardpoint6ForceLabel.setText("%0.1f" % data.measuredForce[5])
         self.hardpointMagForceLabel.setText("%0.1f" % (sum(data.measuredForce)))
-        self.hardpointFxLabel.setText("%0.1f" % data.fx)
-        self.hardpointFyLabel.setText("%0.1f" % data.fy)
-        self.hardpointFzLabel.setText("%0.1f" % data.fz)
-        self.hardpointMxLabel.setText("%0.1f" % data.mx)
-        self.hardpointMyLabel.setText("%0.1f" % data.my)
-        self.hardpointMzLabel.setText("%0.1f" % data.mz)
-        self.hardpointMagLabel.setText("%0.1f" % data.forceMagnitude)
+
+        self._fillRow(self.remaing, data)
 
         self._hardpointData = data
         self._setTotalForces()
@@ -263,7 +225,7 @@ class ForceBalanceSystemPageWidget(QWidget):
     def _issueCommandDisableHardpointCorrections(self, **kwargs):
         return self.m1m3.remote.cmd_disableHardpointCorrections
 
-    def _fillAddRow(self, variables, d1, d2):
+    def _fillRowSum(self, variables, d1, d2):
         for k, v in variables.items():
             v.setValue(getattr(d1, k) + getattr(d2, k))
 
@@ -271,4 +233,4 @@ class ForceBalanceSystemPageWidget(QWidget):
         if self._balanceData is None or self._hardpointData is None:
             return
 
-        self._fillAddRow(self.totals, self._balanceData, self._hardpointData)
+        self._fillRowSum(self.totals, self._balanceData, self._hardpointData)
