@@ -1,7 +1,7 @@
-from .QTHelpers import setWarningLabel, setBoolLabelHighLow, setBoolLabelOnOff
+from .CustomLabels import OnOffLabel, WarningLabel
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QFormLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
@@ -11,17 +11,7 @@ class AirPageWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
-        self.dataLayout = QGridLayout()
-        self.warningLayout = QGridLayout()
-        self.commandLayout = QVBoxLayout()
-        self.layout.addLayout(self.commandLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.dataLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.warningLayout)
-        self.setLayout(self.layout)
-        self.setFixedHeight(300)
+        layout = QVBoxLayout()
 
         self.turnAirOnButton = EngineeringButton("Turn Air On", m1m3)
         self.turnAirOnButton.clicked.connect(self.issueCommandTurnAirOn)
@@ -30,48 +20,52 @@ class AirPageWidget(QWidget):
         self.turnAirOffButton.clicked.connect(self.issueCommandTurnAirOff)
         self.turnAirOffButton.setFixedWidth(256)
 
-        self.airCommandedOnLabel = QLabel("UNKNOWN")
-        self.airValveOpenedLabel = QLabel("UNKNOWN")
-        self.airValveClosedLabel = QLabel("UNKNOWN")
+        self.airCommandedOnLabel = OnOffLabel()
+        self.airValveOpenedLabel = OnOffLabel()
+        self.airValveClosedLabel = OnOffLabel()
 
-        self.anyWarningLabel = QLabel("UNKNOWN")
-        self.airValveSensorMismatch = QLabel("UNKNOWN")
+        self.anyWarningLabel = WarningLabel()
+        self.commandOutputMismatchLabel = WarningLabel()
+        self.commandSensorMismatchLabel = WarningLabel()
 
-        self.commandLayout.addWidget(self.turnAirOnButton)
-        self.commandLayout.addWidget(self.turnAirOffButton)
+        layout.addWidget(self.turnAirOnButton)
+        layout.addWidget(self.turnAirOffButton)
+        layout.addSpacing(20)
 
-        row = 0
-        col = 0
-        self.dataLayout.addWidget(QLabel("Commanded On"), row, col)
-        self.dataLayout.addWidget(self.airCommandedOnLabel, row, col + 1)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Valve Opened"), row, col)
-        self.dataLayout.addWidget(self.airValveOpenedLabel, row, col + 1)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Valve Closed"), row, col)
-        self.dataLayout.addWidget(self.airValveClosedLabel, row, col + 1)
+        dataLayout = QFormLayout()
 
-        row = 0
-        col = 0
-        self.warningLayout.addWidget(QLabel("Any Warnings"), row, col)
-        self.warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
-        row += 1
-        self.warningLayout.addWidget(QLabel("Command / Sensor Mismatch"), row, col)
-        self.warningLayout.addWidget(self.airValveSensorMismatch, row, col + 1)
+        dataLayout.addRow("Commanded On", self.airCommandedOnLabel)
+        dataLayout.addRow("Valve Opened", self.airValveOpenedLabel)
+        dataLayout.addRow("Valve Closed", self.airValveClosedLabel)
+
+        layout.addLayout(dataLayout)
+        layout.addSpacing(20)
+
+        warningLayout = QFormLayout()
+
+        warningLayout.addRow("Any Warnings", self.anyWarningLabel)
+        warningLayout.addRow("Output Mismatch", self.commandOutputMismatchLabel)
+        warningLayout.addRow("Sensor Mismatch", self.commandSensorMismatchLabel)
+
+        layout.addLayout(warningLayout)
+        layout.addStretch()
+
+        self.setLayout(layout)
 
         self.m1m3.airSupplyWarning.connect(self.airSupplyWarning)
         self.m1m3.airSupplyStatus.connect(self.airSupplyStatus)
 
     @Slot(map)
     def airSupplyWarning(self, data):
-        setWarningLabel(self.anyWarningLabel, data.anyWarning)
-        # TODO setWarningLabel(self.airValveSensorMismatch, BitHelper.get(data.airSupplyFlags, AirSupplyFlags.AirValveSensorMismatch))
+        self.anyWarningLabel.setValue(data.anyWarning)
+        self.commandOutputMismatchLabel.setValue(data.commandOutputMismatch)
+        self.commandSensorMismatchLabel.setValue(data.commandSensorMismatch)
 
     @Slot(map)
     def airSupplyStatus(self, data):
-        setBoolLabelOnOff(self.airCommandedOnLabel, data.airCommandedOn)
-        setBoolLabelHighLow(self.airValveOpenedLabel, data.airValveOpened)
-        setBoolLabelHighLow(self.airValveClosedLabel, data.airValveClosed)
+        self.airCommandedOnLabel.setValue(data.airCommandedOn)
+        self.airValveOpenedLabel.setValue(data.airValveOpened)
+        self.airValveClosedLabel.setValue(data.airValveClosed)
 
         self.turnAirOnButton.setDisabled(data.airCommandedOn)
         self.turnAirOffButton.setEnabled(data.airCommandedOn)
