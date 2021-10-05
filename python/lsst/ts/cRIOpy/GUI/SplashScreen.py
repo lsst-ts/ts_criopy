@@ -19,13 +19,14 @@
 
 __all__ = ["SplashScreen"]
 
-from PySide2.QtWidgets import QSplashScreen
+from PySide2.QtWidgets import QSplashScreen, QApplication
 from PySide2.QtCore import QTimer, Slot
 from PySide2.QtGui import QPixmap
 import asyncio
 
-import time
 import binascii
+import traceback
+import time
 
 
 class SplashScreen(QSplashScreen):
@@ -86,7 +87,11 @@ class SplashScreen(QSplashScreen):
         self._checkTimer.stop()
         self.state = 2
 
-        self.started(*self.comms)
+        try:
+            self.started(*self.comms)
+        except Exception:
+            print(traceback.format_exc())
+            QApplication.exit(1)
 
     def stop(self):
         if not (self.state == 0):
