@@ -69,7 +69,6 @@ class AirPageWidget(QWidget):
 
     @Slot(map)
     def airSupplyStatus(self, data):
-        print("airSupplyStatus", data.airCommandedOn)
         setBoolLabelOnOff(self.airCommandedOnLabel, data.airCommandedOn)
         setBoolLabelHighLow(self.airValveOpenedLabel, data.airValveOpened)
         setBoolLabelHighLow(self.airValveClosedLabel, data.airValveClosed)
