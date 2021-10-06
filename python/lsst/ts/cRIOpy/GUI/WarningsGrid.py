@@ -19,13 +19,13 @@
 
 from .CustomLabels import WarningLabel
 
-from PySide2.QtWidgets import QWidget, QGridLayout, QLabel
+from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
 from PySide2.QtCore import Slot
 
 
-class WarningsGrid(QWidget):
+class WarningsGrid(QGroupBox):
     def __init__(self, warnings, event, cols):
-        super().__init__()
+        super().__init__("Any Warnings: ---")
         self.warnings = {}
 
         layout = QGridLayout()
@@ -51,6 +51,10 @@ class WarningsGrid(QWidget):
 
     @Slot(map)
     def data(self, data):
-        print("WarningsGrid data")
+        if data.anyWarning:
+            self.setTitle("<font color='red'>Any Warning: yes</font>")
+        else:
+            self.setTitle("<font color='green'>Any Warning: no</font>")
+
         for w in self.warnings:
             w[1].setValue(getattr(data, w[0]))
