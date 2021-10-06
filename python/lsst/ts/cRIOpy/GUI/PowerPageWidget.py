@@ -1,4 +1,4 @@
-from .QTHelpers import setWarningLabel, setBoolLabelOnOff
+from .CustomLabels import PowerOnOffLabel, WarningLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
@@ -8,57 +8,62 @@ from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
 
+def bus(b):
+    return chr(ord("A") + b)
+
+
+class TurnButton(EngineeringButton):
+    def __init__(self, m1m3, kind, bus, onOff):
+        super().__init__(f"Turn {kind} {bus} {onOff}", m1m3)
+        self.m1m3 = m1m3
+        self.onOff = onOff
+
+        if kind == "Main":
+            self.__commandName = f"turnPowerNetwork{bus}{onOff}"
+        else:
+            self.__commandName = f"turn{kind}PowerNetwork{bus}{onOff}"
+
+        self.clicked.connect(self.runCommand)
+
+    @SALCommand
+    def _turnPower(self, **kwargs):
+        return getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}")
+
+    @asyncSlot()
+    async def runCommand(self):
+        await self._turnPower(**{self.__commandName: True})
+
+
 class PowerPageWidget(QWidget):
     def __init__(self, m1m3):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
-        self.dataLayout = QGridLayout()
-        self.warningLayout = QGridLayout()
-        self.commandLayout = QGridLayout()
-        self.plotLayout = QVBoxLayout()
-        self.layout.addLayout(self.commandLayout)
-        self.layout.addLayout(self.dataLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.warningLayout)
-        self.layout.addLayout(self.plotLayout)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        dataLayout = QGridLayout()
+        warningLayout = QGridLayout()
+        commandLayout = QGridLayout()
+        plotLayout = QVBoxLayout()
+        layout.addLayout(commandLayout)
+        layout.addLayout(dataLayout)
+        layout.addSpacing(20)
+        layout.addLayout(warningLayout)
+        layout.addLayout(plotLayout)
 
-        self.turnMainAOnButton = EngineeringButton("Turn Main A On", m1m3)
-        self.turnMainAOnButton.clicked.connect(self.issueCommandTurnMainAOn)
-        self.turnMainAOffButton = EngineeringButton("Turn Main A Off", m1m3)
-        self.turnMainAOffButton.clicked.connect(self.issueCommandTurnMainAOff)
-        self.turnMainBOnButton = EngineeringButton("Turn Main B On", m1m3)
-        self.turnMainBOnButton.clicked.connect(self.issueCommandTurnMainBOn)
-        self.turnMainBOffButton = EngineeringButton("Turn Main B Off", m1m3)
-        self.turnMainBOffButton.clicked.connect(self.issueCommandTurnMainBOff)
-        self.turnMainCOnButton = EngineeringButton("Turn Main C On", m1m3)
-        self.turnMainCOnButton.clicked.connect(self.issueCommandTurnMainCOn)
-        self.turnMainCOffButton = EngineeringButton("Turn Main C Off", m1m3)
-        self.turnMainCOffButton.clicked.connect(self.issueCommandTurnMainCOff)
-        self.turnMainDOnButton = EngineeringButton("Turn Main D On", m1m3)
-        self.turnMainDOnButton.clicked.connect(self.issueCommandTurnMainDOn)
-        self.turnMainDOffButton = EngineeringButton("Turn Main D Off", m1m3)
-        self.turnMainDOffButton.clicked.connect(self.issueCommandTurnMainDOff)
-        self.turnAuxAOnButton = EngineeringButton("Turn Aux A On", m1m3)
-        self.turnAuxAOnButton.clicked.connect(self.issueCommandTurnAuxAOn)
-        self.turnAuxAOffButton = EngineeringButton("Turn Aux A Off", m1m3)
-        self.turnAuxAOffButton.clicked.connect(self.issueCommandTurnAuxAOff)
-        self.turnAuxBOnButton = EngineeringButton("Turn Aux B On", m1m3)
-        self.turnAuxBOnButton.clicked.connect(self.issueCommandTurnAuxBOn)
-        self.turnAuxBOffButton = EngineeringButton("Turn Aux B Off", m1m3)
-        self.turnAuxBOffButton.clicked.connect(self.issueCommandTurnAuxBOff)
-        self.turnAuxCOnButton = EngineeringButton("Turn Aux C On", m1m3)
-        self.turnAuxCOnButton.clicked.connect(self.issueCommandTurnAuxCOn)
-        self.turnAuxCOffButton = EngineeringButton("Turn Aux C Off", m1m3)
-        self.turnAuxCOffButton.clicked.connect(self.issueCommandTurnAuxCOff)
-        self.turnAuxDOnButton = EngineeringButton("Turn Aux D On", m1m3)
-        self.turnAuxDOnButton.clicked.connect(self.issueCommandTurnAuxDOn)
-        self.turnAuxDOffButton = EngineeringButton("Turn Aux D Off", m1m3)
-        self.turnAuxDOffButton.clicked.connect(self.issueCommandTurnAuxDOff)
+        self.setLayout(layout)
 
-        self.anyWarningLabel = QLabel("UNKNOWN")
+        def createButtons(kind, onOff, col):
+            for b in range(4):
+                but = TurnButton(m1m3, kind, bus(b), onOff)
+                commandLayout.addWidget(but, b, col)
+
+        createButtons("Main", "On", 0)
+        createButtons("Main", "Off", 1)
+
+        createButtons("Aux", "On", 2)
+        createButtons("Aux", "Off", 3)
+
+        self.anyWarningLabel = WarningLabel()
         self.rcpMirrorCellUtility220VAC1StatusLabel = QLabel("UNKNOWN")
         self.rcpCabinetUtility220VACStatusLabel = QLabel("UNKNOWN")
         self.rcpExternalEquipment220VACStatusLabel = QLabel("UNKNOWN")
@@ -83,20 +88,32 @@ class PowerPageWidget(QWidget):
         self.externalEquipmentPowerNetworkStatusLabel = QLabel("UNKNOWN")
         self.laserTrackerPowerNetworkStatusLabel = QLabel("UNKNOWN")
 
-        self.powerNetworkACurrentLabel = QLabel("UNKNOWN")
-        self.powerNetworkBCurrentLabel = QLabel("UNKNOWN")
-        self.powerNetworkCCurrentLabel = QLabel("UNKNOWN")
-        self.powerNetworkDCurrentLabel = QLabel("UNKNOWN")
-        self.lightPowerNetworkCurrentLabel = QLabel("UNKNOWN")
-        self.controlsPowerNetworkCurrentLabel = QLabel("UNKNOWN")
-        self.powerNetworkACommandedOnLabel = QLabel("UNKNOWN")
-        self.powerNetworkBCommandedOnLabel = QLabel("UNKNOWN")
-        self.powerNetworkCCommandedOnLabel = QLabel("UNKNOWN")
-        self.powerNetworkDCommandedOnLabel = QLabel("UNKNOWN")
-        self.auxPowerNetworkACommandedOnLabel = QLabel("UNKNOWN")
-        self.auxPowerNetworkBCommandedOnLabel = QLabel("UNKNOWN")
-        self.auxPowerNetworkCCommandedOnLabel = QLabel("UNKNOWN")
-        self.auxPowerNetworkDCommandedOnLabel = QLabel("UNKNOWN")
+        self.mainOnOffLabels = []
+        self.auxOnOffLabels = []
+        self.currentLabels = []
+
+        dataLayout.addWidget(QLabel("<b>Main (ON/OFF)</b>"), 0, 1)
+        dataLayout.addWidget(QLabel("<b>Aux (ON/OFF)</b>"), 0, 2)
+        dataLayout.addWidget(QLabel("<b>Current (A)</b>"), 0, 3)
+
+        def createLabels(title, row, onOff=True):
+            dataLayout.addWidget(QLabel(f"<b>{title}</b>"), row, 0)
+
+            if onOff:
+                self.mainOnOffLabels.append(PowerOnOffLabel())
+                dataLayout.addWidget(self.mainOnOffLabels[-1], row, 1)
+
+                self.auxOnOffLabels.append(PowerOnOffLabel())
+                dataLayout.addWidget(self.auxOnOffLabels[-1], row, 2)
+
+            self.currentLabels.append(QLabel("---"))
+            dataLayout.addWidget(self.currentLabels[-1], row, 3)
+
+        for row in range(4):
+            createLabels(f"Power Network {bus(row)}", row + 1)
+
+        createLabels("Light Network", 5, False)
+        createLabels("Controls Network", 6, False)
 
         self.chart = TimeChart(
             {"Current (A)": ["A", "B", "C", "D", "Lights", "Controls"]}
@@ -105,182 +122,109 @@ class PowerPageWidget(QWidget):
 
         row = 0
         col = 0
-        self.commandLayout.addWidget(QLabel("Main"), row, col)
-        self.commandLayout.addWidget(QLabel("Aux"), row, col + 2)
-        self.commandLayout.addWidget(self.turnMainAOnButton, row + 1, col)
-        self.commandLayout.addWidget(self.turnMainAOffButton, row + 1, col + 1)
-        self.commandLayout.addWidget(self.turnAuxAOnButton, row + 1, col + 2)
-        self.commandLayout.addWidget(self.turnAuxAOffButton, row + 1, col + 3)
-        self.commandLayout.addWidget(self.turnMainBOnButton, row + 2, col)
-        self.commandLayout.addWidget(self.turnMainBOffButton, row + 2, col + 1)
-        self.commandLayout.addWidget(self.turnAuxBOnButton, row + 2, col + 2)
-        self.commandLayout.addWidget(self.turnAuxBOffButton, row + 2, col + 3)
-        self.commandLayout.addWidget(self.turnMainCOnButton, row + 3, col)
-        self.commandLayout.addWidget(self.turnMainCOffButton, row + 3, col + 1)
-        self.commandLayout.addWidget(self.turnAuxCOnButton, row + 3, col + 2)
-        self.commandLayout.addWidget(self.turnAuxCOffButton, row + 3, col + 3)
-        self.commandLayout.addWidget(self.turnMainDOnButton, row + 4, col)
-        self.commandLayout.addWidget(self.turnMainDOffButton, row + 4, col + 1)
-        self.commandLayout.addWidget(self.turnAuxDOnButton, row + 4, col + 2)
-        self.commandLayout.addWidget(self.turnAuxDOffButton, row + 4, col + 3)
-
-        row = 0
-        col = 0
-        self.dataLayout.addWidget(QLabel("Main (ON/OFF)"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("Aux (ON/OFF)"), row, col + 2)
-        self.dataLayout.addWidget(QLabel("Current (A)"), row, col + 3)
+        warningLayout.addWidget(QLabel("Any Warnings"), row, col)
+        warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
         row += 1
-        self.dataLayout.addWidget(QLabel("Power Network A"), row, col)
-        self.dataLayout.addWidget(self.powerNetworkACommandedOnLabel, row, col + 1)
-        self.dataLayout.addWidget(self.auxPowerNetworkACommandedOnLabel, row, col + 2)
-        self.dataLayout.addWidget(self.powerNetworkACurrentLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Power Network B"), row, col)
-        self.dataLayout.addWidget(self.powerNetworkBCommandedOnLabel, row, col + 1)
-        self.dataLayout.addWidget(self.auxPowerNetworkBCommandedOnLabel, row, col + 2)
-        self.dataLayout.addWidget(self.powerNetworkBCurrentLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Power Network C"), row, col)
-        self.dataLayout.addWidget(self.powerNetworkCCommandedOnLabel, row, col + 1)
-        self.dataLayout.addWidget(self.auxPowerNetworkCCommandedOnLabel, row, col + 2)
-        self.dataLayout.addWidget(self.powerNetworkCCurrentLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Power Network D"), row, col)
-        self.dataLayout.addWidget(self.powerNetworkDCommandedOnLabel, row, col + 1)
-        self.dataLayout.addWidget(self.auxPowerNetworkDCommandedOnLabel, row, col + 2)
-        self.dataLayout.addWidget(self.powerNetworkDCurrentLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Light Network"), row, col)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 2)
-        self.dataLayout.addWidget(self.lightPowerNetworkCurrentLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Controls Network"), row, col)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 2)
-        self.dataLayout.addWidget(self.controlsPowerNetworkCurrentLabel, row, col + 3)
-
-        row = 0
-        col = 0
-        self.warningLayout.addWidget(QLabel("Any Warnings"), row, col)
-        self.warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
-        row += 1
-        self.warningLayout.addWidget(QLabel("RCP Utility 220VAC 1 Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("RCP Utility 220VAC 1 Status"), row, col)
+        warningLayout.addWidget(
             self.rcpMirrorCellUtility220VAC1StatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("RCP Utility 220VAC 2 Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("RCP Utility 220VAC 2 Status"), row, col)
+        warningLayout.addWidget(
             self.rcpMirrorCellUtility220VAC2StatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("RCP Utility 220VAC 3 Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("RCP Utility 220VAC 3 Status"), row, col)
+        warningLayout.addWidget(
             self.rcpMirrorCellUtility220VAC3StatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(
-            QLabel("RCP Cabinet Utility 220VAC Status"), row, col
-        )
-        self.warningLayout.addWidget(
-            self.rcpCabinetUtility220VACStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("RCP Cabinet Utility 220VAC Status"), row, col)
+        warningLayout.addWidget(self.rcpCabinetUtility220VACStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(
             QLabel("RCP External Equipment 220VAC Status"), row, col
         )
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(
             self.rcpExternalEquipment220VACStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("A Redundancy Control Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("A Redundancy Control Status"), row, col)
+        warningLayout.addWidget(
             self.powerNetworkARedundancyControlStatusLabel, row, col + 1
         )
 
         row = 1
         col = 2
-        self.warningLayout.addWidget(QLabel("B Redundancy Control Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("B Redundancy Control Status"), row, col)
+        warningLayout.addWidget(
             self.powerNetworkBRedundancyControlStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("C Redundancy Control Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("C Redundancy Control Status"), row, col)
+        warningLayout.addWidget(
             self.powerNetworkCRedundancyControlStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("D Redundancy Control Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("D Redundancy Control Status"), row, col)
+        warningLayout.addWidget(
             self.powerNetworkDRedundancyControlStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(
-            QLabel("Controls Redundancy Control Status"), row, col
-        )
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("Controls Redundancy Control Status"), row, col)
+        warningLayout.addWidget(
             self.controlsPowerNetworkRedundancyControlStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("A Status"), row, col)
-        self.warningLayout.addWidget(self.powerNetworkAStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("A Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkAStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("A Redundant Status"), row, col)
-        self.warningLayout.addWidget(
-            self.powerNetworkARedundantStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("A Redundant Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkARedundantStatusLabel, row, col + 1)
 
         row = 1
         col = 4
-        self.warningLayout.addWidget(QLabel("B Status"), row, col)
-        self.warningLayout.addWidget(self.powerNetworkBStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("B Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkBStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("B Redundant Status"), row, col)
-        self.warningLayout.addWidget(
-            self.powerNetworkBRedundantStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("B Redundant Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkBRedundantStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("C Status"), row, col)
-        self.warningLayout.addWidget(self.powerNetworkCStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("C Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkCStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("C Redundant Status"), row, col)
-        self.warningLayout.addWidget(
-            self.powerNetworkCRedundantStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("C Redundant Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkCRedundantStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("D Status"), row, col)
-        self.warningLayout.addWidget(self.powerNetworkDStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("D Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkDStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("D Redundant Status"), row, col)
-        self.warningLayout.addWidget(
-            self.powerNetworkDRedundantStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("D Redundant Status"), row, col)
+        warningLayout.addWidget(self.powerNetworkDRedundantStatusLabel, row, col + 1)
 
         row = 1
         col = 6
-        self.warningLayout.addWidget(QLabel("Controls Status"), row, col)
-        self.warningLayout.addWidget(self.controlsPowerNetworkStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("Controls Status"), row, col)
+        warningLayout.addWidget(self.controlsPowerNetworkStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("Controls Redundant Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("Controls Redundant Status"), row, col)
+        warningLayout.addWidget(
             self.controlsPowerNetworkRedundantStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("Light Status"), row, col)
-        self.warningLayout.addWidget(self.lightPowerNetworkStatusLabel, row, col + 1)
+        warningLayout.addWidget(QLabel("Light Status"), row, col)
+        warningLayout.addWidget(self.lightPowerNetworkStatusLabel, row, col + 1)
         row += 1
-        self.warningLayout.addWidget(QLabel("External Equipment Status"), row, col)
-        self.warningLayout.addWidget(
+        warningLayout.addWidget(QLabel("External Equipment Status"), row, col)
+        warningLayout.addWidget(
             self.externalEquipmentPowerNetworkStatusLabel, row, col + 1
         )
         row += 1
-        self.warningLayout.addWidget(QLabel("Laser Tracker Status"), row, col)
-        self.warningLayout.addWidget(
-            self.laserTrackerPowerNetworkStatusLabel, row, col + 1
-        )
+        warningLayout.addWidget(QLabel("Laser Tracker Status"), row, col)
+        warningLayout.addWidget(self.laserTrackerPowerNetworkStatusLabel, row, col + 1)
 
-        self.plotLayout.addWidget(self.chartView)
+        plotLayout.addWidget(self.chartView)
 
         self.m1m3.powerWarning.connect(self.powerWarning)
         self.m1m3.powerStatus.connect(self.powerStatus)
@@ -288,7 +232,7 @@ class PowerPageWidget(QWidget):
 
     @Slot(map)
     def powerWarning(self, data):
-        setWarningLabel(self.anyWarningLabel, data.anyWarning)
+        self.anyWarningLabel.setValue(data.anyWarning)
         # TODO setWarningLabel(self.rcpMirrorCellUtility220VAC1StatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPMirrorCellUtility220VAC1Status))
         # TODO setWarningLabel(self.rcpCabinetUtility220VACStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPCabinetUtility220VACStatus))
         # TODO setWarningLabel(self.rcpExternalEquipment220VACStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPExternalEquipment220VACStatus))
@@ -315,43 +259,22 @@ class PowerPageWidget(QWidget):
 
     @Slot(map)
     def powerStatus(self, data):
-        setBoolLabelOnOff(
-            self.powerNetworkACommandedOnLabel, data.powerNetworkACommandedOn
-        )
-        setBoolLabelOnOff(
-            self.powerNetworkBCommandedOnLabel, data.powerNetworkBCommandedOn
-        )
-        setBoolLabelOnOff(
-            self.powerNetworkCCommandedOnLabel, data.powerNetworkCCommandedOn
-        )
-        setBoolLabelOnOff(
-            self.powerNetworkDCommandedOnLabel, data.powerNetworkDCommandedOn
-        )
-        setBoolLabelOnOff(
-            self.auxPowerNetworkACommandedOnLabel, data.auxPowerNetworkACommandedOn
-        )
-        setBoolLabelOnOff(
-            self.auxPowerNetworkBCommandedOnLabel, data.auxPowerNetworkBCommandedOn
-        )
-        setBoolLabelOnOff(
-            self.auxPowerNetworkCCommandedOnLabel, data.auxPowerNetworkCCommandedOn
-        )
-        setBoolLabelOnOff(
-            self.auxPowerNetworkDCommandedOnLabel, data.auxPowerNetworkDCommandedOn
-        )
+        for b in range(4):
+            self.mainOnOffLabels[b].setValue(
+                getattr(data, f"powerNetwork{bus(b)}CommandedOn")
+            )
+            self.auxOnOffLabels[b].setValue(
+                getattr(data, f"auxPowerNetwork{bus(b)}CommandedOn")
+            )
 
     @Slot(map)
     def powerSupplyData(self, data):
-        self.powerNetworkACurrentLabel.setText("%0.3f" % data.powerNetworkACurrent)
-        self.powerNetworkBCurrentLabel.setText("%0.3f" % data.powerNetworkBCurrent)
-        self.powerNetworkCCurrentLabel.setText("%0.3f" % data.powerNetworkCCurrent)
-        self.powerNetworkDCurrentLabel.setText("%0.3f" % data.powerNetworkDCurrent)
-        self.lightPowerNetworkCurrentLabel.setText(
-            "%0.3f" % data.lightPowerNetworkCurrent
-        )
-        self.controlsPowerNetworkCurrentLabel.setText(
-            "%0.3f" % data.controlsPowerNetworkCurrent
-        )
+        for b in range(4):
+            name = f"powerNetwork{chr(ord('A') + b)}Current"
+            self.currentLabels[b].setText(f"{getattr(data, name):0.3f}")
+
+        self.currentLabels[4].setText(f"{data.lightPowerNetworkCurrent:0.3f}")
+        self.currentLabels[5].setText(f"{data.controlsPowerNetworkCurrent:0.3f}")
 
         self.chart.append(
             data.timestamp,
@@ -364,75 +287,3 @@ class PowerPageWidget(QWidget):
                 data.controlsPowerNetworkCurrent,
             ],
         )
-
-    @SALCommand
-    def _turnPowerOn(self, **kwargs):
-        return self.m1m3.remote.cmd_turnPowerOn
-
-    @SALCommand
-    def _turnPowerOff(self, **kwargs):
-        return self.m1m3.remote.cmd_turnPowerOff
-
-    @asyncSlot()
-    async def issueCommandTurnMainAOn(self):
-        await self._turnPowerOn(turnPowerNetworkAOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainAOff(self):
-        await self._turnPowerOff(turnPowerNetworkAOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainBOn(self):
-        await self._turnPowerOn(turnPowerNetworkBOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainBOff(self):
-        await self._turnPowerOff(turnPowerNetworkBOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainCOn(self):
-        await self._turnPowerOn(turnPowerNetworkCOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainCOff(self):
-        await self._turnPowerOff(turnPowerNetworkCOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainDOn(self):
-        await self._turnPowerOn(turnPowerNetworkDOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnMainDOff(self):
-        await self._turnPowerOff(turnPowerNetworkDOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxAOn(self):
-        await self._turnPowerOn(turnAuxPowerNetworkAOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxAOff(self):
-        await self._turnPowerOff(turnAuxPowerNetworkAOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxBOn(self):
-        await self._turnPowerOn(turnAuxPowerNetworkBOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxBOff(self):
-        await self._turnPowerOff(turnAuxPowerNetworkBOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxCOn(self):
-        await self._turnPowerOn(turnAuxPowerNetworkCOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxCOff(self):
-        await self._turnPowerOff(turnAuxPowerNetworkCOff=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxDOn(self):
-        await self._turnPowerOn(turnAuxPowerNetworkDOn=True)
-
-    @asyncSlot()
-    async def issueCommandTurnAuxDOff(self):
-        await self._turnPowerOff(turnAuxPowerNetworkDOff=True)

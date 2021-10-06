@@ -40,6 +40,7 @@ __all__ = [
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
+    "PowerOnOffLabel",
     "WarningLabel",
     "Clipped",
     "Heartbeat",
@@ -257,6 +258,29 @@ class OnOffLabel(QLabel):
             self.setText("<font color='red'>On</font>")
         else:
             self.setText("<font color='green'>Off</font>")
+
+
+class PowerOnOffLabel(QLabel):
+    """Displays on/off warnings"""
+
+    def __init__(self):
+        super().__init__("---")
+
+    def __copy__(self):
+        return PowerOnOffLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes On (red)/Off (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means power is on.
+        """
+        if value:
+            self.setText("<font color='green'>On</font>")
+        else:
+            self.setText("<font color='gold'>Off</font>")
 
 
 class WarningLabel(QLabel):
