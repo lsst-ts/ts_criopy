@@ -86,8 +86,8 @@ class PowerPageWidget(QWidget):
         self.auxOnOffLabels = []
         self.currentLabels = []
 
-        dataLayout.addWidget(QLabel("<b>Main (ON/OFF)</b>"), 0, 1)
-        dataLayout.addWidget(QLabel("<b>Aux (ON/OFF)</b>"), 0, 2)
+        dataLayout.addWidget(QLabel("<b>Main</b>"), 0, 1)
+        dataLayout.addWidget(QLabel("<b>Aux</b>"), 0, 2)
         dataLayout.addWidget(QLabel("<b>Current (A)</b>"), 0, 3)
 
         def createLabels(title, row, onOff=True):
