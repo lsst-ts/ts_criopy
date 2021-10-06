@@ -276,7 +276,7 @@ class PowerOnOffLabel(QLabel):
         Parameters
         ----------
         value : `bool`
-            Current (=to be displayed) variable value. True means power is on.
+            Current (=to be displayed) variable value. True means power is On.
         """
         if value:
             self.setText("<font color='green'>On</font>")
@@ -308,7 +308,7 @@ class WarningLabel(QLabel):
 
 
 class StatusLabel(QLabel):
-    """Displays WARNING/OK"""
+    """Displays OK/Error status."""
 
     def __init__(self):
         super().__init__("---")

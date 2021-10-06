@@ -1,3 +1,22 @@
+# This file is part of M1M3 GUI
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
 from .CustomLabels import PowerOnOffLabel, WarningLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
@@ -10,10 +29,24 @@ from asyncqt import asyncSlot
 
 
 def bus(b):
+    """Returns bus name from its number."""
     return chr(ord("A") + b)
 
 
 class TurnButton(EngineeringButton):
+    """Button to turn bis on/off.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        M1M3 Sal object.
+    kind : `str`
+        Either Main or Aux - type of power bus to command.
+    bus : `int`
+        Bus number (0 to 3).
+    onOff : `str`
+        On or Off, command is turn On or Off.
+    """
     def __init__(self, m1m3, kind, bus, onOff):
         super().__init__(f"Turn {kind} {bus} {onOff}", m1m3)
         self.m1m3 = m1m3
@@ -27,15 +60,22 @@ class TurnButton(EngineeringButton):
         self.clicked.connect(self.runCommand)
 
     @SALCommand
-    def _turnPower(self, **kwargs):
+    def __turnPower(self, **kwargs):
         return getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}")
 
     @asyncSlot()
     async def runCommand(self):
-        await self._turnPower(**{self.__commandName: True})
+        await self.__turnPower(**{self.__commandName: True})
 
 
 class PowerPageWidget(QWidget):
+    """Displays power related values, allows power commanding.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        M1M3 SAL object.
+    """
     def __init__(self, m1m3):
         super().__init__()
         self.m1m3 = m1m3

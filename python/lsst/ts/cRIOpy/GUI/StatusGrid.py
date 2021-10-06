@@ -24,6 +24,18 @@ from PySide2.QtCore import Slot
 
 
 class StatusGrid(QGroupBox):
+    """Displays Status Labels. Feed in hash with names and labels, event to
+    connect to and number of columns.
+
+    Parameters
+    ----------
+    states : `map(str, str)`
+        Keys are event items, values are labels for those items.
+    event : `Signal`
+        Event emitted when new data arrives.
+    cols : `int`
+        Number of columns.
+    """
     def __init__(self, states, event, cols):
         super().__init__()
         self.states = {}
