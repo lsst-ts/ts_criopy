@@ -287,7 +287,7 @@ class WarningLabel(QLabel):
     """Displays WARNING/OK"""
 
     def __init__(self):
-        super().__init__()
+        super().__init__("---")
 
     def __copy__(self):
         return WarningLabel()

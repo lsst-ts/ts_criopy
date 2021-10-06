@@ -2,6 +2,7 @@ from .CustomLabels import PowerOnOffLabel, WarningLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
+from .WarningsGrid import WarningsGrid
 
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
@@ -41,16 +42,8 @@ class PowerPageWidget(QWidget):
 
         layout = QVBoxLayout()
         dataLayout = QGridLayout()
-        warningLayout = QGridLayout()
         commandLayout = QGridLayout()
         plotLayout = QVBoxLayout()
-        layout.addLayout(commandLayout)
-        layout.addLayout(dataLayout)
-        layout.addSpacing(20)
-        layout.addLayout(warningLayout)
-        layout.addLayout(plotLayout)
-
-        self.setLayout(layout)
 
         def createButtons(kind, onOff, col):
             ret = []
@@ -65,7 +58,6 @@ class PowerPageWidget(QWidget):
         self.auxOnButtons = createButtons("Aux", "On", 2)
         self.auxOffButtons = createButtons("Aux", "Off", 3)
 
-        self.anyWarningLabel = WarningLabel()
         self.rcpMirrorCellUtility220VAC1StatusLabel = QLabel("UNKNOWN")
         self.rcpCabinetUtility220VACStatusLabel = QLabel("UNKNOWN")
         self.rcpExternalEquipment220VACStatusLabel = QLabel("UNKNOWN")
@@ -122,142 +114,35 @@ class PowerPageWidget(QWidget):
         )
         self.chartView = TimeChartView(self.chart)
 
-        row = 0
-        col = 0
-        warningLayout.addWidget(QLabel("Any Warnings"), row, col)
-        warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("RCP Utility 220VAC 1 Status"), row, col)
-        warningLayout.addWidget(
-            self.rcpMirrorCellUtility220VAC1StatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("RCP Utility 220VAC 2 Status"), row, col)
-        warningLayout.addWidget(
-            self.rcpMirrorCellUtility220VAC2StatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("RCP Utility 220VAC 3 Status"), row, col)
-        warningLayout.addWidget(
-            self.rcpMirrorCellUtility220VAC3StatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("RCP Cabinet Utility 220VAC Status"), row, col)
-        warningLayout.addWidget(self.rcpCabinetUtility220VACStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(
-            QLabel("RCP External Equipment 220VAC Status"), row, col
-        )
-        warningLayout.addWidget(
-            self.rcpExternalEquipment220VACStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("A Redundancy Control Status"), row, col)
-        warningLayout.addWidget(
-            self.powerNetworkARedundancyControlStatusLabel, row, col + 1
-        )
+        warningGrid = WarningsGrid(
+            {
+                "powerNetworkAOutputMismatch": "Main A Mismatch",
+                "powerNetworkBOutputMismatch": "Main B Mismatch",
+                "powerNetworkCOutputMismatch": "Main C Mismatch",
+                "powerNetworkDOutputMismatch": "Main D Mismatch",
 
-        row = 1
-        col = 2
-        warningLayout.addWidget(QLabel("B Redundancy Control Status"), row, col)
-        warningLayout.addWidget(
-            self.powerNetworkBRedundancyControlStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("C Redundancy Control Status"), row, col)
-        warningLayout.addWidget(
-            self.powerNetworkCRedundancyControlStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("D Redundancy Control Status"), row, col)
-        warningLayout.addWidget(
-            self.powerNetworkDRedundancyControlStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("Controls Redundancy Control Status"), row, col)
-        warningLayout.addWidget(
-            self.controlsPowerNetworkRedundancyControlStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("A Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkAStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("A Redundant Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkARedundantStatusLabel, row, col + 1)
+                "auxPowerNetworkAOutputMismatch": "Aux A Mismatch",
+                "auxPowerNetworkBOutputMismatch": "Aux B Mismatch",
+                "auxPowerNetworkCOutputMismatch": "Aux C Mismatch",
+                "auxPowerNetworkDOutputMismatch": "Aux D Mismatch",
 
-        row = 1
-        col = 4
-        warningLayout.addWidget(QLabel("B Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkBStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("B Redundant Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkBRedundantStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("C Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkCStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("C Redundant Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkCRedundantStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("D Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkDStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("D Redundant Status"), row, col)
-        warningLayout.addWidget(self.powerNetworkDRedundantStatusLabel, row, col + 1)
-
-        row = 1
-        col = 6
-        warningLayout.addWidget(QLabel("Controls Status"), row, col)
-        warningLayout.addWidget(self.controlsPowerNetworkStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("Controls Redundant Status"), row, col)
-        warningLayout.addWidget(
-            self.controlsPowerNetworkRedundantStatusLabel, row, col + 1
+            },
+            self.m1m3.powerWarning,
+            2,
         )
-        row += 1
-        warningLayout.addWidget(QLabel("Light Status"), row, col)
-        warningLayout.addWidget(self.lightPowerNetworkStatusLabel, row, col + 1)
-        row += 1
-        warningLayout.addWidget(QLabel("External Equipment Status"), row, col)
-        warningLayout.addWidget(
-            self.externalEquipmentPowerNetworkStatusLabel, row, col + 1
-        )
-        row += 1
-        warningLayout.addWidget(QLabel("Laser Tracker Status"), row, col)
-        warningLayout.addWidget(self.laserTrackerPowerNetworkStatusLabel, row, col + 1)
 
         plotLayout.addWidget(self.chartView)
 
-        self.m1m3.powerWarning.connect(self.powerWarning)
+        layout.addLayout(commandLayout)
+        layout.addLayout(dataLayout)
+        layout.addSpacing(20)
+        layout.addWidget(warningGrid)
+        layout.addLayout(plotLayout)
+
+        self.setLayout(layout)
+
         self.m1m3.powerStatus.connect(self.powerStatus)
         self.m1m3.powerSupplyData.connect(self.powerSupplyData)
-
-    @Slot(map)
-    def powerWarning(self, data):
-        self.anyWarningLabel.setValue(data.anyWarning)
-        # TODO setWarningLabel(self.rcpMirrorCellUtility220VAC1StatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPMirrorCellUtility220VAC1Status))
-        # TODO setWarningLabel(self.rcpCabinetUtility220VACStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPCabinetUtility220VACStatus))
-        # TODO setWarningLabel(self.rcpExternalEquipment220VACStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPExternalEquipment220VACStatus))
-        # TODO setWarningLabel(self.rcpMirrorCellUtility220VAC2StatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPMirrorCellUtility220VAC2Status))
-        # TODO setWarningLabel(self.rcpMirrorCellUtility220VAC3StatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.RCPMirrorCellUtility220VAC3Status))
-        # TODO setWarningLabel(self.powerNetworkARedundancyControlStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkARedundancyControlStatus))
-        # TODO setWarningLabel(self.powerNetworkBRedundancyControlStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkBRedundancyControlStatus))
-        # TODO setWarningLabel(self.powerNetworkCRedundancyControlStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkCRedundancyControlStatus))
-        # TODO setWarningLabel(self.powerNetworkDRedundancyControlStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkDRedundancyControlStatus))
-        # TODO setWarningLabel(self.controlsPowerNetworkRedundancyControlStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.ControlsPowerNetworkRedundancyControlStatus))
-        # TODO setWarningLabel(self.powerNetworkAStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkAStatus))
-        # TODO setWarningLabel(self.powerNetworkARedundantStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkARedundantStatus))
-        # TODO setWarningLabel(self.powerNetworkBStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkBStatus))
-        # TODO setWarningLabel(self.powerNetworkBRedundantStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkBRedundantStatus))
-        # TODO setWarningLabel(self.powerNetworkCStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkCStatus))
-        # TODO setWarningLabel(self.powerNetworkCRedundantStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkCRedundantStatus))
-        # TODO setWarningLabel(self.powerNetworkDStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkDStatus))
-        # TODO setWarningLabel(self.powerNetworkDRedundantStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.PowerNetworkDRedundantStatus))
-        # TODO setWarningLabel(self.controlsPowerNetworkStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.ControlsPowerNetworkStatus))
-        # TODO setWarningLabel(self.controlsPowerNetworkRedundantStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.ControlsPowerNetworkRedundantStatus))
-        # TODO setWarningLabel(self.lightPowerNetworkStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.LightPowerNetworkStatus))
-        # TODO setWarningLabel(self.externalEquipmentPowerNetworkStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.ExternalEquipmentPowerNetworkStatus))
-        # TODO setWarningLabel(self.laserTrackerPowerNetworkStatusLabel, BitHelper.get(data.powerSystemFlags, PowerSystemFlags.LaserTrackerPowerNetworkStatus))
 
     @Slot(map)
     def powerStatus(self, data):
