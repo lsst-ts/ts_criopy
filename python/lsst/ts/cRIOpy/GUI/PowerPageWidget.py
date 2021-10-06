@@ -4,7 +4,7 @@ from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
 from .WarningsGrid import WarningsGrid
 
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QSpacerItem
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
@@ -82,26 +82,40 @@ class PowerPageWidget(QWidget):
         self.externalEquipmentPowerNetworkStatusLabel = QLabel("UNKNOWN")
         self.laserTrackerPowerNetworkStatusLabel = QLabel("UNKNOWN")
 
-        self.mainOnOffLabels = []
-        self.auxOnOffLabels = []
+        self.mainCommandedLabels = []
+        self.mainOutputLabels = []
+        self.auxCommandedLabels = []
+        self.auxOutputLabels = []
         self.currentLabels = []
 
         dataLayout.addWidget(QLabel("<b>Main</b>"), 0, 1)
-        dataLayout.addWidget(QLabel("<b>Aux</b>"), 0, 2)
-        dataLayout.addWidget(QLabel("<b>Current (A)</b>"), 0, 3)
+        dataLayout.addWidget(QLabel("Output"), 0, 2)
+        dataLayout.addWidget(QLabel("<b>Aux</b>"), 0, 3)
+        dataLayout.addWidget(QLabel("Output"), 0, 4)
+        dataLayout.addWidget(QLabel("<b>Current (A)</b>"), 0, 5)
+
+        dataLayout.addItem(QSpacerItem(1, 1), 0, 6, -1, 1)
+
+        dataLayout.setColumnStretch(0, 1)
+        dataLayout.setColumnStretch(5, 1)
+        dataLayout.setColumnStretch(6, 2)
 
         def createLabels(title, row, onOff=True):
             dataLayout.addWidget(QLabel(f"<b>{title}</b>"), row, 0)
 
             if onOff:
-                self.mainOnOffLabels.append(PowerOnOffLabel())
-                dataLayout.addWidget(self.mainOnOffLabels[-1], row, 1)
+                self.mainCommandedLabels.append(PowerOnOffLabel())
+                self.mainOutputLabels.append(PowerOnOffLabel())
+                dataLayout.addWidget(self.mainCommandedLabels[-1], row, 1)
+                dataLayout.addWidget(self.mainOutputLabels[-1], row, 2)
 
-                self.auxOnOffLabels.append(PowerOnOffLabel())
-                dataLayout.addWidget(self.auxOnOffLabels[-1], row, 2)
+                self.auxCommandedLabels.append(PowerOnOffLabel())
+                self.auxOutputLabels.append(PowerOnOffLabel())
+                dataLayout.addWidget(self.auxCommandedLabels[-1], row, 3)
+                dataLayout.addWidget(self.auxOutputLabels[-1], row, 4)
 
             self.currentLabels.append(QLabel("---"))
-            dataLayout.addWidget(self.currentLabels[-1], row, 3)
+            dataLayout.addWidget(self.currentLabels[-1], row, 5)
 
         for row in range(4):
             createLabels(f"Power Network {bus(row)}", row + 1)
@@ -120,12 +134,10 @@ class PowerPageWidget(QWidget):
                 "powerNetworkBOutputMismatch": "Main B Mismatch",
                 "powerNetworkCOutputMismatch": "Main C Mismatch",
                 "powerNetworkDOutputMismatch": "Main D Mismatch",
-
                 "auxPowerNetworkAOutputMismatch": "Aux A Mismatch",
                 "auxPowerNetworkBOutputMismatch": "Aux B Mismatch",
                 "auxPowerNetworkCOutputMismatch": "Aux C Mismatch",
                 "auxPowerNetworkDOutputMismatch": "Aux D Mismatch",
-
             },
             self.m1m3.powerWarning,
             2,
@@ -147,15 +159,19 @@ class PowerPageWidget(QWidget):
     @Slot(map)
     def powerStatus(self, data):
         for b in range(4):
-            main = getattr(data, f"powerNetwork{bus(b)}CommandedOn")
-            self.mainOnButtons[b].setDisabled(main)
-            self.mainOffButtons[b].setEnabled(main)
-            self.mainOnOffLabels[b].setValue(main)
+            mainCmd = getattr(data, f"powerNetwork{bus(b)}CommandedOn")
+            mainOut = getattr(data, f"powerNetwork{bus(b)}OutputOn")
+            self.mainOnButtons[b].setDisabled(mainCmd)
+            self.mainOffButtons[b].setEnabled(mainCmd)
+            self.mainCommandedLabels[b].setValue(mainCmd)
+            self.mainOutputLabels[b].setValue(mainOut)
 
-            aux = getattr(data, f"auxPowerNetwork{bus(b)}CommandedOn")
-            self.auxOnButtons[b].setDisabled(main)
-            self.auxOffButtons[b].setEnabled(main)
-            self.auxOnOffLabels[b].setValue(aux)
+            auxCmd = getattr(data, f"auxPowerNetwork{bus(b)}CommandedOn")
+            auxOut = getattr(data, f"auxPowerNetwork{bus(b)}OutputOn")
+            self.auxOnButtons[b].setDisabled(mainCmd)
+            self.auxOffButtons[b].setEnabled(mainCmd)
+            self.auxCommandedLabels[b].setValue(auxCmd)
+            self.auxOutputLabels[b].setValue(auxOut)
 
     @Slot(map)
     def powerSupplyData(self, data):
