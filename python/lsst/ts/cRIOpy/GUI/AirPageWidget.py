@@ -1,7 +1,7 @@
 from .CustomLabels import OnOffLabel, WarningLabel
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QFormLayout
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QFormLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
