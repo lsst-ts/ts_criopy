@@ -53,15 +53,17 @@ class PowerPageWidget(QWidget):
         self.setLayout(layout)
 
         def createButtons(kind, onOff, col):
+            ret = []
             for b in range(4):
-                but = TurnButton(m1m3, kind, bus(b), onOff)
-                commandLayout.addWidget(but, b, col)
+                ret.append(TurnButton(m1m3, kind, bus(b), onOff))
+                commandLayout.addWidget(ret[-1], b, col)
+            return ret
 
-        createButtons("Main", "On", 0)
-        createButtons("Main", "Off", 1)
+        self.mainOnButtons = createButtons("Main", "On", 0)
+        self.mainOffButtons = createButtons("Main", "Off", 1)
 
-        createButtons("Aux", "On", 2)
-        createButtons("Aux", "Off", 3)
+        self.auxOnButtons = createButtons("Aux", "On", 2)
+        self.auxOffButtons = createButtons("Aux", "Off", 3)
 
         self.anyWarningLabel = WarningLabel()
         self.rcpMirrorCellUtility220VAC1StatusLabel = QLabel("UNKNOWN")
@@ -260,12 +262,15 @@ class PowerPageWidget(QWidget):
     @Slot(map)
     def powerStatus(self, data):
         for b in range(4):
-            self.mainOnOffLabels[b].setValue(
-                getattr(data, f"powerNetwork{bus(b)}CommandedOn")
-            )
-            self.auxOnOffLabels[b].setValue(
-                getattr(data, f"auxPowerNetwork{bus(b)}CommandedOn")
-            )
+            main = getattr(data, f"powerNetwork{bus(b)}CommandedOn")
+            self.mainOnButtons[b].setDisabled(main)
+            self.mainOffButtons[b].setEnabled(main)
+            self.mainOnOffLabels[b].setValue(main)
+
+            aux = getattr(data, f"auxPowerNetwork{bus(b)}CommandedOn")
+            self.auxOnButtons[b].setDisabled(main)
+            self.auxOffButtons[b].setEnabled(main)
+            self.auxOnOffLabels[b].setValue(aux)
 
     @Slot(map)
     def powerSupplyData(self, data):
