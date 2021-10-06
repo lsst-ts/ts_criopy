@@ -1,4 +1,4 @@
-from .CustomLabels import PowerOnOffLabel, WarningLabel
+from .CustomLabels import PowerOnOffLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton

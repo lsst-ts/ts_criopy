@@ -40,10 +40,10 @@ class WarningsGrid(QGroupBox):
 
             layout.addWidget(QLabel(w[1]), r, c)
 
-            l = WarningLabel()
-            layout.addWidget(l, r, c + 1)
+            label = WarningLabel()
+            layout.addWidget(label, r, c + 1)
 
-            self.warnings[w[0]] = l
+            self.warnings[w[0]] = label
 
         self.setLayout(layout)
 
