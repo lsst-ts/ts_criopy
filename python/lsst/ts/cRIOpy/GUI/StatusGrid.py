@@ -17,33 +17,33 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import WarningLabel
+from .CustomLabels import StatusLabel
 
 from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
 from PySide2.QtCore import Slot
 
 
-class WarningsGrid(QGroupBox):
-    def __init__(self, warnings, event, cols):
-        super().__init__("Any Warnings: ---")
-        self.warnings = {}
+class StatusGrid(QGroupBox):
+    def __init__(self, states, event, cols):
+        super().__init__()
+        self.states = {}
 
         layout = QGridLayout()
 
-        lw = len(warnings)
+        lw = len(states)
         rows = lw / cols
         i = 0
-        for w in warnings.items():
+        for s in states.items():
             r = i % rows
             c = int(i / rows) * 2
             i += 1
 
-            layout.addWidget(QLabel(w[1]), r, c)
+            layout.addWidget(QLabel(s[1]), r, c)
 
-            label = WarningLabel()
+            label = StatusLabel()
             layout.addWidget(label, r, c + 1)
 
-            self.warnings[w[0]] = label
+            self.states[s[0]] = label
 
         self.setLayout(layout)
 
@@ -51,10 +51,5 @@ class WarningsGrid(QGroupBox):
 
     @Slot(map)
     def data(self, data):
-        if data.anyWarning:
-            self.setTitle("<font color='red'>Any Warning: yes</font>")
-        else:
-            self.setTitle("<font color='green'>Any Warning: no</font>")
-
-        for w in self.warnings:
-            w[1].setValue(getattr(data, w[0]))
+        for s in self.states.items():
+            s[1].setValue(getattr(data, s[0]))

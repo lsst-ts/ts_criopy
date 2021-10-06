@@ -42,6 +42,7 @@ __all__ = [
     "OnOffLabel",
     "PowerOnOffLabel",
     "WarningLabel",
+    "StatusLabel",
     "Clipped",
     "Heartbeat",
     "LogEventWarning",
@@ -261,7 +262,7 @@ class OnOffLabel(QLabel):
 
 
 class PowerOnOffLabel(QLabel):
-    """Displays on/off warnings"""
+    """Displays on/off power state"""
 
     def __init__(self):
         super().__init__("---")
@@ -304,6 +305,29 @@ class WarningLabel(QLabel):
             self.setText("<font color='red'>WARNING</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class StatusLabel(QLabel):
+    """Displays WARNING/OK"""
+
+    def __init__(self):
+        super().__init__("---")
+
+    def __copy__(self):
+        return StatusLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes Error (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means OK.
+        """
+        if value:
+            self.setText("<font color='green'>OK</font>")
+        else:
+            self.setText("<font color='red'>Error</font>")
 
 
 class Clipped(QLabel):

@@ -2,7 +2,7 @@ from .CustomLabels import PowerOnOffLabel, WarningLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
-from .WarningsGrid import WarningsGrid
+from .StatusGrid import StatusGrid
 
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QSpacerItem
 from PySide2.QtCore import Slot
@@ -138,27 +138,54 @@ class PowerPageWidget(QWidget):
         )
         self.chartView = TimeChartView(self.chart)
 
-        warningGrid = WarningsGrid(
+        statusGrid = StatusGrid(
             {
-                "powerNetworkAOutputMismatch": "Main A Mismatch",
-                "powerNetworkBOutputMismatch": "Main B Mismatch",
-                "powerNetworkCOutputMismatch": "Main C Mismatch",
-                "powerNetworkDOutputMismatch": "Main D Mismatch",
-                "auxPowerNetworkAOutputMismatch": "Aux A Mismatch",
-                "auxPowerNetworkBOutputMismatch": "Aux B Mismatch",
-                "auxPowerNetworkCOutputMismatch": "Aux C Mismatch",
-                "auxPowerNetworkDOutputMismatch": "Aux D Mismatch",
+                "rcpMirrorCellUtility220VAC1Status" : "Mirror 220VAC1",
+                "rcpMirrorCellUtility220VAC2Status" : "Mirror 220VAC2",
+                "rcpMirrorCellUtility220VAC3Status" : "Mirror 222VAC3",
+                "rcpCabinetUtility220VACStatus" : "Cabinet 220VAC",
+                "rcpExternalEquipment220VACStatus" : "External 220VAC",
+
+                "controlsPowerNetworkRedundantStatus" : "Power Redundant",
+                "controlsPowerNetworkRedundancyControlStatus" : "Redundancy Control",
+
+                "lightPowerNetworkStatus" : "Light",
+                "externalEquipmentPowerNetworkStatus" : "External",
+                "laserTrackerPowerNetworkStatus" : "Laser",
+                "controlsPowerNetworkStatus" : "Power",
             },
-            self.m1m3.powerWarning,
-            2,
+            self.m1m3.powerSupplyStatus,
+            4,
+        )
+
+        powerGrid = StatusGrid(
+            {
+                "powerNetworkAStatus" : "A Power",
+                "powerNetworkARedundantStatus" : "A Redundant",
+                "powerNetworkARedundancyControlStatus" : "A Redundancy Control",
+
+                "powerNetworkBStatus" : "B Power",
+                "powerNetworkBRedundantStatus" : "B Redundant",
+                "powerNetworkBRedundancyControlStatus" : "B Redundancy Control",
+
+                "powerNetworkCStatus" : "C Power",
+                "powerNetworkCRedundantStatus" : "C Redundant",
+                "powerNetworkCRedundancyControlStatus" : "C Redundancy Control",
+
+                "powerNetworkDStatus" : "D Power",
+                "powerNetworkDRedundantStatus" : "D Redundant",
+                "powerNetworkDRedundancyControlStatus" : "D Redundancy Control",
+            },
+            self.m1m3.powerSupplyStatus,
+            4,
         )
 
         plotLayout.addWidget(self.chartView)
 
         layout.addLayout(commandLayout)
         layout.addLayout(dataLayout)
-        layout.addSpacing(20)
-        layout.addWidget(warningGrid)
+        layout.addWidget(statusGrid)
+        layout.addWidget(powerGrid)
         layout.addLayout(plotLayout)
 
         self.setLayout(layout)
