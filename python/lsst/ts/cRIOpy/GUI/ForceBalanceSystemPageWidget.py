@@ -81,7 +81,7 @@ class ForceBalanceSystemPageWidget(QWidget):
             "Mag",
         ]
 
-        for d in range(7):
+        for d in range(len(values)):
             dataLayout.addWidget(QLabel(f"<b>{values[d]}</b>"), row, d + 1)
 
         row += 1
@@ -123,15 +123,15 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         hardpoints = [f"HP{x}" for x in range(1, 7)] + ["Mag"]
 
-        for d in range(7):
+        for d in range(len(hardpoints)):
             dataLayout.addWidget(QLabel(f"<b>{hardpoints[d]}</b>"), row, d + 1)
 
         row += 1
 
         dataLayout.addWidget(QLabel("<b>Measured Force</b>"), row, 0)
 
-        self.hardpoints = [Force() for x in range(7)]
-        for c in range(7):
+        self.hardpoints = [Force() for x in range(len(hardpoints))]
+        for c in range(len(self.hardpoints)):
             dataLayout.addWidget(self.hardpoints[c], row, c + 1)
 
         warningLayout.addWidget(self.balanceForcesClipped)
