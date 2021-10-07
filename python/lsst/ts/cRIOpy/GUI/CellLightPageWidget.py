@@ -1,7 +1,8 @@
-from .QTHelpers import setWarningLabel, setBoolLabelOnOff
+from .CustomLabels import OnOffLabel, WarningLabel
 from .SALComm import SALCommand
+from .StateEnabled import EngineeringButton
 
-from PySide2.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QFormLayout
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
@@ -11,62 +12,61 @@ class CellLightPageWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
-        self.dataLayout = QGridLayout()
-        self.warningLayout = QGridLayout()
-        self.commandLayout = QVBoxLayout()
-        self.layout.addLayout(self.commandLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.dataLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.warningLayout)
-        self.setLayout(self.layout)
-        self.setFixedHeight(300)
+        layout = QVBoxLayout()
 
-        self.turnLightsOnButton = QPushButton("Turn Lights On")
+        self.turnLightsOnButton = EngineeringButton("Turn Lights On", m1m3)
         self.turnLightsOnButton.clicked.connect(self.issueCommandTurnLightsOn)
         self.turnLightsOnButton.setFixedWidth(256)
-        self.turnLightsOffButton = QPushButton("Turn Lights Off")
+        self.turnLightsOffButton = EngineeringButton("Turn Lights Off", m1m3)
         self.turnLightsOffButton.clicked.connect(self.issueCommandTurnLightsOff)
         self.turnLightsOffButton.setFixedWidth(256)
 
-        self.cellLightsCommandedOnLabel = QLabel("UNKNOWN")
-        self.cellLightsOnLabel = QLabel("UNKNOWN")
+        self.cellLightsCommandedOnLabel = OnOffLabel()
+        self.cellLightsOnLabel = OnOffLabel()
 
-        self.anyWarningLabel = QLabel("UNKNOWN")
-        self.cellLightSensorMismatchLabel = QLabel("UNKNOWN")
+        self.anyWarningLabel = WarningLabel()
+        self.cellLightsOutputMismatchLabel = WarningLabel()
+        self.cellLightsSensorMismatchLabel = WarningLabel()
 
-        self.commandLayout.addWidget(self.turnLightsOnButton)
-        self.commandLayout.addWidget(self.turnLightsOffButton)
+        layout.addWidget(self.turnLightsOnButton)
+        layout.addWidget(self.turnLightsOffButton)
 
-        row = 0
-        col = 0
-        self.dataLayout.addWidget(QLabel("Command"), row, col)
-        self.dataLayout.addWidget(self.cellLightsCommandedOnLabel, row, col + 1)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Sensor"), row, col)
-        self.dataLayout.addWidget(self.cellLightsOnLabel, row, col + 1)
+        layout.addSpacing(20)
 
-        row = 0
-        col = 0
-        self.warningLayout.addWidget(QLabel("Any Warnings"), row, col)
-        self.warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
-        row += 1
-        self.warningLayout.addWidget(QLabel("Command / Sensor Mismatch"), row, col)
-        self.warningLayout.addWidget(self.cellLightSensorMismatchLabel, row, col + 1)
+        dataLayout = QFormLayout()
+        dataLayout.addRow("Command", self.cellLightsCommandedOnLabel)
+        dataLayout.addRow("Sensor", self.cellLightsOnLabel)
+
+        layout.addLayout(dataLayout)
+        layout.addSpacing(20)
+
+        warningLayout = QFormLayout()
+
+        warningLayout.addRow("Any Warnings", self.anyWarningLabel)
+        warningLayout.addRow("Output Mismatch", self.cellLightsOutputMismatchLabel)
+        warningLayout.addRow("Sensor Mismatch", self.cellLightsSensorMismatchLabel)
+
+        layout.addLayout(warningLayout)
+        layout.addStretch()
+
+        self.setLayout(layout)
 
         self.m1m3.cellLightWarning.connect(self.cellLightWarning)
         self.m1m3.cellLightStatus.connect(self.cellLightStatus)
 
     @Slot(map)
     def cellLightWarning(self, data):
-        setWarningLabel(self.anyWarningLabel, data.anyWarning)
-        # TODO setWarningLabel(self.cellLightSensorMismatchLabel, BitHelper.get(data.cellLightFlags, CellLightFlags.CellLightSensorMismatch))
+        self.anyWarningLabel.setValue(data.anyWarning)
+        self.cellLightsOutputMismatchLabel.setValue(data.cellLightsOutputMismatch)
+        self.cellLightsSensorMismatchLabel.setValue(data.cellLightsSensorMismatch)
 
     @Slot(map)
     def cellLightStatus(self, data):
-        setBoolLabelOnOff(self.cellLightsCommandedOnLabel, data.cellLightsCommandedOn)
-        setBoolLabelOnOff(self.cellLightsOnLabel, data.cellLightsOn)
+        self.cellLightsCommandedOnLabel.setValue(data.cellLightsCommandedOn)
+        self.cellLightsOnLabel.setValue(data.cellLightsOn)
+
+        self.turnLightsOnButton.setDisabled(data.cellLightsCommandedOn)
+        self.turnLightsOffButton.setEnabled(data.cellLightsCommandedOn)
 
     @asyncSlot()
     async def issueCommandTurnLightsOn(self):

@@ -43,13 +43,28 @@ class StateEnabledButton(QPushButton):
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
     ):
         super().__init__(title)
+        self.__correctState = False
+        self.__askedEnabled = False
+        self.setEnabled()
         self._enabledStates = enabledStates
 
         m1m3.detailedState.connect(self.detailedState)
 
+    def setEnabled(self, enabled=True):
+        self.__askedEnabled = enabled
+        self.__updateEnabled()
+
+    def setDisabled(self, disabled=True):
+        self.__askedEnabled = not (disabled)
+        self.__updateEnabled()
+
     @Slot(map)
     def detailedState(self, data):
-        self.setEnabled(data.detailedState in self._enabledStates)
+        self.__correctState = data.detailedState in self._enabledStates
+        self.__updateEnabled()
+
+    def __updateEnabled(self):
+        super().setEnabled(self.__correctState and self.__askedEnabled)
 
 
 class EngineeringButton(StateEnabledButton):
@@ -63,6 +78,7 @@ class EngineeringButton(StateEnabledButton):
         SALComm. When detailed state is in one of the engineering states,
         button is enabled. It is disabled otherwise.
     """
+
     def __init__(self, title, m1m3):
         super().__init__(
             title,
@@ -87,12 +103,14 @@ class StateEnabledWidget(QWidget):
     enabledStates : `[DetailedState]`
         States in which the widget is enabled.
     """
+
     def __init__(
         self,
         m1m3,
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
     ):
         super().__init__()
+        self.setEnabled(False)
         self._enabledStates = enabledStates
 
         m1m3.detailedState.connect(self.detailedState)

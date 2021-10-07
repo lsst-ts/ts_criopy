@@ -40,7 +40,10 @@ __all__ = [
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
+    "PowerOnOffLabel",
     "WarningLabel",
+    "StatusLabel",
+    "Clipped",
     "Heartbeat",
     "LogEventWarning",
     "DockWindow",
@@ -258,11 +261,34 @@ class OnOffLabel(QLabel):
             self.setText("<font color='green'>Off</font>")
 
 
+class PowerOnOffLabel(QLabel):
+    """Displays on/off power state"""
+
+    def __init__(self):
+        super().__init__("---")
+
+    def __copy__(self):
+        return PowerOnOffLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes On (red)/Off (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means power is On.
+        """
+        if value:
+            self.setText("<font color='green'>On</font>")
+        else:
+            self.setText("<font color='gold'>Off</font>")
+
+
 class WarningLabel(QLabel):
     """Displays WARNING/OK"""
 
     def __init__(self):
-        super().__init__()
+        super().__init__("---")
 
     def __copy__(self):
         return WarningLabel()
@@ -279,6 +305,43 @@ class WarningLabel(QLabel):
             self.setText("<font color='red'>WARNING</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class StatusLabel(QLabel):
+    """Displays OK/Error status."""
+
+    def __init__(self):
+        super().__init__("---")
+
+    def __copy__(self):
+        return StatusLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes Error (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means OK.
+        """
+        if value:
+            self.setText("<font color='green'>OK</font>")
+        else:
+            self.setText("<font color='red'>Error</font>")
+
+
+class Clipped(QLabel):
+    "Display clipped/not clipped"
+
+    def __init__(self, force):
+        super().__init__()
+        self._force = force
+
+    def setClipped(self, clipped):
+        if clipped:
+            self.setText(f"<font color='red'>{self._force} forces clipped</font>")
+        else:
+            self.setText(f"<font color='green'>{self._force} forces not clipped</font>")
 
 
 class Heartbeat(QWidget):
