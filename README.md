@@ -39,10 +39,73 @@ Python 3.8
 [asyncqt](https://pypi.org/project/asyncqt)
 [LSST ts_salobj](https://github.com/lsst-ts/ts_salobj)
 
-## Prerequsities
+## Installing packages
+
+The most troublesome is dds. That can be build from source, or a wheel package
+needs to be copied from previously build package.
+
+GUI requires Python 3.8, which is best build from source.
+
+[Download Python3.8](https://www.python.org/ftp/python/3.8.8/Python-3.8.8.tar.xz)
+
+```bash
+curl -O https://www.python.org/ftp/python/3.8.8/Python-3.8.8.tar.xz
+tar xJf Python-3.8.8.tar.xz
+cd Python-3.8.8
+./configure
+make
+make test
+sudo make install
+```
+
+Most of the remaining packages can be installed through pip:
+
+```bash
+pip3.8 install boto3 moto pyaml asyncqt PySide2 jsonschema
+```
+
+dds package can be build from OSPL source (installed from RPM from nexus), 
+see [instructions](https://istkb.adlinktech.com/article/using-opensplice-dds-with-python/).
+
+QtWayland needs to be installed so GUI/EUI can launch (otherwise you will see
+complains about missing plugin, _"qt.qpa.plugin: Could not load the Qt platform
+plugin "xcb" in "" even though it was found."_
+
+```bash
+sudo yum install qt5-qtwayland
+```
+
+SAL needs to be setup. For that, ts_xml, ts_sal, ts_salobj, ts_idl,
+ts_ddsconfig and ts_utils modules shall be cloned from GitHub (with appropriate
+version) and put into PYTHONPATH. Environmental values needs to be setup for
+that. The base minimum is (assuming all packages are cloned into $HOME, and
+OpenSpliceDDS V6.10.4 is installed from RPM):
+
+```bash
+export OSPL_HOME=/opt/OpenSpliceDDS/V6.10.4/HDE/x86_64.linux
+export LSST_DDS_DOMAIN_ID=0
+export OSPL_URI=file://$HOME/ts_ddsconfig/config/ospl-shmem.xml
+export LSST_DDS_QOS=file://$HOME/ts_ddsconfig/qos/QoS.xml
+export LSST_DDS_PARTITION_PREFIX=summit
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OSPL_HOME/lib
+
+cd $HOME
+source ts_sal/setup.env
+
+export PYTHONPATH=:$HOME/ts_xml/python/:$HOME/ts_ddsconfig/python/:$HOME/ts_salobj/python/:$HOME/ts_idl/python:$HOME/ts_sal/python:$HOME/ts_utils/python:$HOME/ts_cRIOpy/python
+```
 
 ```bash
 make_idl_files.py MTM1M3 MTM1M3TS MTMount MTVMS
+```
+
+Only after that ospl can be started and M1M3GUI can be run (_ospl start doesn't
+need to issued if it's already running):
+
+```bash
+ospl start
+cd ts_cRIOpy
+./bin/M1M3GUI
 ```
 
 ## SALComm
