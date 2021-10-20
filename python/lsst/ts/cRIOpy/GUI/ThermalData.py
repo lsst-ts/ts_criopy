@@ -1,4 +1,5 @@
 from .TopicData import TopicData, TopicField
+from .ActuatorsDisplay import Scales
 
 __all__ = ["Thermals"]
 
@@ -20,6 +21,17 @@ class Thermals:
                     ),
                     TopicField("Fan RPM", "fanRPM", None),
                     TopicField("Absolute temperature", "absoluteTemperature", None),
+                ],
+                "thermalData",
+                False,
+            ),
+            TopicData(
+                "Thermal ILCs",
+                [
+                    TopicField("ILC Fault", "ilcFault", None, Scales.WARNING),
+                    TopicField("Heater disabled", "heaterDisabled", None, Scales.WARNING),
+                    TopicField("Heater breaker", "heaterBreaker", None, Scales.ONOFF),
+                    TopicField("Fan breaker", "fanBreaker", None, Scales.ONOFF),
                 ],
                 "thermalData",
                 False,
