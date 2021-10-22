@@ -22,13 +22,15 @@ from asyncqt import asyncSlot
 from PySide2.QtWidgets import (
     QFormLayout,
     QVBoxLayout,
+    QHBoxLayout,
     QWidget,
     QDoubleSpinBox,
     QPushButton,
 )
 
-from .SALComm import SALCommand
 from .CustomLabels import Volt, Percent, DockWindow
+from .TimeChart import TimeChart, TimeChartView
+from .SALComm import SALCommand
 
 
 class MixingValveWidget(DockWindow):
@@ -59,14 +61,26 @@ class MixingValveWidget(DockWindow):
         setMixingValve.clicked.connect(self._setMixingValve)
         commandLayout.addRow(setMixingValve)
 
-        layout = QVBoxLayout()
-        layout.addLayout(dataLayout)
-        layout.addSpacing(20)
-        layout.addLayout(commandLayout)
-        layout.addStretch()
+        vlayout = QVBoxLayout()
+        vlayout.addLayout(dataLayout)
+        vlayout.addSpacing(20)
+        vlayout.addLayout(commandLayout)
+        vlayout.addStretch()
+
+        hlayout = QHBoxLayout()
+        hlayout.addLayout(vlayout)
+
+        self.mixingValveChart = TimeChart(
+            {
+                "Raw (V)": ["Raw Position"],
+                "Percent (%)": ["Position"],
+            }
+        )
+
+        hlayout.addWidget(TimeChartView(self.mixingValveChart))
 
         widget = QWidget()
-        widget.setLayout(layout)
+        widget.setLayout(hlayout)
 
         self.setWidget(widget)
 
@@ -76,6 +90,18 @@ class MixingValveWidget(DockWindow):
     def mixingValve(self, data):
         self.rawPosition.setValue(data.rawValvePosition)
         self.position.setValue(data.valvePosition)
+
+        self.mixingValveChart.append(
+            data.private_sndStamp,
+            [data.rawValvePosition],
+            axis_index=0,
+        )
+
+        self.mixingValveChart.append(
+            data.private_sndStamp,
+            [data.valvePosition],
+            axis_index=1,
+        )
 
     @SALCommand
     def _callMixingValve(self, **kvargs):
