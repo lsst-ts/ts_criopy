@@ -19,7 +19,13 @@
 
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-from PySide2.QtWidgets import QLabel, QFormLayout, QVBoxLayout, QWidget, QDoubleSpinBox, QPushButton
+from PySide2.QtWidgets import (
+    QFormLayout,
+    QVBoxLayout,
+    QWidget,
+    QDoubleSpinBox,
+    QPushButton,
+)
 
 from .SALComm import SALCommand
 from .CustomLabels import Volt, Percent, DockWindow
@@ -46,7 +52,7 @@ class MixingValveWidget(DockWindow):
         self.target.setRange(0, 100)
         self.target.setSingleStep(1)
         self.target.setDecimals(2)
-        self.target.setSuffix('%')
+        self.target.setSuffix("%")
         commandLayout.addRow("Target", self.target)
 
         setMixingValve = QPushButton("Set")

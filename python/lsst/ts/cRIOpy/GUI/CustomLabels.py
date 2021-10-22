@@ -222,6 +222,7 @@ class Percent(UnitLabel):
     def __init__(self, fmt="0.02f"):
         super().__init__(fmt, u.percent)
 
+
 class Volt(UnitLabel):
     """Displays Volts.
 
@@ -233,6 +234,7 @@ class Volt(UnitLabel):
 
     def __init__(self, fmt="0.02f"):
         super().__init__(fmt, u.V)
+
 
 class ArcsecWarning(Arcsec):
     """Display degrees as arcseconds. Shows values above threshold as error /
