@@ -20,7 +20,7 @@
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QLabel, QFormLayout, QVBoxLayout, QWidget
 
-from .CustomLabels import DockWindow
+from .CustomLabels import Volt, Percent, DockWindow
 
 
 class MixingValveWidget(DockWindow):
@@ -31,8 +31,8 @@ class MixingValveWidget(DockWindow):
 
         dataLayout = QFormLayout()
 
-        self.rawPosition = QLabel()
-        self.position = QLabel()
+        self.rawPosition = Volt()
+        self.position = Percent()
 
         dataLayout.addRow("Raw Position", self.rawPosition)
         dataLayout.addRow("Position", self.position)
@@ -50,5 +50,5 @@ class MixingValveWidget(DockWindow):
 
     @Slot(map)
     def mixingValve(self, data):
-        self.rawPosition.setText(str(data.rawValvePosition))
-        self.position.setText(str(data.valvePosition))
+        self.rawPosition.setValue(data.rawValvePosition)
+        self.position.setValue(data.valvePosition)

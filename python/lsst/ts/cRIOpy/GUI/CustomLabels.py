@@ -37,6 +37,8 @@ __all__ = [
     "Moment",
     "Mm",
     "Arcsec",
+    "Percent",
+    "Volt",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -207,6 +209,30 @@ class Arcsec(UnitLabel):
     def __init__(self, fmt="0.02f", is_warn_func=None, is_err_func=None):
         super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
 
+
+class Percent(UnitLabel):
+    """Displays percents.
+
+    Parameters
+    ----------
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, fmt="0.02f"):
+        super().__init__(fmt, u.percent)
+
+class Volt(UnitLabel):
+    """Displays Volts.
+
+    Parameters
+    ----------
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, fmt="0.02f"):
+        super().__init__(fmt, u.V)
 
 class ArcsecWarning(Arcsec):
     """Display degrees as arcseconds. Shows values above threshold as error /
