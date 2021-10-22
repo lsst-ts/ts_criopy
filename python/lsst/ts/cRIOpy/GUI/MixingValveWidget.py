@@ -18,8 +18,10 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QLabel, QFormLayout, QVBoxLayout, QWidget
+from asyncqt import asyncSlot
+from PySide2.QtWidgets import QLabel, QFormLayout, QVBoxLayout, QWidget, QDoubleSpinBox, QPushButton
 
+from .SALComm import SALCommand
 from .CustomLabels import Volt, Percent, DockWindow
 
 
@@ -28,6 +30,7 @@ class MixingValveWidget(DockWindow):
 
     def __init__(self, m1m3ts):
         super().__init__("Mixing valve")
+        self.m1m3ts = m1m3ts
 
         dataLayout = QFormLayout()
 
@@ -37,8 +40,23 @@ class MixingValveWidget(DockWindow):
         dataLayout.addRow("Raw Position", self.rawPosition)
         dataLayout.addRow("Position", self.position)
 
+        commandLayout = QFormLayout()
+
+        self.target = QDoubleSpinBox()
+        self.target.setRange(0, 100)
+        self.target.setSingleStep(1)
+        self.target.setDecimals(2)
+        self.target.setSuffix('%')
+        commandLayout.addRow("Target", self.target)
+
+        setMixingValve = QPushButton("Set")
+        setMixingValve.clicked.connect(self._setMixingValve)
+        commandLayout.addRow(setMixingValve)
+
         layout = QVBoxLayout()
         layout.addLayout(dataLayout)
+        layout.addSpacing(20)
+        layout.addLayout(commandLayout)
         layout.addStretch()
 
         widget = QWidget()
@@ -46,9 +64,17 @@ class MixingValveWidget(DockWindow):
 
         self.setWidget(widget)
 
-        m1m3ts.mixingValve.connect(self.mixingValve)
+        self.m1m3ts.mixingValve.connect(self.mixingValve)
 
     @Slot(map)
     def mixingValve(self, data):
         self.rawPosition.setValue(data.rawValvePosition)
         self.position.setValue(data.valvePosition)
+
+    @SALCommand
+    def _callMixingValve(self, **kvargs):
+        return self.m1m3ts.remote.cmd_setMixingValve
+
+    @asyncSlot()
+    async def _setMixingValve(self):
+        await self._callMixingValve(mixingValveTarget=self.target.value())
