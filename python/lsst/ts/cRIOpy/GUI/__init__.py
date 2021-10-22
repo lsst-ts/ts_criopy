@@ -19,6 +19,7 @@ from .HardpointsWidget import HardpointsWidget
 from .IMSPageWidget import IMSPageWidget
 from .InclinometerPageWidget import InclinometerPageWidget
 from .InterlockPageWidget import InterlockPageWidget
+from .MixingValveWidget import MixingValveWidget
 from .OffsetsWidget import OffsetsWidget
 from .OverviewPageWidget import OverviewPageWidget
 from .PIDPageWidget import PIDPageWidget
