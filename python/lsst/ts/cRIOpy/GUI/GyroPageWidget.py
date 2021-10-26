@@ -1,6 +1,6 @@
 from .ValueGrid import WarningGrid
 from .TimeChart import TimeChart, TimeChartView
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QFormLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 
 
@@ -10,7 +10,6 @@ class GyroPageWidget(QWidget):
         self.m1m3 = m1m3
 
         dataLayout = QGridLayout()
-        warningLayout = QFormLayout()
         plotLayout = QVBoxLayout()
 
         self.maxPlotSize = 50 * 30  # 50Hz * 30s

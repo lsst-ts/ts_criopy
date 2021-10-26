@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import StatusLabel, WarningLabel
+from .CustomLabels import StatusLabel, WarningLabel, OnOffLabel, PowerOnOffLabel
 
 from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
 from PySide2.QtCore import Slot
@@ -78,3 +78,13 @@ class StatusGrid(ValueGrid):
 class WarningGrid(ValueGrid):
     def __init__(self, states, event, cols):
         super().__init__(WarningLabel, states, event, cols)
+
+
+class OnOffGrid(ValueGrid):
+    def __init__(self, states, event, cols):
+        super().__init__(OnOffLabel, states, event, cols)
+
+
+class PowerOnOffGrid(ValueGrid):
+    def __init__(self, states, event, cols):
+        super().__init__(PowerOnOffLabel, states, event, cols)
