@@ -1,5 +1,31 @@
-from .QTHelpers import setWarningLabel
-from .CustomLabels import Force, Moment, Arcsec, Mm, LogEventWarning, Heartbeat
+# This file is part of M1M3 SS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
+from .CustomLabels import (
+    Force,
+    Moment,
+    Arcsec,
+    Mm,
+    LogEventWarning,
+    Heartbeat,
+    WarningLabel,
+)
 
 from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
@@ -29,17 +55,6 @@ class OverviewPageWidget(QWidget):
         self.mirrorStateLabel = QLabel("UNKNOWN")
         self.modeStateLabel = QLabel("UNKNOWN")
         self.errorCodeLabel = QLabel("---")
-        self.interlockWarningLabel = QLabel("UNKNOWN")
-        self.powerWarningLabel = QLabel("UNKNOWN")
-        self.forceActuatorWarningLabel = LogEventWarning(m1m3.forceActuatorWarning)
-        self.hardpointActuatorWarningLabel = QLabel("UNKNOWN")
-        self.hardpointMonitorWarningLabel = QLabel("UNKNOWN")
-        self.inclinometerWarningLabel = QLabel("UNKNOWN")
-        self.accelerometerWarningLabel = QLabel("UNKNOWN")
-        self.gyroWarningLabel = QLabel("UNKNOWN")
-        self.airSupplyWarningLabel = QLabel("UNKNOWN")
-        self.imsWarningLabel = QLabel("UNKNOWN")
-        self.cellLightWarningLabel = QLabel("UNKNOWN")
         self.heartbeatLabel = Heartbeat()
 
         def createForcesAndMoments():
@@ -112,37 +127,37 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.errorCodeLabel, row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Interlocks"), row, col)
-        dataLayout.addWidget(self.interlockWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.interlockWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Power"), row, col)
-        dataLayout.addWidget(self.powerWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.powerWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Force Actuators"), row, col)
-        dataLayout.addWidget(self.forceActuatorWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.forceActuatorWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Actuators"), row, col)
-        dataLayout.addWidget(self.hardpointActuatorWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.hardpointActuatorWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Monitors"), row, col)
-        dataLayout.addWidget(self.hardpointMonitorWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.hardpointMonitorWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Inclinometer"), row, col)
-        dataLayout.addWidget(self.inclinometerWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.inclinometerSensorWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Accelerometer"), row, col)
-        dataLayout.addWidget(self.accelerometerWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.accelerometerWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Gyro"), row, col)
-        dataLayout.addWidget(self.gyroWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.gyroWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Air Supply"), row, col)
-        dataLayout.addWidget(self.airSupplyWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.airSupplyWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("IMS"), row, col)
-        dataLayout.addWidget(self.imsWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.displacementSensorWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Cell Light"), row, col)
-        dataLayout.addWidget(self.cellLightWarningLabel, row, col + 1)
+        dataLayout.addWidget(WarningLabel(m1m3.cellLightWarning), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Heartbeat"), row, col)
         dataLayout.addWidget(self.heartbeatLabel, row, col + 1)
@@ -226,20 +241,10 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.xmlVersion, row, col + 6)
         dataLayout.addWidget(self.osplVersion, row, col + 7)
 
-        m1m3.accelerometerWarning.connect(self.accelerometerWarning)
-        m1m3.airSupplyWarning.connect(self.airSupplyWarning)
         m1m3.appliedForces.connect(self.appliedForces)
-        m1m3.cellLightWarning.connect(self.cellLightWarning)
         m1m3.detailedState.connect(self.detailedState)
-        m1m3.displacementSensorWarning.connect(self.displacementSensorWarning)
         m1m3.errorCode.connect(self.errorCode)
-        m1m3.gyroWarning.connect(self.gyroWarning)
-        m1m3.hardpointActuatorWarning.connect(self.hardpointActuatorWarning)
-        m1m3.hardpointMonitorWarning.connect(self.hardpointMonitorWarning)
         m1m3.heartbeat.connect(self.heartbeatLabel.heartbeat)
-        m1m3.inclinometerSensorWarning.connect(self.inclinometerSensorWarning)
-        m1m3.interlockWarning.connect(self.interlockWarning)
-        m1m3.powerWarning.connect(self.powerWarning)
 
         m1m3.accelerometerData.connect(self.accelerometerData)
         m1m3.forceActuatorData.connect(self.forceActuatorData)
@@ -253,13 +258,6 @@ class OverviewPageWidget(QWidget):
         mtmount.azimuth.connect(self.azimuth)
         mtmount.elevation.connect(self.elevation)
 
-    def accelerometerWarning(self, data):
-        setWarningLabel(self.accelerometerWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def airSupplyWarning(self, data):
-        setWarningLabel(self.airSupplyWarningLabel, data.anyWarning)
-
     def _setValues(self, variables, data):
         for k, v in variables.items():
             v.setValue(getattr(data, k))
@@ -267,10 +265,6 @@ class OverviewPageWidget(QWidget):
     @Slot(map)
     def appliedForces(self, data):
         self._setValues(self.faCommanded, data)
-
-    @Slot(map)
-    def cellLightWarning(self, data):
-        setWarningLabel(self.cellLightWarningLabel, data.anyWarning)
 
     @Slot(map)
     def detailedState(self, data):
@@ -298,36 +292,8 @@ class OverviewPageWidget(QWidget):
         self.modeStateLabel.setText(m[2])
 
     @Slot(map)
-    def displacementSensorWarning(self, data):
-        setWarningLabel(self.imsWarningLabel, data.anyWarning)
-
-    @Slot(map)
     def errorCode(self, data):
         self.errorCodeLabel.setText(hex(data.errorCode))
-
-    @Slot(map)
-    def gyroWarning(self, data):
-        setWarningLabel(self.gyroWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def hardpointActuatorWarning(self, data):
-        setWarningLabel(self.hardpointActuatorWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def hardpointMonitorWarning(self, data):
-        setWarningLabel(self.hardpointMonitorWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def inclinometerSensorWarning(self, data):
-        setWarningLabel(self.inclinometerWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def interlockWarning(self, data):
-        setWarningLabel(self.interlockWarningLabel, data.anyWarning)
-
-    @Slot(map)
-    def powerWarning(self, data):
-        setWarningLabel(self.powerWarningLabel, data.anyWarning)
 
     @Slot(map)
     def accelerometerData(self, data):
