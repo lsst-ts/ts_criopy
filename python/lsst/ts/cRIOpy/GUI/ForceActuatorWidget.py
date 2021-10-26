@@ -28,7 +28,7 @@ from PySide2.QtWidgets import (
     QGridLayout,
     QListWidget,
 )
-from .QTHelpers import setWarningLabel
+from .CustomLabels import WarningLabel
 from .TopicData import Topics
 from .TimeDeltaLabel import TimeDeltaLabel
 from ..M1M3FATable import (
@@ -85,7 +85,7 @@ class ForceActuatorWidget(QWidget):
 
         self.selectedActuatorIdLabel = QLabel()
         self.selectedActuatorValueLabel = QLabel()
-        self.selectedActuatorWarningLabel = QLabel()
+        self.selectedActuatorWarningLabel = WarningLabel()
         self.lastUpdatedLabel = TimeDeltaLabel()
 
         self.nearSelectedIdsLabel = QLabel()
@@ -211,7 +211,7 @@ class ForceActuatorWidget(QWidget):
 
         self.selectedActuatorIdLabel.setText(str(s.id))
         self.selectedActuatorValueLabel.setText(s.getValue())
-        setWarningLabel(self.selectedActuatorWarningLabel, s.warning)
+        self.selectedActuatorWarningLabel.setValue(s.warning)
 
         # near neighbour
         nearIDs = FATABLE[s.index][FATABLE_NEAR_NEIGHBOR_INDEX]

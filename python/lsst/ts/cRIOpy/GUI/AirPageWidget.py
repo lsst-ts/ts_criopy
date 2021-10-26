@@ -24,10 +24,6 @@ class AirPageWidget(QWidget):
         self.airValveOpenedLabel = OnOffLabel()
         self.airValveClosedLabel = OnOffLabel()
 
-        self.anyWarningLabel = WarningLabel()
-        self.commandOutputMismatchLabel = WarningLabel()
-        self.commandSensorMismatchLabel = WarningLabel()
-
         layout.addWidget(self.turnAirOnButton)
         layout.addWidget(self.turnAirOffButton)
         layout.addSpacing(20)
@@ -43,23 +39,24 @@ class AirPageWidget(QWidget):
 
         warningLayout = QFormLayout()
 
-        warningLayout.addRow("Any Warnings", self.anyWarningLabel)
-        warningLayout.addRow("Output Mismatch", self.commandOutputMismatchLabel)
-        warningLayout.addRow("Sensor Mismatch", self.commandSensorMismatchLabel)
+        warningLayout.addRow(
+            "Any Warnings", WarningLabel(m1m3.airSupplyWarning, "anyWarning")
+        )
+        warningLayout.addRow(
+            "Output Mismatch",
+            WarningLabel(m1m3.airSupplyWarning, "commandOutputMismatch"),
+        )
+        warningLayout.addRow(
+            "Sensor Mismatch",
+            WarningLabel(m1m3.airSupplyWarning, "commandSensorMismatch"),
+        )
 
         layout.addLayout(warningLayout)
         layout.addStretch()
 
         self.setLayout(layout)
 
-        self.m1m3.airSupplyWarning.connect(self.airSupplyWarning)
         self.m1m3.airSupplyStatus.connect(self.airSupplyStatus)
-
-    @Slot(map)
-    def airSupplyWarning(self, data):
-        self.anyWarningLabel.setValue(data.anyWarning)
-        self.commandOutputMismatchLabel.setValue(data.commandOutputMismatch)
-        self.commandSensorMismatchLabel.setValue(data.commandSensorMismatch)
 
     @Slot(map)
     def airSupplyStatus(self, data):

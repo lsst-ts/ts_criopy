@@ -303,7 +303,7 @@ class WarningLabel(QLabel):
     def __init__(self, signal=None, field="anyWarning"):
         super().__init__("---")
         if signal is not None:
-            self._field=field
+            self._field = field
             signal.connect(self._data)
 
     def __copy__(self):

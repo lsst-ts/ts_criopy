@@ -22,7 +22,6 @@ from .CustomLabels import (
     Moment,
     Arcsec,
     Mm,
-    LogEventWarning,
     Heartbeat,
     WarningLabel,
 )

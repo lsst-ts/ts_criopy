@@ -1,4 +1,3 @@
-from .QTHelpers import setWarningLabel
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
     FATABLE_ID,
@@ -91,7 +90,4 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
             if selected.data is not None:
                 self.selectedActuatorValueLabel.setText(selected.getValue())
             if warningData is not None:
-                setWarningLabel(
-                    self.selectedActuatorWarningLabel,
-                    getWarning(selected.index),
-                )
+                self.selectedActuatorWarningLabel.setValue(getWarning(selected.index))

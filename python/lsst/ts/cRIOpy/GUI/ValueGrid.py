@@ -17,18 +17,20 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import StatusLabel
+from .CustomLabels import StatusLabel, WarningLabel
 
 from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
 from PySide2.QtCore import Slot
 
 
-class StatusGrid(QGroupBox):
+class ValueGrid(QGroupBox):
     """Displays Status Labels. Feed in hash with names and labels, event to
     connect to and number of columns.
 
     Parameters
     ----------
+    valueLabel : `class`
+        Type of values.
     states : `map(str, str)`
         Keys are event items, values are labels for those items.
     event : `Signal`
@@ -36,7 +38,8 @@ class StatusGrid(QGroupBox):
     cols : `int`
         Number of columns.
     """
-    def __init__(self, states, event, cols):
+
+    def __init__(self, valueLabel, states, event, cols):
         super().__init__()
         self.states = {}
 
@@ -52,7 +55,7 @@ class StatusGrid(QGroupBox):
 
             layout.addWidget(QLabel(s[1]), r, c)
 
-            label = StatusLabel()
+            label = valueLabel()
             layout.addWidget(label, r, c + 1)
 
             self.states[s[0]] = label
@@ -65,3 +68,13 @@ class StatusGrid(QGroupBox):
     def data(self, data):
         for s in self.states.items():
             s[1].setValue(getattr(data, s[0]))
+
+
+class StatusGrid(ValueGrid):
+    def __init__(self, states, event, cols):
+        super().__init__(StatusLabel, states, event, cols)
+
+
+class WarningGrid(ValueGrid):
+    def __init__(self, states, event, cols):
+        super().__init__(WarningLabel, states, event, cols)

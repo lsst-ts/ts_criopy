@@ -1,6 +1,6 @@
-from .QTHelpers import setWarningLabel
+from .CustomLabels import WarningLabel
 from .TimeChart import TimeChart, TimeChartView
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QFormLayout
 from PySide2.QtCore import Slot
 
 
@@ -11,7 +11,7 @@ class DCAccelerometerPageWidget(QWidget):
 
         self.layout = QVBoxLayout()
         self.dataLayout = QGridLayout()
-        self.warningLayout = QGridLayout()
+        self.warningLayout = QFormLayout()
         self.plotLayout = QVBoxLayout()
         self.layout.addLayout(self.dataLayout)
         self.layout.addWidget(QLabel(" "))
@@ -38,9 +38,6 @@ class DCAccelerometerPageWidget(QWidget):
         self.angularAccelerationXLabel = QLabel("UNKNOWN")
         self.angularAccelerationYLabel = QLabel("UNKNOWN")
         self.angularAccelerationZLabel = QLabel("UNKNOWN")
-
-        self.anyWarningLabel = QLabel("UNKNOWN")
-        self.responseTimeoutLabel = QLabel("UNKNOWN")
 
         self.chart = TimeChart(
             {"Angular Acceleration (rad/s<sup>2</sup>)": ["X", "Y", "Z"]}
@@ -91,23 +88,13 @@ class DCAccelerometerPageWidget(QWidget):
         self.dataLayout.addWidget(self.accelerometer4XLabel, row, col + 7)
         self.dataLayout.addWidget(self.accelerometer4YLabel, row, col + 8)
 
-        row = 0
-        col = 0
-        self.warningLayout.addWidget(QLabel("Any Warnings"), row, col)
-        self.warningLayout.addWidget(self.anyWarningLabel, row, col + 1)
-        row += 1
-        self.warningLayout.addWidget(QLabel("Response Timeout"), row, col)
-        self.warningLayout.addWidget(self.responseTimeoutLabel, row, col + 1)
+        self.warningLayout.addRow(
+            "Any Warnings", WarningLabel(m1m3.accelerometerWarning)
+        )
 
         self.plotLayout.addWidget(self.chart_view)
 
-        self.m1m3.accelerometerWarning.connect(self.accelerometerWarning)
         self.m1m3.accelerometerData.connect(self.accelerometerData)
-
-    @Slot(map)
-    def accelerometerWarning(self, data):
-        setWarningLabel(self.anyWarningLabel, data.anyWarning)
-        # TODO setWarningLabel(self.responseTimeoutLabel, BitHelper.get(data.accelerometerFlags, AccelerometerFlags.ResponseTimeout))
 
     @Slot(map)
     def accelerometerData(self, data):
