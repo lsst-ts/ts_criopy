@@ -1,7 +1,7 @@
 from .ValueGrid import InterlockOffGrid, PowerOnOffGrid
 from .TimeChart import TimeChart, TimeChartView
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QFormLayout
+from PySide2.QtWidgets import QWidget, QVBoxLayout
 from PySide2.QtCore import Slot
 
 

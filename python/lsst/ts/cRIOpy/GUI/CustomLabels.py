@@ -327,6 +327,7 @@ class WarningLabel(QLabel):
         else:
             self.setText("<font color='green'>OK</font>")
 
+
 class InterlockOffLabel(QLabel):
     """Displays PROBLEM/OK. Constructor can be passed parameters allowing
     connection to a Signal emitted when warning value changes.
@@ -365,6 +366,7 @@ class InterlockOffLabel(QLabel):
             self.setText("<font color='red'>PROBLEM</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
 
 class StatusLabel(QLabel):
     """Displays OK/Error status."""
