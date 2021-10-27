@@ -42,6 +42,7 @@ __all__ = [
     "OnOffLabel",
     "PowerOnOffLabel",
     "WarningLabel",
+    "InterlockOffLabel",
     "StatusLabel",
     "Clipped",
     "Heartbeat",
@@ -326,6 +327,44 @@ class WarningLabel(QLabel):
         else:
             self.setText("<font color='green'>OK</font>")
 
+class InterlockOffLabel(QLabel):
+    """Displays PROBLEM/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
+        super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. False is OK, True is a problem.
+        """
+        if value:
+            self.setText("<font color='red'>PROBLEM</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
 
 class StatusLabel(QLabel):
     """Displays OK/Error status."""

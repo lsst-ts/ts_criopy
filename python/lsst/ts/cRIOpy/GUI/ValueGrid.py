@@ -17,7 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import StatusLabel, WarningLabel, OnOffLabel, PowerOnOffLabel
+from .CustomLabels import (
+    StatusLabel,
+    WarningLabel,
+    OnOffLabel,
+    PowerOnOffLabel,
+    InterlockOffLabel,
+)
 
 from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
 from PySide2.QtCore import Slot
@@ -37,9 +43,11 @@ class ValueGrid(QGroupBox):
         Event emitted when new data arrives.
     cols : `int`
         Number of columns.
+    extraLabels : `array((str, QLabel))`
+        Extra labels added to beginning.
     """
 
-    def __init__(self, valueLabel, states, event, cols):
+    def __init__(self, valueLabel, states, event, cols, extraLabels=[]):
         super().__init__()
         self.states = {}
 
@@ -48,6 +56,13 @@ class ValueGrid(QGroupBox):
         lw = len(states)
         rows = lw / cols
         i = 0
+        for (l, w) in extraLabels:
+            r = i % rows
+            c = int(i / rows) * 2
+            i += 1
+            layout.addWidget(QLabel(l), r, c)
+            layout.addWidget(w, r, c + 1)
+
         for s in states.items():
             r = i % rows
             c = int(i / rows) * 2
@@ -88,3 +103,28 @@ class OnOffGrid(ValueGrid):
 class PowerOnOffGrid(ValueGrid):
     def __init__(self, states, event, cols):
         super().__init__(PowerOnOffLabel, states, event, cols)
+
+
+class InterlockOffGrid(ValueGrid):
+    def __init__(self, states, event, cols, showAnyWarning=True):
+        if showAnyWarning:
+            self.anyWarningLabel = WarningLabel()
+            super().__init__(
+                InterlockOffLabel,
+                states,
+                event,
+                cols,
+                [("Any Warning", self.anyWarningLabel)],
+            )
+        else:
+            self.anyWarningLabel = None
+            super().__init__(InterlockOffLabel, states, event, cols)
+
+    @Slot(map)
+    def data(self, data):
+        super().data(data)
+        if self.anyWarningLabel:
+            anyWarning = False
+            for s in self.states.items():
+                anyWarning |= getattr(data, s[0])
+            self.anyWarningLabel.setValue(anyWarning)

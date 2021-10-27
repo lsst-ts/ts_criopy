@@ -1,4 +1,4 @@
-from .ValueGrid import WarningGrid, PowerOnOffGrid
+from .ValueGrid import InterlockOffGrid, PowerOnOffGrid
 from .TimeChart import TimeChart, TimeChartView
 
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QFormLayout
@@ -22,9 +22,8 @@ class InterlockPageWidget(QWidget):
         )
         layout.addSpacing(20)
         layout.addWidget(
-            WarningGrid(
+            InterlockOffGrid(
                 {
-                    "anyWarning": "Any Warnings",
                     "auxPowerNetworksOff": "AUX Power Networks",
                     "thermalEquipmentOff": "Thermal Equipment",
                     "airSupplyOff": "Air Supply",
