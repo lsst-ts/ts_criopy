@@ -23,7 +23,6 @@ from .CustomLabels import (
     Arcsec,
     Mm,
     Heartbeat,
-    WarningLabel,
     WarningButton,
 )
 
@@ -130,34 +129,42 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(WarningButton(m1m3, "interlockWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Power"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.powerWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "powerWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Force Actuators"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.forceActuatorWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "forceActuatorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Actuators"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.hardpointActuatorWarning), row, col + 1)
+        dataLayout.addWidget(
+            WarningButton(m1m3, "hardpointActuatorWarning"), row, col + 1
+        )
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Monitors"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.hardpointMonitorWarning), row, col + 1)
+        dataLayout.addWidget(
+            WarningButton(m1m3, "hardpointMonitorWarning"), row, col + 1
+        )
         row += 1
         dataLayout.addWidget(QLabel("Inclinometer"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.inclinometerSensorWarning), row, col + 1)
+        dataLayout.addWidget(
+            WarningButton(m1m3, "inclinometerSensorWarning"), row, col + 1
+        )
         row += 1
         dataLayout.addWidget(QLabel("Accelerometer"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.accelerometerWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "accelerometerWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Gyro"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.gyroWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "gyroWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Air Supply"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.airSupplyWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "airSupplyWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("IMS"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.displacementSensorWarning), row, col + 1)
+        dataLayout.addWidget(
+            WarningButton(m1m3, "displacementSensorWarning"), row, col + 1
+        )
         row += 1
         dataLayout.addWidget(QLabel("Cell Light"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.cellLightWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "cellLightWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Heartbeat"), row, col)
         dataLayout.addWidget(self.heartbeatLabel, row, col + 1)
