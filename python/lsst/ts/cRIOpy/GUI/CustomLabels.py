@@ -26,9 +26,12 @@ from PySide2.QtWidgets import (
     QProgressBar,
     QSizePolicy,
     QDockWidget,
+    QPushButton,
 )
 import astropy.units as u
 from datetime import datetime
+
+from .EventWindow import EventWindow
 
 __all__ = [
     "VLine",
@@ -42,6 +45,7 @@ __all__ = [
     "OnOffLabel",
     "PowerOnOffLabel",
     "WarningLabel",
+    "WarningButton",
     "InterlockOffLabel",
     "StatusLabel",
     "Clipped",
@@ -326,6 +330,53 @@ class WarningLabel(QLabel):
             self.setText("<font color='red'>WARNING</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class WarningButton(QPushButton):
+    """Displays WARNING/OK. When clicked, displays window with values hidden in signal.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, m1m3, topic, field="anyWarning"):
+        super().__init__("---")
+        self.m1m3 = m1m3
+        self._topic = topic
+        self._field = field
+        getattr(m1m3, topic).connect(self._data)
+        self.window = None
+        self.clicked.connect(self._showWindow)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def _showWindow(self):
+        if self.window is None:
+            self.window = EventWindow(self.m1m3, self._topic)
+        self.window.show()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        if value:
+            self.setText("WARNING")
+        else:
+            self.setText("OK")
 
 
 class InterlockOffLabel(QLabel):

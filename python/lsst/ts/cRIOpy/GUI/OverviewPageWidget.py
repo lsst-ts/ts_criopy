@@ -24,6 +24,7 @@ from .CustomLabels import (
     Mm,
     Heartbeat,
     WarningLabel,
+    WarningButton,
 )
 
 from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QGridLayout
@@ -126,7 +127,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.errorCodeLabel, row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Interlocks"), row, col)
-        dataLayout.addWidget(WarningLabel(m1m3.interlockWarning), row, col + 1)
+        dataLayout.addWidget(WarningButton(m1m3, "interlockWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Power"), row, col)
         dataLayout.addWidget(WarningLabel(m1m3.powerWarning), row, col + 1)
