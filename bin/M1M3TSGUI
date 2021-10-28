@@ -6,12 +6,11 @@ import sys
 from lsst.ts.cRIOpy.GUI import (
     Application,
     SALStatusBar,
-    ThermalValuePageWidget,
-    MixingValveWidget,
     SALLog,
 )
 
-from lsst.ts.cRIOpy.GUI.M1M3TSGUI import ThermalStatesDock
+from lsst.ts.cRIOpy.M1M3TS import ThermalValuePageWidget, MixingValveWidget
+from lsst.ts.cRIOpy.M1M3TS.M1M3TSGUI import ThermalStatesDock
 
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QMainWindow

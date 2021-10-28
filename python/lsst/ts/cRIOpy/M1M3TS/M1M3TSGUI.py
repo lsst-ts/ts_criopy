@@ -19,8 +19,7 @@
 
 __all__ = ["summaryStateString", "ThermalStatesDock"]
 
-from .CustomLabels import DockWindow
-from .SALComm import SALCommand
+from ..GUI import DockWindow, SALCommand
 
 from lsst.ts.salobj import State
 

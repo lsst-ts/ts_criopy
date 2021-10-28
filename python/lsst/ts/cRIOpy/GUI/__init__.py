@@ -29,7 +29,6 @@ from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import StateEnabledButton, StateEnabledWidget
 from .SplashScreen import SplashScreen
-from .ThermalValuePageWidget import ThermalValuePageWidget
 from .TimeBoxChart import TimeBoxChart
 from .TimeDeltaLabel import TimeDeltaLabel
 from .TimeChart import TimeChart, SALAxis, SALChartWidget

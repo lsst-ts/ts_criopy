@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
-from .TopicWindow import TopicWindow
+from ..GUI.TopicWindow import TopicWindow
 from .ThermalData import Thermals
 
 
