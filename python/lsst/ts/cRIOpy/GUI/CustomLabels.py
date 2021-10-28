@@ -28,6 +28,7 @@ from PySide2.QtWidgets import (
     QDockWidget,
     QPushButton,
 )
+from PySide2.QtGui import QPalette
 import astropy.units as u
 from datetime import datetime
 
@@ -373,10 +374,14 @@ class WarningButton(QPushButton):
         value : `bool`
             Current (=to be displayed) variable value. True means warning.
         """
+        pal = self.palette()
         if value:
             self.setText("WARNING")
+            pal.setColor(QPalette.Button, Qt.red)
         else:
             self.setText("OK")
+            pal.setColor(QPalette.Button, Qt.green)
+        self.setPalette(pal)
 
 
 class InterlockOffLabel(QLabel):
