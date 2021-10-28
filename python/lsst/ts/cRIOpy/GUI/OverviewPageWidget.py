@@ -26,7 +26,7 @@ from .CustomLabels import (
     WarningButton,
 )
 
-from PySide2.QtWidgets import QWidget, QLabel, QHBoxLayout, QGridLayout
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
 
 
@@ -45,10 +45,11 @@ class OverviewPageWidget(QWidget):
     def __init__(self, m1m3, mtmount):
         super().__init__()
 
-        self.layout = QHBoxLayout()
+        layout = QVBoxLayout()
         dataLayout = QGridLayout()
-        self.layout.addLayout(dataLayout)
-        self.setLayout(self.layout)
+        layout.addLayout(dataLayout)
+        layout.addStretch()
+        self.setLayout(layout)
 
         self.summaryStateLabel = QLabel("UNKNOWN")
         self.mirrorStateLabel = QLabel("UNKNOWN")
