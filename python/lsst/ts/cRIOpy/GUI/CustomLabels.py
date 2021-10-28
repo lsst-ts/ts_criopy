@@ -334,26 +334,25 @@ class WarningLabel(QLabel):
 
 
 class WarningButton(QPushButton):
-    """Displays WARNING/OK. When clicked, displays window with values hidden in signal.
+    """Displays WARNING/OK button. When clicked, displays window with values in
+    the signal. Button is color-coded (red for problems, green for OK values).
 
     Parameters
     ----------
-    signal : `Signal`, optional
-        When not None, given signal will be connected to method calling
-        setValue with a field from signal data. Field is the second argument.
-        Defaults to None.
+    comm : `SALComm`
+        SALComm object representing the signals
+    topic : `str`
+        Topic name. Should be event/telemetry name without leading evt_ (for events).
     field : `str`, optional
-        When specified (and signal parameter is provided), will use this field
-        as fieldname from data arriving with the signal. Defaults to
-        "anyWarning".
+        Field from topic used to display button state. Defaults to anyWarning
     """
 
-    def __init__(self, m1m3, topic, field="anyWarning"):
+    def __init__(self, comm, topic, field="anyWarning"):
         super().__init__("---")
-        self.m1m3 = m1m3
+        self.comm = comm
         self._topic = topic
         self._field = field
-        getattr(m1m3, topic).connect(self._data)
+        getattr(comm, topic).connect(self._data)
         self.window = None
         self.clicked.connect(self._showWindow)
 
@@ -363,7 +362,7 @@ class WarningButton(QPushButton):
 
     def _showWindow(self):
         if self.window is None:
-            self.window = EventWindow(self.m1m3, self._topic)
+            self.window = EventWindow(self.comm, self._topic)
         self.window.show()
 
     def setValue(self, value):
