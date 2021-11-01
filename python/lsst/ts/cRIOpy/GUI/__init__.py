@@ -19,7 +19,6 @@ from .HardpointsWidget import HardpointsWidget
 from .IMSPageWidget import IMSPageWidget
 from .InclinometerPageWidget import InclinometerPageWidget
 from .InterlockPageWidget import InterlockPageWidget
-from .MixingValveWidget import MixingValveWidget
 from .OffsetsWidget import OffsetsWidget
 from .OverviewPageWidget import OverviewPageWidget
 from .PIDPageWidget import PIDPageWidget
@@ -31,7 +30,7 @@ from .StateEnabled import StateEnabledButton, StateEnabledWidget
 from .SplashScreen import SplashScreen
 from .TimeBoxChart import TimeBoxChart
 from .TimeDeltaLabel import TimeDeltaLabel
-from .TimeChart import TimeChart, SALAxis, SALChartWidget
+from .TimeChart import TimeChart, TimeChartView, SALAxis, SALChartWidget
 from .TopicData import TopicData
 from .TopicWindow import TopicWindow
 from .VMSChartWidgets import *
