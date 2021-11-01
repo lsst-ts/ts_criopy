@@ -7,6 +7,7 @@ from lsst.ts.cRIOpy.GUI import (
     Application,
     SALStatusBar,
     ThermalValuePageWidget,
+    MixingValveWidget,
     SALLog,
 )
 
@@ -29,6 +30,7 @@ class EUI(QMainWindow):
         self.setStatusBar(SALStatusBar([self.m1m3ts]))
 
         thermalValues = ThermalValuePageWidget(self.m1m3ts)
+        mixingValve = MixingValveWidget(self.m1m3ts)
         stateDock = ThermalStatesDock(self.m1m3ts)
         logDock = SALLog.Dock(self.m1m3ts)
 
@@ -36,6 +38,7 @@ class EUI(QMainWindow):
 
         viewMenu = menuBar.addMenu("&Views")
         viewMenu.addAction(thermalValues.toggleViewAction())
+        viewMenu.addAction(mixingValve.toggleViewAction())
         viewMenu.addSeparator()
         viewMenu.addAction(stateDock.toggleViewAction())
         viewMenu.addAction(logDock.toggleViewAction())
@@ -48,6 +51,7 @@ class EUI(QMainWindow):
             self.resize(1000, 700)
 
         self.addDockWidget(Qt.RightDockWidgetArea, thermalValues)
+        self.addDockWidget(Qt.RightDockWidgetArea, mixingValve)
         self.addDockWidget(Qt.LeftDockWidgetArea, stateDock)
         self.addDockWidget(Qt.BottomDockWidgetArea, logDock)
 
