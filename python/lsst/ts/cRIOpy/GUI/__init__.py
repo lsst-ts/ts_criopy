@@ -36,4 +36,4 @@ from .TimeChart import TimeChart, SALAxis, SALChartWidget
 from .TopicData import TopicData
 from .TopicWindow import TopicWindow
 from .VMSChartWidgets import *
-from .StatusGrid import StatusGrid
+from .ValueGrid import StatusGrid, WarningGrid

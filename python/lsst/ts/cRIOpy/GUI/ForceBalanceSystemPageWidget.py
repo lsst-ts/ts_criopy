@@ -1,4 +1,3 @@
-# from .QTHelpers import setBoolLabelYesNo
 from .SALComm import SALCommand
 from .CustomLabels import Force, Moment, Clipped
 from .StateEnabled import StateEnabledButton

@@ -24,10 +24,6 @@ class CellLightPageWidget(QWidget):
         self.cellLightsCommandedOnLabel = OnOffLabel()
         self.cellLightsOnLabel = OnOffLabel()
 
-        self.anyWarningLabel = WarningLabel()
-        self.cellLightsOutputMismatchLabel = WarningLabel()
-        self.cellLightsSensorMismatchLabel = WarningLabel()
-
         layout.addWidget(self.turnLightsOnButton)
         layout.addWidget(self.turnLightsOffButton)
 
@@ -42,23 +38,24 @@ class CellLightPageWidget(QWidget):
 
         warningLayout = QFormLayout()
 
-        warningLayout.addRow("Any Warnings", self.anyWarningLabel)
-        warningLayout.addRow("Output Mismatch", self.cellLightsOutputMismatchLabel)
-        warningLayout.addRow("Sensor Mismatch", self.cellLightsSensorMismatchLabel)
+        warningLayout.addRow(
+            "Any Warnings", WarningLabel(m1m3.cellLightWarning, "anyWarning")
+        )
+        warningLayout.addRow(
+            "Output Mismatch",
+            WarningLabel(m1m3.cellLightWarning, "cellLightsOutputMismatch"),
+        )
+        warningLayout.addRow(
+            "Sensor Mismatch",
+            WarningLabel(m1m3.cellLightWarning, "cellLightsSensorMismatch"),
+        )
 
         layout.addLayout(warningLayout)
         layout.addStretch()
 
         self.setLayout(layout)
 
-        self.m1m3.cellLightWarning.connect(self.cellLightWarning)
         self.m1m3.cellLightStatus.connect(self.cellLightStatus)
-
-    @Slot(map)
-    def cellLightWarning(self, data):
-        self.anyWarningLabel.setValue(data.anyWarning)
-        self.cellLightsOutputMismatchLabel.setValue(data.cellLightsOutputMismatch)
-        self.cellLightsSensorMismatchLabel.setValue(data.cellLightsSensorMismatch)
 
     @Slot(map)
     def cellLightStatus(self, data):

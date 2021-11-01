@@ -29,7 +29,9 @@ class Thermals:
                 "Thermal ILCs",
                 [
                     TopicField("ILC Fault", "ilcFault", None, Scales.WARNING),
-                    TopicField("Heater disabled", "heaterDisabled", None, Scales.WARNING),
+                    TopicField(
+                        "Heater disabled", "heaterDisabled", None, Scales.WARNING
+                    ),
                     TopicField("Heater breaker", "heaterBreaker", None, Scales.ONOFF),
                     TopicField("Fan breaker", "fanBreaker", None, Scales.ONOFF),
                 ],

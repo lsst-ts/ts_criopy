@@ -21,7 +21,7 @@ from .CustomLabels import PowerOnOffLabel, WarningLabel
 from .TimeChart import TimeChart, TimeChartView
 from .SALComm import SALCommand
 from .StateEnabled import EngineeringButton
-from .StatusGrid import StatusGrid
+from .ValueGrid import StatusGrid
 
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QSpacerItem
 from PySide2.QtCore import Slot
@@ -47,6 +47,7 @@ class TurnButton(EngineeringButton):
     onOff : `str`
         On or Off, command is turn On or Off.
     """
+
     def __init__(self, m1m3, kind, bus, onOff):
         super().__init__(f"Turn {kind} {bus} {onOff}", m1m3)
         self.m1m3 = m1m3
@@ -76,6 +77,7 @@ class PowerPageWidget(QWidget):
     m1m3 : `SALComm`
         M1M3 SAL object.
     """
+
     def __init__(self, m1m3):
         super().__init__()
         self.m1m3 = m1m3
@@ -180,19 +182,17 @@ class PowerPageWidget(QWidget):
 
         statusGrid = StatusGrid(
             {
-                "rcpMirrorCellUtility220VAC1Status" : "Mirror 220VAC1",
-                "rcpMirrorCellUtility220VAC2Status" : "Mirror 220VAC2",
-                "rcpMirrorCellUtility220VAC3Status" : "Mirror 222VAC3",
-                "rcpCabinetUtility220VACStatus" : "Cabinet 220VAC",
-                "rcpExternalEquipment220VACStatus" : "External 220VAC",
-
-                "controlsPowerNetworkRedundantStatus" : "Power Redundant",
-                "controlsPowerNetworkRedundancyControlStatus" : "Redundancy Control",
-
-                "lightPowerNetworkStatus" : "Light",
-                "externalEquipmentPowerNetworkStatus" : "External",
-                "laserTrackerPowerNetworkStatus" : "Laser",
-                "controlsPowerNetworkStatus" : "Power",
+                "rcpMirrorCellUtility220VAC1Status": "Mirror 220VAC1",
+                "rcpMirrorCellUtility220VAC2Status": "Mirror 220VAC2",
+                "rcpMirrorCellUtility220VAC3Status": "Mirror 222VAC3",
+                "rcpCabinetUtility220VACStatus": "Cabinet 220VAC",
+                "rcpExternalEquipment220VACStatus": "External 220VAC",
+                "controlsPowerNetworkRedundantStatus": "Power Redundant",
+                "controlsPowerNetworkRedundancyControlStatus": "Redundancy Control",
+                "lightPowerNetworkStatus": "Light",
+                "externalEquipmentPowerNetworkStatus": "External",
+                "laserTrackerPowerNetworkStatus": "Laser",
+                "controlsPowerNetworkStatus": "Power",
             },
             self.m1m3.powerSupplyStatus,
             4,
@@ -200,21 +200,18 @@ class PowerPageWidget(QWidget):
 
         powerGrid = StatusGrid(
             {
-                "powerNetworkAStatus" : "A Power",
-                "powerNetworkARedundantStatus" : "A Redundant",
-                "powerNetworkARedundancyControlStatus" : "A Redundancy Control",
-
-                "powerNetworkBStatus" : "B Power",
-                "powerNetworkBRedundantStatus" : "B Redundant",
-                "powerNetworkBRedundancyControlStatus" : "B Redundancy Control",
-
-                "powerNetworkCStatus" : "C Power",
-                "powerNetworkCRedundantStatus" : "C Redundant",
-                "powerNetworkCRedundancyControlStatus" : "C Redundancy Control",
-
-                "powerNetworkDStatus" : "D Power",
-                "powerNetworkDRedundantStatus" : "D Redundant",
-                "powerNetworkDRedundancyControlStatus" : "D Redundancy Control",
+                "powerNetworkAStatus": "A Power",
+                "powerNetworkARedundantStatus": "A Redundant",
+                "powerNetworkARedundancyControlStatus": "A Redundancy Control",
+                "powerNetworkBStatus": "B Power",
+                "powerNetworkBRedundantStatus": "B Redundant",
+                "powerNetworkBRedundancyControlStatus": "B Redundancy Control",
+                "powerNetworkCStatus": "C Power",
+                "powerNetworkCRedundantStatus": "C Redundant",
+                "powerNetworkCRedundancyControlStatus": "C Redundancy Control",
+                "powerNetworkDStatus": "D Power",
+                "powerNetworkDRedundantStatus": "D Redundant",
+                "powerNetworkDRedundancyControlStatus": "D Redundancy Control",
             },
             self.m1m3.powerSupplyStatus,
             4,

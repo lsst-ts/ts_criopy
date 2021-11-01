@@ -2,7 +2,8 @@ from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot, Qt
 from lsst.ts.salobj import State
 from lsst.ts.idl.enums import MTM1M3
-from .QTHelpers import warning
+
+from .SALComm import warning
 
 
 class ApplicationStatusWidget(QWidget):

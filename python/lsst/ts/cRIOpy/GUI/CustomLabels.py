@@ -26,9 +26,13 @@ from PySide2.QtWidgets import (
     QProgressBar,
     QSizePolicy,
     QDockWidget,
+    QPushButton,
 )
+from PySide2.QtGui import QPalette
 import astropy.units as u
 from datetime import datetime
+
+from .EventWindow import EventWindow
 
 __all__ = [
     "VLine",
@@ -44,6 +48,8 @@ __all__ = [
     "OnOffLabel",
     "PowerOnOffLabel",
     "WarningLabel",
+    "WarningButton",
+    "InterlockOffLabel",
     "StatusLabel",
     "Clipped",
     "Heartbeat",
@@ -313,13 +319,33 @@ class PowerOnOffLabel(QLabel):
 
 
 class WarningLabel(QLabel):
-    """Displays WARNING/OK"""
+    """Displays WARNING/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
 
-    def __init__(self):
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
         super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
 
     def __copy__(self):
         return WarningLabel()
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
 
     def setValue(self, value):
         """Sets formatted value. Color codes WARNING (red)/OK (green).
@@ -331,6 +357,96 @@ class WarningLabel(QLabel):
         """
         if value:
             self.setText("<font color='red'>WARNING</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
+
+
+class WarningButton(QPushButton):
+    """Displays WARNING/OK button. When clicked, displays window with values in
+    the signal. Button is color-coded (red for problems, green for OK values).
+
+    Parameters
+    ----------
+    comm : `SALComm`
+        SALComm object representing the signals
+    topic : `str`
+        Topic name. Should be event/telemetry name without leading evt_ (for events).
+    field : `str`, optional
+        Field from topic used to display button state. Defaults to anyWarning
+    """
+
+    def __init__(self, comm, topic, field="anyWarning"):
+        super().__init__("---")
+        self.comm = comm
+        self._topic = topic
+        self._field = field
+        getattr(comm, topic).connect(self._data)
+        self.window = None
+        self.clicked.connect(self._showWindow)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def _showWindow(self):
+        if self.window is None:
+            self.window = EventWindow(self.comm, self._topic)
+        self.window.show()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        pal = self.palette()
+        if value:
+            self.setText("WARNING")
+            pal.setColor(QPalette.Button, Qt.red)
+        else:
+            self.setText("OK")
+            pal.setColor(QPalette.Button, Qt.green)
+        self.setPalette(pal)
+
+
+class InterlockOffLabel(QLabel):
+    """Displays PROBLEM/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
+        super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        interlockOff : `bool`
+            Current interlock off state. True means interlock is locked (=PROBLEM).
+        """
+        if value:
+            self.setText("<font color='red'>PROBLEM</font>")
         else:
             self.setText("<font color='green'>OK</font>")
 
