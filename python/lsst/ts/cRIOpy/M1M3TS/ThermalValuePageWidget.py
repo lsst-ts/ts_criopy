@@ -17,8 +17,17 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
-from ..GUI.TopicWindow import TopicWindow
+from PySide2.QtWidgets import (
+    QWidget,
+    QTableWidget,
+    QPushButton,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+)
+from PySide2.QtCore import Slot
+from ..GUI import TopicWindow
 from .ThermalData import Thermals
 
 
@@ -37,13 +46,40 @@ class DataWidget(QTableWidget):
                 self.item(r, c).setText(str(r * 10 + c))
 
 
-class ThermalValuePageWidget(TopicWindow):
+class CommandWidget(QWidget):
     def __init__(self, m1m3ts):
+        super().__init__()
+        self.m1m3ts = m1m3ts
+
         self.dataWidget = DataWidget()
 
-        super().__init__("Thermals values", m1m3ts, Thermals(), self.dataWidget)
+        self.setFansbutton = QPushButton("Set FCU fan speed")
+        self.setFansbutton.setDisabled(True)
+        self.setFansbutton.clicked.connect(self.setFans)
 
-    def updateValues(self, data):
+        commandLayout = QGridLayout()
+        commandLayout.addWidget(self.setFansbutton, 0, 0)
+
+        hBox = QHBoxLayout()
+        hBox.addLayout(commandLayout)
+        hBox.addStretch()
+
+        layout = QVBoxLayout()
+
+        layout.addWidget(self.dataWidget)
+        layout.addStretch()
+        layout.addLayout(hBox)
+
+        self.setLayout(layout)
+
+    @Slot()
+    def setFans(self):
+        self.updateValues(self.m1m3ts.remote.tel_thermalData.get(), True)
+
+    def updateValues(self, data, freeze=False):
+        if self.freezed:
+            return
+
         if data is None:
             self.dataWidget.empty()
             return
@@ -55,3 +91,15 @@ class ThermalValuePageWidget(TopicWindow):
                 index = r * 10 + c
                 if index < 96:
                     self.dataWidget.item(r, c).setText(str(values[index]))
+
+        self.freezed = freeze
+
+
+class ThermalValuePageWidget(TopicWindow):
+    def __init__(self, m1m3ts):
+        self.commandWidget = CommandWidget(m1m3ts)
+
+        super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
+
+    def updateValues(self, data):
+        self.commandWidget.updateValues(data)
