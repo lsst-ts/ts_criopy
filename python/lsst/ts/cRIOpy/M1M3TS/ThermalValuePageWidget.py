@@ -50,6 +50,7 @@ class CommandWidget(QWidget):
     def __init__(self, m1m3ts):
         super().__init__()
         self.m1m3ts = m1m3ts
+        self.freezed = False
 
         self.dataWidget = DataWidget()
 

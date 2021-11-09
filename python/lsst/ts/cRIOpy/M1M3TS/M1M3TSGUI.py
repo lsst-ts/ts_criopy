@@ -179,3 +179,10 @@ class ThermalStatesDock(DockWindow):
     def summaryState(self, data):
         self.stateLabel.setText(summaryStateString(data.summaryState))
         self.setButtonsToState(data.summaryState)
+
+    @Slot(map)
+    def engineeringMode(self, data):
+        if data.engineeringMode:
+            self.engineeringButton.setText("Exit Engineering")
+        else:
+            self.engineeringButton.setText("Enter Engineering")
