@@ -25,6 +25,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QGridLayout,
+    QSpinBox,
 )
 from PySide2.QtCore import Slot
 from ..GUI import TopicWindow, SALCommand
@@ -100,9 +101,17 @@ class CommandWidget(QWidget):
         setHeatersButton = self.SetButton(self, BUTTON_HEATERS)
         setFansbutton = self.SetButton(self, BUTTON_FANS)
 
+        self.flatDemand = QSpinBox()
+        self.flatDemand.setRange(0, 255)
+
+        setConstant = QPushButton("Set constant")
+        setConstant.clicked.connect(self.setConstant)
+
         commandLayout = QGridLayout()
-        commandLayout.addWidget(setHeatersButton, 0, 0)
-        commandLayout.addWidget(setFansbutton, 0, 1)
+        commandLayout.addWidget(self.flatDemand, 0, 0)
+        commandLayout.addWidget(setConstant, 0, 1)
+        commandLayout.addWidget(setHeatersButton, 1, 0)
+        commandLayout.addWidget(setFansbutton, 1, 1)
 
         hBox = QHBoxLayout()
         hBox.addLayout(commandLayout)
@@ -115,6 +124,14 @@ class CommandWidget(QWidget):
         layout.addLayout(hBox)
 
         self.setLayout(layout)
+
+    @Slot()
+    def setConstant(self):
+        for r in range(0, 10):
+            for c in range(0, 10):
+                index = r * 10 + c
+                if index < 96:
+                    self.dataWidget.item(r, c).setText(self.flatDemand.text())
 
     @SALCommand
     def _heaterFanDemand(self, **kwargs):
@@ -145,6 +162,8 @@ class CommandWidget(QWidget):
         if self.freezed:
             return
 
+        self.freezed = freeze
+
         if values is None:
             self.dataWidget.empty()
             return
@@ -154,8 +173,6 @@ class CommandWidget(QWidget):
                 index = r * 10 + c
                 if index < 96:
                     self.dataWidget.item(r, c).setText(str(values[index]))
-
-        self.freezed = freeze
 
 
 class ThermalValuePageWidget(TopicWindow):
