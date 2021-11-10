@@ -67,7 +67,7 @@ class ThermalStatesDock(DockWindow):
     def __init__(self, m1m3ts):
         super().__init__("Status")
         self.m1m3ts = m1m3ts
-        self.setMaximumWidth(100)
+        self.setMinimumWidth(200)
 
         layout = QVBoxLayout()
 
@@ -85,7 +85,7 @@ class ThermalStatesDock(DockWindow):
         _addButton("Start", self.start, True)
         _addButton("Enable", self.enable)
         self.engineeringButton = _addButton(
-            "Enable Engineering", self.setEngineeringMode
+            "Enter Engineering", self.setEngineeringMode
         )
         _addButton("Disable", self.disable)
         _addButton("Standby", self.standby)
@@ -149,7 +149,9 @@ class ThermalStatesDock(DockWindow):
 
     @asyncSlot()
     async def setEngineeringMode(self):
-        await self._setEngineeringMode(enableEngineeringMode=self._)
+        await self._setEngineeringMode(
+            enableEngineeringMode=self.engineeringButton.text() == "Enter Engineering"
+        )
 
     @SALCommand
     def _disable(self, **kwargs):

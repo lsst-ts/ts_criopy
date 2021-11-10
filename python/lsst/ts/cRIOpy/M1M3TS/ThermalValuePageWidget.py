@@ -75,17 +75,15 @@ class CommandWidget(QWidget):
 
     @Slot()
     def setFans(self):
-        self.updateValues(self.m1m3ts.remote.tel_thermalData.get(), True)
+        self.updateValues(self.m1m3ts.remote.tel_thermalData.get().fanRPM, True)
 
-    def updateValues(self, data, freeze=False):
+    def updateValues(self, values, freeze=False):
         if self.freezed:
             return
 
-        if data is None:
+        if values is None:
             self.dataWidget.empty()
             return
-
-        values = self.field.getValue(data)
 
         for r in range(0, 10):
             for c in range(0, 10):
@@ -103,4 +101,7 @@ class ThermalValuePageWidget(TopicWindow):
         super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
 
     def updateValues(self, data):
-        self.commandWidget.updateValues(data)
+        if data is None:
+            self.commandWidget.updateValues(None)
+        else:
+            self.commandWidget.updateValues(self.field.getValue(data))
