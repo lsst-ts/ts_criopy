@@ -98,20 +98,21 @@ class CommandWidget(QWidget):
         self.fans = [0] * 96
         self.heaters = [0] * 96
 
-        setHeatersButton = self.SetButton(self, BUTTON_HEATERS)
-        setFansbutton = self.SetButton(self, BUTTON_FANS)
+        self.setHeatersButton = self.SetButton(self, BUTTON_HEATERS)
+        self.setFansButton = self.SetButton(self, BUTTON_FANS)
 
         self.flatDemand = QSpinBox()
         self.flatDemand.setRange(0, 255)
 
-        setConstant = QPushButton("Set constant")
-        setConstant.clicked.connect(self.setConstant)
+        self.setConstantButton = QPushButton("Set constant")
+        self.setConstantButton.setDisabled(True)
+        self.setConstantButton.clicked.connect(self.setConstant)
 
         commandLayout = QGridLayout()
         commandLayout.addWidget(self.flatDemand, 0, 0)
-        commandLayout.addWidget(setConstant, 0, 1)
-        commandLayout.addWidget(setHeatersButton, 1, 0)
-        commandLayout.addWidget(setFansbutton, 1, 1)
+        commandLayout.addWidget(self.setConstantButton, 0, 1)
+        commandLayout.addWidget(self.setHeatersButton, 1, 0)
+        commandLayout.addWidget(self.setFansButton, 1, 1)
 
         hBox = QHBoxLayout()
         hBox.addLayout(commandLayout)
@@ -140,8 +141,12 @@ class CommandWidget(QWidget):
     def startEdit(self, kind):
         if kind == BUTTON_HEATERS:
             self.updateValues(self.heaters, True)
+            self.setFansButton.setDisabled(True)
         else:
             self.updateValues(self.fans, True)
+            self.setHeatersButton.setDisabled(True)
+
+        self.setConstantButton.setEnabled(True)
 
     async def heaterFanDemand(self, kind):
         data = []
@@ -153,10 +158,13 @@ class CommandWidget(QWidget):
         if kind == BUTTON_HEATERS:
             await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
+            self.setFansButton.setEnabled(True)
         else:
             await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
             self.fans = data
+            self.setHeatersButton.setEnabled(True)
         self.freezed = False
+        self.setConstantButton.setDisabled(True)
 
     def updateValues(self, values, freeze=False):
         if self.freezed:
