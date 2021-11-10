@@ -121,7 +121,6 @@ class CommandWidget(QWidget):
         layout = QVBoxLayout()
 
         layout.addWidget(self.dataWidget)
-        layout.addStretch()
         layout.addLayout(hBox)
 
         self.setLayout(layout)
