@@ -32,27 +32,8 @@ from .ThermalData import Thermals
 
 from asyncqt import asyncSlot
 
-EDIT_FAN = "Edit FCU Fan speed"
-SET_FAN = "Set FCU Fan speed"
-
-EDIT_HEATER = "Edit FCU Heaters PWM"
-SET_HEATER = "Set FCU Heaters PWM"
-
-
-class SetButton(QPushButton):
-    def __init__(self, m1m3ts, title):
-        super().__init__(title)
-        self._title = title
-        self.m1m3ts = m1m3ts
-        self.setDisabled(True)
-
-        m1m3ts.engineeringMode.connect(self.engineeringMode)
-
-    @Slot(map)
-    def engineeringMode(self, data):
-        self.setEnabled(data.engineeringMode)
-        if not (data.engineeringMode):
-            self.setText(self._title)
+BUTTON_FANS = 1
+BUTTON_HEATERS = 2
 
 
 class DataWidget(QTableWidget):
@@ -71,6 +52,41 @@ class DataWidget(QTableWidget):
 
 
 class CommandWidget(QWidget):
+    class SetButton(QPushButton):
+        def __init__(self, parent, kind):
+            self._kind = kind
+            if self._kind == BUTTON_HEATERS:
+                self._edit_title = "Edit FCU Heaters PWM"
+                self._set_title = "Set FCU Heaters PWM"
+            elif self._kind == BUTTON_FANS:
+                self._edit_title = "Edit FCU Fans speed"
+                self._set_title = "Set FCU Fans speed"
+            else:
+                raise RuntimeError(f"Unknown set button kind {kind}")
+
+            super().__init__(self._edit_title)
+
+            self._parent = parent
+            self.setDisabled(True)
+
+            self._parent.m1m3ts.engineeringMode.connect(self.engineeringMode)
+            self.clicked.connect(self.edit)
+
+        @Slot(map)
+        def engineeringMode(self, data):
+            self.setEnabled(data.engineeringMode)
+            if not (data.engineeringMode):
+                self.setText(self._edit_title)
+
+        @asyncSlot()
+        async def edit(self):
+            if self.text() == self._edit_title:
+                self._parent.startEdit(self._kind)
+                self.setText(self._set_title)
+            else:
+                await self._parent.heaterFanDemand(self._kind)
+                self.setText(self._edit_title)
+
     def __init__(self, m1m3ts):
         super().__init__()
         self.m1m3ts = m1m3ts
@@ -78,18 +94,15 @@ class CommandWidget(QWidget):
 
         self.dataWidget = DataWidget()
 
-        self.fans = [0] * 97
-        self.heaters = [0] * 97
+        self.fans = [0] * 96
+        self.heaters = [0] * 96
 
-        self.setHeatersButton = SetButton(m1m3ts, EDIT_HEATER)
-        self.setHeatersButton.clicked.connect(self.setHeaters)
-
-        self.setFansbutton = SetButton(m1m3ts, EDIT_FAN)
-        self.setFansbutton.clicked.connect(self.setFans)
+        setHeatersButton = self.SetButton(self, BUTTON_HEATERS)
+        setFansbutton = self.SetButton(self, BUTTON_FANS)
 
         commandLayout = QGridLayout()
-        commandLayout.addWidget(self.setHeatersButton, 0, 0)
-        commandLayout.addWidget(self.setFansbutton, 0, 1)
+        commandLayout.addWidget(setHeatersButton, 0, 0)
+        commandLayout.addWidget(setFansbutton, 0, 1)
 
         hBox = QHBoxLayout()
         hBox.addLayout(commandLayout)
@@ -107,39 +120,26 @@ class CommandWidget(QWidget):
     def _heaterFanDemand(self, **kwargs):
         return self.m1m3ts.remote.cmd_heaterFanDemand
 
-    @asyncSlot()
-    async def setFans(self):
-        if self.setFansbutton.text() == EDIT_FAN:
-            self.updateValues(self.fans, True)
-            self.setFansbutton.setText(SET_FAN)
-        else:
-            data = []
-            for r in range(0, 10):
-                for c in range(0, 10):
-                    index = r * 10 + c
-                    if index < 96:
-                        data.append(int(self.dataWidget.item(r, c).text()))
-            await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
-            self.fans = data
-            self.freezed = False
-            self.setFansbutton.setText(EDIT_FAN)
-
-    @asyncSlot()
-    async def setHeaters(self):
-        if self.setHeatersButton.text() == EDIT_HEATER:
+    def startEdit(self, kind):
+        if kind == BUTTON_HEATERS:
             self.updateValues(self.heaters, True)
-            self.setHeatersButton.setText(SET_HEATER)
         else:
-            data = []
-            for r in range(0, 10):
-                for c in range(0, 10):
-                    index = r * 10 + c
-                    if index < 96:
-                        data.append(int(self.dataWidget.item(r, c).text()))
+            self.updateValues(self.fans, True)
+
+    async def heaterFanDemand(self, kind):
+        data = []
+        for r in range(0, 10):
+            for c in range(0, 10):
+                index = r * 10 + c
+                if index < 96:
+                    data.append(int(self.dataWidget.item(r, c).text()))
+        if kind == BUTTON_HEATERS:
             await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
-            self.freezed = False
-            self.setHeatersButton.setText(EDIT_HEATER)
+        else:
+            await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
+            self.fans = data
+        self.freezed = False
 
     def updateValues(self, values, freeze=False):
         if self.freezed:
