@@ -109,7 +109,7 @@ class CommandWidget(QWidget):
                     if index < 96:
                         data.append(int(self.dataWidget.item(r, c).text()))
             await self._heaterFanDemand(heaterPWM=[0] * 97, fanRPM=data)
-
+            self.freezed = False
             self.setFansbutton.setText(EDIT_FCU)
 
     def updateValues(self, values, freeze=False):
