@@ -27,8 +27,28 @@ from PySide2.QtWidgets import (
     QGridLayout,
 )
 from PySide2.QtCore import Slot
-from ..GUI import TopicWindow
+from ..GUI import TopicWindow, SALCommand
 from .ThermalData import Thermals
+
+from asyncqt import asyncSlot
+
+EDIT_FCU = "Edit FCU Fan speed"
+SET_FCU = "Set FCU Fan speed"
+
+
+class FanButton(QPushButton):
+    def __init__(self, m1m3ts):
+        super().__init__(EDIT_FCU)
+        self.m1m3ts = m1m3ts
+        self.setDisabled(True)
+
+        m1m3ts.engineeringMode.connect(self.engineeringMode)
+
+    @Slot(map)
+    def engineeringMode(self, data):
+        self.setEnabled(data.engineeringMode)
+        if not (data.engineeringMode):
+            self.setText(EDIT_FCU)
 
 
 class DataWidget(QTableWidget):
@@ -54,8 +74,7 @@ class CommandWidget(QWidget):
 
         self.dataWidget = DataWidget()
 
-        self.setFansbutton = QPushButton("Set FCU fan speed")
-        self.setFansbutton.setDisabled(True)
+        self.setFansbutton = FanButton(m1m3ts)
         self.setFansbutton.clicked.connect(self.setFans)
 
         commandLayout = QGridLayout()
@@ -73,9 +92,25 @@ class CommandWidget(QWidget):
 
         self.setLayout(layout)
 
-    @Slot()
-    def setFans(self):
-        self.updateValues(self.m1m3ts.remote.tel_thermalData.get().fanRPM, True)
+    @SALCommand
+    def _heaterFanDemand(self, **kwargs):
+        return self.m1m3ts.remote.cmd_heaterFanDemand
+
+    @asyncSlot()
+    async def setFans(self):
+        if self.setFansbutton.text() == EDIT_FCU:
+            self.updateValues(self.m1m3ts.remote.tel_thermalData.get().fanRPM, True)
+            self.setFansbutton.setText(SET_FCU)
+        else:
+            data = []
+            for r in range(0, 10):
+                for c in range(0, 10):
+                    index = r * 10 + c
+                    if index < 96:
+                        data.append(int(self.dataWidget.item(r, c).text()))
+            await self._heaterFanDemand(heaterPWM=[0] * 97, fanRPM=data)
+
+            self.setFansbutton.setText(EDIT_FCU)
 
     def updateValues(self, values, freeze=False):
         if self.freezed:
