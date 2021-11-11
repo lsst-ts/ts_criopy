@@ -26,6 +26,7 @@ from PySide2.QtWidgets import (
     QHBoxLayout,
     QGridLayout,
     QSpinBox,
+    QAbstractItemView,
 )
 from PySide2.QtCore import Slot
 from ..GUI import TopicWindow, SALCommand
@@ -38,22 +39,61 @@ BUTTON_HEATERS = 2
 
 
 class DataWidget(QTableWidget):
+    """Table with ILC values. Stores ILC values."""
+
     def __init__(self):
         super().__init__(10, 10)
         for r in range(0, 10):
+            self.setVerticalHeaderItem(r, QTableWidgetItem(str(r * 10)))
             for c in range(0, 10):
                 item = QTableWidgetItem("")
                 self.setItem(r, c, item)
         self.empty()
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def empty(self):
+        self.setValues(range(1, 97))
+
+    def setValues(self, data):
+        r = 0
+        c = 0
+        for value in data:
+            self.item(r, c).setText(str(value))
+            c += 1
+            if c >= self.columnCount():
+                c = 0
+                r += 1
+
+    def getValues(self):
+        data = []
         for r in range(0, 10):
             for c in range(0, 10):
-                self.item(r, c).setText(str(r * 10 + c))
+                index = r * 10 + c
+                if index < 96:
+                    data.append(int(self.item(r, c).text()))
+        return data
 
 
 class CommandWidget(QWidget):
+    """Widget with buttons to edit table.
+
+    Parameters
+    ----------
+    m1m3ts : `SALComm`
+        SAL communication object.
+    """
+
     class SetButton(QPushButton):
+        """Button for editing/setting values.
+
+        Parameters
+        ----------
+        parent : `CommandWidget`
+            Command widget holding the button.
+        kind : `int`
+            Button type. Either BUTTON_HEATERS or BUTTON_FANS.
+        """
+
         def __init__(self, parent, kind):
             self._kind = kind
             if self._kind == BUTTON_HEATERS:
@@ -127,11 +167,7 @@ class CommandWidget(QWidget):
 
     @Slot()
     def setConstant(self):
-        for r in range(0, 10):
-            for c in range(0, 10):
-                index = r * 10 + c
-                if index < 96:
-                    self.dataWidget.item(r, c).setText(self.flatDemand.text())
+        self.dataWidget.setValues([self.flatDemand.text()] * 96)
 
     @SALCommand
     def _heaterFanDemand(self, **kwargs):
@@ -145,15 +181,12 @@ class CommandWidget(QWidget):
             self.updateValues(self.fans, True)
             self.setHeatersButton.setDisabled(True)
 
+        self.dataWidget.setEditTriggers(QAbstractItemView.AllEditTriggers)
+        self.dataWidget.setEnabled(True)
         self.setConstantButton.setEnabled(True)
 
     async def heaterFanDemand(self, kind):
-        data = []
-        for r in range(0, 10):
-            for c in range(0, 10):
-                index = r * 10 + c
-                if index < 96:
-                    data.append(int(self.dataWidget.item(r, c).text()))
+        data = self.dataWidget.getValues()
         if kind == BUTTON_HEATERS:
             await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
@@ -162,7 +195,9 @@ class CommandWidget(QWidget):
             await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
             self.fans = data
             self.setHeatersButton.setEnabled(True)
+
         self.freezed = False
+        self.dataWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setConstantButton.setDisabled(True)
 
     def updateValues(self, values, freeze=False):
@@ -175,14 +210,18 @@ class CommandWidget(QWidget):
             self.dataWidget.empty()
             return
 
-        for r in range(0, 10):
-            for c in range(0, 10):
-                index = r * 10 + c
-                if index < 96:
-                    self.dataWidget.item(r, c).setText(str(values[index]))
+        self.dataWidget.setValues(values)
 
 
 class ThermalValuePageWidget(TopicWindow):
+    """Widget displaying ILC values.
+
+    Parameters
+    ----------
+    m1m3ts : `SALComm`
+        SALComm TS object
+    """
+
     def __init__(self, m1m3ts):
         self.commandWidget = CommandWidget(m1m3ts)
 
