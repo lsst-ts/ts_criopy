@@ -99,13 +99,16 @@ class CommandWidget(QWidget):
             if self._kind == BUTTON_HEATERS:
                 self._edit_title = "Edit FCU Heaters PWM"
                 self._set_title = "Set FCU Heaters PWM"
+                tooltip = "Edit and sets Fan Coil Units Heaters Power Wave Modulation (0-255 equals 0-100%)"
             elif self._kind == BUTTON_FANS:
                 self._edit_title = "Edit FCU Fans speed"
                 self._set_title = "Set FCU Fans speed"
+                tooltip = "Edit and sets Fan Coil Units Fans Speed (0-255, *10 RPM)"
             else:
                 raise RuntimeError(f"Unknown set button kind {kind}")
 
             super().__init__(self._edit_title)
+            self.setToolTip(tooltip)
 
             self._parent = parent
             self.setDisabled(True)
@@ -128,6 +131,10 @@ class CommandWidget(QWidget):
                 await self._parent.heaterFanDemand(self._kind)
                 self.setText(self._edit_title)
 
+        def cancel(self):
+            self.setText(self._edit_title)
+            self.setEnabled(True)
+
     def __init__(self, m1m3ts):
         super().__init__()
         self.m1m3ts = m1m3ts
@@ -145,12 +152,19 @@ class CommandWidget(QWidget):
         self.flatDemand.setRange(0, 255)
 
         self.setConstantButton = QPushButton("Set constant")
+        self.setConstantButton.setToolTip("Sets all target values to given constant")
         self.setConstantButton.setDisabled(True)
         self.setConstantButton.clicked.connect(self.setConstant)
+
+        self.cancelButton = QPushButton("Cancel")
+        self.cancelButton.setToolTip("Cancel value editing")
+        self.cancelButton.setDisabled(True)
+        self.cancelButton.clicked.connect(self.cancel)
 
         commandLayout = QGridLayout()
         commandLayout.addWidget(self.flatDemand, 0, 0)
         commandLayout.addWidget(self.setConstantButton, 0, 1)
+        commandLayout.addWidget(self.cancelButton, 0, 2, 2, 1)
         commandLayout.addWidget(self.setHeatersButton, 1, 0)
         commandLayout.addWidget(self.setFansButton, 1, 1)
 
@@ -169,6 +183,17 @@ class CommandWidget(QWidget):
     def setConstant(self):
         self.dataWidget.setValues([self.flatDemand.text()] * 96)
 
+    @Slot()
+    def cancel(self):
+        self.freezed = False
+        self.dataWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setConstantButton.setDisabled(True)
+        self.setFansButton.setEnabled(True)
+        self.setFansButton.cancel()
+        self.setHeatersButton.setEnabled(True)
+        self.setHeatersButton.cancel()
+        self.cancelButton.setDisabled(True)
+
     @SALCommand
     def _heaterFanDemand(self, **kwargs):
         return self.m1m3ts.remote.cmd_heaterFanDemand
@@ -183,6 +208,7 @@ class CommandWidget(QWidget):
 
         self.dataWidget.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.dataWidget.setEnabled(True)
+        self.cancelButton.setEnabled(True)
         self.setConstantButton.setEnabled(True)
 
     async def heaterFanDemand(self, kind):
@@ -190,15 +216,11 @@ class CommandWidget(QWidget):
         if kind == BUTTON_HEATERS:
             await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
-            self.setFansButton.setEnabled(True)
         else:
             await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
             self.fans = data
-            self.setHeatersButton.setEnabled(True)
 
-        self.freezed = False
-        self.dataWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setConstantButton.setDisabled(True)
+        self.cancel()
 
     def updateValues(self, values, freeze=False):
         if self.freezed:
