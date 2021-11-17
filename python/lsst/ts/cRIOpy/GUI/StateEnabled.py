@@ -22,9 +22,65 @@ from PySide2.QtWidgets import QWidget, QPushButton
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
+__all__ = [
+    "SignalButton",
+    "DetailedStateEnabledButton",
+    "EngineeringButton",
+    "StateEnabledWidget",
+]
 
-class StateEnabledButton(QPushButton):
-    """Push button enabled by state.
+
+class SignalButton(QPushButton):
+    """Push button enabled by signal.value in given state.
+
+    Parameters
+    ----------
+    title : `str`
+        Button title. Passed to QPushButton.
+    signal : `PySide2.QtCore.Signal`
+        Signal
+    variable : `str`
+        Name of variable governing enable/disable switching. Part of signal.
+    enabledValues : `[]`
+        When variable value is in this list, button is enabled. It is disabled otherwise.
+    """
+
+    def __init__(
+        self,
+        title,
+        signal,
+        variable,
+        enabledValues,
+    ):
+        super().__init__(title)
+        self.__correctState = False
+        self.__askedEnabled = False
+        self._variable = variable
+        self._enabledValues = enabledValues
+
+        self.setEnabled()
+
+        signal.connect(self.__update)
+
+    def setEnabled(self, enabled=True):
+        self.__askedEnabled = enabled
+        self.__updateEnabled()
+
+    def setDisabled(self, disabled=True):
+        self.__askedEnabled = not (disabled)
+        self.__updateEnabled()
+
+    @Slot(map)
+    def __update(self, data):
+        self.__correctState = getattr(data, self._variable) in self._enabledValues
+        self.__updateEnabled()
+
+    def __updateEnabled(self):
+        super().setEnabled(self.__correctState and self.__askedEnabled)
+
+
+class DetailedStateEnabledButton(SignalButton):
+    """Push button enabled by detailed state.
 
     Parameters
     ----------
@@ -42,32 +98,10 @@ class StateEnabledButton(QPushButton):
         m1m3,
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
     ):
-        super().__init__(title)
-        self.__correctState = False
-        self.__askedEnabled = False
-        self.setEnabled()
-        self._enabledStates = enabledStates
-
-        m1m3.detailedState.connect(self.detailedState)
-
-    def setEnabled(self, enabled=True):
-        self.__askedEnabled = enabled
-        self.__updateEnabled()
-
-    def setDisabled(self, disabled=True):
-        self.__askedEnabled = not (disabled)
-        self.__updateEnabled()
-
-    @Slot(map)
-    def detailedState(self, data):
-        self.__correctState = data.detailedState in self._enabledStates
-        self.__updateEnabled()
-
-    def __updateEnabled(self):
-        super().setEnabled(self.__correctState and self.__askedEnabled)
+        super().__init__(title, m1m3.detailedState, "detailedState", enabledStates)
 
 
-class EngineeringButton(StateEnabledButton):
+class EngineeringButton(DetailedStateEnabledButton):
     """Push button enabled only in mirror engineering states.
 
     Parameters

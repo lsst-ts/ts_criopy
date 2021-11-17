@@ -26,7 +26,7 @@ from .PowerPageWidget import PowerPageWidget
 from .SALComm import *
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
-from .StateEnabled import StateEnabledButton, StateEnabledWidget
+from .StateEnabled import DetailedStateEnabledButton, StateEnabledWidget
 from .SplashScreen import SplashScreen
 from .TimeBoxChart import TimeBoxChart
 from .TimeDeltaLabel import TimeDeltaLabel

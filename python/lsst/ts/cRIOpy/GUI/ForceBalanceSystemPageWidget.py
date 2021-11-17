@@ -1,6 +1,6 @@
 from .SALComm import SALCommand
 from .CustomLabels import Force, Moment, Clipped
-from .StateEnabled import StateEnabledButton
+from .StateEnabled import DetailedStateEnabledButton
 from .TimeChart import TimeChart, TimeChartView
 from PySide2.QtWidgets import (
     QLabel,
@@ -36,7 +36,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         layout.addLayout(plotLayout)
         self.setLayout(layout)
 
-        self.enableHardpointCorrectionsButton = StateEnabledButton(
+        self.enableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Enable Hardpoint Corrections",
             m1m3,
             [DetailedState.ACTIVE],
@@ -45,7 +45,7 @@ class ForceBalanceSystemPageWidget(QWidget):
             self.issueCommandEnableHardpointCorrections
         )
         self.enableHardpointCorrectionsButton.setFixedWidth(256)
-        self.disableHardpointCorrectionsButton = StateEnabledButton(
+        self.disableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Disable Hardpoint Corrections",
             m1m3,
             [DetailedState.ACTIVE],
