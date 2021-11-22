@@ -99,11 +99,13 @@ class CommandWidget(QWidget):
             if self._kind == BUTTON_HEATERS:
                 self._edit_title = "Edit FCU Heaters PWM"
                 self._set_title = "Set FCU Heaters PWM"
-                tooltip = "Edit and sets Fan Coil Units Heaters Power Wave Modulation (0-255 equals 0-100%)"
+                tooltip = "Edit and sets Fan Coil Units (FCU) Heaters Power Wave Modulationi (PWM) (0-255 equals 0-100%)"
             elif self._kind == BUTTON_FANS:
                 self._edit_title = "Edit FCU Fans speed"
                 self._set_title = "Set FCU Fans speed"
-                tooltip = "Edit and sets Fan Coil Units Fans Speed (0-255, *10 RPM)"
+                tooltip = (
+                    "Edit and sets Fan Coil Units (FCU) Fans Speed (0-255, *10 RPM)"
+                )
             else:
                 raise RuntimeError(f"Unknown set button kind {kind}")
 
