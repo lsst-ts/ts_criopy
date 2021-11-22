@@ -19,8 +19,7 @@
 
 __all__ = ["summaryStateString", "ThermalStatesDock"]
 
-from .CustomLabels import DockWindow
-from .SALComm import SALCommand
+from ..GUI import DockWindow, SALCommand
 
 from lsst.ts.salobj import State
 
@@ -68,7 +67,7 @@ class ThermalStatesDock(DockWindow):
     def __init__(self, m1m3ts):
         super().__init__("Status")
         self.m1m3ts = m1m3ts
-        self.setMaximumWidth(100)
+        self.setMinimumWidth(200)
 
         layout = QVBoxLayout()
 
@@ -85,6 +84,9 @@ class ThermalStatesDock(DockWindow):
 
         _addButton("Start", self.start, True)
         _addButton("Enable", self.enable)
+        self.engineeringButton = _addButton(
+            "Enter Engineering", self.setEngineeringMode
+        )
         _addButton("Disable", self.disable)
         _addButton("Standby", self.standby)
         _addButton("Exit Control", self.exitControl)
@@ -99,6 +101,7 @@ class ThermalStatesDock(DockWindow):
         widget.setLayout(layout)
 
         m1m3ts.summaryState.connect(self.summaryState)
+        m1m3ts.engineeringMode.connect(self.engineeringMode)
 
         self.setWidget(widget)
 
@@ -111,11 +114,11 @@ class ThermalStatesDock(DockWindow):
         state : `int`
             Current CSC state."""
         _bm = {
-            State.OFFLINE: [False, False, False, False, False],
-            State.STANDBY: [True, False, False, False, True],
-            State.DISABLED: [False, True, False, True, False],
-            State.ENABLED: [False, False, True, False, False],
-            State.FAULT: [False, False, False, True, False],
+            State.OFFLINE: [False, False, False, False, False, False],
+            State.STANDBY: [True, False, False, False, False, True],
+            State.DISABLED: [False, True, False, False, True, False],
+            State.ENABLED: [False, False, True, True, False, False],
+            State.FAULT: [False, False, False, False, True, False],
         }
         try:
             bs = _bm[state]
@@ -139,6 +142,16 @@ class ThermalStatesDock(DockWindow):
     @asyncSlot()
     async def enable(self):
         await self._enable()
+
+    @SALCommand
+    def _setEngineeringMode(self, **kwargs):
+        return self.m1m3ts.remote.cmd_setEngineeringMode
+
+    @asyncSlot()
+    async def setEngineeringMode(self):
+        await self._setEngineeringMode(
+            enableEngineeringMode=self.engineeringButton.text() == "Enter Engineering"
+        )
 
     @SALCommand
     def _disable(self, **kwargs):
@@ -168,3 +181,10 @@ class ThermalStatesDock(DockWindow):
     def summaryState(self, data):
         self.stateLabel.setText(summaryStateString(data.summaryState))
         self.setButtonsToState(data.summaryState)
+
+    @Slot(map)
+    def engineeringMode(self, data):
+        if data.engineeringMode:
+            self.engineeringButton.setText("Exit Engineering")
+        else:
+            self.engineeringButton.setText("Enter Engineering")

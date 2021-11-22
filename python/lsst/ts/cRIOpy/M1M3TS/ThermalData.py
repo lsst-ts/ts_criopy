@@ -1,5 +1,5 @@
-from .TopicData import TopicData, TopicField
-from .ActuatorsDisplay import Scales
+from ..GUI.TopicData import TopicData, TopicField
+from ..GUI.ActuatorsDisplay import Scales
 
 __all__ = ["Thermals"]
 

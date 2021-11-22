@@ -28,9 +28,7 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
-from .CustomLabels import Volt, Percent, DockWindow
-from .TimeChart import TimeChart, TimeChartView
-from .SALComm import SALCommand
+from ..GUI import Volt, Percent, DockWindow, TimeChart, TimeChartView, SALCommand
 
 
 class MixingValveWidget(DockWindow):
