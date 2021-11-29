@@ -32,7 +32,6 @@ from datetime import datetime
 import numpy as np
 import logging
 
-
 try:
     import h5py
 
@@ -66,15 +65,17 @@ parser.add_argument(
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
 )
+parser.add_argument(
+    "--logfile",
+    action="store",
+    dest="logfile",
+    default=None,
+    help="write log messages to given file",
+)
 
 device_sensors = [3, 6, 3]
 
 logger = logging.getLogger("VMSlogger")
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-ch.setFormatter(formatter)
 
 
 class Collector:
@@ -171,6 +172,24 @@ class Collector:
 
 async def main():
     args = parser.parse_args()
+
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    ch.setFormatter(formatter)
+
+    if args.logfile:
+        fh = logging.FileHandler(args.logfile)
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
     if args.debug > 0:
         ch.setLevel(logging.DEBUG)
     else:
@@ -194,7 +213,7 @@ async def main():
         file_type += "z"
     if args.h5py:
         if has_h5py is False:
-            print(
+            logger.error(
                 "Python is missing h5py module, saving HDF 5 file is not supported. Please install h5py first (pip install h5py)."
             )
             sys.exit(1)
@@ -220,14 +239,14 @@ async def main():
         )
         collectors.append(c)
         tasks.append(asyncio.create_task(c.collect_data()))
-    try:
-        await asyncio.gather(*tasks)
-        logger.info("Done")
-    except asyncio.exceptions.CancelledError:
-        logger.info("Canceled")
+        try:
+            await asyncio.gather(*tasks)
+            logger.info("Done")
+        except asyncio.exceptions.CancelledError:
+            logger.info("Canceled")
 
-    for c in collectors:
-        c.close()
+        for c in collectors:
+            c.close()
 
 
 asyncio.run(main())
