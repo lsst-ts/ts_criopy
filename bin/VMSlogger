@@ -30,6 +30,7 @@ import asyncio
 import click
 from datetime import datetime
 import numpy as np
+import pathlib
 import logging
 
 try:
@@ -64,6 +65,13 @@ parser.add_argument(
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
+)
+parser.add_argument(
+    "--workdir",
+    action="store",
+    dest="workdir",
+    default="",
+    help="directory where files will be stored",
 )
 parser.add_argument(
     "--logfile",
@@ -232,6 +240,8 @@ async def main():
             fn += ".csv"
             if "z" in file_type:
                 fn += ".gz"
+
+        fn = str(pathlib.Path(args.workdir, fn))
 
         logger.info(f"Collecting {d} to {fn}")
         c = Collector(
