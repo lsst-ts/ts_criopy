@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import os
 import signal
 import sys
 
@@ -60,6 +61,7 @@ parser.add_argument(
 parser.add_argument(
     "--header", dest="header", action="store_true", help="adds header with column names"
 )
+parser.add_argument("-p", dest="pidfile", action="store", help="PID file location")
 parser.add_argument(
     "-s", type=int, dest="size", default=None, help="number of records to save"
 )
@@ -231,6 +233,11 @@ async def main():
     else:
         if args.size is None:
             args.size = 50000
+
+    if args.pidfile:
+        f = open(args.pidfile, "w")
+        f.write(str(os.getpid()))
+        f.close()
 
     for d in args.devices:
         fn = d + datetime.strftime(datetime.now(), "_%Y-%m-%dT%H:%M:%S")
