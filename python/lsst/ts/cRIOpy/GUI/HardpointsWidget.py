@@ -39,7 +39,7 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionState
 
 
 class OffsetsTypeButton(QPushButton):
-    unitChanged = Signal(str, int)
+    unitChanged = Signal(float, float, str, int)
 
     def __init__(self):
         super().__init__()
@@ -51,14 +51,23 @@ class OffsetsTypeButton(QPushButton):
         ]
         self.setToolTip("Click to change move units")
         self.setScales(0.0607, 0.2442)
+
+        self._selectedIndex = 0
         self.setSelectedIndex(0)
         self.clicked.connect(self._clicked)
 
     def setSelectedIndex(self, index):
+        oldScale = self.getScale()
+
         self._selectedIndex = index
         self.setText(self._units[index][0])
 
-        self.unitChanged.emit(self.getUnit(), self.getDecimals())
+        self.unitChanged.emit(
+            oldScale, self.getScale(), self.getUnit(), self.getDecimals()
+        )
+
+    def getScale(self):
+        return self._units[self._selectedIndex][1]
 
     def getDecimals(self):
         """Returns number of decimals suggested for display. 0 for integer values."""
@@ -74,13 +83,13 @@ class OffsetsTypeButton(QPushButton):
 
     @Slot(bool)
     def _clicked(self, checked):
-        self._selectedIndex += 1
-        if self._selectedIndex == len(self._units):
-            self._selectedIndex = 0
-        self.setSelectedIndex(self._selectedIndex)
+        newIndex = self._selectedIndex + 1
+        if newIndex >= len(self._units):
+            newIndex = 0
+        self.setSelectedIndex(newIndex)
 
     def getSteps(self, value):
-        return int(value * self._units[self._selectedIndex][1])
+        return int(value * self.getScale())
 
 
 class HardpointsWidget(QWidget):
@@ -125,12 +134,14 @@ class HardpointsWidget(QWidget):
             setattr(self, k, addRow(v, row))
             row += 1
 
+        self.lastEditedSteps = [0] * 6
+
         self.offsetType = OffsetsTypeButton()
         self.offsetType.unitChanged.connect(self._HPUnitChanged)
 
         self.dataLayout.addWidget(self.offsetType, row, 0)
         self._hpMoveRow = row
-        self._HPUnitChanged(" motor", 0)
+        self._HPUnitChanged(1, 1, " motor", 0)
         row += 1
 
         enabledStates = [
@@ -242,11 +253,14 @@ class HardpointsWidget(QWidget):
 
     @Slot(QWidget, QWidget)
     def focusChanged(self, old, new):
-        if old in self.hpOffsets:
-            self._lastOffsetFocused = old
+        for hp in range(len(self.hpOffsets)):
+            if self.hpOffsets[hp] == old:
+                self.lastEditedSteps[hp] = self.offsetType.getScale() * old.value()
+                self._lastOffsetFocused = hp
+                return
 
-    @Slot(str, int)
-    def _HPUnitChanged(self, units, decimals):
+    @Slot(float, float, str, int)
+    def _HPUnitChanged(self, oldScale, newScale, units, decimals):
         self.hpOffsets = []
         for hp in range(6):
             if decimals == 0:
@@ -263,14 +277,18 @@ class HardpointsWidget(QWidget):
 
             sb.setSuffix(" " + units)
             self.dataLayout.addWidget(sb, self._hpMoveRow, 1 + hp)
+            if self.lastEditedSteps is not None:
+                sb.setValue(self.lastEditedSteps[hp] / self.offsetType.getScale())
+
             self.hpOffsets.append(sb)
 
     @Slot()
     def _copyHP(self):
         if self._lastOffsetFocused:
-            v = self._lastOffsetFocused.value()
+            v = self.hpOffsets[self._lastOffsetFocused].value()
             for offset in self.hpOffsets:
                 offset.setValue(v)
+            self.lastEditedSteps = [self.offsetType.getScale() * v] * 6
 
     @SALCommand
     def _moveIt(self, **kvargs):
