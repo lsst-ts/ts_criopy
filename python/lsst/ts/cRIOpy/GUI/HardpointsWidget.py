@@ -29,8 +29,10 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 from .CustomLabels import Force, Moment, Mm, UnitLabel, OnOffLabel
+from .StateEnabled import DetailedStateEnabledButton
 import copy
 
+import astropy.units as u
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
 
 
@@ -38,10 +40,13 @@ class OffsetsTypeButton(QPushButton):
     def __init__(self):
         super().__init__()
         self._units = [
-            ("&Motor steps", 1),
-            ("&Encoder steps", 4.023064),
-            ("&Displacement (um)", 16.474464),
+            ["&Motor steps", 1],
+            ["&Encoder steps", 1],
+            ["&Displacement (um)", 1],
+            ["&Displacement (mm)", 1],
         ]
+        self.setToolTip("Click to change move units")
+        self.setScales(0.0607, 0.2442)
         self.setSelectedIndex(0)
         self.clicked.connect(self._clicked)
 
@@ -49,12 +54,20 @@ class OffsetsTypeButton(QPushButton):
         self._selectedIndex = index
         self.setText(self._units[index][0])
 
+    def setScales(self, micrometersPerStep, micrometersPerEncoder):
+        self._units[1][1] = micrometersPerEncoder / micrometersPerStep
+        self._units[2][1] = 1.0 / micrometersPerStep
+        self._units[3][1] = u.mm.to(u.um) / micrometersPerStep
+
     @Slot(bool)
     def _clicked(self, checked):
         self._selectedIndex += 1
-        if self._selectedIndex == 3:
+        if self._selectedIndex == len(self._units):
             self._selectedIndex = 0
         self.setSelectedIndex(self._selectedIndex)
+
+    def getSteps(self, value):
+        return int(value * self._units[self._selectedIndex][1])
 
 
 class HardpointsWidget(QWidget):
@@ -99,7 +112,9 @@ class HardpointsWidget(QWidget):
             setattr(self, k, addRow(v, row))
             row += 1
 
-        dataLayout.addWidget(OffsetsTypeButton(), row, 0)
+        self.offsetType = OffsetsTypeButton()
+
+        dataLayout.addWidget(self.offsetType, row, 0)
         self.hpOffsets = []
         for hp in range(6):
             sb = QSpinBox()
@@ -109,13 +124,24 @@ class HardpointsWidget(QWidget):
             self.hpOffsets.append(sb)
         row += 1
 
-        self.moveHPButton = QPushButton("Move")
-        self.moveHPButton.clicked.connect(self._moveHP)
-        dataLayout.addWidget(self.moveHPButton, row, 1, 1, 3)
+        enabledStates = [
+            DetailedState.PARKEDENGINEERING,
+            DetailedState.RAISINGENGINEERING,
+            DetailedState.ACTIVEENGINEERING,
+            DetailedState.LOWERINGENGINEERING,
+        ]
+
+        moveHPButton = DetailedStateEnabledButton("Move", m1m3, enabledStates)
+        moveHPButton.clicked.connect(self._moveHP)
+        dataLayout.addWidget(moveHPButton, row, 1, 1, 2)
+
+        stopHPButton = DetailedStateEnabledButton("Stop", m1m3, enabledStates)
+        stopHPButton.clicked.connect(self._stopHP)
+        dataLayout.addWidget(stopHPButton, row, 3, 1, 2)
 
         reset = QPushButton("Reset")
         reset.clicked.connect(self._reset)
-        dataLayout.addWidget(reset, row, 4, 1, 3)
+        dataLayout.addWidget(reset, row, 5, 1, 2)
 
         row += 1
 
@@ -189,7 +215,8 @@ class HardpointsWidget(QWidget):
 
         layout.addStretch()
 
-        self.m1m3.detailedState.connect(self.detailedState)
+        self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
+
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
         self.m1m3.hardpointActuatorState.connect(self.hardpointActuatorState)
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
@@ -201,8 +228,16 @@ class HardpointsWidget(QWidget):
 
     @asyncSlot()
     async def _moveHP(self):
-        steps = list(map(lambda x: x.value(), self.hpOffsets))
+        steps = list(map(lambda x: self.offsetType.getSteps(x.value()), self.hpOffsets))
         await self._moveIt(steps=steps)
+
+    @SALCommand
+    def _stopIt(self, **kvargs):
+        return self.m1m3.remote.cmd_stopHardpointMotion
+
+    @asyncSlot()
+    async def _stopHP(self):
+        await self._stopIt()
 
     @Slot()
     def _reset(self):
@@ -214,16 +249,8 @@ class HardpointsWidget(QWidget):
             rowLabels[hp].setValue(hpData[hp])
 
     @Slot(map)
-    def detailedState(self, data):
-        self.moveHPButton.setEnabled(
-            data.detailedState
-            in (
-                DetailedState.PARKEDENGINEERING,
-                DetailedState.RAISINGENGINEERING,
-                DetailedState.ACTIVEENGINEERING,
-                DetailedState.LOWERINGENGINEERING,
-            )
-        )
+    def hardpointActuatorSettings(self, data):
+        self.offsetType.setScales(data.micrometersPerStep, data.micrometersPerEncoder)
 
     @Slot(map)
     def hardpointActuatorData(self, data):
