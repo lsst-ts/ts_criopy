@@ -39,10 +39,22 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionState
 
 
 class OffsetsTypeButton(QPushButton):
+    """Button to change units of offset movement. Knows how to convert value from selected units into steps.
+
+    Attributes
+    ----------
+    unitChanged : Signal(float, float, str, int)
+        Signal emmited after unit changes. Parameters passed is old and new
+        scale, unit name and number of decimal values to shown.
+    """
+
     unitChanged = Signal(float, float, str, int)
 
     def __init__(self):
         super().__init__()
+
+        # member array is unit name, scale factor, numbe of decimals, unit
+        # abbrevation
         self._units = [
             ["&Motor steps", 1, 0, "motor"],
             ["&Encoder steps", 1, 0, "encoder"],
@@ -57,6 +69,13 @@ class OffsetsTypeButton(QPushButton):
         self.clicked.connect(self._clicked)
 
     def setSelectedIndex(self, index):
+        """Sets new selected index.
+
+        Parameters
+        ----------
+        index : int
+            New index to set.
+        """
         oldScale = self.getScale()
 
         self._selectedIndex = index
@@ -67,6 +86,13 @@ class OffsetsTypeButton(QPushButton):
         )
 
     def getScale(self):
+        """Returns scale used.
+
+        Returns
+        -------
+        scale : float
+            Scale factor for the current unit.
+        """
         return self._units[self._selectedIndex][1]
 
     def getDecimals(self):
