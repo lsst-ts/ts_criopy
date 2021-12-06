@@ -26,6 +26,7 @@ from PySide2.QtWidgets import (
     QSpinBox,
     QDoubleSpinBox,
     QPushButton,
+    QApplication,
 )
 from PySide2.QtCore import Signal, Slot
 from asyncqt import asyncSlot
@@ -139,6 +140,13 @@ class HardpointsWidget(QWidget):
             DetailedState.LOWERINGENGINEERING,
         ]
 
+        self._lastOffsetFocused = None
+
+        copyHPButton = QPushButton("Copy")
+        copyHPButton.setToolTip("Use last edited (focused) value for all HP offsets")
+        copyHPButton.clicked.connect(self._copyHP)
+        self.dataLayout.addWidget(copyHPButton, row, 0)
+
         moveHPButton = DetailedStateEnabledButton("Move", m1m3, enabledStates)
         moveHPButton.clicked.connect(self._moveHP)
         self.dataLayout.addWidget(moveHPButton, row, 1, 1, 2)
@@ -223,12 +231,19 @@ class HardpointsWidget(QWidget):
 
         layout.addStretch()
 
+        QApplication.instance().focusChanged.connect(self.focusChanged)
+
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
         self.m1m3.hardpointActuatorState.connect(self.hardpointActuatorState)
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorWarning.connect(self.hardpointActuatorWarning)
+
+    @Slot(QWidget, QWidget)
+    def focusChanged(self, old, new):
+        if old in self.hpOffsets:
+            self._lastOffsetFocused = old
 
     @Slot(str, int)
     def _HPUnitChanged(self, units, decimals):
@@ -249,6 +264,13 @@ class HardpointsWidget(QWidget):
             sb.setSuffix(" " + units)
             self.dataLayout.addWidget(sb, self._hpMoveRow, 1 + hp)
             self.hpOffsets.append(sb)
+
+    @Slot()
+    def _copyHP(self):
+        if self._lastOffsetFocused:
+            v = self._lastOffsetFocused.value()
+            for offset in self.hpOffsets:
+                offset.setValue(v)
 
     @SALCommand
     def _moveIt(self, **kvargs):
