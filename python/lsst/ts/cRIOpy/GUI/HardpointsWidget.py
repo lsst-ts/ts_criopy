@@ -34,6 +34,29 @@ import copy
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
 
 
+class OffsetsTypeButton(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self._units = [
+            ("&Motor steps", 1),
+            ("&Encoder steps", 4.023064),
+            ("&Displacement (um)", 16.474464),
+        ]
+        self.setSelectedIndex(0)
+        self.clicked.connect(self._clicked)
+
+    def setSelectedIndex(self, index):
+        self._selectedIndex = index
+        self.setText(self._units[index][0])
+
+    @Slot(bool)
+    def _clicked(self, checked):
+        self._selectedIndex += 1
+        if self._selectedIndex == 3:
+            self._selectedIndex = 0
+        self.setSelectedIndex(self._selectedIndex)
+
+
 class HardpointsWidget(QWidget):
     """Displays hardpoint data - encoders and calculated position, hardpoint
     state, and M1M3 displacement."""
@@ -42,12 +65,12 @@ class HardpointsWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         dataLayout = QGridLayout()
 
-        self.layout.addLayout(dataLayout)
-        self.setLayout(self.layout)
+        layout.addLayout(dataLayout)
+        self.setLayout(layout)
 
         dataLayout.addWidget(QLabel("<b>Hardpoint</b>"), 0, 0)
         for hp in range(1, 7):
@@ -76,7 +99,7 @@ class HardpointsWidget(QWidget):
             setattr(self, k, addRow(v, row))
             row += 1
 
-        dataLayout.addWidget(QLabel("Encoder offsets"), row, 0)
+        dataLayout.addWidget(OffsetsTypeButton(), row, 0)
         self.hpOffsets = []
         for hp in range(6):
             sb = QSpinBox()
@@ -164,7 +187,7 @@ class HardpointsWidget(QWidget):
         }
         addDataRow(self.positions, row, 1)
 
-        self.layout.addStretch()
+        layout.addStretch()
 
         self.m1m3.detailedState.connect(self.detailedState)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
