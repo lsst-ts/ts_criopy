@@ -24,9 +24,10 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QGridLayout,
     QSpinBox,
+    QDoubleSpinBox,
     QPushButton,
 )
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Signal, Slot
 from asyncqt import asyncSlot
 from .CustomLabels import Force, Moment, Mm, UnitLabel, OnOffLabel
 from .StateEnabled import DetailedStateEnabledButton
@@ -37,13 +38,15 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionState
 
 
 class OffsetsTypeButton(QPushButton):
+    unitChanged = Signal(str, int)
+
     def __init__(self):
         super().__init__()
         self._units = [
-            ["&Motor steps", 1],
-            ["&Encoder steps", 1],
-            ["&Displacement (um)", 1],
-            ["&Displacement (mm)", 1],
+            ["&Motor steps", 1, 0, "motor"],
+            ["&Encoder steps", 1, 0, "encoder"],
+            ["&Displacement (um)", 1, 1, "um"],
+            ["&Displacement (mm)", 1, 4, "mm"],
         ]
         self.setToolTip("Click to change move units")
         self.setScales(0.0607, 0.2442)
@@ -53,6 +56,15 @@ class OffsetsTypeButton(QPushButton):
     def setSelectedIndex(self, index):
         self._selectedIndex = index
         self.setText(self._units[index][0])
+
+        self.unitChanged.emit(self.getUnit(), self.getDecimals())
+
+    def getDecimals(self):
+        """Returns number of decimals suggested for display. 0 for integer values."""
+        return self._units[self._selectedIndex][2]
+
+    def getUnit(self):
+        return self._units[self._selectedIndex][3]
 
     def setScales(self, micrometersPerStep, micrometersPerEncoder):
         self._units[1][1] = micrometersPerEncoder / micrometersPerStep
@@ -80,14 +92,14 @@ class HardpointsWidget(QWidget):
 
         layout = QVBoxLayout()
 
-        dataLayout = QGridLayout()
+        self.dataLayout = QGridLayout()
 
-        layout.addLayout(dataLayout)
+        layout.addLayout(self.dataLayout)
         self.setLayout(layout)
 
-        dataLayout.addWidget(QLabel("<b>Hardpoint</b>"), 0, 0)
+        self.dataLayout.addWidget(QLabel("<b>Hardpoint</b>"), 0, 0)
         for hp in range(1, 7):
-            dataLayout.addWidget(QLabel(f"<b>{hp}</b>"), 0, hp)
+            self.dataLayout.addWidget(QLabel(f"<b>{hp}</b>"), 0, hp)
 
         self.variables = {
             "stepsQueued": ("Steps queued", UnitLabel()),
@@ -101,10 +113,10 @@ class HardpointsWidget(QWidget):
 
         def addRow(textValue, row):
             ret = []
-            dataLayout.addWidget(QLabel(textValue[0]), row, 0)
+            self.dataLayout.addWidget(QLabel(textValue[0]), row, 0)
             for hp in range(6):
                 label = copy.copy(textValue[1])
-                dataLayout.addWidget(label, row, 1 + hp)
+                self.dataLayout.addWidget(label, row, 1 + hp)
                 ret.append(label)
             return ret
 
@@ -113,15 +125,11 @@ class HardpointsWidget(QWidget):
             row += 1
 
         self.offsetType = OffsetsTypeButton()
+        self.offsetType.unitChanged.connect(self._HPUnitChanged)
 
-        dataLayout.addWidget(self.offsetType, row, 0)
-        self.hpOffsets = []
-        for hp in range(6):
-            sb = QSpinBox()
-            sb.setRange(-(1 << 16), 1 << 16)
-            sb.setSingleStep(100)
-            dataLayout.addWidget(sb, row, 1 + hp)
-            self.hpOffsets.append(sb)
+        self.dataLayout.addWidget(self.offsetType, row, 0)
+        self._hpMoveRow = row
+        self._HPUnitChanged(" motor", 0)
         row += 1
 
         enabledStates = [
@@ -133,15 +141,15 @@ class HardpointsWidget(QWidget):
 
         moveHPButton = DetailedStateEnabledButton("Move", m1m3, enabledStates)
         moveHPButton.clicked.connect(self._moveHP)
-        dataLayout.addWidget(moveHPButton, row, 1, 1, 2)
+        self.dataLayout.addWidget(moveHPButton, row, 1, 1, 2)
 
         stopHPButton = DetailedStateEnabledButton("Stop", m1m3, enabledStates)
         stopHPButton.clicked.connect(self._stopHP)
-        dataLayout.addWidget(stopHPButton, row, 3, 1, 2)
+        self.dataLayout.addWidget(stopHPButton, row, 3, 1, 2)
 
         reset = QPushButton("Reset")
         reset.clicked.connect(self._reset)
-        dataLayout.addWidget(reset, row, 5, 1, 2)
+        self.dataLayout.addWidget(reset, row, 5, 1, 2)
 
         row += 1
 
@@ -172,11 +180,11 @@ class HardpointsWidget(QWidget):
             setattr(self, k, addRow(v, row))
             row += 1
 
-        dataLayout.addWidget(QLabel("Motion state"), row, 0)
+        self.dataLayout.addWidget(QLabel("Motion state"), row, 0)
         self.hpStates = []
         for hp in range(6):
             self.hpStates.append(QLabel())
-            dataLayout.addWidget(self.hpStates[hp], row, hp + 1)
+            self.dataLayout.addWidget(self.hpStates[hp], row, hp + 1)
         row += 1
 
         self.forces = {
@@ -189,19 +197,19 @@ class HardpointsWidget(QWidget):
             "mz": ("Moment Z", Moment()),
         }
 
-        dataLayout.addWidget(QLabel(), row, 0)
+        self.dataLayout.addWidget(QLabel(), row, 0)
         row += 1
 
         def addDataRow(variables, row, col=0):
             for k, v in variables.items():
-                dataLayout.addWidget(QLabel(f"<b>{v[0]}</b>"), row, col)
+                self.dataLayout.addWidget(QLabel(f"<b>{v[0]}</b>"), row, col)
                 setattr(self, k, v[1])
-                dataLayout.addWidget(v[1], row + 1, col)
+                self.dataLayout.addWidget(v[1], row + 1, col)
                 col += 1
 
         addDataRow(self.forces, row)
         row += 2
-        dataLayout.addWidget(QLabel(), row, 0)
+        self.dataLayout.addWidget(QLabel(), row, 0)
         row += 1
         self.positions = {
             "xPosition": ("Position X", Mm()),
@@ -221,6 +229,26 @@ class HardpointsWidget(QWidget):
         self.m1m3.hardpointActuatorState.connect(self.hardpointActuatorState)
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorWarning.connect(self.hardpointActuatorWarning)
+
+    @Slot(str, int)
+    def _HPUnitChanged(self, units, decimals):
+        self.hpOffsets = []
+        for hp in range(6):
+            if decimals == 0:
+                sb = QSpinBox()
+                maxSteps = 70000 * 4.03 / self.offsetType.getSteps(1)
+                sb.setRange(-maxSteps, maxSteps)
+                sb.setSingleStep(100)
+            else:
+                sb = QDoubleSpinBox()
+                maxRange = 15 * (10 ** (4 - decimals))
+                sb.setRange(-maxRange, maxRange)
+                sb.setDecimals(decimals)
+                sb.setSingleStep(1)
+
+            sb.setSuffix(" " + units)
+            self.dataLayout.addWidget(sb, self._hpMoveRow, 1 + hp)
+            self.hpOffsets.append(sb)
 
     @SALCommand
     def _moveIt(self, **kvargs):
