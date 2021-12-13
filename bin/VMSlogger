@@ -82,6 +82,12 @@ parser.add_argument(
     default=None,
     help="write log messages to given file",
 )
+parser.add_argument(
+    "--daemon",
+    action="store_true",
+    dest="daemon",
+    help="starts as daemon (fork to start process).",
+)
 
 device_sensors = [3, 6, 3]
 
@@ -89,11 +95,14 @@ logger = logging.getLogger("VMSlogger")
 
 
 class Collector:
-    def __init__(self, index, filename, size, file_type, header, chunk_size):
+    def __init__(
+        self, index, filename, size, file_type, header, chunk_size, daemonized
+    ):
         self.index = index
         self.size = size
         self.file_type = file_type
         self.header = header
+        self.daemonized = daemonized
         self.h5file = None
 
         logger.debug(
@@ -135,7 +144,7 @@ class Collector:
         async with Domain() as domain:
             remote = Remote(domain, "MTVMS", index=self.index + 1)
             remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
-            if logger.getEffectiveLevel() == logging.DEBUG:
+            if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
                 while not (self.cache.filled):
                     await asyncio.sleep(0.5)
                     logger.debug(
@@ -173,16 +182,14 @@ class Collector:
                             break
 
             if self.h5file is None:
-                logger.info(f"Saving CVS to {self.filename}")
+                logger.info(f"Saving CSV to {self.filename}")
                 kwargs = {"delimiter": ","}
                 if self.header:
                     kwargs["header"] = ",".join(self.cache.columns())
                 self.cache.savetxt(self.filename, **kwargs)
 
 
-async def main():
-    args = parser.parse_args()
-
+async def main(args, pipe=None):
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
 
@@ -236,7 +243,7 @@ async def main():
 
     if args.pidfile:
         f = open(args.pidfile, "w")
-        f.write(str(os.getpid()))
+        f.write(f"{os.getpid()}\n")
         f.close()
 
     for d in args.devices:
@@ -252,18 +259,55 @@ async def main():
 
         logger.info(f"Collecting {d} to {fn}")
         c = Collector(
-            devices.index(d), fn, args.size, file_type, args.header, args.chunk_size
+            devices.index(d),
+            fn,
+            args.size,
+            file_type,
+            args.header,
+            args.chunk_size,
+            args.daemon is not None,
         )
         collectors.append(c)
         tasks.append(asyncio.create_task(c.collect_data()))
-        try:
-            await asyncio.gather(*tasks)
-            logger.info("Done")
-        except asyncio.exceptions.CancelledError:
-            logger.info("Canceled")
 
-        for c in collectors:
-            c.close()
+    if pipe is not None:
+        os.write(pipe, b"OK\n")
+        os.close(pipe)
+    try:
+        await asyncio.gather(*tasks)
+        logger.info("Done")
+    except asyncio.exceptions.CancelledError:
+        logger.info("Canceled")
+
+    for c in collectors:
+        c.close()
 
 
-asyncio.run(main())
+args = parser.parse_args()
+if args.daemon:
+    import time
+
+    r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)
+    child = os.fork()
+    if child == 0:
+        os.close(0)
+        os.close(1)
+        os.close(2)
+
+        dn = os.open("/dev/null", os.O_WRONLY)
+        os.dup(dn)
+        os.dup(dn)
+        os.dup(dn)
+
+        asyncio.run(main(args, pipe=w_pipe))
+    else:
+        time.sleep(1)
+        ret = os.read(r_pipe, 50)
+        os.close(r_pipe)
+        if ret == b"OK\n":
+            sys.exit(0)
+
+        print("Returned: ", ret)
+        sys.exit(1)
+else:
+    asyncio.run(main(args))
