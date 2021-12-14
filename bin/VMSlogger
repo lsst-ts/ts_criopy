@@ -54,7 +54,7 @@ parser.add_argument(
     action="store_true",
     help="save into HDF 5. Requires h5py (pip install h5py)",
 )
-parser.add_argument("--chunk-size", dest="chunk_size", default=300000, type=int)
+parser.add_argument("--chunk-size", dest="chunk_size", default=5000, type=int)
 parser.add_argument(
     "-d", dest="debug", default=0, action="count", help="increase debug level"
 )
@@ -96,9 +96,10 @@ logger = logging.getLogger("VMSlogger")
 
 class Collector:
     def __init__(
-        self, index, filename, size, file_type, header, chunk_size, daemonized
+        self, index, fn_template, size, file_type, header, chunk_size, daemonized
     ):
         self.index = index
+        self.fn_template = fn_template
         self.size = size
         self.file_type = file_type
         self.header = header
@@ -109,26 +110,35 @@ class Collector:
             f"Creating cache: index={self.index+1} device={device_sensors[self.index]} type={self.file_type}"
         )
 
-        if "5" in file_type:
+        if "5" in self.file_type:
             self.chunk_size = min(chunk_size, self.size)
             self.cache_size = self.chunk_size + 50000
 
             self.cache = VMSCache(self.cache_size, device_sensors[self.index])
 
+        else:
+            self.chunk_size = self.size
+            self.cache = VMSCache(self.size, device_sensors[self.index])
+
+        self._create_file()
+
+    def _create_file(self):
+        filename = datetime.strftime(datetime.now(), self.fn_template)
+        logger.info(f"Creating {filename}")
+
+        if "5" in self.file_type:
             self.h5file = h5py.File(filename, "a")
             group_args = {"chunks": (self.chunk_size)}
             if "z" in self.file_type:
                 group_args["compression"] = "gzip"
             self.cache.create_hdf5_datasets(self.size, self.h5file, group_args)
         else:
-            self.chunk_size = self.size
-            self.cache = VMSCache(self.size, device_sensors[self.index])
             self.filename = filename
 
     def _save_hdf5(self):
         if self.h5file is not None and len(self.cache) >= self.chunk_size:
             logger.info(
-                f"Device {devices[self.index]} Saving to {self.h5file.file.filename} from {self.cache.hdf5_index}"
+                f"Saving device {devices[self.index]} data to {self.h5file.file.filename} from {self.cache.hdf5_index}"
             )
             self.cache.savehdf5(self.chunk_size)
             self.h5file.flush()
@@ -140,53 +150,58 @@ class Collector:
             logger.info(f"Closing HDF5 {self.h5file.file.filename}")
             self.h5file.close()
 
+    async def sample_file(self):
+        if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
+            while not (self.cache.filled):
+                await asyncio.sleep(0.5)
+                logger.debug(
+                    f"Waiting {devices[self.index]}..{100 * len(self.cache)/self.size:.02f}% {len(self.cache)} of {self.size}"
+                )
+                self._save_hdf5()
+                if self.cache.h5_filled():
+                    break
+        else:
+
+            async def collect_it():
+                with click.progressbar(
+                    length=self.chunk_size,
+                    label=f"Getting data {devices[self.index]}",
+                    show_eta=True,
+                    show_percent=True,
+                    width=0,
+                ) as bar:
+                    current = 0
+                    while not (self.cache.filled):
+                        l = len(self.cache)
+                        bar.update(l - current)
+                        current = l
+                        await asyncio.sleep(0.1)
+                        if self._save_hdf5():
+                            break
+                    bar.update(len(self.cache) - current)
+
+            if self.h5file is None:
+                await collect_it()
+            else:
+                while True:
+                    await collect_it()
+                    if self.cache.h5_filled():
+                        break
+
+        if self.h5file is None:
+            logger.info(f"Saving CSV to {self.filename}")
+            kwargs = {"delimiter": ","}
+            if self.header:
+                kwargs["header"] = ",".join(self.cache.columns())
+            self.cache.savetxt(self.filename, **kwargs)
+
     async def collect_data(self):
         async with Domain() as domain:
             remote = Remote(domain, "MTVMS", index=self.index + 1)
             remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
-            if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
-                while not (self.cache.filled):
-                    await asyncio.sleep(0.5)
-                    logger.debug(
-                        f"Waiting {devices[self.index]}..{100 * len(self.cache)/self.size:.02f}% {len(self.cache)} of {self.size}"
-                    )
-                    self._save_hdf5()
-                    if self.cache.h5_filled():
-                        break
-            else:
-
-                async def collect_it():
-                    with click.progressbar(
-                        length=self.chunk_size,
-                        label=f"Getting data {devices[self.index]}",
-                        show_eta=True,
-                        show_percent=True,
-                        width=0,
-                    ) as bar:
-                        current = 0
-                        while not (self.cache.filled):
-                            l = len(self.cache)
-                            bar.update(l - current)
-                            current = l
-                            await asyncio.sleep(0.1)
-                            if self._save_hdf5():
-                                break
-                        bar.update(len(self.cache) - current)
-
-                if self.h5file is None:
-                    await collect_it()
-                else:
-                    while True:
-                        await collect_it()
-                        if self.cache.h5_filled():
-                            break
-
-            if self.h5file is None:
-                logger.info(f"Saving CSV to {self.filename}")
-                kwargs = {"delimiter": ","}
-                if self.header:
-                    kwargs["header"] = ",".join(self.cache.columns())
-                self.cache.savetxt(self.filename, **kwargs)
+            while True:
+                await self.sample_file()
+                self._create_file()
 
 
 async def main(args, pipe=None):
@@ -247,7 +262,7 @@ async def main(args, pipe=None):
         f.close()
 
     for d in args.devices:
-        fn = d + datetime.strftime(datetime.now(), "_%Y-%m-%dT%H:%M:%S")
+        fn = d + "_%Y-%m-%dT%H:%M:%S"
         if "5" in file_type:
             fn += ".hdf"
         else:
