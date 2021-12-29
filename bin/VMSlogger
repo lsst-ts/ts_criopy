@@ -112,13 +112,12 @@ class Collector:
 
         if "5" in self.file_type:
             self.chunk_size = min(chunk_size, self.size)
-            self.cache_size = self.chunk_size + 50000
-
-            self.cache = VMSCache(self.cache_size, device_sensors[self.index])
-
         else:
             self.chunk_size = self.size
-            self.cache = VMSCache(self.size, device_sensors[self.index])
+
+        self.cache_size = self.chunk_size + 50000
+
+        self.cache = VMSCache(self.cache_size, device_sensors[self.index])
 
         self._create_file()
 
@@ -137,7 +136,7 @@ class Collector:
 
     def _save_hdf5(self):
         if self.h5file is not None and len(self.cache) >= self.chunk_size:
-            logger.info(
+            logger.debug(
                 f"Saving device {devices[self.index]} data to {self.h5file.file.filename} from {self.cache.hdf5_index}"
             )
             self.cache.savehdf5(self.chunk_size)
@@ -152,48 +151,60 @@ class Collector:
 
     async def sample_file(self):
         if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
-            while not (self.cache.filled):
-                await asyncio.sleep(0.5)
+            saved_len = 0
+            while True:
+                l = saved_len + len(self.cache)
                 logger.debug(
-                    f"Waiting {devices[self.index]}..{100 * len(self.cache)/self.size:.02f}% {len(self.cache)} of {self.size}"
+                    f"Waiting {devices[self.index]}..{100 * (l)/self.size:.02f}% {l} of {self.size}"
                 )
-                self._save_hdf5()
-                if self.cache.h5_filled():
-                    break
-        else:
-
-            async def collect_it():
-                with click.progressbar(
-                    length=self.chunk_size,
-                    label=f"Getting data {devices[self.index]}",
-                    show_eta=True,
-                    show_percent=True,
-                    width=0,
-                ) as bar:
-                    current = 0
-                    while not (self.cache.filled):
-                        l = len(self.cache)
-                        bar.update(l - current)
-                        current = l
-                        await asyncio.sleep(0.1)
-                        if self._save_hdf5():
-                            break
-                    bar.update(len(self.cache) - current)
-
-            if self.h5file is None:
-                await collect_it()
-            else:
-                while True:
-                    await collect_it()
+                if self.h5file is None:
+                    if l >= self.size:
+                        break
+                else:
+                    if self._save_hdf5():
+                        saved_len += self.chunk_size
                     if self.cache.h5_filled():
                         break
+                await asyncio.sleep(0.5)
+        else:
+
+            async def collect_it(bar):
+                last_l = 0
+
+                while True:
+                    l = len(self.cache)
+                    if l >= self.size:
+                        break
+                    bar.update(l - last_l)
+                    last_l = l
+                    await asyncio.sleep(0.1)
+                    if self._save_hdf5():
+                        bar.update(self.chunk_size - last_l)
+                        break
+
+            with click.progressbar(
+                length=self.size,
+                label=f"Getting data {devices[self.index]}",
+                show_eta=True,
+                show_percent=True,
+                width=0,
+            ) as bar:
+                if self.h5file is None:
+                    await collect_it(bar)
+                else:
+                    while True:
+                        await collect_it(bar)
+                        if self.cache.h5_filled():
+                            break
+
+                bar.update(self.size)
 
         if self.h5file is None:
             logger.info(f"Saving CSV to {self.filename}")
             kwargs = {"delimiter": ","}
             if self.header:
                 kwargs["header"] = ",".join(self.cache.columns())
-            self.cache.savetxt(self.filename, **kwargs)
+            self.cache.savetxt(self.filename, self.size, **kwargs)
 
     async def collect_data(self):
         async with Domain() as domain:
@@ -280,7 +291,7 @@ async def main(args, pipe=None):
             file_type,
             args.header,
             args.chunk_size,
-            args.daemon is not None,
+            args.daemon,
         )
         collectors.append(c)
         tasks.append(asyncio.create_task(c.collect_data()))
