@@ -24,13 +24,12 @@ import signal
 import sys
 
 from lsst.ts.salobj import Domain, Remote
-from lsst.ts.cRIOpy.VMSCache import *
+from lsst.ts.cRIOpy.VMSCache import VMSCache
 
 import argparse
 import asyncio
 import click
 from datetime import datetime
-import numpy as np
 import pathlib
 import logging
 
@@ -67,6 +66,13 @@ parser.add_argument(
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
+)
+parser.add_argument(
+    "--template",
+    action="store",
+    default="${name}_%Y-%m-%dT%H:%M:%S.${ext}",
+    type=str,
+    help="template used to construct filename",
 )
 parser.add_argument(
     "--workdir",
@@ -121,8 +127,25 @@ class Collector:
 
         self._create_file()
 
-    def _create_file(self):
+    def get_filename(self):
         filename = datetime.strftime(datetime.now(), self.fn_template)
+        repl = [
+            ("name", devices[self.index]),
+            (
+                "ext",
+                "hdf"
+                if "5" in self.file_type
+                else "csv.gz"
+                if "z" in self.file_type
+                else "csv",
+            ),
+        ]
+        for name, value in repl:
+            filename = filename.replace("${" + name + "}", value)
+        return filename
+
+    def _create_file(self):
+        filename = self.get_filename()
         logger.info(f"Creating {filename}")
 
         if "5" in self.file_type:
@@ -153,12 +176,12 @@ class Collector:
         if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
             saved_len = 0
             while True:
-                l = saved_len + len(self.cache)
+                current_len = saved_len + len(self.cache)
                 logger.debug(
-                    f"Waiting {devices[self.index]}..{100 * (l)/self.size:.02f}% {l} of {self.size}"
+                    f"Waiting {devices[self.index]}..{100 * (current_len)/self.size:.02f}% {current_len} of {self.size}"
                 )
                 if self.h5file is None:
-                    if l >= self.size:
+                    if current_len >= self.size:
                         break
                 else:
                     if self._save_hdf5():
@@ -172,11 +195,11 @@ class Collector:
                 last_l = 0
 
                 while True:
-                    l = len(self.cache)
-                    if l >= self.size:
+                    cache_len = len(self.cache)
+                    if cache_len >= self.size:
                         break
-                    bar.update(l - last_l)
-                    last_l = l
+                    bar.update(cache_len - last_l)
+                    last_l = cache_len
                     await asyncio.sleep(0.1)
                     if self._save_hdf5():
                         bar.update(self.chunk_size - last_l)
