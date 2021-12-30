@@ -20,8 +20,10 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import os.path
 import signal
 import sys
+import traceback
 
 from lsst.ts.salobj import Domain, Remote
 from lsst.ts.cRIOpy.VMSCache import VMSCache
@@ -125,8 +127,6 @@ class Collector:
 
         self.cache = VMSCache(self.cache_size, device_sensors[self.index])
 
-        self._create_file()
-
     def get_filename(self):
         filename = datetime.strftime(datetime.now(), self.fn_template)
         repl = [
@@ -147,6 +147,13 @@ class Collector:
     def _create_file(self):
         filename = self.get_filename()
         logger.info(f"Creating {filename}")
+
+        try:
+            dirs = os.path.dirname(filename)
+            if dirs != "":
+                os.makedirs(dirs)
+        except FileExistsError:
+            pass
 
         if "5" in self.file_type:
             self.h5file = h5py.File(filename, "a")
@@ -230,12 +237,17 @@ class Collector:
             self.cache.savetxt(self.filename, self.size, **kwargs)
 
     async def collect_data(self):
-        async with Domain() as domain:
-            remote = Remote(domain, "MTVMS", index=self.index + 1)
-            remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
-            while True:
-                await self.sample_file()
-                self._create_file()
+        try:
+            async with Domain() as domain:
+                remote = Remote(domain, "MTVMS", index=self.index + 1)
+                remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
+                while True:
+                    self._create_file()
+                    await self.sample_file()
+        except Exception:
+            logger.error(f"Cannot collect data for {devices[self.index]}")
+            for line in traceback.format_exc().split("\n"):
+                logger.error(f"> {line}")
 
 
 async def main(args, pipe=None):
