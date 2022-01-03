@@ -126,25 +126,41 @@ class TimeCache:
             for r in range(self._size - 1, self.current_index - 1, -1):
                 yield self.data[r]
 
-    def savetxt(self, filename, **kwargs):
-        """Saves data to file.
+    def savetxt(self, filename, size=None, **kwargs):
+        """Saves data to CSV file. Saved data are forgotten.
 
         Parameters
         ----------
         filename : `str`
             Filename to save the data.
+        size : `int`
+            Size of data to store. Defaults to all current data.
         **kwargs : `dict`, optional
             Arguments passed to np.savetxt()
         """
+
+        if size is None:
+            size = len(self)
+
+        new_data = np.array(self.data)
+
+        remaining = len(self) - size
+
+        for n in self.data.dtype.names:
+            new_data[n][:remaining] = self[n][size:]
+
         if self.filled:
-            np.savetxt(
-                filename,
-                list(self.data[self.current_index + 1 :])
-                + list(self.data[: self.current_index]),
-                **kwargs,
+            data = list(self.data[self.current_index + 1 :]) + list(
+                self.data[: self.current_index]
             )
         else:
-            np.savetxt(filename, self.data[: self.current_index], **kwargs)
+            data = list(self.data)
+
+        self.filled = False
+        self.data = new_data
+        self.current_index = remaining
+
+        np.savetxt(filename, data[:size], **kwargs)
 
     def create_hdf5_datasets(self, size, group, group_args={}):
         """Creates HDF5 datasets.
@@ -169,7 +185,7 @@ class TimeCache:
         self._hdf5_size = size
 
     def h5_filled(self):
-        """Returns True if HDF5 files is filled."""
+        """Returns True if HDF5 file is filled."""
         return self.hdf5_index >= self._hdf5_size
 
     def savehdf5(self, size):
