@@ -87,15 +87,16 @@ parser.add_argument(
 parser.add_argument(
     "--template",
     action="store",
+    dest="template",
     default="${name}_%Y-%m-%dT%H:%M:%S.${ext}",
     type=str,
-    help="template used to construct filename",
+    help="template used to construct filename. Defaults to ${name}_%Y-%m-%dT%H:%M:%S.${ext}",
 )
 parser.add_argument(
     "--workdir",
     action="store",
     dest="workdir",
-    default="",
+    default=None,
     help="directory where files will be stored",
 )
 parser.add_argument(
@@ -291,6 +292,13 @@ async def main(args, pipe=None):
     )
     ch.setFormatter(formatter)
 
+    if args.workdir is not None:
+        try:
+            os.chdir(args.workdir)
+        except OSError as oerr:
+            print(f"Cannot chdir to {args.workdir}: {oerr.strerror}")
+            sys.exit(2)
+
     if args.logfile:
         fh = logging.FileHandler(args.logfile)
         fh.setLevel(logging.DEBUG)
@@ -340,20 +348,10 @@ async def main(args, pipe=None):
         f.close()
 
     for d in args.devices:
-        fn = d + "_%Y-%m-%dT%H:%M:%S"
-        if "5" in file_type:
-            fn += ".hdf"
-        else:
-            fn += ".csv"
-            if "z" in file_type:
-                fn += ".gz"
-
-        fn = str(pathlib.Path(args.workdir, fn))
-
-        logger.info(f"Collecting {d} to {fn}")
+        logger.info(f"Collecting {d} - template {args.template}")
         c = Collector(
             devices.index(d),
-            fn,
+            args.template,
             args.size,
             file_type,
             args.header,
