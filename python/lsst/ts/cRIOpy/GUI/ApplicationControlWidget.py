@@ -25,6 +25,7 @@ from PySide2.QtWidgets import (
     QProgressBar,
     QLCDNumber,
     QFormLayout,
+    QSizePolicy,
 )
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
@@ -51,6 +52,7 @@ class ApplicationControlWidget(QWidget):
     TEXT_ENTER_ENGINEERING = "&Enter Engineering"
     TEXT_EXIT_ENGINEERING = "&Exit Engineering"
     TEXT_EXIT_CONTROL = "&Exit Control"
+    TEXT_PANIC = "&Panic!"
 
     def __init__(self, m1m3):
         super().__init__()
@@ -64,6 +66,12 @@ class ApplicationControlWidget(QWidget):
             button.setEnabled(False)
             button.setAutoDefault(default)
             return button
+
+        self.panicButton = _addButton(self.TEXT_PANIC, self.panic, True)
+        pal = self.panicButton.palette()
+        pal.setColor(pal.Button, QColor(255, 0, 0))
+        self.panicButton.setPalette(pal)
+        self.panicButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         self.startButton = _addButton(self.TEXT_START, self.start, True)
         self.enableButton = _addButton(self.TEXT_ENABLE, self.enable, True)
@@ -86,6 +94,7 @@ class ApplicationControlWidget(QWidget):
         dataLayout.addRow("Max pressure", self.maxPressure)
 
         commandLayout = QVBoxLayout()
+        commandLayout.addWidget(self.panicButton, 1)
         commandLayout.addWidget(self.startButton)
         commandLayout.addWidget(self.enableButton)
         commandLayout.addWidget(self.raiseButton)
@@ -139,7 +148,9 @@ class ApplicationControlWidget(QWidget):
     async def command(self, button):
         self.disableAllButtons()
         try:
-            if button.text() == self.TEXT_START:
+            if button.text() == self.TEXT_PANIC:
+                await self.m1m3.remote.cmd_panic.start()
+            elif button.text() == self.TEXT_START:
                 await self.m1m3.remote.cmd_start.set_start(
                     settingsToApply="Default", timeout=60
                 )
@@ -179,6 +190,10 @@ class ApplicationControlWidget(QWidget):
             self.restoreEnabled()
 
     @asyncSlot()
+    async def panic(self):
+        await self.command(self.panicButton)
+
+    @asyncSlot()
     async def start(self):
         await self.command(self.startButton)
 
@@ -206,51 +221,62 @@ class ApplicationControlWidget(QWidget):
     def detailedState(self, data):
         self.lastEnabled = None
         if data.detailedState == DetailedState.DISABLED:
+            self.panicButton.setEnabled(True)
             self.raiseButton.setEnabled(False)
             self.engineeringButton.setEnabled(False)
             self._setTextEnable(self.enableButton, self.TEXT_ENABLE)
             self._setTextEnable(self.exitButton, self.TEXT_STANDBY)
             self.enableButton.setDefault(True)
         elif data.detailedState == DetailedState.FAULT:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.startButton, self.TEXT_STANDBY)
             self.startButton.setDefault(True)
         elif data.detailedState == DetailedState.OFFLINE:
             self.startButton.setEnabled(False)
         elif data.detailedState == DetailedState.STANDBY:
-            self.enableButton.setEnabled(False)
+            self.panicButton.setEnabled(False)
             self._setTextEnable(self.startButton, self.TEXT_START)
             self._setTextEnable(self.exitButton, self.TEXT_EXIT_CONTROL)
             self.startButton.setDefault(True)
         elif data.detailedState == DetailedState.PARKED:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.enableButton, self.TEXT_DISABLE)
             self._setTextEnable(self.raiseButton, self.TEXT_RAISE)
             self._setTextEnable(self.engineeringButton, self.TEXT_ENTER_ENGINEERING)
             self.exitButton.setEnabled(False)
             self.raiseButton.setDefault(True)
         elif data.detailedState == DetailedState.RAISING:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.raiseButton, self.TEXT_ABORT_RAISE)
             self.engineeringButton.setEnabled(False)
             self.raiseButton.setDefault(True)
         elif data.detailedState == DetailedState.ACTIVE:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.raiseButton, self.TEXT_LOWER)
             self._setTextEnable(self.engineeringButton, self.TEXT_ENTER_ENGINEERING)
             self.engineeringButton.setEnabled(True)
         elif data.detailedState == DetailedState.LOWERING:
+            self.panicButton.setEnabled(True)
             pass
         elif data.detailedState == DetailedState.PARKEDENGINEERING:
+            self.panicButton.setEnabled(True)
             self.enableButton.setEnabled(False)
             self._setTextEnable(self.raiseButton, self.TEXT_RAISE)
             self._setTextEnable(self.engineeringButton, self.TEXT_EXIT_ENGINEERING)
         elif data.detailedState == DetailedState.RAISINGENGINEERING:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.raiseButton, self.TEXT_ABORT_RAISE)
             self.engineeringButton.setEnabled(False)
         elif data.detailedState == DetailedState.ACTIVEENGINEERING:
+            self.panicButton.setEnabled(True)
             self._setTextEnable(self.raiseButton, self.TEXT_LOWER)
             self.engineeringButton.setEnabled(True)
             self._setTextEnable(self.engineeringButton, self.TEXT_EXIT_ENGINEERING)
         elif data.detailedState == DetailedState.LOWERINGENGINEERING:
+            self.panicButton.setEnabled(True)
             pass
         elif data.detailedState == DetailedState.LOWERINGFAULT:
+            self.panicButton.setEnabled(False)
             self._setTextEnable(self.exitButton, self.TEXT_STANDBY)
         elif data.detailedState == DetailedState.PROFILEHARDPOINTCORRECTIONS:
             pass
