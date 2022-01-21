@@ -116,6 +116,16 @@ parser.add_argument(
     dest="daemon",
     help="starts as daemon (fork to start process).",
 )
+parser.add_argument(
+    "--rotate", action="store", default=None, help="rotate on given interval"
+)
+parser.add_argument(
+    "--rotate-offset",
+    action="store",
+    default=None,
+    help="rotate at give offset from rotate interval (--rotate argument)",
+)
+
 
 device_sensors = [3, 6, 3]
 

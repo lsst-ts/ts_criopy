@@ -5,3 +5,4 @@ except ImportError:
 
 from .TimeCache import *
 from .VMSCache import *
+from .DurationParser import *
