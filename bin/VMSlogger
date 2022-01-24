@@ -26,7 +26,7 @@ import sys
 import traceback
 
 from lsst.ts.salobj import Domain, Remote
-from lsst.ts.cRIOpy.VMSCache import VMSCache
+from lsst.ts.cRIOpy import parseDuration, VMSCache
 
 import argparse
 import asyncio
@@ -34,6 +34,8 @@ import click
 from datetime import datetime
 import pathlib
 import logging
+
+FREQ = 1000  # Hz
 
 try:
     import h5py
@@ -117,12 +119,19 @@ parser.add_argument(
     help="starts as daemon (fork to start process).",
 )
 parser.add_argument(
-    "--rotate", action="store", default=None, help="rotate on given interval"
+    "--rotate",
+    action="store",
+    dest="rotate",
+    default=None,
+    type=parseDuration,
+    help="rotate on given interval",
 )
 parser.add_argument(
     "--rotate-offset",
     action="store",
-    default=None,
+    dest="rotate_offset",
+    default=0,
+    type=parseDuration,
     help="rotate at give offset from rotate interval (--rotate argument)",
 )
 
@@ -134,7 +143,16 @@ logger = logging.getLogger("VMSlogger")
 
 class Collector:
     def __init__(
-        self, index, fn_template, size, file_type, header, chunk_size, daemonized
+        self,
+        index,
+        fn_template,
+        size,
+        file_type,
+        header,
+        chunk_size,
+        daemonized,
+        rotate,
+        rotate_offset,
     ):
         self.index = index
         self.fn_template = fn_template
@@ -142,6 +160,9 @@ class Collector:
         self.file_type = file_type
         self.header = header
         self.daemonized = daemonized
+        self.rotate = rotate
+        self.rotate_offset = rotate_offset
+        self.next_rotate = None
         self.h5file = None
 
         logger.debug(
@@ -157,8 +178,20 @@ class Collector:
 
         self.cache = VMSCache(self.cache_size, device_sensors[self.index])
 
-    def get_filename(self):
-        filename = datetime.strftime(datetime.now(), self.fn_template)
+    def _need_rotate(self, timestamp):
+        if self.rotate is None:
+            return False
+        elif self.next_rotate is None:
+            (q, r) = divmod(timestamp, self.rotate)
+            self.next_rotate = (q + 1) * self.rotate + self.rotate_offset
+            return False
+        elif self.next_rotate <= timestamp:
+            self.next_rotate += self.rotate
+            return True
+        return False
+
+    def _get_filename(self, date):
+        filename = datetime.strftime(date, self.fn_template)
         repl = [
             ("name", devices[self.index]),
             (
@@ -174,8 +207,8 @@ class Collector:
             filename = filename.replace("${" + name + "}", value)
         return filename
 
-    def _create_file(self):
-        filename = self.get_filename()
+    def _create_file(self, date):
+        filename = self._get_filename(date)
         logger.info(f"Creating {filename}")
 
         try:
@@ -209,6 +242,12 @@ class Collector:
             logger.info(f"Closing HDF5 {self.h5file.file.filename}")
             self.h5file.close()
 
+    def _h5_filled(self):
+        et = self.cache.endTime()
+        if et is not None and self._need_rotate(et):
+            return True
+        return self.cache.h5_filled()
+
     async def _sample_daemon(self):
         saved_len = 0
         while True:
@@ -222,7 +261,7 @@ class Collector:
             else:
                 if self._save_hdf5():
                     saved_len += self.chunk_size
-                if self.cache.h5_filled():
+                if self._h5_filled():
                     break
             await asyncio.sleep(0.5)
 
@@ -253,12 +292,12 @@ class Collector:
             else:
                 while True:
                     await collect_it(bar)
-                    if self.cache.h5_filled():
+                    if self._h5_filled():
                         break
 
             bar.update(self.size)
 
-    async def sample_file(self):
+    async def _sample_file(self):
         if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
             await self._sample_daemon()
         else:
@@ -286,8 +325,8 @@ class Collector:
                 remote = Remote(domain, "MTVMS", index=self.index + 1)
                 remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
                 while True:
-                    self._create_file()
-                    await self.sample_file()
+                    self._create_file(datetime.now())
+                    await self._sample_file()
                     if single_shot:
                         break
 
@@ -351,7 +390,11 @@ async def main(args, pipe=None):
             sys.exit(1)
         file_type += "5"
         if args.size is None:
-            args.size = 86400000
+            if args.rotate is None:
+                args.size = 86400000
+            else:
+                # 50 second more than needed
+                args.size = FREQ * (args.rotate + 50)
     else:
         if args.size is None:
             args.size = 50000
@@ -371,6 +414,8 @@ async def main(args, pipe=None):
             args.header,
             args.chunk_size,
             args.daemon,
+            args.rotate,
+            args.rotate_offset,
         )
         collectors.append(c)
         tasks.append(asyncio.create_task(c.collect_data(args.single_shot)))

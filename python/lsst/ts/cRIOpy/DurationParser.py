@@ -21,33 +21,34 @@
 
 __all__ = ["parseDuration"]
 
-"""Accept string depicting duration. Numbers can be suffixed with character, denomination their lengths.
-
-Length denominators
--------------------
-D : days (86400 seconds)
-h : hours (3600 seconds)
-m : minutesa (60 seconds)
-s : seconds (1 second)
-
-Examples
---------
-'1D 1m' = 86460 seconds
-'1h 1m 30s' = 3690 seconds
-
-Parameters
-----------
-duration : `str`
-    Duration string. Numbers with know suffixed. Non-sufficed number will be treated as seconds.
-
-Returns
--------
-seconds : `int`
-    Number of seconds in string.
-"""
+import argparse
 
 
 def parseDuration(duration):
+    """Accept string depicting duration. Numbers can be suffixed with character, denomination their lengths.
+
+    Length denominators
+    -------------------
+    D : days (86400 seconds)
+    h : hours (3600 seconds)
+    m : minutesa (60 seconds)
+    s : seconds (1 second)
+
+    Examples
+    --------
+    '1D 1m' = 86460 seconds
+    '1h 1m 30s' = 3690 seconds
+
+    Parameters
+    ----------
+    duration : `str`
+        Duration string. Numbers with know suffixed. Non-sufficed number will be treated as seconds.
+
+    Returns
+    -------
+    seconds : `int`
+        Number of seconds in string.
+    """
     muls = {"D": 86400, "h": 3600, "m": 60, "s": 1}
     ret = 0
     current = 0
@@ -61,5 +62,5 @@ def parseDuration(duration):
                 ret += current * muls[s]
                 current = 0
             except KeyError:
-                raise RuntimeError(f"Unknown suffix: {s}")
+                raise argparse.ArgumentTypeError(f"Unknown suffix: {s}")
     return ret + current

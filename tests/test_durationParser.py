@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import unittest
+import argparse
 
 from lsst.ts.cRIOpy import parseDuration
 
@@ -39,7 +40,7 @@ class ParseDurationTestCase(unittest.TestCase):
         )
 
     def test_failures(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(argparse.ArgumentTypeError):
             parseDuration("1d")
             parseDuration("1Dd")
             parseDuration("239  Dd")
