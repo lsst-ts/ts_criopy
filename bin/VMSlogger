@@ -79,7 +79,7 @@ parser.add_argument(
     type=int,
     dest="size",
     default=None,
-    help="number of records to save in a file. Default to 86400000.",
+    help="number of records to save in a file. Default to 86400 seconds (assuming --rotate isn't specified and data are producet on FREQ, e.g 1kHz)..",
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
@@ -124,7 +124,7 @@ parser.add_argument(
     dest="rotate",
     default=None,
     type=parseDuration,
-    help="rotate on given interval",
+    help="rotate on given interval. Default to not rotate - rotate on reaching size number of entriers. Can be used only for HDF5 output.",
 )
 parser.add_argument(
     "--rotate-offset",
@@ -391,7 +391,7 @@ async def main(args, pipe=None):
         file_type += "5"
         if args.size is None:
             if args.rotate is None:
-                args.size = 86400000
+                args.size = 86400 * FREQ
             else:
                 # 50 second more than needed
                 args.size = FREQ * (args.rotate + 50)
@@ -403,6 +403,12 @@ async def main(args, pipe=None):
         f = open(args.pidfile, "w")
         f.write(f"{os.getpid()}\n")
         f.close()
+
+    if args.rotate is not None:
+        if args.size is not None:
+            raise RuntimeError("Cannot use --rotate argument with --size")
+        if not args.h5py:
+            raise RuntimeError("--rotate option works only with HDF5 files")
 
     for d in args.devices:
         logger.info(f"Collecting {d} - template {args.template}")
@@ -449,7 +455,10 @@ if args.daemon:
         os.dup(dn)
         os.dup(dn)
 
-        asyncio.run(main(args, pipe=w_pipe))
+        try:
+            asyncio.run(main(args, pipe=w_pipe))
+        except RuntimeError as re:
+            print(str(re))
     else:
         time.sleep(1)
         ret = os.read(r_pipe, 50)
