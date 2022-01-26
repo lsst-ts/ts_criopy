@@ -1,4 +1,4 @@
-ARG DEVELOP_TAG=c0022.001
+ARG DEVELOP_TAG=c0023.001
 
 FROM lsstts/develop-env:$DEVELOP_TAG AS crio-develop
 
@@ -17,7 +17,9 @@ RUN source .setup.sh \
 echo "Configuring environment for cRIOpy" \\n\
 source /home/saluser/.setup_salobj.sh \\n\
 export PYTHONPATH="/home/saluser/repos/ts_cRIOpy/python:\$PYTHONPATH" \\n\
-export LSST_DDS_PARTITION_PREFIX="test" \\n
+export OSPL_URI=$(python -c "from lsst.ts import ddsconfig; print( (ddsconfig.get_config_dir() / 'ospl-sp.xml').as_uri())") \\n\
+export LSST_DDS_PARTITION_PREFIX="summit" \\n\
+export LSST_DDS_DOMAIN_ID=0
 
 COPY startup.sh .
 
