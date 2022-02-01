@@ -8,6 +8,7 @@ config.log
 *.pyc
 *_wrap.cc
 *Lib.py
+ospl-*.log
 
 version.py
 
@@ -17,3 +18,6 @@ pytest_session.txt
 .cache/
 .pytest_cache
 .coverage
+
+# Mac file
+.DS_Store

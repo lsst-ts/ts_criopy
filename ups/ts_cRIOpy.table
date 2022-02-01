@@ -4,9 +4,6 @@
 #   the "sconsUtils" package.
 setupRequired(sconsUtils)
 setupRequired(ts_salobj)
-setupRequired(PySide2)
-setupRequired(asyncqt)
-setupOptional(h5py)
 
 # The following is boilerplate for all packages.
 # See https://dmtn-001.lsst.io for details on LSST_LIBRARY_PATH.
