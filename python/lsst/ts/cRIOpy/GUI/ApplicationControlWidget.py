@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from PySide2 import QtCore
 from PySide2.QtWidgets import (
     QWidget,
     QPushButton,
@@ -27,7 +28,7 @@ from PySide2.QtWidgets import (
     QFormLayout,
     QSizePolicy,
 )
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Qt, Slot, QSignalMapper
 from PySide2.QtGui import QColor
 
 from .SALComm import warning
@@ -36,6 +37,59 @@ from asyncqt import asyncSlot
 
 from lsst.ts.salobj import base
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
+
+
+class HPWarnings:
+    def __init__(self, m1m3):
+        self.faultHigh = self.faultLow = None
+        self.warningHigh = self.warningLow = None
+
+        self._faultLow = self._faultLowRaising = None
+
+        m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
+
+    def setState(self, state):
+        """Change low limits according to sensed state.
+
+        Note
+        ----
+        As that needs to be called before toottips are set, do not hook that
+        directly to detailedState signal.
+
+        Parameters
+        ----------
+        state : `int`
+            New CSC state.
+        """
+
+        rangeRatio = 0.1
+        if state == DetailedState.RAISING or state == DetailedState.RAISINGENGINEERING:
+            self.faultLow = self._faultLowRaising
+        else:
+            self.faultLow = self._faultLow
+
+        errorRange = self.faultHigh - self.faultLow
+        self.warningLow = self.faultLow + errorRange * rangeRatio
+        self.warningHigh = self.faultHigh - errorRange * rangeRatio
+
+    def getColor(self, v):
+        if v < self.faultLow or v > self.faultHigh:
+            return QColor(255, 0, 0)
+        elif v < self.warningLow or v > self.warningHigh:
+            return QColor(255, 255, 0)
+        return QColor(0, 255, 0)
+
+    def minText(self):
+        return f"Fault: {self.faultLow:.2f} Warning: {self.warningLow:.2f}"
+
+    def maxText(self):
+        return f"Warning: {self.warningHigh:.2f} Fault: {self.faultHigh:.2f}"
+
+    @Slot(map)
+    def hardpointActuatorSettings(self, data):
+        self.faultHigh = data.airPressureFaultHigh
+        self._faultLow = data.airPressureFaultLow
+        self._faultLowRaising = data.airPressureFaultLowRaising
 
 
 class ApplicationControlWidget(QWidget):
@@ -58,28 +112,36 @@ class ApplicationControlWidget(QWidget):
         super().__init__()
 
         self.m1m3 = m1m3
-        self.lastEnabled = None
+        self._lastEnabled = None
+        self._hpWarnings = HPWarnings(self.m1m3)
 
-        def _addButton(text, onClick, default=False):
+        self._signalMapper = QSignalMapper(self)
+        self._signalMapper.mapped[str].connect(self._command)
+
+        commandLayout = QVBoxLayout()
+
+        def _addButton(text):
             button = QPushButton(text)
-            button.clicked.connect(onClick)
+            self._signalMapper.setMapping(button, text)
+            button.clicked.connect(self._signalMapper.map)
             button.setEnabled(False)
-            button.setAutoDefault(default)
+            commandLayout.addWidget(button)
             return button
 
-        self.panicButton = _addButton(self.TEXT_PANIC, self.panic, True)
+        self.panicButton = _addButton(self.TEXT_PANIC)
+        self._signalMapper.setMapping(self.panicButton, self.TEXT_PANIC)
         pal = self.panicButton.palette()
         pal.setColor(pal.Button, QColor(255, 0, 0))
         self.panicButton.setPalette(pal)
         self.panicButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
-        self.startButton = _addButton(self.TEXT_START, self.start, True)
-        self.enableButton = _addButton(self.TEXT_ENABLE, self.enable, True)
-        self.raiseButton = _addButton(self.TEXT_RAISE, self.raiseControl, True)
-        self.engineeringButton = _addButton(
-            self.TEXT_ENTER_ENGINEERING, self.engineering
-        )
-        self.exitButton = _addButton(self.TEXT_STANDBY, self.exit)
+        self.buttons = [
+            _addButton(self.TEXT_START),
+            _addButton(self.TEXT_ENABLE),
+            _addButton(self.TEXT_RAISE),
+            _addButton(self.TEXT_ENTER_ENGINEERING),
+            _addButton(self.TEXT_STANDBY),
+        ]
 
         self.supportedNumber = QLCDNumber(6)
         self.supportedNumber.setAutoFillBackground(True)
@@ -88,18 +150,14 @@ class ApplicationControlWidget(QWidget):
         self.maxPressure = QLCDNumber(6)
         self.maxPressure.setAutoFillBackground(True)
 
+        self.minPressure.setToolTip("Limits weren't (yet) received")
+        self.maxPressure.setToolTip("Limits weren't (yet) received")
+
         dataLayout = QFormLayout()
         dataLayout.addRow("Supported", self.supportedNumber)
         dataLayout.addRow("Min pressure", self.minPressure)
         dataLayout.addRow("Max pressure", self.maxPressure)
 
-        commandLayout = QVBoxLayout()
-        commandLayout.addWidget(self.panicButton, 1)
-        commandLayout.addWidget(self.startButton)
-        commandLayout.addWidget(self.enableButton)
-        commandLayout.addWidget(self.raiseButton)
-        commandLayout.addWidget(self.engineeringButton)
-        commandLayout.addWidget(self.exitButton)
         commandLayout.addLayout(dataLayout)
         commandLayout.addStretch()
 
@@ -121,167 +179,161 @@ class ApplicationControlWidget(QWidget):
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
 
     def disableAllButtons(self):
-        if self.lastEnabled is None:
-            self.lastEnabled = [
-                self.startButton.isEnabled(),
-                self.enableButton.isEnabled(),
-                self.raiseButton.isEnabled(),
-                self.engineeringButton.isEnabled(),
-                self.exitButton.isEnabled(),
-            ]
-        self.startButton.setEnabled(False)
-        self.enableButton.setEnabled(False)
-        self.raiseButton.setEnabled(False)
-        self.engineeringButton.setEnabled(False)
-        self.exitButton.setEnabled(False)
+        if self._lastEnabled is None:
+            self._lastEnabled = []
+            for b in self.buttons:
+                self._lastEnabled.append(b.isEnabled())
+                b.setEnabled(False)
 
     def restoreEnabled(self):
-        if self.lastEnabled is None:
+        if self._lastEnabled is None:
             return
-        self.startButton.setEnabled(self.lastEnabled[0])
-        self.enableButton.setEnabled(self.lastEnabled[1])
-        self.raiseButton.setEnabled(self.lastEnabled[2])
-        self.engineeringButton.setEnabled(self.lastEnabled[3])
-        self.exitButton.setEnabled(self.lastEnabled[4])
-        self.lastEnabled = None
+        for bi in range(len(self.buttons)):
+            self.buttons[bi].setEnabled(self._lastEnabled[bi])
 
-    async def command(self, button):
+        self._lastEnabled = None
+
+    @asyncSlot()
+    async def _command(self, text):
         self.disableAllButtons()
         try:
-            if button.text() == self.TEXT_PANIC:
+            if text == self.TEXT_PANIC:
                 await self.m1m3.remote.cmd_panic.start()
-            elif button.text() == self.TEXT_START:
+            elif text == self.TEXT_START:
                 await self.m1m3.remote.cmd_start.set_start(
-                    settingsToApply="Default", timeout=60
+                    configurationOverride="Default", timeout=60
                 )
-            elif button.text() == self.TEXT_EXIT_CONTROL:
-                await self.m1m3.remote.cmd_exitControl.start()
-            elif button.text() == self.TEXT_ENABLE:
+            elif text == self.TEXT_EXIT_CONTROL:
+                ret = await self.m1m3.remote.cmd_exitControl.start()
+            elif text == self.TEXT_ENABLE:
                 await self.m1m3.remote.cmd_enable.start()
-            elif button.text() == self.TEXT_DISABLE:
+            elif text == self.TEXT_DISABLE:
                 await self.m1m3.remote.cmd_disable.start()
-            elif button.text() == self.TEXT_RAISE:
+            elif text == self.TEXT_RAISE:
                 await self.m1m3.remote.cmd_raiseM1M3.set_start(
                     bypassReferencePosition=False
                 )
-            elif button.text() == self.TEXT_ABORT_RAISE:
+            elif text == self.TEXT_ABORT_RAISE:
                 await self.m1m3.remote.cmd_abortRaiseM1M3.start()
-            elif button.text() == self.TEXT_LOWER:
+            elif text == self.TEXT_LOWER:
                 await self.m1m3.remote.cmd_lowerM1M3.start()
-            elif button.text() == self.TEXT_ENTER_ENGINEERING:
+            elif text == self.TEXT_ENTER_ENGINEERING:
                 await self.m1m3.remote.cmd_enterEngineering.start()
-            elif button.text() == self.TEXT_EXIT_ENGINEERING:
+            elif text == self.TEXT_EXIT_ENGINEERING:
                 await self.m1m3.remote.cmd_exitEngineering.start()
-            elif button.text() == self.TEXT_STANDBY:
+            elif text == self.TEXT_STANDBY:
                 await self.m1m3.remote.cmd_standby.start()
+            else:
+                raise RuntimeError(f"unassigned command for button {text}")
         except base.AckError as ackE:
             warning(
                 self,
-                f"Error executing button {button.text()}",
-                f"Error executing button <i>{button.text()}</i>:<br/>{ackE.ackcmd.result}",
+                f"Error executing button {text}",
+                f"Error executing button <i>{text}</i>:<br/>{ackE.ackcmd.result}",
+            )
+        except base.AckTimeoutError as ackTimeoutE:
+            warning(
+                self,
+                f"Error executing button {text}",
+                f"Error executing button <i>{text}</i>:<br/>{ackE.ackcmd.result}",
             )
         except RuntimeError as rte:
             warning(
                 self,
-                f"Error executing {button.text()}",
-                f"Executing button <i>{button.text()}</i>:<br/>{str(rte)}",
+                f"Error executing {text()}",
+                f"Executing button <i>{text()}</i>:<br/>{str(rte)}",
             )
         finally:
             self.restoreEnabled()
 
-    @asyncSlot()
-    async def panic(self):
-        await self.command(self.panicButton)
-
-    @asyncSlot()
-    async def start(self):
-        await self.command(self.startButton)
-
-    @asyncSlot()
-    async def enable(self):
-        await self.command(self.enableButton)
-
-    @asyncSlot()
-    async def raiseControl(self):
-        await self.command(self.raiseButton)
-
-    @asyncSlot()
-    async def engineering(self):
-        await self.command(self.engineeringButton)
-
-    @asyncSlot()
-    async def exit(self):
-        await self.command(self.exitButton)
-
-    def _setTextEnable(self, button, text):
-        button.setText(text)
-        button.setEnabled(True)
-
     @Slot(map)
     def detailedState(self, data):
-        self.lastEnabled = None
-        if data.detailedState == DetailedState.DISABLED:
-            self.panicButton.setEnabled(True)
-            self.raiseButton.setEnabled(False)
-            self.engineeringButton.setEnabled(False)
-            self._setTextEnable(self.enableButton, self.TEXT_ENABLE)
-            self._setTextEnable(self.exitButton, self.TEXT_STANDBY)
-            self.enableButton.setDefault(True)
-        elif data.detailedState == DetailedState.FAULT:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.startButton, self.TEXT_STANDBY)
-            self.startButton.setDefault(True)
-        elif data.detailedState == DetailedState.OFFLINE:
-            self.startButton.setEnabled(False)
-        elif data.detailedState == DetailedState.STANDBY:
-            self.panicButton.setEnabled(False)
-            self._setTextEnable(self.startButton, self.TEXT_START)
-            self._setTextEnable(self.exitButton, self.TEXT_EXIT_CONTROL)
-            self.startButton.setDefault(True)
-        elif data.detailedState == DetailedState.PARKED:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.enableButton, self.TEXT_DISABLE)
-            self._setTextEnable(self.raiseButton, self.TEXT_RAISE)
-            self._setTextEnable(self.engineeringButton, self.TEXT_ENTER_ENGINEERING)
-            self.exitButton.setEnabled(False)
-            self.raiseButton.setDefault(True)
-        elif data.detailedState == DetailedState.RAISING:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.raiseButton, self.TEXT_ABORT_RAISE)
-            self.engineeringButton.setEnabled(False)
-            self.raiseButton.setDefault(True)
-        elif data.detailedState == DetailedState.ACTIVE:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.raiseButton, self.TEXT_LOWER)
-            self._setTextEnable(self.engineeringButton, self.TEXT_ENTER_ENGINEERING)
-            self.engineeringButton.setEnabled(True)
-        elif data.detailedState == DetailedState.LOWERING:
-            self.panicButton.setEnabled(True)
-            pass
-        elif data.detailedState == DetailedState.PARKEDENGINEERING:
-            self.panicButton.setEnabled(True)
-            self.enableButton.setEnabled(False)
-            self._setTextEnable(self.raiseButton, self.TEXT_RAISE)
-            self._setTextEnable(self.engineeringButton, self.TEXT_EXIT_ENGINEERING)
-        elif data.detailedState == DetailedState.RAISINGENGINEERING:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.raiseButton, self.TEXT_ABORT_RAISE)
-            self.engineeringButton.setEnabled(False)
-        elif data.detailedState == DetailedState.ACTIVEENGINEERING:
-            self.panicButton.setEnabled(True)
-            self._setTextEnable(self.raiseButton, self.TEXT_LOWER)
-            self.engineeringButton.setEnabled(True)
-            self._setTextEnable(self.engineeringButton, self.TEXT_EXIT_ENGINEERING)
-        elif data.detailedState == DetailedState.LOWERINGENGINEERING:
-            self.panicButton.setEnabled(True)
-            pass
-        elif data.detailedState == DetailedState.LOWERINGFAULT:
-            self.panicButton.setEnabled(False)
-            self._setTextEnable(self.exitButton, self.TEXT_STANDBY)
-        elif data.detailedState == DetailedState.PROFILEHARDPOINTCORRECTIONS:
-            pass
-        else:
+        # text mean button is enabled and given text shall be displayed. None for disabled buttons.
+        stateMap = {
+            DetailedState.STANDBY: [
+                self.TEXT_START,
+                None,
+                None,
+                None,
+                self.TEXT_EXIT_CONTROL,
+            ],
+            DetailedState.DISABLED: [
+                None,
+                self.TEXT_ENABLE,
+                None,
+                None,
+                self.TEXT_STANDBY,
+            ],
+            DetailedState.FAULT: [self.TEXT_STANDBY, None, None, None, None],
+            DetailedState.OFFLINE: [None, None, None, None, None],
+            DetailedState.PARKED: [
+                None,
+                self.TEXT_DISABLE,
+                self.TEXT_RAISE,
+                self.TEXT_ENTER_ENGINEERING,
+                None,
+            ],
+            DetailedState.PARKEDENGINEERING: [
+                None,
+                self.TEXT_DISABLE,
+                self.TEXT_RAISE,
+                self.TEXT_EXIT_ENGINEERING,
+                None,
+            ],
+            DetailedState.RAISING: [None, self.TEXT_ABORT_RAISE, None, None, None],
+            DetailedState.RAISINGENGINEERING: [
+                None,
+                self.TEXT_ABORT_RAISE,
+                None,
+                None,
+                None,
+            ],
+            DetailedState.ACTIVE: [
+                None,
+                None,
+                self.TEXT_LOWER,
+                self.TEXT_ENTER_ENGINEERING,
+                None,
+            ],
+            DetailedState.ACTIVEENGINEERING: [
+                None,
+                None,
+                self.TEXT_LOWER,
+                self.TEXT_EXIT_ENGINEERING,
+                None,
+            ],
+            DetailedState.LOWERING: [None, None, None, None, None],
+            DetailedState.LOWERINGENGINEERING: [None, None, None, None, None],
+            DetailedState.LOWERINGFAULT: [None, None, None, None, None],
+            DetailedState.PROFILEHARDPOINTCORRECTIONS: [None, None, None, None, None],
+        }
+
+        self._lastEnabled = None
+
+        self.panicButton.setEnabled(not (data.detailedState == DetailedState.OFFLINE))
+
+        try:
+            dbSet = True
+            stateData = stateMap[data.detailedState]
+            for bi in range(len(self.buttons)):
+                b = self.buttons[bi]
+                self._signalMapper.removeMappings(b)
+                text = stateData[bi]
+                if text is None:
+                    b.setEnabled(False)
+                    b.setDefault(False)
+                else:
+                    b.setText(text)
+                    b.setEnabled(True)
+                    b.setDefault(dbSet)
+                    self._signalMapper.setMapping(b, text)
+                    dbSet = False
+        except KeyError:
             print(f"Unhandled detailed state {data.detailedState}")
+
+        self._hpWarnings.setState(data.detailedState)
+        self.minPressure.setToolTip(self._hpWarnings.minText())
+        self.maxPressure.setToolTip(self._hpWarnings.maxText())
 
     @Slot(map)
     def forceActuatorState(self, data):
@@ -304,19 +356,12 @@ class ApplicationControlWidget(QWidget):
         min_d = min(data.breakawayPressure)
         max_d = max(data.breakawayPressure)
 
-        def _getColor(v):
-            if v < 110 or v > 127:
-                return QColor(255, 0, 0)
-            elif v < 115 or v > 125:
-                return QColor(255, 255, 0)
-            return QColor(0, 255, 0)
-
         min_pal = self.minPressure.palette()
-        min_pal.setColor(min_pal.Background, _getColor(min_d))
+        min_pal.setColor(min_pal.Background, self._hpWarnings.getColor(min_d))
         self.minPressure.display(f"{min_d:.02f}")
         self.minPressure.setPalette(min_pal)
 
         max_pal = self.minPressure.palette()
-        max_pal.setColor(max_pal.Background, _getColor(max_d))
+        max_pal.setColor(max_pal.Background, self._hpWarnings.getColor(max_d))
         self.maxPressure.display(f"{max_d:.02f}")
         self.maxPressure.setPalette(max_pal)
