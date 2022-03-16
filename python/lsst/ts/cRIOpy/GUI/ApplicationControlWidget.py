@@ -51,7 +51,7 @@ class HPWarnings:
 
         Note
         ----
-        As that needs to be called before toottips are set, do not hook that
+        As that needs to be called before tool tips are set, do not hook that
         directly to detailedState signal.
 
         Parameters
