@@ -53,7 +53,7 @@ class SALStatusBar(QStatusBar):
         self.settingsLabel = QLabel("--")
         self.addWidget(self.settingsLabel)
         self.addWidget(VLine())
-        comms[0].settingsApplied.connect(self.settingsApplied)
+        comms[0].configurationApplied.connect(self.configurationApplied)
 
         self.errorCodeLabel = QLabel()
         self.addWidget(self.errorCodeLabel)
@@ -81,8 +81,8 @@ class SALStatusBar(QStatusBar):
         self.detailedStateLabel.setText(self.detailedStateFunction(data.detailedState))
 
     @Slot(map)
-    def settingsApplied(self, data):
-        self.settingsLabel.setText(data.settingsVersion)
+    def configurationApplied(self, data):
+        self.settingsLabel.setText(data.version)
 
     @Slot(map)
     def errorCode(self, data):
