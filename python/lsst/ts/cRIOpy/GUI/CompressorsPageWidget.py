@@ -36,6 +36,7 @@ class CompressorsPageWidget(QWidget):
 
         layout.addLayout(commandLayout)
         layout.addLayout(dataLayout)
+        layout.addStretch()
 
         self.commandButtons = QButtonGroup(self)
         self.commandButtons.buttonClicked.connect(self._buttonClicked)
@@ -108,6 +109,23 @@ class CompressorsPageWidget(QWidget):
         dataLayout.addRow(
             "Stage 1 output temperature",
             DataLabel(self.compressor.analogData, "stage1OutputTemperature"),
+        )
+        dataLayout.addRow(
+            "Running hours", DataLabel(self.compressor.timerInfo, "runningHours")
+        )
+        dataLayout.addRow(
+            "Loaded hours", DataLabel(self.compressor.timerInfo, "loadedHours")
+        )
+        dataLayout.addRow(
+            "Lowest service counter",
+            DataLabel(self.compressor.timerInfo, "lowestServiceCounter"),
+        )
+        dataLayout.addRow(
+            "Run-On timer", DataLabel(self.compressor.timerInfo, "runOnTimer")
+        )
+        dataLayout.addRow(
+            "Loaded hours 50 percent",
+            DataLabel(self.compressor.timerInfo, "loadedHours50Percent"),
         )
 
         self.setLayout(layout)
