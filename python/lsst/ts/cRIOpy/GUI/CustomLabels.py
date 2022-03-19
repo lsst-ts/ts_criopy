@@ -47,6 +47,7 @@ __all__ = [
     "MmWarning",
     "OnOffLabel",
     "PowerOnOffLabel",
+    "DataLabel",
     "WarningLabel",
     "WarningButton",
     "InterlockOffLabel",
@@ -318,9 +319,8 @@ class PowerOnOffLabel(QLabel):
             self.setText("<font color='gold'>Off</font>")
 
 
-class WarningLabel(QLabel):
-    """Displays WARNING/OK. Constructor can be passed parameters allowing
-    connection to a Signal emitted when warning value changes.
+class DataLabel(QLabel):
+    """Displays data from (SAL originated) signal.
 
     Parameters
     ----------
@@ -346,6 +346,39 @@ class WarningLabel(QLabel):
     @Slot(map)
     def _data(self, data):
         self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets value.
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        self.setText(str(value))
+
+
+class WarningLabel(DataLabel):
+    """Displays WARNING/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return WarningLabel()
 
     def setValue(self, value):
         """Sets formatted value. Color codes WARNING (red)/OK (green).

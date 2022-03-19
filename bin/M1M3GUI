@@ -9,6 +9,7 @@ from lsst.ts.cRIOpy.GUI import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
     CellLightPageWidget,
+    CompressorsPageWidget,
     DCAccelerometerPageWidget,
     EnabledForceActuators,
     ForceActuatorGraphPageWidget,
@@ -51,10 +52,12 @@ import asyncio
 
 
 class EUI(QMainWindow):
-    def __init__(self, m1m3, mtmount):
+    def __init__(self, m1m3, mtmount, compressor_1, compressor_2):
         super().__init__()
         self.m1m3 = m1m3
         self.mtmount = mtmount
+        self.compressor_1 = compressor_1
+        self.compressor_2 = compressor_2
 
         controlWidget = QGroupBox("Application Control")
         applicationControl = ApplicationControlWidget(self.m1m3)
@@ -88,6 +91,8 @@ class EUI(QMainWindow):
         self.addPage("Enabled Force Actuators", EnabledForceActuators(self.m1m3))
         self.addPage("Force Actuator Graph", ForceActuatorGraphPageWidget(self.m1m3))
         self.addPage("Force Actuator Value", ForceActuatorValuePageWidget(self.m1m3))
+        self.addPage("Compressor 1", CompressorsPageWidget(self.compressor_1))
+        self.addPage("Compressor 2", CompressorsPageWidget(self.compressor_2))
         self.addPage("SAL Log", SALLog.Widget(self.m1m3))
         self.addPage("SAL Errors", SALErrorCodeWidget(self.m1m3))
 
@@ -131,7 +136,7 @@ class EUI(QMainWindow):
         settings = QSettings("LSST.TS", "M1M3GUI")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
-        await asyncio.gather(self.m1m3.close(), self.mtmount.close())
+        await asyncio.gather(self.m1m3.close(), self.mtmount.close(), self.compressor_1.close(), self.compressor_2.close())
         super().closeEvent(event)
 
 
@@ -140,5 +145,7 @@ if __name__ == "__main__":
     app = Application(EUI)
     app.addComm("MTM1M3")
     app.addComm("MTMount", include=["azimuth", "elevation", "heartbeat"])
+    app.addComm("MTAirCompressor", index=1)
+    app.addComm("MTAirCompressor", index=2)
 
     app.run()

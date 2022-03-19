@@ -31,7 +31,7 @@ from PySide2.QtCharts import QtCharts
 import concurrent.futures
 import numpy as np
 import time
-from lsst.ts.salobj import make_done_future
+from lsst.ts.utils import make_done_future
 
 
 class VMSChartView(TimeChartView):
@@ -348,7 +348,7 @@ class PSDWidget(DockWindow):
             return min(psd), max(psd)
 
         def plotAll():
-            """Plot all signals. Run as task in thread."""
+            """Plot all signals. Run as task in a thread."""
             #   min_psd, max_psd = plot(
             #   0,
             #   np.mean(

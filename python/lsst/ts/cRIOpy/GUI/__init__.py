@@ -5,6 +5,7 @@ from .Application import Application
 from .ApplicationControlWidget import ApplicationControlWidget
 from .ApplicationStatusWidget import ApplicationStatusWidget
 from .CellLightPageWidget import CellLightPageWidget
+from .CompressorsPageWidget import CompressorsPageWidget
 from .CustomLabels import *
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget

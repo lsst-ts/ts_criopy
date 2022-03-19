@@ -20,7 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtWidgets import QLabel
-from lsst.ts.salobj import current_tai
+from lsst.ts.utils import current_tai
 
 __all__ = ["TimeDeltaLabel"]
 
