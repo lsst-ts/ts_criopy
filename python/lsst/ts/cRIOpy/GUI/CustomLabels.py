@@ -36,6 +36,7 @@ from .EventWindow import EventWindow
 
 __all__ = [
     "VLine",
+    "DataLabel",
     "UnitLabel",
     "Force",
     "Moment",
@@ -47,7 +48,6 @@ __all__ = [
     "MmWarning",
     "OnOffLabel",
     "PowerOnOffLabel",
-    "DataLabel",
     "WarningLabel",
     "WarningButton",
     "InterlockOffLabel",
@@ -69,6 +69,44 @@ class VLine(QFrame):
         super().__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
+
+
+class DataLabel(QLabel):
+    """Displays data from (SAL originated) signal.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+
+    def __copy__(self):
+        return WarningLabel()
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets value.
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        self.setText(str(value))
 
 
 class UnitLabel(QLabel):
@@ -273,11 +311,22 @@ class ArcsecWarning(Arcsec):
         )
 
 
-class OnOffLabel(QLabel):
-    """Displays on/off warnings"""
+class OnOffLabel(DataLabel):
+    """Displays on/off warnings
 
-    def __init__(self):
-        super().__init__()
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
 
     def __copy__(self):
         return OnOffLabel()
@@ -317,45 +366,6 @@ class PowerOnOffLabel(QLabel):
             self.setText("<font color='green'>On</font>")
         else:
             self.setText("<font color='gold'>Off</font>")
-
-
-class DataLabel(QLabel):
-    """Displays data from (SAL originated) signal.
-
-    Parameters
-    ----------
-    signal : `Signal`, optional
-        When not None, given signal will be connected to method calling
-        setValue with a field from signal data. Field is the second argument.
-        Defaults to None.
-    field : `str`, optional
-        When specified (and signal parameter is provided), will use this field
-        as fieldname from data arriving with the signal. Defaults to
-        "anyWarning".
-    """
-
-    def __init__(self, signal=None, field="anyWarning"):
-        super().__init__("---")
-        if signal is not None:
-            self._field = field
-            signal.connect(self._data)
-
-    def __copy__(self):
-        return WarningLabel()
-
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
-
-    def setValue(self, value):
-        """Sets value.
-
-        Parameters
-        ----------
-        value : `bool`
-            Current (=to be displayed) variable value. True means warning.
-        """
-        self.setText(str(value))
 
 
 class WarningLabel(DataLabel):

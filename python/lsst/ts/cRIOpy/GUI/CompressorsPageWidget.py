@@ -1,4 +1,4 @@
-from .CustomLabels import DataLabel
+from .CustomLabels import DataLabel, OnOffLabel
 from .SALComm import warning
 
 from PySide2.QtWidgets import (
@@ -33,9 +33,11 @@ class CompressorsPageWidget(QWidget):
 
         commandLayout = QVBoxLayout()
         dataLayout = QFormLayout()
+        statusLayout = QFormLayout()
 
         layout.addLayout(commandLayout)
         layout.addLayout(dataLayout)
+        layout.addLayout(statusLayout)
         layout.addStretch()
 
         self.commandButtons = QButtonGroup(self)
@@ -126,6 +128,62 @@ class CompressorsPageWidget(QWidget):
         dataLayout.addRow(
             "Loaded hours 50 percent",
             DataLabel(self.compressor.timerInfo, "loadedHours50Percent"),
+        )
+
+        statusLayout.addRow(
+            "Read to start", OnOffLabel(self.compressor.status, "readyToStart")
+        )
+        statusLayout.addRow(
+            "Operating", OnOffLabel(self.compressor.status, "operating")
+        )
+        statusLayout.addRow(
+            "Start Inhibit", OnOffLabel(self.compressor.status, "startInhibit")
+        )
+        statusLayout.addRow(
+            "Motor start phase", OnOffLabel(self.compressor.status, "motorStartPhase")
+        )
+        statusLayout.addRow("Off load", OnOffLabel(self.compressor.status, "offLoad"))
+        statusLayout.addRow("On load", OnOffLabel(self.compressor.status, "onLoad"))
+        statusLayout.addRow("Soft stop", OnOffLabel(self.compressor.status, "softStop"))
+        statusLayout.addRow(
+            "Run on timer", OnOffLabel(self.compressor.status, "runOnTimer")
+        )
+        statusLayout.addRow("Fault", OnOffLabel(self.compressor.status, "fault"))
+        statusLayout.addRow("Warning", OnOffLabel(self.compressor.status, "warning"))
+        statusLayout.addRow(
+            "Service required", OnOffLabel(self.compressor.status, "serviceRequired")
+        )
+        statusLayout.addRow(
+            "Min. allowed speed",
+            OnOffLabel(self.compressor.status, "minAllowedSpeedAchieved"),
+        )
+        statusLayout.addRow(
+            "Max. allowed speed",
+            OnOffLabel(self.compressor.status, "maxAllowedSpeedAchieved"),
+        )
+
+        statusLayout.addRow(
+            "Start by remote", OnOffLabel(self.compressor.status, "startByRemote")
+        )
+        statusLayout.addRow(
+            "Start with timer control",
+            OnOffLabel(self.compressor.status, "startWithTimerControl"),
+        )
+        statusLayout.addRow(
+            "Start with pressure requirement",
+            OnOffLabel(self.compressor.status, "startWithPressureRequirement"),
+        )
+        statusLayout.addRow(
+            "Start after de-pressurise",
+            OnOffLabel(self.compressor.status, "startAfterDePressurise"),
+        )
+        statusLayout.addRow(
+            "Start after power-loss",
+            OnOffLabel(self.compressor.status, "startAfterPowerLoss"),
+        )
+        statusLayout.addRow(
+            "Start after dryer pre-run",
+            OnOffLabel(self.compressor.status, "startAfterDryerPreRun"),
         )
 
         self.setLayout(layout)
