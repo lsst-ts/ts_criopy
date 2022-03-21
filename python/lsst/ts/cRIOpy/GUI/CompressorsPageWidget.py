@@ -226,6 +226,7 @@ class CompressorsPageWidget(QWidget):
                 self.TEXT_DISABLE,
                 None,
             ],
+            salobj.State.FAULT: [None, None, None, self.TEXT_STANDBY],
             salobj.State.OFFLINE: [None, None, None, None, None],
         }
 
