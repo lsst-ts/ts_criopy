@@ -23,7 +23,7 @@ from PySide2.QtCore import Qt, QDateTime, QPointF
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
 
-from lsst.ts.salobj import make_done_future
+from lsst.ts.utils import make_done_future
 from lsst.ts.cRIOpy import TimeCache
 import time
 

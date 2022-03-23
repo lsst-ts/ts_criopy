@@ -26,7 +26,6 @@ from lsst.ts.salobj import Domain, Remote, base
 from lsst.ts.salobj.topics import RemoteTelemetry, RemoteEvent
 
 import asyncio
-import functools
 
 __all__ = ["create", "SALCommand", "SALListCommand"]
 
@@ -76,19 +75,9 @@ class MetaSAL(type(QObject)):
             for m in filter(_filterEvtTel, dir(self.remote)):
                 getattr(self.remote, m).callback = getattr(self, m[4:]).emit
 
-            self.remote.start_task.add_done_callback(
-                functools.partial(self.reemit_remote)
-            )
-
-        def reemit_remote(self, task=None):
+        def reemit_remote(self):
             """
             Re-emits all telemetry and event data from a single remote as Qt messages.
-
-            Parameters
-            ----------
-            task : Object
-                Optional parameter, future from Future.add_done_callback. See
-                https://docs.python.org/3/library/asyncio-future.html#asyncio.Future.add_done_callback.
             """
             for m in filter(_filterEvtTel, dir(self.remote)):
                 data = getattr(self.remote, m).get()

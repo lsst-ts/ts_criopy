@@ -121,6 +121,9 @@ class Application:
                 self._eui = self._eui_class(*comms)
                 splash.finish(self._eui)
                 self._eui.show()
+                # re-emit signals from history
+                for c in self._comms:
+                    c.reemit_remote()
 
         splash = AppSplashScreen(*self._comms, show=self._splash)
         if self._splash:
