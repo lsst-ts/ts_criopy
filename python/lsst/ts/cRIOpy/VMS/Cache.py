@@ -21,12 +21,12 @@
 
 __all__ = ["VMSCache"]
 
-from .TimeCache import TimeCache
+from .. import TimeCache
 
 import numpy as np
 
 
-class VMSCache(TimeCache):
+class Cache(TimeCache):
     """Cache for large float data. Holds rolling time window of records. Act as
     dictionary, where keys are accelerometer number and axis
     (1X,1Y,1Z,..,<sensors>Z). [] and len operators are supported.

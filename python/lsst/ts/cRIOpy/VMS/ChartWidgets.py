@@ -19,10 +19,10 @@
 
 __all__ = ["BoxChartWidget", "PSDWidget"]
 
-from .TimeChart import TimeChartView, AbstractChart
+from ..GUI.TimeChart import TimeChartView, AbstractChart
 from .TimeBoxChart import TimeBoxChart
-from .VMSUnit import menuUnits, units, coefficients
-from .CustomLabels import DockWindow
+from .Unit import menuUnits, units, coefficients
+from ..GUI.CustomLabels import DockWindow
 
 from PySide2.QtCore import Qt, Slot, Signal, QPointF
 from PySide2.QtWidgets import QMenu

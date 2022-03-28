@@ -29,10 +29,8 @@ from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import DetailedStateEnabledButton, StateEnabledWidget
 from .SplashScreen import SplashScreen
-from .TimeBoxChart import TimeBoxChart
 from .TimeDeltaLabel import TimeDeltaLabel
 from .TimeChart import TimeChart, TimeChartView, SALAxis, SALChartWidget
 from .TopicData import TopicData
 from .TopicWindow import TopicWindow
-from .VMSChartWidgets import *
 from .ValueGrid import StatusGrid, WarningGrid

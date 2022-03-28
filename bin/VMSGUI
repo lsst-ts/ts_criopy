@@ -4,9 +4,9 @@ import signal
 import sys
 
 from lsst.ts.cRIOpy.GUI import SALLog, SALComm, Application
-from lsst.ts.cRIOpy.GUI.VMSChartWidgets import *
-from lsst.ts.cRIOpy.GUI.VMSGUI import *
-from lsst.ts.cRIOpy.VMSCache import *
+from lsst.ts.cRIOpy.VMS.ChartWidgets import *
+from lsst.ts.cRIOpy.VMS import ToolBar, StatusBar
+from lsst.ts.cRIOpy.VMS import Cache
 
 from PySide2.QtCore import Slot, Signal, QSettings, Qt
 from PySide2.QtWidgets import QMainWindow, QDockWidget
@@ -33,7 +33,7 @@ class EUI(QMainWindow):
         for comm in self.comms:
             comm.data.connect(self.data)
 
-        self.caches = [VMSCache(0, 3), VMSCache(0, 6), VMSCache(0, 3)]
+        self.caches = [Cache(0, 3), Cache(0, 6), Cache(0, 3)]
 
         logDock = SALLog.Dock(self.comms)
 

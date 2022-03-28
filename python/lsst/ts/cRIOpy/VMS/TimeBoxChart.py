@@ -26,8 +26,8 @@ from PySide2.QtCharts import QtCharts
 import time
 import numpy as np
 
-from .TimeChart import AbstractChart
-from .VMSUnit import units, deltas, coefficients
+from ..GUI.TimeChart import AbstractChart
+from .Unit import units, deltas, coefficients
 
 
 class TimeBoxChart(AbstractChart):
