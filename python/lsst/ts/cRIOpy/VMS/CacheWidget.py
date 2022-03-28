@@ -24,7 +24,7 @@ from .ChartView import ChartView
 from .Unit import units, coefficients
 from ..GUI.CustomLabels import DockWindow
 
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Slot
 from PySide2.QtCharts import QtCharts
 
 import concurrent.futures
@@ -70,61 +70,36 @@ class CacheWidget(DockWindow):
 
         self.coefficient = 1
         self.unit = units[0]
-        self.setupAxes = True
-        self._setupAxes()
+        self.callSetupAxes = True
+        self.setupAxes()
 
         self.setWidget(self.chartView)
 
     @Slot(bool, bool)
     def axisChanged(self, logX, logY):
-        self.setupAxes = True
+        self.callSetupAxes = True
 
     @Slot(str)
     def unitChanged(self, unit):
         self.coefficient = coefficients(unit)
         self.unit = unit
-        self.setupAxes = True
+        self.callSetupAxes = True
 
-    def _setupAxes(self):
-        for a in self.chart.axes():
-            self.chart.removeAxis(a)
+    def setupAxes(self):
+        raise RuntimeError(
+            "Abstract CacheWidget.setupAxes called - please make sure the method is implemented in all child classes"
+        )
 
-        if len(self.chart.series()) == 0:
-            return
+    def _plotAll(self):
+        try:
+            self.plotAll()
+        except Exception as ex:
+            print(str(ex))
 
-        if self.chartView.logX:
-            xAxis = QtCharts.QLogValueAxis()
-        else:
-            xAxis = QtCharts.QValueAxis()
-
-        if self.chartView.logY:
-            yAxis = QtCharts.QLogValueAxis()
-        else:
-            yAxis = QtCharts.QValueAxis()
-
-        xAxis.setTitleText("Frequency (Hz)")
-        yAxis.setTitleText("PSD ((" + self.unit + ")<sup>2</sup> Hz <sup>-1</sup>)")
-
-        self.chart.addAxis(xAxis, Qt.AlignBottom)
-        self.chart.addAxis(yAxis, Qt.AlignLeft)
-
-        for s in self.chart.series():
-            s.attachAxis(xAxis)
-            s.attachAxis(yAxis)
-
-        self.chart.axes(Qt.Horizontal)[0].setGridLineVisible(True)
-        self.chart.axes(Qt.Horizontal)[0].setMinorGridLineVisible(True)
-
-        self.chart.legend().setAlignment(Qt.AlignTop)
-
-        self.frequencyChanged(*self.toolBar.getFrequencyRange())
-
-        self.setupAxes = False
-
-    def plotAll():
+    def plotAll(self):
         """Plot all signals. Run as task in a thread. Should be overriden."""
         raise RuntimeError(
-            "Abstract CacheWidget.plotAll called - please make sure it is implemented"
+            "Abstract CacheWidget.plotAll called - please make sure the method is implemented in all child classes"
         )
 
     @Slot(int, int, float, float)
@@ -138,18 +113,18 @@ class CacheWidget(DockWindow):
         startTime : `float`
         endTime : `float`
         """
-        if self.setupAxes is True:
-            self._setupAxes()
+        if self.callSetupAxes is True:
+            self.setupAxes()
             self.update_after = 0
 
         if self.update_after < time.monotonic() and self.updateTask.done():
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.updateTask = pool.submit(self.plotAll)
+                self.updateTask = pool.submit(self._plotAll)
 
     @Slot(float, float)
-    def frequencyChanged(self, low, high):
-        if len(self.chart.series()) == 0:
-            self.setupAxes = True
-            return
+    def frequencyChanged(self, lowFrequency, highFrequency):
+        pass
 
-        self.chart.axes(Qt.Horizontal)[0].setRange(low, high)
+    @Slot(int)
+    def integralBinningChanged(self, newBinning):
+        pass

@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO/VMS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -21,7 +21,8 @@ __all__ = ["PSDWidget"]
 
 from .CacheWidget import CacheWidget
 
-from PySide2.QtCore import Qt, QPointF
+from PySide2.QtCore import Qt, Slot, QPointF
+from PySide2.QtCharts import QtCharts
 
 import numpy as np
 import time
@@ -44,6 +45,42 @@ class PSDWidget(CacheWidget):
 
     def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
         super().__init__(title, cache, SAMPLE_TIME, toolBar, channels)
+
+    def setupAxes(self):
+        for a in self.chart.axes():
+            self.chart.removeAxis(a)
+
+        if len(self.chart.series()) == 0:
+            return
+
+        if self.chartView.logX:
+            xAxis = QtCharts.QLogValueAxis()
+        else:
+            xAxis = QtCharts.QValueAxis()
+
+        if self.chartView.logY:
+            yAxis = QtCharts.QLogValueAxis()
+        else:
+            yAxis = QtCharts.QValueAxis()
+
+        xAxis.setTitleText("Frequency (Hz)")
+        yAxis.setTitleText("PSD ((" + self.unit + ")<sup>2</sup> Hz <sup>-1</sup>)")
+
+        self.chart.addAxis(xAxis, Qt.AlignBottom)
+        self.chart.addAxis(yAxis, Qt.AlignLeft)
+
+        for s in self.chart.series():
+            s.attachAxis(xAxis)
+            s.attachAxis(yAxis)
+
+        self.chart.axes(Qt.Horizontal)[0].setGridLineVisible(True)
+        self.chart.axes(Qt.Horizontal)[0].setMinorGridLineVisible(True)
+
+        self.chart.legend().setAlignment(Qt.AlignTop)
+
+        self.frequencyChanged(*self.toolBar.getFrequencyRange())
+
+        self.callSetupAxes = False
 
     def plotAll(self):
         """Plot all signals. Run as task in a thread."""
@@ -136,7 +173,15 @@ class PSDWidget(CacheWidget):
 
         if len(min_psd) > 0:
             if len(self.chart.axes(Qt.Vertical)) == 0:
-                self.setupAxes = True
+                self.callSetupAxes = True
             else:
                 self.chart.axes(Qt.Vertical)[0].setRange(min(min_psd), max(max_psd))
         self.update_after = time.monotonic() + 0.5
+
+    @Slot(float, float)
+    def frequencyChanged(self, lowFrequency, highFrequency):
+        if len(self.chart.series()) == 0:
+            self.callSetupAxes = True
+            return
+
+        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)

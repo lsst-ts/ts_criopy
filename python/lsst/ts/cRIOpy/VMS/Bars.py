@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO/VMS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -24,6 +24,7 @@ from PySide2.QtWidgets import (
     QLabel,
     QToolBar,
     QStyle,
+    QSpinBox,
     QDoubleSpinBox,
     QStatusBar,
 )
@@ -38,6 +39,7 @@ class ToolBar(QToolBar):
 
     frequencyChanged = Signal(float, float)
     intervalChanged = Signal(float)
+    integralBinningChanged = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -54,6 +56,7 @@ class ToolBar(QToolBar):
         self.minFreq.setDecimals(1)
         self.minFreq.setRange(0, 10000)
         self.minFreq.setSingleStep(5)
+        self.minFreq.setSuffix(" Hz")
         self.minFreq.setValue(float(settings.value("minFreq", 0)))
         self.minFreq.editingFinished.connect(self.minMaxChanged)
         self.addWidget(self.minFreq)
@@ -64,6 +67,7 @@ class ToolBar(QToolBar):
         self.maxFreq.setDecimals(1)
         self.maxFreq.setRange(0.1, 10000)
         self.maxFreq.setSingleStep(5)
+        self.maxFreq.setSuffix(" Hz")
         self.maxFreq.setValue(float(settings.value("maxFreq", 200)))
         self.maxFreq.editingFinished.connect(self.minMaxChanged)
         self.addWidget(self.maxFreq)
@@ -74,9 +78,19 @@ class ToolBar(QToolBar):
         self.interval.setDecimals(3)
         self.interval.setRange(0.01, 3600)
         self.interval.setSingleStep(0.1)
+        self.interval.setSuffix(" s")
         self.interval.setValue(float(settings.value("interval", 50.0)))
         self.interval.editingFinished.connect(self.newInterval)
         self.addWidget(self.interval)
+
+        self.addWidget(QLabel("Integral binning"))
+
+        self.integralBinning = QSpinBox()
+        self.integralBinning.setRange(2, 10000)
+        self.integralBinning.setSingleStep(10)
+        self.integralBinning.setValue(float(settings.value("integralBinning", 10)))
+        self.integralBinning.editingFinished.connect(self.newIntegralBinning)
+        self.addWidget(self.integralBinning)
 
         self.frequencyChanged.emit(self.minFreq.value(), self.maxFreq.value())
 
@@ -86,6 +100,7 @@ class ToolBar(QToolBar):
         settings.setValue("minFreq", self.minFreq.value())
         settings.setValue("maxFreq", self.maxFreq.value())
         settings.setValue("interval", self.interval.value())
+        settings.setValue("integralBinning", self.integralBinning.value())
 
     @Slot()
     def minMaxChanged(self):
@@ -95,8 +110,15 @@ class ToolBar(QToolBar):
     def newInterval(self):
         self.intervalChanged.emit(self.interval.value())
 
+    @Slot()
+    def newIntegralBinning(self):
+        self.integralBinningChanged.emit(self.integralBinning.value())
+
     def getFrequencyRange(self):
         return (self.minFreq.value(), self.maxFreq.value())
+
+    def getIntegralBinning(self):
+        return self.integralBinning.value()
 
 
 class StatusBar(QStatusBar):

@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO/VMS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project

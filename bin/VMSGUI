@@ -1,7 +1,15 @@
 #!/usr/bin/env python3.8
 
 from lsst.ts.cRIOpy.GUI import SALLog, Application
-from lsst.ts.cRIOpy.VMS import Cache, ToolBar, StatusBar, BoxChartWidget, PSDWidget
+from lsst.ts.cRIOpy.VMS import (
+    Cache,
+    ToolBar,
+    StatusBar,
+    BoxChartWidget,
+    PSDWidget,
+    VelocityWidget,
+    RawAccelerationWidget,
+)
 
 from PySide2.QtCore import Slot, Signal, QSettings, Qt
 from PySide2.QtWidgets import QMainWindow
@@ -42,8 +50,21 @@ class EUI(QMainWindow):
         i = 0
         for s in self.SYSTEMS:
             m = menuBar.addMenu(s)
+            m.addAction(
+                "New &raw graph",
+                partial(
+                    self._addCacheWidget, i, "Raw acceleration", RawAccelerationWidget
+                ),
+            )
             m.addAction("New &box graph", partial(self.addBox, i))
-            m.addAction("New &PSD graph", partial(self.addPSD, i))
+            m.addAction(
+                "New &PSD graph", partial(self._addCacheWidget, i, "PSD", PSDWidget)
+            )
+            m.addAction(
+                "New &Velocity graph",
+                partial(self._addCacheWidget, i, "Velocity", VelocityWidget),
+            )
+            # m.addAction("New &Acceleration graph", partial(self.addAcceleration, i))
             i += 1
 
         self.toolBar = ToolBar()
@@ -74,6 +95,20 @@ class EUI(QMainWindow):
         self.toolBar.frequencyChanged.emit(*self.toolBar.getFrequencyRange())
         self.toolBar.intervalChanged.emit(self.toolBar.interval.value())
 
+    def _addCacheWidget(self, index, prefix, ChartTypeClass):
+        prefix = prefix + " " + self.SYSTEMS[index] + ":"
+        id = self.getNextId(prefix)
+        aWidget = ChartTypeClass(
+            prefix + str(id),
+            self.caches[index],
+            self.SAMPLE_TIME,
+            self.toolBar,
+        )
+        self.cacheUpdated.connect(aWidget.cacheUpdated)
+        self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
+        self.toolBar.integralBinningChanged.connect(aWidget.integralBinningChanged)
+        self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
+
     def addBox(self, index):
         prefix = "Box " + self.SYSTEMS[index] + ":"
         id = self.getNextId(prefix)
@@ -82,23 +117,9 @@ class EUI(QMainWindow):
             BoxChartWidget(prefix + str(id), self.comms[index], []),
         )
 
-    def addPSD(self, index):
-        prefix = "PSD " + self.SYSTEMS[index] + ":"
-        id = self.getNextId(prefix)
-        psdWidget = PSDWidget(
-            prefix + str(id),
-            self.caches[index],
-            self.SAMPLE_TIME,
-            self.toolBar,
-        )
-        self.cacheUpdated.connect(psdWidget.cacheUpdated)
-        self.toolBar.frequencyChanged.connect(psdWidget.frequencyChanged)
-        psdWidget.frequencyChanged(*self.toolBar.getFrequencyRange())
-        self.addDockWidget(Qt.TopDockWidgetArea, psdWidget)
-
     def removeAll(self):
         for child in self.children():
-            if child.objectName()[:3] == "PSD" or child.objectName()[:3] == "Box":
+            if child.objectName()[:3] in ["PSD", "Box", "Vel", "Acc"]:
                 self.removeDockWidget(child)
                 del child
 

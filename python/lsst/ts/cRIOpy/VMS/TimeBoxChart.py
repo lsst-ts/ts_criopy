@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO/VMS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -44,7 +44,7 @@ class TimeBoxChart(AbstractChart):
 
     maxItems : `int`, optional
         Number of items to keep in graph. When series grows above the specified
-        number of points, oldest points are removed. Defaults to 50 * 30 = 50Hz * 30s.
+        number of points, oldest points are removed. Defaults to 10.
     """
 
     def __init__(self, maxItems=10):
