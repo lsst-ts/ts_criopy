@@ -17,154 +17,20 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["BoxChartWidget", "PSDWidget"]
+__all__ = ["PSDWidget"]
 
-from ..GUI.TimeChart import TimeChartView, AbstractChart
-from .TimeBoxChart import TimeBoxChart
-from .Unit import menuUnits, units, coefficients
+from ..GUI.TimeChart import AbstractChart
+from .ChartView import ChartView
+from .Unit import units, coefficients
 from ..GUI.CustomLabels import DockWindow
 
-from PySide2.QtCore import Qt, Slot, Signal, QPointF
-from PySide2.QtWidgets import QMenu
+from PySide2.QtCore import Qt, Slot, QPointF
 from PySide2.QtCharts import QtCharts
 
 import concurrent.futures
 import numpy as np
 import time
 from lsst.ts.utils import make_done_future
-
-
-class VMSChartView(TimeChartView):
-
-    axisChanged = Signal(bool, bool)
-    unitChanged = Signal(str)
-
-    def __init__(self, title, serieType):
-        super().__init__(title)
-        self._serieType = serieType
-        self._maxSensor = 0
-        self.logX = False
-        self.logY = False
-        self.unit = menuUnits[0]
-
-    def updateMaxSensor(self, maxSensor):
-        self._maxSensor = max(self._maxSensor, maxSensor)
-
-    def clear(self):
-        self.chart().clearData()
-
-    def addSerie(self, name):
-        s = self._serieType()
-        s.setName(name)
-        self.chart().addSeries(s)
-        if (
-            len(self.chart().axes(Qt.Horizontal)) > 0
-            and len(self.chart().axes(Qt.Vertical)) > 0
-        ):
-            s.attachAxis(self.chart().axes(Qt.Horizontal)[0])
-            s.attachAxis(self.chart().axes(Qt.Vertical)[0])
-
-    def removeSerie(self, name):
-        self.chart().remove(name)
-
-    def contextMenuEvent(self, event):
-        contextMenu = QMenu()
-        zoomOut = contextMenu.addAction("Zoom out")
-        clear = contextMenu.addAction("Clear")
-        unitMenu = contextMenu.addMenu("Unit")
-
-        def addUnit(unit):
-            action = unitMenu.addAction(unit)
-            action.setCheckable(True)
-            action.setChecked(unit == self.unit)
-            return action
-
-        units_actions = [addUnit(menuUnits[i]) for i in range(len(menuUnits))]
-
-        for s in range(1, self._maxSensor + 1):
-            for a in ["X", "Y", "Z"]:
-                name = f"{s} {a}"
-                action = contextMenu.addAction(name)
-                action.setCheckable(True)
-                action.setChecked(self.chart().findSerie(name) is not None)
-
-        if isinstance(self._serieType, QtCharts.QLineSeries):
-            contextMenu.addSeparator()
-            logX = contextMenu.addAction("Log X")
-            logX.setCheckable(True)
-            logX.setChecked(self.logX)
-
-            logY = contextMenu.addAction("Log Y")
-            logY.setCheckable(True)
-            logY.setChecked(self.logY)
-
-        else:
-            logX = None
-            logY = None
-
-        action = contextMenu.exec_(event.globalPos())
-        # conversions
-        if action is None:
-            return
-        elif action == zoomOut:
-            self.chart().zoomReset()
-        elif action == clear:
-            self.clear()
-        elif action in units_actions:
-            self.unit = action.text()
-            self.unitChanged.emit(units[menuUnits.index(self.unit)])
-        elif action == logX:
-            self.logX = action.isChecked()
-            self.axisChanged.emit(self.logX, self.logY)
-        elif action == logY:
-            self.logY = action.isChecked()
-            self.axisChanged.emit(self.logX, self.logY)
-        else:
-            name = action.text()
-            if action.isChecked():
-                self.addSerie(name)
-            else:
-                self.removeSerie(name)
-
-
-class BoxChartWidget(DockWindow):
-    """Display box chart with accelerometer data.
-
-    Parameters
-    ----------
-    title : `str`
-        QDockWidget title and object name.
-    comm : `SALComm`
-        SALComm object providing data.
-    channels : `[(sensor, axis)]`
-        Enabled channels.
-    """
-
-    def __init__(self, title, comm, channels):
-        super().__init__(title)
-        self.channels = channels
-        self.chart = TimeBoxChart()
-        self.chartView = VMSChartView(self.chart, QtCharts.QBoxPlotSeries)
-        self.setWidget(self.chartView)
-
-        comm.data.connect(self.data)
-        self.chartView.unitChanged.connect(self.chart.unitChanged)
-
-    @Slot(map)
-    def data(self, data):
-        self.chartView.updateMaxSensor(data.sensor)
-        for axis in ["X", "Y", "Z"]:
-            name = f"{str(data.sensor)} {axis}"
-            serie = self.chart.findSerie(name)
-            if serie is not None:
-                self.chart.append(
-                    serie,
-                    data.timestamp,
-                    getattr(data, f"acceleration{axis}"),
-                )
-                self.chart.axes(Qt.Vertical)[0].setTitleText(
-                    "Acceleration (" + self.chart.unit + ")"
-                )
 
 
 class PSDWidget(DockWindow):
@@ -196,7 +62,7 @@ class PSDWidget(DockWindow):
 
         self.cache = cache
 
-        self.chartView = VMSChartView(self.chart, QtCharts.QLineSeries)
+        self.chartView = ChartView(self.chart, QtCharts.QLineSeries)
         self.chartView.updateMaxSensor(self.cache.sensors())
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
