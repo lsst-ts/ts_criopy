@@ -2,10 +2,11 @@
 
 from lsst.ts.cRIOpy.GUI import SALLog, Application
 from lsst.ts.cRIOpy.VMS import (
+    BoxChartWidget,
     Cache,
+    DisplacementWidget,
     ToolBar,
     StatusBar,
-    BoxChartWidget,
     PSDWidget,
     VelocityWidget,
     RawAccelerationWidget,
@@ -64,7 +65,10 @@ class EUI(QMainWindow):
                 "New &Velocity graph",
                 partial(self._addCacheWidget, i, "Velocity", VelocityWidget),
             )
-            # m.addAction("New &Acceleration graph", partial(self.addAcceleration, i))
+            m.addAction(
+                "New &Displacement graph",
+                partial(self._addCacheWidget, i, "Displacement", DisplacementWidget),
+            )
             i += 1
 
         self.toolBar = ToolBar()

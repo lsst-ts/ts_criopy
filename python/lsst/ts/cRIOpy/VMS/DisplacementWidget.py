@@ -17,23 +17,25 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["VelocityWidget"]
+__all__ = ["DisplacementWidget"]
 
 from .CacheTimeWidget import CacheTimeWidget
 
 import numpy as np
 
 
-class VelocityWidget(CacheTimeWidget):
-    """Display signal as velocity (single acceleration integral)."""
+class DisplacementWidget(CacheTimeWidget):
+    """Display signal as displacement (double acceleration integral)."""
 
     def calculateValues(self, timestamps, signal):
-        if len(signal) <= self.integralBinning:
-            return (None, None)
-
+        # use 2 bin for velocity
         velocity = np.trapz(
+            [(signal[i], signal[i + 1]) for i in range(len(signal) - 1)], axis=1
+        )
+
+        displacement = np.trapz(
             np.reshape(
-                signal[: len(signal) - len(signal) % self.integralBinning],
+                velocity[: len(velocity) - len(velocity) % self.integralBinning],
                 (-1, self.integralBinning),
             ),
             axis=1,
@@ -46,7 +48,7 @@ class VelocityWidget(CacheTimeWidget):
                     + timestamps[(r + 1) * self.integralBinning - 1]
                 )
                 / 2.0
-                for r in range(len(velocity))
+                for r in range(len(displacement))
             ],
-            velocity,
+            displacement,
         )

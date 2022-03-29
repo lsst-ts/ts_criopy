@@ -23,22 +23,7 @@ from .CacheTimeWidget import CacheTimeWidget
 
 
 class RawAccelerationWidget(CacheTimeWidget):
-    """Display signal as velocity (first acceleration integral).
-
-    Parameters
-    ----------
-    title : `str`
-        QDockWidget title and object name.
-    cache : `VMSCache`
-        Data cache.
-    toolBar : `ToolBar`
-        Provides getFrequencyRange() method.
-    channels : `[(sensor, axis)]`
-        Enabled channels.
-    """
-
-    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
-        super().__init__(title, cache, SAMPLE_TIME, toolBar, channels)
+    """Display signal as velocity (first acceleration integral)."""
 
     def calculateValues(self, timestamps, signal):
         return (timestamps, signal)
