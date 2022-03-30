@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO/VMS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -19,14 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["VMSCache"]
+__all__ = ["Cache"]
 
-from .TimeCache import TimeCache
+from .. import TimeCache
 
 import numpy as np
 
 
-class VMSCache(TimeCache):
+class Cache(TimeCache):
     """Cache for large float data. Holds rolling time window of records. Act as
     dictionary, where keys are accelerometer number and axis
     (1X,1Y,1Z,..,<sensors>Z). [] and len operators are supported.

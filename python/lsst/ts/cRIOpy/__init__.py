@@ -4,5 +4,4 @@ except ImportError:
     __version__ = "?"
 
 from .TimeCache import *
-from .VMSCache import *
 from .DurationParser import *

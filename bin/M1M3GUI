@@ -136,7 +136,12 @@ class EUI(QMainWindow):
         settings = QSettings("LSST.TS", "M1M3GUI")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
-        await asyncio.gather(self.m1m3.close(), self.mtmount.close(), self.compressor_1.close(), self.compressor_2.close())
+        await asyncio.gather(
+            self.m1m3.close(),
+            self.mtmount.close(),
+            self.compressor_1.close(),
+            self.compressor_2.close(),
+        )
         super().closeEvent(event)
 
 
