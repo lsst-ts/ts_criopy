@@ -33,7 +33,8 @@ from lsst.ts.utils import make_done_future
 
 
 class CacheWidget(DockWindow):
-    """Display signal. Child classes shall override cacheUpdated.
+    """Display signal. Child classes shall override plotAll and possibly
+    frequencyChanged and integralBinningChanged.
 
     Parameters
     ----------
@@ -104,14 +105,18 @@ class CacheWidget(DockWindow):
 
     @Slot(int, int, float, float)
     def cacheUpdated(self, index, length, startTime, endTime):
-        """Process and plot data.
+        """Process and plot data. Signalled when new data become available.
 
         Parameters
         ----------
         index : `int`
+            VMS index (1 - M1M3, 2 - M2, 3 - CameraRotator)
         length : `int`
+            Number of points in cache.
         startTime : `float`
+            Start timestamp.
         endTime : `float`
+            End timestamp.
         """
         if self.callSetupAxes is True:
             self.setupAxes()

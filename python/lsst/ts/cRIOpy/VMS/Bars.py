@@ -140,6 +140,8 @@ class StatusBar(QStatusBar):
 
         Parameters
         ----------
+        index : `int`
+            VMS index (1 - M1M3, 2 - M2, 3 - CameraRotator)
         length : `int`
             Number of points cached.
         start : `float`
