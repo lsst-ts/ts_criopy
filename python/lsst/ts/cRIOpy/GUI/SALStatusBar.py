@@ -23,6 +23,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QStatusBar, QLabel, QWidget, QHBoxLayout
 
 from datetime import datetime
+from html import escape
 
 __all__ = ["SALStatusBar"]
 
@@ -90,5 +91,5 @@ class SALStatusBar(QStatusBar):
             sep=" ", timespec="milliseconds"
         )
         self.errorCodeLabel.setText(
-            f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:{'green' if data.errorCode==0 else 'red'}'>{data.errorReport}</span>"
+            f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:{'green' if data.errorCode==0 else 'red'}'>{escape(data.errorReport)}</span>"
         )

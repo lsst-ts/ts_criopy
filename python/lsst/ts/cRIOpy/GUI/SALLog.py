@@ -37,6 +37,7 @@ from .SALComm import SALListCommand
 from asyncqt import asyncSlot
 from datetime import datetime
 from .CustomLabels import DockWindow
+from html import escape
 
 LEVELS = ["Trace", "Debug", "Info", "Warning", "Error", "Critical"]
 
@@ -172,7 +173,7 @@ class Messages(QPlainTextEdit):
         )
         level = min(int(data.level / 10), 5)
         self.appendHtml(
-            f"{date} [<b>{self.LEVELS_IDS[level]}</b>] <span style='{self.LEVEL_TEXT_STYLE[level]}'>{data.message}</span>"
+            f"{date} [<b>{self.LEVELS_IDS[level]}</b>] <span style='{self.LEVEL_TEXT_STYLE[level]}'>{escape(data.message)}</span>"
         )
         self.ensureCursorVisible()
 
