@@ -55,6 +55,7 @@ __all__ = [
     "Clipped",
     "Heartbeat",
     "LogEventWarning",
+    "SimulationStatus",
     "DockWindow",
 ]
 
@@ -666,6 +667,33 @@ class LogEventWarning(QLabel):
             self.setText("<font color='yellow'>Warning</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class SimulationStatus(QLabel):
+    """Displays if CSC is running in simulation mode.
+
+    Parameters
+    ----------
+    comm : `lsst.ts.m1m3.salobj.Remote`
+        Remote used for communciation with SAL/DDS CSC.
+
+    """
+
+    def __init__(self, comm):
+        super().__init__("--")
+        try:
+            comm.simulationMode.connect(self.simulationMode)
+        except AttributeError:
+            # simulationMode needs to be subscribed from remote
+            self.setText(f"{comm.remote.salinfo.name} simulationMode missing")
+
+    @Slot(map)
+    def simulationMode(self, data):
+        self.setText(
+            "<font color='green'>HW</font>"
+            if data.mode == 0
+            else "<font color='red'>SIM</font>"
+        )
 
 
 class DockWindow(QDockWidget):

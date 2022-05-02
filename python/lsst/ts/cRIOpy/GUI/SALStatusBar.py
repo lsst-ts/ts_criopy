@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import VLine, Heartbeat
+from .CustomLabels import VLine, Heartbeat, SimulationStatus
 
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QStatusBar, QLabel, QWidget, QHBoxLayout
@@ -66,6 +66,11 @@ class SALStatusBar(QStatusBar):
 
         for comm in comms:
             hbLayout.addWidget(QLabel(comm.remote.salinfo.name))
+
+            hbLayout.addWidget(VLine())
+            hbLayout.addWidget(SimulationStatus(comm))
+            hbLayout.addWidget(VLine())
+
             heartBeatLabel = Heartbeat(indicator=False)
             hbLayout.addWidget(heartBeatLabel)
             comm.heartbeat.connect(heartBeatLabel.heartbeat)
