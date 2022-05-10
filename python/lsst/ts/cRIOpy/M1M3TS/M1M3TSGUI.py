@@ -133,7 +133,7 @@ class ThermalStatesDock(DockWindow):
 
     @asyncSlot()
     async def start(self):
-        await self._start(settingsToApply="Default")
+        await self._start(configurationOverride="Default")
 
     @SALCommand
     def _enable(self, **kwargs):
