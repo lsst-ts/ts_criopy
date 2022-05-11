@@ -44,6 +44,7 @@ __all__ = [
     "Arcsec",
     "Percent",
     "Volt",
+    "DataDegC",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -93,7 +94,7 @@ class DataLabel(QLabel):
             signal.connect(self._data)
 
     def __copy__(self):
-        return WarningLabel()
+        return DataLabel()
 
     @Slot(map)
     def _data(self, data):
@@ -141,13 +142,20 @@ class UnitLabel(QLabel):
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
             self.scale = unit.to(convert)
-            self.unit_name = " " + convert.to_string()
+            self.unit_name = convert.to_string()
         elif unit is not None:
             self.scale = 1
-            self.unit_name = " " + unit.to_string()
+            self.unit_name = unit.to_string()
         else:
             self.scale = 1
             self.unit_name = ""
+
+        # we can display some units better using unicode
+        if self.unit_name == "deg_C":
+            self.unit_name = "°C"
+
+        self.unit_name = " " + self.unit_name
+
         self.unit = unit
         self.convert = convert
         self.is_warn_func = is_warn_func
@@ -173,6 +181,60 @@ class UnitLabel(QLabel):
             self.setText(f"<font color='{WARNING}'>{text}</font>")
         else:
             self.setText(text)
+
+
+# TODO: tried to combine UnitLabel and DataLabel directly, but failed.
+# the closest I was able to get was probably using **kwargs for DataLabel and UnitLabel, and
+# keep Python super().__init__(... call
+class DataUnitLabel(UnitLabel):
+    """Combines DataLabel and UnitLabel. Parameters specify signal and field
+    name (as in DataLabel) and display options (as in UnitLabel).
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    unit : `astropy.units`, optional
+        Variable unit. Default is None - no unit
+    convert : `astropy.units`, optional
+        Convert values to this unit. Default is None - no unit. If provided,
+        unit must be provided as well.
+    is_warn_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded warning value.
+    is_err_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded error value.
+    """
+
+    def __init__(
+        self,
+        signal=None,
+        field=None,
+        fmt="d",
+        unit=None,
+        convert=None,
+        is_warn_func=None,
+        is_err_func=None,
+    ):
+        super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
 
 
 class Force(UnitLabel):
@@ -280,6 +342,11 @@ class Volt(UnitLabel):
 
     def __init__(self, fmt="0.02f"):
         super().__init__(fmt, u.V)
+
+
+class DataDegC(DataUnitLabel):
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field, "0.02f", u.deg_C)
 
 
 class ArcsecWarning(Arcsec):
