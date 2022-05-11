@@ -22,6 +22,7 @@
 from PySide2.QtCore import Qt, QDateTime, QPointF
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
+from PySide2.QtWidgets import QMenu
 
 from lsst.ts.utils import make_done_future
 from lsst.ts.cRIOpy import TimeCache
@@ -182,6 +183,9 @@ class TimeChart(AbstractChart):
             d_min = d_max = None
             for n in cache.columns()[1:]:
                 serie = self.findSerie(n)
+                if serie.isVisible() is False:
+                    continue
+
                 data = cache[n]
                 if d_min is None:
                     d_min = min(data)
@@ -233,6 +237,20 @@ class TimeChartView(QtCharts.QChartView):
             super().__init__(chart)
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
+
+    def contextMenuEvent(self, event):
+        contextMenu = QMenu()
+
+        for s in self.chart().series():
+            action = contextMenu.addAction(s.name())
+            action.setCheckable(True)
+            action.setChecked(s.isVisible())
+
+        action = contextMenu.exec_(event.globalPos())
+        for s in self.chart().series():
+            if action.text() == s.name():
+                s.setVisible(action.isChecked())
+                return
 
 
 class SALAxis:
