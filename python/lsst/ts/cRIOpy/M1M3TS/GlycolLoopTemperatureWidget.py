@@ -34,6 +34,7 @@ class GlycolLoopTemperatureWidget(DockWindow):
     m1m3ts : `SALComm`
         SALComm object representing M1M3 Termal System.
     """
+
     def __init__(self, m1m3ts):
         super().__init__("Glycol Loop Temperature")
 
