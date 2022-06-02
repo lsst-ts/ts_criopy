@@ -49,6 +49,7 @@ __all__ = [
     "MmWarning",
     "OnOffLabel",
     "PowerOnOffLabel",
+    "ErrorLabel",
     "WarningLabel",
     "WarningButton",
     "InterlockOffLabel",
@@ -84,7 +85,8 @@ class DataLabel(QLabel):
         Defaults to None.
     field : `str`, optional
         When specified (and signal parameter is provided), will use this field
-        as fieldname from data arriving with the signal. Defaults to None.
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
     """
 
     def __init__(self, signal=None, field=None):
@@ -92,6 +94,8 @@ class DataLabel(QLabel):
         if signal is not None:
             self._field = field
             signal.connect(self._data)
+        if field is not None:
+            self.setObjectName(field)
 
     def __copy__(self):
         return DataLabel()
@@ -436,6 +440,42 @@ class PowerOnOffLabel(QLabel):
             self.setText("<font color='gold'>Off</font>")
 
 
+class ErrorLabel(DataLabel):
+    """Displays ERROR/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return WarningLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes ERROR (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means error.
+        """
+        if value:
+            self.setText("<font color='red'>ERROR</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
+
+
 class WarningLabel(DataLabel):
     """Displays WARNING/OK. Constructor can be passed parameters allowing
     connection to a Signal emitted when warning value changes.
@@ -448,8 +488,8 @@ class WarningLabel(DataLabel):
         Defaults to None.
     field : `str`, optional
         When specified (and signal parameter is provided), will use this field
-        as fieldname from data arriving with the signal. Defaults to
-        "anyWarning".
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to "anyWarning".
     """
 
     def __init__(self, signal=None, field="anyWarning"):
