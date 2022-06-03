@@ -95,7 +95,7 @@ class CompressorsPageWidget(QWidget):
                 ("Cooling", ErrorLabel(field="coolingE410")),
                 ("Oil Pressure Low", ErrorLabel(field="oilPressureLowE411")),
                 ("External Fault", ErrorLabel(field="externalFaultE412")),
-                ("Dryer", ErrorLabel(field="dryer413")),
+                ("Dryer", ErrorLabel(field="dryerE413")),
                 ("Condensate Darin", ErrorLabel(field="condensateDrainE414")),
                 ("No Pressure Build Up", ErrorLabel(field="noPressureBuildUpE415")),
                 ("Heavy Startup", ErrorLabel(field="heavyStartupE416")),
