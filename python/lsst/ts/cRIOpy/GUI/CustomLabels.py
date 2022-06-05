@@ -46,6 +46,8 @@ __all__ = [
     "Arcsec",
     "Percent",
     "Volt",
+    "PressureBar",
+    "PressuremBar",
     "DataDegC",
     "ArcsecWarning",
     "MmWarning",
@@ -238,6 +240,8 @@ class DataUnitLabel(UnitLabel):
         if signal is not None:
             self._field = field
             signal.connect(self._data)
+        if field is not None:
+            self.setObjectName(field)
 
     @Slot(map)
     def _data(self, data):
@@ -349,6 +353,29 @@ class Volt(UnitLabel):
 
     def __init__(self, fmt="0.02f"):
         super().__init__(fmt, u.V)
+
+
+class PressureBar(DataLabel):
+    """Display pressure in bar and psi"""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def setValue(self, value):
+        psi = value * 14.5038
+        self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
+
+
+class PressuremBar(DataLabel):
+    """Display pressure in bar and psi"""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def setValue(self, value):
+        value /= 1000.0
+        psi = value * 14.5038
+        self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
 
 
 class DataDegC(DataUnitLabel):
@@ -463,7 +490,7 @@ class ErrorLabel(DataLabel):
         super().__init__(signal, field)
 
     def __copy__(self):
-        return WarningLabel()
+        return ErrorLabel()
 
     def setValue(self, value):
         """Sets formatted value. Color codes ERROR (red)/OK (green).

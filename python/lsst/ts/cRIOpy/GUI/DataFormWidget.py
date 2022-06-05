@@ -83,26 +83,25 @@ class DataFormButton(QPushButton):
 
     def __init__(self, title, signal, fields):
         super().__init__(title)
-        self._dataWidget = None
-        self._signal = signal
+
         self._fields = fields
+
+        self._dataWidget = DataFormWidget(signal, self._fields)
+        self._dataWidget.setWindowTitle(self.text())
 
         signal.connect(self._dataChanged)
         self.clicked.connect(self._displayDetails)
 
     @Slot(map)
     def _dataChanged(self, data):
-        pal = self.pallete()
+        pal = self.palette()
         pal.setColor(QPalette.Button, Qt.green)
         for f in self._fields:
-            if getattr(data, f) is True:
+            if getattr(data, f[1].objectName()) is True:
                 pal.setColor(QPalette.Button, Qt.red)
                 break
         self.setPalette(pal)
 
     @Slot()
     def _displayDetails(self):
-        if self._dataWidget is None:
-            self._dataWidget = DataFormWidget(self._signal, self._fields)
-            self._dataWidget.setWindowTitle(self.text())
         self._dataWidget.show()
