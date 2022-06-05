@@ -1,9 +1,9 @@
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot, Qt
-from lsst.ts.salobj import State
 from lsst.ts.idl.enums import MTM1M3
 
 from .SALComm import warning
+from .CustomLabels import SummaryStateLabel
 
 
 class ApplicationStatusWidget(QWidget):
@@ -16,14 +16,15 @@ class ApplicationStatusWidget(QWidget):
         self.layout.addLayout(self.statusLayout)
         self.setLayout(self.layout)
 
-        self.summaryStateLabel = QLabel("UNKNOWN")
         self.modeStateLabel = QLabel("UNKNOWN")
         self.mirrorStateLabel = QLabel("UNKNOWN")
 
         row = 0
         col = 0
         self.statusLayout.addWidget(QLabel("State"), row, col)
-        self.statusLayout.addWidget(self.summaryStateLabel, row, col + 1)
+        self.statusLayout.addWidget(
+            SummaryStateLabel(self.m1m3.summaryState, "summaryState"), row, col + 1
+        )
         row += 1
         self.statusLayout.addWidget(QLabel("Mode"), row, col)
         self.statusLayout.addWidget(self.modeStateLabel, row, col + 1)
@@ -31,24 +32,7 @@ class ApplicationStatusWidget(QWidget):
         self.statusLayout.addWidget(QLabel("Mirror State"), row, col)
         self.statusLayout.addWidget(self.mirrorStateLabel, row, col + 1)
 
-        self.m1m3.summaryState.connect(self.processEventSummaryState)
         self.m1m3.detailedState.connect(self.processEventDetailedState)
-
-    @Slot(map)
-    def processEventSummaryState(self, data):
-        summaryStateText = "Unknown"
-        if data.summaryState == State.DISABLED:
-            summaryStateText = "Disabled"
-        elif data.summaryState == State.ENABLED:
-            summaryStateText = "Enabled"
-        elif data.summaryState == State.FAULT:
-            summaryStateText = "Fault"
-        elif data.summaryState == State.OFFLINE:
-            summaryStateText = "Offline"
-        elif data.summaryState == State.STANDBY:
-            summaryStateText = "Standby"
-
-        self.summaryStateLabel.setText(summaryStateText)
 
     @Slot(map)
     def forceActuatorState(self, data):

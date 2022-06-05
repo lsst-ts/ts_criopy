@@ -17,7 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import DataLabel, OnOffLabel, ErrorLabel, WarningLabel
+from .CustomLabels import (
+    DataLabel,
+    OnOffLabel,
+    ErrorLabel,
+    WarningLabel,
+    SummaryStateLabel,
+)
 from .DataFormWidget import DataFormButton
 from .SALComm import warning
 from .SALLog import Widget as SALLogWidget
@@ -173,8 +179,6 @@ class CompressorsPageWidget(QWidget):
         _addButton(self.TEXT_ENABLE)
         _addButton(self.TEXT_EXIT_CONTROL)
 
-        commandLayout.addStretch()
-
         dataLayout.addRow(
             "Compressor Software Version",
             DataLabel(self.compressor.compressorInfo, "softwareVersion"),
@@ -305,9 +309,15 @@ class CompressorsPageWidget(QWidget):
             OnOffLabel(self.compressor.status, "startAfterDryerPreRun"),
         )
 
+        commandLayout.addWidget(
+            SummaryStateLabel(self.compressor.summaryState, "summaryState")
+        )
+
         commandLayout.addSpacing(15)
         commandLayout.addWidget(errorsWidget)
         commandLayout.addWidget(warningsWidget)
+
+        commandLayout.addStretch()
 
         topLayout.addLayout(commandLayout)
         topLayout.addLayout(dataLayout)
@@ -357,8 +367,8 @@ class CompressorsPageWidget(QWidget):
                 self.TEXT_DISABLE,
                 None,
             ],
-            salobj.State.FAULT: [None, None, None, self.TEXT_STANDBY],
-            salobj.State.OFFLINE: [None, None, None, None, None],
+            salobj.State.FAULT: [None, None, self.TEXT_STANDBY],
+            salobj.State.OFFLINE: [None, None, None],
         }
 
         self._lastEnabled = None

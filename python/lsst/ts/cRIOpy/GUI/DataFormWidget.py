@@ -63,6 +63,24 @@ class DataFormWidget(QWidget):
 
 
 class DataFormButton(QPushButton):
+    """
+    Creates button displaying overall status. On click, . Update fields on signal with new values.
+
+    Parameters
+    ----------
+    signal : `QSignal`
+        Signal with new data. It is assumed DataLabel childs passed in fields
+        contain DataLabel with field corresponding to fields in the signal.
+
+    fields : `[(str, DataLabel)]`
+        Tuple of text and label. Label shall be child of DataLabel with
+        fieldname set.
+
+    Usage
+    -----
+       myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
+    """
+
     def __init__(self, title, signal, fields):
         super().__init__(title)
         self._dataWidget = None
@@ -86,4 +104,5 @@ class DataFormButton(QPushButton):
     def _displayDetails(self):
         if self._dataWidget is None:
             self._dataWidget = DataFormWidget(self._signal, self._fields)
+            self._dataWidget.setWindowTitle(self.text())
         self._dataWidget.show()
