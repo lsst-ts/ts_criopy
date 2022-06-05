@@ -18,8 +18,9 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from .CustomLabels import DataLabel, OnOffLabel, ErrorLabel, WarningLabel
-from .DataFormWidget import DataFormWidget
+from .DataFormWidget import DataFormButton
 from .SALComm import warning
+from .SALLog import Widget as SALLogWidget
 
 from PySide2.QtWidgets import (
     QWidget,
@@ -49,13 +50,14 @@ class CompressorsPageWidget(QWidget):
 
         self._lastEnabled = None
 
-        layout = QHBoxLayout()
-
+        masterLayout = QVBoxLayout()
+        topLayout = QHBoxLayout()
         commandLayout = QVBoxLayout()
         dataLayout = QFormLayout()
         statusLayout = QFormLayout()
 
-        errorsWidget = DataFormWidget(
+        errorsWidget = DataFormButton(
+            "Errors",
             compressor.errors,
             [
                 ("Power supply failure", ErrorLabel(field="powerSupplyFailureE400")),
@@ -96,7 +98,7 @@ class CompressorsPageWidget(QWidget):
                 ("Oil Pressure Low", ErrorLabel(field="oilPressureLowE411")),
                 ("External Fault", ErrorLabel(field="externalFaultE412")),
                 ("Dryer", ErrorLabel(field="dryerE413")),
-                ("Condensate Darin", ErrorLabel(field="condensateDrainE414")),
+                ("Condensate Drain", ErrorLabel(field="condensateDrainE414")),
                 ("No Pressure Build Up", ErrorLabel(field="noPressureBuildUpE415")),
                 ("Heavy Startup", ErrorLabel(field="heavyStartupE416")),
                 ("Pre Adjustment VSD", ErrorLabel(field="preAdjustmentVSDE500")),
@@ -116,7 +118,8 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        warningsWidget = DataFormWidget(
+        warningsWidget = DataFormButton(
+            "Warnings",
             compressor.warnings,
             [
                 ("Service Due", WarningLabel(field="serviceDueA600")),
@@ -155,13 +158,6 @@ class CompressorsPageWidget(QWidget):
                 ("Temperature High VSD", WarningLabel(field="temperatureHighVSDA700")),
             ],
         )
-
-        layout.addLayout(commandLayout)
-        layout.addLayout(dataLayout)
-        layout.addLayout(statusLayout)
-        layout.addWidget(errorsWidget)
-        layout.addWidget(warningsWidget)
-        layout.addStretch()
 
         self.commandButtons = QButtonGroup(self)
         self.commandButtons.buttonClicked.connect(self._buttonClicked)
@@ -309,7 +305,19 @@ class CompressorsPageWidget(QWidget):
             OnOffLabel(self.compressor.status, "startAfterDryerPreRun"),
         )
 
-        self.setLayout(layout)
+        commandLayout.addSpacing(15)
+        commandLayout.addWidget(errorsWidget)
+        commandLayout.addWidget(warningsWidget)
+
+        topLayout.addLayout(commandLayout)
+        topLayout.addLayout(dataLayout)
+        topLayout.addLayout(statusLayout)
+        topLayout.addStretch()
+
+        masterLayout.addLayout(topLayout)
+        masterLayout.addWidget(SALLogWidget(self.compressor))
+
+        self.setLayout(masterLayout)
 
         self.compressor.summaryState.connect(self.summaryState)
 

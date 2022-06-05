@@ -19,9 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QFormLayout, QWidget
+from PySide2.QtCore import Slot, Qt
+from PySide2.QtGui import QPalette
+from PySide2.QtWidgets import QFormLayout, QWidget, QPushButton
 
-__all__ = ["DataFormWidget"]
+__all__ = ["DataFormWidget", "DataFormButton"]
 
 
 class DataFormWidget(QWidget):
@@ -58,3 +60,30 @@ class DataFormWidget(QWidget):
             ch = self.findChild(QWidget, e)
             if ch is not None:
                 ch.setValue(getattr(data, e))
+
+
+class DataFormButton(QPushButton):
+    def __init__(self, title, signal, fields):
+        super().__init__(title)
+        self._dataWidget = None
+        self._signal = signal
+        self._fields = fields
+
+        signal.connect(self._dataChanged)
+        self.clicked.connect(self._displayDetails)
+
+    @Slot(map)
+    def _dataChanged(self, data):
+        pal = self.pallete()
+        pal.setColor(QPalette.Button, Qt.green)
+        for f in self._fields:
+            if getattr(data, f) is True:
+                pal.setColor(QPalette.Button, Qt.red)
+                break
+        self.setPalette(pal)
+
+    @Slot()
+    def _displayDetails(self):
+        if self._dataWidget is None:
+            self._dataWidget = DataFormWidget(self._signal, self._fields)
+        self._dataWidget.show()
