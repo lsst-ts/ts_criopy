@@ -17,19 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import (
-    DataLabel,
-    PressuremBar,
-    DataDegC,
-    OnOffLabel,
-    ErrorLabel,
-    WarningLabel,
-    SummaryStateLabel,
-)
-from .DataFormWidget import DataFormWidget, DataFormButton
-from .SALComm import warning
-from .SALLog import Widget as SALLogWidget
-
 from PySide2.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -41,6 +28,27 @@ from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
 from lsst.ts import salobj
+
+from .CustomLabels import (
+    DataLabel,
+    DataUnitLabel,
+    Ampere,
+    DataDegC,
+    Percent,
+    PressuremBar,
+    KiloWatt,
+    Hours,
+    Seconds,
+    Volt,
+    RPM,
+    OnOffLabel,
+    ErrorLabel,
+    WarningLabel,
+    SummaryStateLabel,
+)
+from .DataFormWidget import DataFormWidget, DataFormButton
+from .SALComm import warning
+from .SALLog import Widget as SALLogWidget
 
 
 class CompressorsPageWidget(QWidget):
@@ -193,23 +201,31 @@ class CompressorsPageWidget(QWidget):
             DataFormWidget(
                 self.compressor.analogData,
                 [
-                    ("Water level", DataLabel(field="waterLevel")),
-                    ("Target speed", DataLabel(field="targetSpeed")),
-                    ("Motor current", DataLabel(field="motorCurrent")),
-                    ("Heatsink temperature", DataDegC(field="heatsinkTemperature")),
-                    ("DC link voltage", DataLabel(field="dclinkVoltage")),
-                    ("Motor speed percentage", DataLabel(field="motorSpeedPercentage")),
-                    ("Motor speed RPM", DataLabel(field="motorSpeedRPM")),
-                    ("Motor input", DataLabel(field="motorInput")),
+                    ("Water level", Percent(field="waterLevel", fmt=".0f")),
+                    ("Target speed", RPM(field="targetSpeed")),
+                    ("Motor current", Ampere(field="motorCurrent")),
+                    ("Heatsink temperature", DataDegC(field="heatsinkTemperature", fmt=".0f")),
+                    ("DC link voltage", Volt(field="dclinkVoltage")),
+                    (
+                        "Motor speed percentage",
+                        Percent(field="motorSpeedPercentage", fmt=".0f"),
+                    ),
+                    ("Motor speed RPM", RPM(field="motorSpeedRPM")),
+                    ("Motor input", KiloWatt(field="motorInput")),
                     (
                         "Power consumption",
-                        DataLabel(field="compressorPowerConsumption"),
+                        KiloWatt(field="compressorPowerConsumption"),
                     ),
                     (
                         "Volume percentage",
-                        DataLabel(field="compressorVolumePercentage"),
+                        Percent(field="compressorVolumePercentage", fmt=".0f"),
                     ),
-                    ("Volume", DataLabel(field="compressorVolume")),
+                    (
+                        "Volume",
+                        DataUnitLabel(
+                            field="compressorVolume", unit="m3/min", fmt=".01f"
+                        ),
+                    ),
                     (
                         "Stage 1 output pressure",
                         PressuremBar(field="stage1OutputPressure"),
@@ -217,7 +233,7 @@ class CompressorsPageWidget(QWidget):
                     ("Line pressure", PressuremBar(field="linePressure")),
                     (
                         "Stage 1 output temperature",
-                        DataDegC(field="stage1OutputTemperature"),
+                        DataDegC(field="stage1OutputTemperature", fmt=".0f"),
                     ),
                 ],
             )
@@ -227,17 +243,14 @@ class CompressorsPageWidget(QWidget):
             DataFormWidget(
                 self.compressor.timerInfo,
                 [
-                    ("Running hours", DataLabel(field="runningHours")),
+                    ("Running hours", Hours("runningHours")),
                     (
                         "Loaded hours",
-                        DataLabel(self.compressor.timerInfo, "loadedHours"),
+                        Hours("loadedHours"),
                     ),
-                    ("Lowest service counter", DataLabel(field="lowestServiceCounter")),
-                    ("Run-On timer", DataLabel(field="runOnTimer")),
-                    (
-                        "Loaded hours 50 percent",
-                        DataLabel(field="loadedHours50Percent"),
-                    ),
+                    ("Lowest service counter", Hours("lowestServiceCounter")),
+                    ("Run-On timer", Hours("runOnTimer")),
+                    ("Loaded hours 50 percent", Seconds("loadedHours50Percent")),
                 ],
             )
         )

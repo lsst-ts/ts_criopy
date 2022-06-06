@@ -44,10 +44,15 @@ __all__ = [
     "Moment",
     "Mm",
     "Arcsec",
+    "Ampere",
     "Percent",
     "Volt",
+    "RPM",
     "PressureBar",
     "PressuremBar",
+    "Hours",
+    "Seconds",
+    "KiloWatt",
     "DataDegC",
     "ArcsecWarning",
     "MmWarning",
@@ -128,8 +133,8 @@ class UnitLabel(QLabel):
     fmt : `str`, optional
         Format string. See Python formatting function for details. Defaults to
         'd' for decimal number.
-    unit : `astropy.units`, optional
-        Variable unit. Default is None - no unit
+    unit : `astropy.units|str`, optional
+        Variable unit. Default is None - no unit. Can be specified as string.
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
@@ -147,6 +152,8 @@ class UnitLabel(QLabel):
     ):
         super().__init__("---")
         self.fmt = fmt
+        if type(unit) == str:
+            unit = u.Unit(unit)
         if convert is not None:
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
@@ -160,8 +167,14 @@ class UnitLabel(QLabel):
             self.unit_name = ""
 
         # we can display some units better using unicode
-        if self.unit_name == "deg_C":
-            self.unit_name = "°C"
+        aliases = {
+            "deg_C": "°C",
+            "1 / min": "RPM",
+        }
+        try:
+            self.unit_name = aliases[self.unit_name]
+        except KeyError:
+            pass
 
         self.unit_name = " " + self.unit_name
 
@@ -329,30 +342,84 @@ class Arcsec(UnitLabel):
         super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
 
 
-class Percent(UnitLabel):
+class Ampere(DataUnitLabel):
+    """Displays Ampere.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.A)
+
+
+class Percent(DataUnitLabel):
     """Displays percents.
 
     Parameters
     ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
     fmt : `str`, optional
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, fmt="0.02f"):
-        super().__init__(fmt, u.percent)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.percent)
 
 
-class Volt(UnitLabel):
+class Volt(DataUnitLabel):
     """Displays Volts.
 
     Parameters
     ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
     fmt : `str`, optional
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, fmt="0.02f"):
-        super().__init__(fmt, u.V)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.V)
+
+
+class RPM(DataUnitLabel):
+    """Displays RPM.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to .0f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt=".0f"):
+        super().__init__(signal, field, fmt, u.Unit("min^-1"))
 
 
 class PressureBar(DataLabel):
@@ -367,8 +434,6 @@ class PressureBar(DataLabel):
 
 
 class PressuremBar(DataLabel):
-    """Display pressure in bar and psi"""
-
     def __init__(self, signal=None, field=None):
         super().__init__(signal, field)
 
@@ -378,9 +443,24 @@ class PressuremBar(DataLabel):
         self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
 
 
-class DataDegC(DataUnitLabel):
+class Hours(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.h)
+
+
+class Seconds(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.s)
+
+
+class KiloWatt(DataUnitLabel):
     def __init__(self, signal=None, field=None):
-        super().__init__(signal, field, "0.02f", u.deg_C)
+        super().__init__(signal, field, ".01f", u.kW)
+
+
+class DataDegC(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.deg_C)
 
 
 class ArcsecWarning(Arcsec):

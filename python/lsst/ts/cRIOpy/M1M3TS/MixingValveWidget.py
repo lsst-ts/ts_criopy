@@ -28,7 +28,15 @@ from PySide2.QtWidgets import (
     QPushButton,
 )
 
-from ..GUI import Volt, Percent, DockWindow, TimeChart, TimeChartView, SALCommand
+from ..GUI import (
+    Volt,
+    Percent,
+    DockWindow,
+    TimeChart,
+    TimeChartView,
+    SALCommand,
+    DataFormWidget,
+)
 
 
 class MixingValveWidget(DockWindow):
@@ -37,14 +45,6 @@ class MixingValveWidget(DockWindow):
     def __init__(self, m1m3ts):
         super().__init__("Mixing valve")
         self.m1m3ts = m1m3ts
-
-        dataLayout = QFormLayout()
-
-        self.rawPosition = Volt()
-        self.position = Percent()
-
-        dataLayout.addRow("Raw Position", self.rawPosition)
-        dataLayout.addRow("Position", self.position)
 
         commandLayout = QFormLayout()
 
@@ -60,7 +60,15 @@ class MixingValveWidget(DockWindow):
         commandLayout.addRow(setMixingValve)
 
         vlayout = QVBoxLayout()
-        vlayout.addLayout(dataLayout)
+        vlayout.addWidget(
+            DataFormWidget(
+                m1m3ts.mixingValve,
+                [
+                    ("Raw Position", Volt(field="rawValvePosition")),
+                    ("Position", Percent(field="valvePosition")),
+                ],
+            )
+        )
         vlayout.addSpacing(20)
         vlayout.addLayout(commandLayout)
         vlayout.addStretch()
@@ -86,9 +94,6 @@ class MixingValveWidget(DockWindow):
 
     @Slot(map)
     def mixingValve(self, data):
-        self.rawPosition.setValue(data.rawValvePosition)
-        self.position.setValue(data.valvePosition)
-
         self.mixingValveChart.append(
             data.private_sndStamp,
             [data.rawValvePosition],

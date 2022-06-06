@@ -7,6 +7,7 @@ from .ApplicationStatusWidget import ApplicationStatusWidget
 from .CellLightPageWidget import CellLightPageWidget
 from .CompressorsPageWidget import CompressorsPageWidget
 from .CustomLabels import *
+from .DataFormWidget import DataFormWidget, DataFormButton
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget
 from .EnabledForceActuators import EnabledForceActuators
