@@ -42,6 +42,7 @@ from .CustomLabels import (
     Volt,
     RPM,
     OnOffLabel,
+    PowerOnOffLabel,
     ErrorLabel,
     WarningLabel,
     SummaryStateLabel,
@@ -260,8 +261,8 @@ class CompressorsPageWidget(QWidget):
             DataFormWidget(
                 self.compressor.status,
                 [
-                    ("Read to start", OnOffLabel(field="readyToStart")),
-                    ("Operating", OnOffLabel(field="operating")),
+                    ("Ready to start", OnOffLabel(field="readyToStart")),
+                    ("Operating", PowerOnOffLabel(field="operating")),
                     ("Start Inhibit", OnOffLabel(field="startInhibit")),
                     ("Motor start phase", OnOffLabel(field="motorStartPhase")),
                     ("Off load", OnOffLabel(field="offLoad")),

@@ -106,6 +106,7 @@ class DataLabel(QLabel):
             signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
 
     def __copy__(self):
         return DataLabel()
@@ -255,10 +256,14 @@ class DataUnitLabel(UnitLabel):
             signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
 
     @Slot(map)
     def _data(self, data):
         self.setValue(getattr(data, self._field))
+
+    def mousePressEvent(self, ev):
+        print(str(ev))
 
 
 class Force(UnitLabel):
@@ -527,11 +532,11 @@ class OnOffLabel(DataLabel):
             self.setText("<font color='green'>Off</font>")
 
 
-class PowerOnOffLabel(QLabel):
+class PowerOnOffLabel(DataLabel):
     """Displays on/off power state"""
 
-    def __init__(self):
-        super().__init__("---")
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
 
     def __copy__(self):
         return PowerOnOffLabel()
