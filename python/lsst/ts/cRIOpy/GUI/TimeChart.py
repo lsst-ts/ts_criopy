@@ -310,6 +310,9 @@ class TimeChartView(QtCharts.QChartView):
             action.setChecked(s.isVisible())
 
         action = contextMenu.exec_(event.globalPos())
+        if action.text() is None:
+            return
+
         for s in self.chart().series():
             if action.text() == s.name():
                 s.setVisible(action.isChecked())
