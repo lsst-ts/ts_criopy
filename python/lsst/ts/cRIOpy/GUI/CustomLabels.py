@@ -262,9 +262,6 @@ class DataUnitLabel(UnitLabel):
     def _data(self, data):
         self.setValue(getattr(data, self._field))
 
-    def mousePressEvent(self, ev):
-        print(str(ev))
-
 
 class Force(UnitLabel):
     """Displays force in N (Newtons).

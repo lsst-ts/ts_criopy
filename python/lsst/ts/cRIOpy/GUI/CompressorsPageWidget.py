@@ -50,6 +50,7 @@ from .CustomLabels import (
 from .DataFormWidget import DataFormWidget, DataFormButton
 from .SALComm import warning
 from .SALLog import Widget as SALLogWidget
+from .TimeChart import UserSelectedTimeChart, TimeChartView
 
 
 class CompressorsPageWidget(QWidget):
@@ -69,6 +70,10 @@ class CompressorsPageWidget(QWidget):
         masterLayout = QVBoxLayout()
         topLayout = QHBoxLayout()
         commandLayout = QVBoxLayout()
+
+        userTimeChart = UserSelectedTimeChart(
+            {compressor.remote.tel_analogData: compressor.analogData}
+        )
 
         errorsWidget = DataFormButton(
             "Errors",
@@ -205,7 +210,10 @@ class CompressorsPageWidget(QWidget):
                     ("Water level", Percent(field="waterLevel", fmt=".0f")),
                     ("Target speed", RPM(field="targetSpeed")),
                     ("Motor current", Ampere(field="motorCurrent")),
-                    ("Heatsink temperature", DataDegC(field="heatsinkTemperature", fmt=".0f")),
+                    (
+                        "Heatsink temperature",
+                        DataDegC(field="heatsinkTemperature", fmt=".0f"),
+                    ),
                     ("DC link voltage", Volt(field="dclinkVoltage")),
                     (
                         "Motor speed percentage",
@@ -237,6 +245,7 @@ class CompressorsPageWidget(QWidget):
                         DataDegC(field="stage1OutputTemperature", fmt=".0f"),
                     ),
                 ],
+                userTimeChart,
             )
         )
 
@@ -317,7 +326,7 @@ class CompressorsPageWidget(QWidget):
         topLayout.addLayout(commandLayout)
         topLayout.addLayout(dataLayout)
         topLayout.addLayout(statusLayout)
-        topLayout.addStretch()
+        topLayout.addWidget(TimeChartView(userTimeChart))
 
         masterLayout.addLayout(topLayout)
         masterLayout.addWidget(SALLogWidget(self.compressor))

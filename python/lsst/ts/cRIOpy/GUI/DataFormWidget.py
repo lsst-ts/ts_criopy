@@ -45,8 +45,9 @@ class DataFormWidget(QWidget):
        myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
     """
 
-    def __init__(self, signal, fields):
+    def __init__(self, signal, fields, timeChart=None):
         super().__init__()
+        self._timeChart = timeChart
 
         layout = QFormLayout()
         for (text, label) in fields:
@@ -60,6 +61,12 @@ class DataFormWidget(QWidget):
             ch = self.findChild(QWidget, e)
             if ch is not None:
                 ch.setValue(getattr(data, e))
+
+    def mousePressEvent(self, ev):
+        if self._timeChart is not None:
+            child = self.childAt(ev.pos())
+            if child is not None:
+                self._timeChart.topicSelected.emit(child.objectName())
 
 
 class DataFormButton(QPushButton):
