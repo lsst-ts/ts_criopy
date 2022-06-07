@@ -106,7 +106,6 @@ class DataLabel(QLabel):
             signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
-            self.setCursor(Qt.PointingHandCursor)
 
     def __copy__(self):
         return DataLabel()

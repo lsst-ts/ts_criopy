@@ -66,7 +66,7 @@ class DataFormWidget(QWidget):
         if self._timeChart is not None:
             child = self.childAt(ev.pos())
             if child is not None:
-                self._timeChart.topicSelected.emit(child.objectName())
+                self._timeChart.topicSelected.emit(child)
 
 
 class DataFormButton(QPushButton):

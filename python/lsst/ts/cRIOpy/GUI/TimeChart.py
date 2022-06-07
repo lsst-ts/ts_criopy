@@ -131,9 +131,6 @@ class TimeChart(AbstractChart):
         s.attachAxis(a)
 
     def _attachSeries(self):
-        if self.timeAxis is not None:
-            self.removeAxis(self.timeAxis)
-
         # Caveat emptor, the order here is important. Hard to find, but the order in
         # which chart, axis and series are constructed and attached should always be:
         # - construct Axis, Chart, Serie
@@ -156,6 +153,9 @@ class TimeChart(AbstractChart):
             serie.attachAxis(self.timeAxis)
 
     def _createCaches(self, items, maxItems=50 * 30):
+        for a in self.axes():
+            self.removeAxis(a)
+
         self.removeAllSeries()
         self._caches = []
         if items is None:
@@ -218,6 +218,10 @@ class TimeChart(AbstractChart):
             self.timeAxis.setRange(
                 *(map(QDateTime().fromMSecsSinceEpoch, cache.timeRange()))
             )
+            if d_min == d_max:
+                d_min -= d_min * 0.05
+                d_max += d_max * 0.05
+
             axis.setRange(d_min, d_max)
 
             self._next_update = time.monotonic() + self.updateInterval
@@ -244,11 +248,12 @@ class UserSelectedTimeChart(TimeChart):
     """
     Signals
     -------
-    topicSelected : `Signal(str)`
-        Send when DataUnitLabel or DataLabel is clicked.
+    topicSelected : `Signal(object)`
+        Send when DataUnitLabel or DataLabel is clicked. Object parameters
+        denotes selected label.
     """
 
-    topicSelected = Signal(str)
+    topicSelected = Signal(object)
 
     def __init__(self, topics):
         super().__init__(None)
@@ -258,8 +263,9 @@ class UserSelectedTimeChart(TimeChart):
         self.topicSelected.connect(self._topicSelected)
 
     @Slot(str)
-    def _topicSelected(self, name):
-        self._createCaches({"Unit": [name]})
+    def _topicSelected(self, obj):
+        name = obj.objectName()
+        self._createCaches({obj.unit_name: [name]})
         self._attachSeries()
         for (t, s) in self._topics.items():
             for n in t.DataType().get_vars().keys():
