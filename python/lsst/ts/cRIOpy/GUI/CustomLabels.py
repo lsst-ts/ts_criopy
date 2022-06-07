@@ -106,6 +106,7 @@ class DataLabel(QLabel):
             signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
 
     def __copy__(self):
         return DataLabel()
@@ -428,6 +429,7 @@ class PressureBar(DataLabel):
 
     def __init__(self, signal=None, field=None):
         super().__init__(signal, field)
+        self.unit_name = "bar"
 
     def setValue(self, value):
         psi = value * 14.5038
@@ -437,6 +439,7 @@ class PressureBar(DataLabel):
 class PressuremBar(DataLabel):
     def __init__(self, signal=None, field=None):
         super().__init__(signal, field)
+        self.unit_name = "mbar"  # this is only for display
 
     def setValue(self, value):
         value /= 1000.0

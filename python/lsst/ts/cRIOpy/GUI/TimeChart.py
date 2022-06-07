@@ -219,8 +219,12 @@ class TimeChart(AbstractChart):
                 *(map(QDateTime().fromMSecsSinceEpoch, cache.timeRange()))
             )
             if d_min == d_max:
-                d_min -= d_min * 0.05
-                d_max += d_max * 0.05
+                if d_min == 0:
+                    d_min = -1
+                    d_max = 1
+                else:
+                    d_min -= d_min * 0.05
+                    d_max += d_max * 0.05
 
             axis.setRange(d_min, d_max)
 
