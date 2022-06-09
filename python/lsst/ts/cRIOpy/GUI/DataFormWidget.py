@@ -51,7 +51,10 @@ class DataFormWidget(QWidget):
 
         layout = QFormLayout()
         for (text, label) in fields:
-            layout.addRow(text, label)
+            if text is None:
+                layout.addRow(label)
+            else:
+                layout.addRow(text, label)
         self.setLayout(layout)
 
         signal.connect(self._process_signal)

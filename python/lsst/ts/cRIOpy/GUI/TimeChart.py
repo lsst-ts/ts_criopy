@@ -118,6 +118,7 @@ class TimeChart(AbstractChart):
     def _addSerie(self, name, axis):
         s = QtCharts.QLineSeries()
         s.setName(name)
+        # TODO crashes (core dumps) on some systems. Need to investigate
         # s.setUseOpenGL(True)
         a = self.findAxis(axis)
         if a is None:
@@ -272,16 +273,18 @@ class UserSelectedTimeChart(TimeChart):
         self._createCaches({obj.unit_name: [name]})
         self._attachSeries()
         for (t, s) in self._topics.items():
-            for n in t.DataType().get_vars().keys():
-                if n == name:
-                    if self._signal is not None:
-                        self._signal.disconnect(self._appendData)
+            for n in vars(t.DataType()):
+                if n != name:
+                    continue
 
-                    self._signal = s
-                    self._name = name
+                if self._signal is not None:
+                    self._signal.disconnect(self._appendData)
 
-                    self._signal.connect(self._appendData)
-                    break
+                self._signal = s
+                self._name = name
+
+                self._signal.connect(self._appendData)
+                break
 
     @Slot(map)
     def _appendData(self, data):

@@ -35,7 +35,7 @@ from .CustomLabels import (
     Ampere,
     DataDegC,
     Percent,
-    PressuremBar,
+    PressureInmBar,
     KiloWatt,
     Hours,
     Seconds,
@@ -214,7 +214,7 @@ class CompressorsPageWidget(QWidget):
                         "Heatsink temperature",
                         DataDegC(field="heatsinkTemperature", fmt=".0f"),
                     ),
-                    ("DC link voltage", Volt(field="dclinkVoltage")),
+                    ("DC link voltage", Volt(field="dclinkVoltage", fmt=".0f")),
                     (
                         "Motor speed percentage",
                         Percent(field="motorSpeedPercentage", fmt=".0f"),
@@ -237,9 +237,9 @@ class CompressorsPageWidget(QWidget):
                     ),
                     (
                         "Stage 1 output pressure",
-                        PressuremBar(field="stage1OutputPressure"),
+                        PressureInmBar(field="stage1OutputPressure"),
                     ),
-                    ("Line pressure", PressuremBar(field="linePressure")),
+                    ("Line pressure", PressureInmBar(field="linePressure")),
                     (
                         "Stage 1 output temperature",
                         DataDegC(field="stage1OutputTemperature", fmt=".0f"),
@@ -265,6 +265,34 @@ class CompressorsPageWidget(QWidget):
             )
         )
 
+        startInhibitDetail = DataFormButton(
+            "Inhibit status",
+            compressor.status,
+            [
+                ("Start by remote", OnOffLabel(field="startByRemote")),
+                (
+                    "Start with timer control",
+                    OnOffLabel(field="startWithTimerControl"),
+                ),
+                (
+                    "Start with pressure requirement",
+                    OnOffLabel(field="startWithPressureRequirement"),
+                ),
+                (
+                    "Start after de-pressurise",
+                    OnOffLabel(field="startAfterDePressurise"),
+                ),
+                (
+                    "Start after power-loss",
+                    OnOffLabel(field="startAfterPowerLoss"),
+                ),
+                (
+                    "Start after dryer pre-run",
+                    OnOffLabel(field="startAfterDryerPreRun"),
+                ),
+            ],
+        )
+
         statusLayout = QVBoxLayout()
         statusLayout.addWidget(
             DataFormWidget(
@@ -272,7 +300,8 @@ class CompressorsPageWidget(QWidget):
                 [
                     ("Ready to start", OnOffLabel(field="readyToStart")),
                     ("Operating", PowerOnOffLabel(field="operating")),
-                    ("Start Inhibit", OnOffLabel(field="startInhibit")),
+                    ("Start inhibit", OnOffLabel(field="startInhibit")),
+                    (None, startInhibitDetail),
                     ("Motor start phase", OnOffLabel(field="motorStartPhase")),
                     ("Off load", OnOffLabel(field="offLoad")),
                     ("Soft stop", OnOffLabel(field="softStop")),
@@ -287,27 +316,6 @@ class CompressorsPageWidget(QWidget):
                     (
                         "Max. allowed speed",
                         WarningLabel(field="maxAllowedSpeedAchieved"),
-                    ),
-                    ("Start by remote", OnOffLabel(field="startByRemote")),
-                    (
-                        "Start with timer control",
-                        OnOffLabel(field="startWithTimerControl"),
-                    ),
-                    (
-                        "Start with pressure requirement",
-                        OnOffLabel(field="startWithPressureRequirement"),
-                    ),
-                    (
-                        "Start after de-pressurise",
-                        OnOffLabel(field="startAfterDePressurise"),
-                    ),
-                    (
-                        "Start after power-loss",
-                        OnOffLabel(field="startAfterPowerLoss"),
-                    ),
-                    (
-                        "Start after dryer pre-run",
-                        OnOffLabel(field="startAfterDryerPreRun"),
                     ),
                 ],
             )

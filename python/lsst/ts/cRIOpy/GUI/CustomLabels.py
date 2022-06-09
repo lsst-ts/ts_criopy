@@ -48,8 +48,8 @@ __all__ = [
     "Percent",
     "Volt",
     "RPM",
-    "PressureBar",
-    "PressuremBar",
+    "PressureInBar",
+    "PressureInmBar",
     "Hours",
     "Seconds",
     "KiloWatt",
@@ -134,7 +134,7 @@ class UnitLabel(QLabel):
     fmt : `str`, optional
         Format string. See Python formatting function for details. Defaults to
         'd' for decimal number.
-    unit : `astropy.units|str`, optional
+    unit : `astropy.units or str`, optional
         Variable unit. Default is None - no unit. Can be specified as string.
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
@@ -424,7 +424,7 @@ class RPM(DataUnitLabel):
         super().__init__(signal, field, fmt, u.Unit("min^-1"))
 
 
-class PressureBar(DataLabel):
+class PressureInBar(DataLabel):
     """Display pressure in bar and psi"""
 
     def __init__(self, signal=None, field=None):
@@ -436,15 +436,16 @@ class PressureBar(DataLabel):
         self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
 
 
-class PressuremBar(DataLabel):
+class PressureInmBar(DataLabel):
     def __init__(self, signal=None, field=None):
         super().__init__(signal, field)
         self.unit_name = "mbar"  # this is only for display
 
     def setValue(self, value):
-        value /= 1000.0
-        psi = value * 14.5038
-        self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
+        mbar = value * u.mbar
+        bar = (mbar).to(u.bar).value
+        psi = mbar.to(u.imperial.psi).value
+        self.setText(f"{bar:.04f} bar ({psi:.02f} psi)")
 
 
 class Hours(DataUnitLabel):
