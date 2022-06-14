@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Qt, QDateTime, QPointF
+from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
 from PySide2.QtWidgets import QMenu
@@ -31,7 +31,13 @@ import time
 import concurrent.futures
 from functools import partial
 
-__all__ = ["TimeChart", "TimeChartView", "SALAxis", "SALChartWidget"]
+__all__ = [
+    "TimeChart",
+    "UserSelectedTimeChart",
+    "TimeChartView",
+    "SALAxis",
+    "SALChartWidget",
+]
 
 
 class AbstractChart(QtCharts.QChart):
@@ -105,18 +111,27 @@ class TimeChart(AbstractChart):
         self.updateInterval = updateInterval
         self.updateTask = make_done_future()
 
-        self._caches = []
-        for axis in items.items():
-            data = [("timestamp", "f8")]
-            for d in axis[1]:
-                if d is None:
-                    self._caches.append(TimeCache(maxItems, data))
-                    data = [("timestamp", "f8")]
-                else:
-                    data.append((d, "f8"))
-                    self._addSerie(d, axis[0])
-            self._caches.append(TimeCache(maxItems, data))
+        self._createCaches(items, maxItems)
 
+        self._attachSeries()
+
+    def _addSerie(self, name, axis):
+        s = QtCharts.QLineSeries()
+        s.setName(name)
+        # TODO crashes (core dumps) on some systems. Need to investigate
+        # s.setUseOpenGL(True)
+        a = self.findAxis(axis)
+        if a is None:
+            a = QtCharts.QValueAxis()
+            a.setTickCount(10)
+            a.setTitleText(axis)
+            self.addAxis(
+                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft
+            )
+        self.addSeries(s)
+        s.attachAxis(a)
+
+    def _attachSeries(self):
         # Caveat emptor, the order here is important. Hard to find, but the order in
         # which chart, axis and series are constructed and attached should always be:
         # - construct Axis, Chart, Serie
@@ -138,20 +153,25 @@ class TimeChart(AbstractChart):
         for serie in self.series():
             serie.attachAxis(self.timeAxis)
 
-    def _addSerie(self, name, axis):
-        s = QtCharts.QLineSeries()
-        s.setName(name)
-        # s.setUseOpenGL(True)
-        a = self.findAxis(axis)
-        if a is None:
-            a = QtCharts.QValueAxis()
-            a.setTickCount(10)
-            a.setTitleText(axis)
-            self.addAxis(
-                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft
-            )
-        self.addSeries(s)
-        s.attachAxis(a)
+    def _createCaches(self, items, maxItems=50 * 30):
+        for a in self.axes():
+            self.removeAxis(a)
+
+        self.removeAllSeries()
+        self._caches = []
+        if items is None:
+            return
+
+        for axis in items.items():
+            data = [("timestamp", "f8")]
+            for d in axis[1]:
+                if d is None:
+                    self._caches.append(TimeCache(maxItems, data))
+                    data = [("timestamp", "f8")]
+                else:
+                    data.append((d, "f8"))
+                    self._addSerie(d, axis[0])
+            self._caches.append(TimeCache(maxItems, data))
 
     def append(self, timestamp, data, axis_index=0, cache_index=None, update=False):
         """Add data to a serie. Creates axis and serie if needed. Shrink if
@@ -199,6 +219,14 @@ class TimeChart(AbstractChart):
             self.timeAxis.setRange(
                 *(map(QDateTime().fromMSecsSinceEpoch, cache.timeRange()))
             )
+            if d_min == d_max:
+                if d_min == 0:
+                    d_min = -1
+                    d_max = 1
+                else:
+                    d_min -= d_min * 0.05
+                    d_max += d_max * 0.05
+
             axis.setRange(d_min, d_max)
 
             self._next_update = time.monotonic() + self.updateInterval
@@ -219,6 +247,48 @@ class TimeChart(AbstractChart):
     def clearData(self):
         """Removes all data from the chart."""
         super().removeAllSeries()
+
+
+class UserSelectedTimeChart(TimeChart):
+    """
+    Signals
+    -------
+    topicSelected : `Signal(object)`
+        Send when DataUnitLabel or DataLabel is clicked. Object parameters
+        denotes selected label.
+    """
+
+    topicSelected = Signal(object)
+
+    def __init__(self, topics):
+        super().__init__(None)
+        self._topics = topics
+        self._signal = None
+        self._name = None
+        self.topicSelected.connect(self._topicSelected)
+
+    @Slot(str)
+    def _topicSelected(self, obj):
+        name = obj.objectName()
+        self._createCaches({obj.unit_name: [name]})
+        self._attachSeries()
+        for (t, s) in self._topics.items():
+            for n in vars(t.DataType()):
+                if n != name:
+                    continue
+
+                if self._signal is not None:
+                    self._signal.disconnect(self._appendData)
+
+                self._signal = s
+                self._name = name
+
+                self._signal.connect(self._appendData)
+                break
+
+    @Slot(map)
+    def _appendData(self, data):
+        self.append(data.private_sndStamp, [getattr(data, self._name)])
 
 
 class TimeChartView(QtCharts.QChartView):
@@ -247,6 +317,9 @@ class TimeChartView(QtCharts.QChartView):
             action.setChecked(s.isVisible())
 
         action = contextMenu.exec_(event.globalPos())
+        if action.text() is None:
+            return
+
         for s in self.chart().series():
             if action.text() == s.name():
                 s.setVisible(action.isChecked())

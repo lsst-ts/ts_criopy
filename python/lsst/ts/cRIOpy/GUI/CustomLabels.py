@@ -32,6 +32,8 @@ from PySide2.QtGui import QPalette
 import astropy.units as u
 from datetime import datetime
 
+from lsst.ts.salobj import State
+
 from .EventWindow import EventWindow
 
 __all__ = [
@@ -42,8 +44,15 @@ __all__ = [
     "Moment",
     "Mm",
     "Arcsec",
+    "Ampere",
     "Percent",
     "Volt",
+    "RPM",
+    "PressureInBar",
+    "PressureInmBar",
+    "Hours",
+    "Seconds",
+    "KiloWatt",
     "DataDegC",
     "ArcsecWarning",
     "MmWarning",
@@ -55,6 +64,7 @@ __all__ = [
     "InterlockOffLabel",
     "StatusLabel",
     "Clipped",
+    "SummaryStateLabel",
     "Heartbeat",
     "LogEventWarning",
     "SimulationStatus",
@@ -96,6 +106,7 @@ class DataLabel(QLabel):
             signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
 
     def __copy__(self):
         return DataLabel()
@@ -123,8 +134,8 @@ class UnitLabel(QLabel):
     fmt : `str`, optional
         Format string. See Python formatting function for details. Defaults to
         'd' for decimal number.
-    unit : `astropy.units`, optional
-        Variable unit. Default is None - no unit
+    unit : `astropy.units or str`, optional
+        Variable unit. Default is None - no unit. Can be specified as string.
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
@@ -142,6 +153,8 @@ class UnitLabel(QLabel):
     ):
         super().__init__("---")
         self.fmt = fmt
+        if type(unit) == str:
+            unit = u.Unit(unit)
         if convert is not None:
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
@@ -155,8 +168,14 @@ class UnitLabel(QLabel):
             self.unit_name = ""
 
         # we can display some units better using unicode
-        if self.unit_name == "deg_C":
-            self.unit_name = "°C"
+        aliases = {
+            "deg_C": "°C",
+            "1 / min": "RPM",
+        }
+        try:
+            self.unit_name = aliases[self.unit_name]
+        except KeyError:
+            pass
 
         self.unit_name = " " + self.unit_name
 
@@ -235,6 +254,9 @@ class DataUnitLabel(UnitLabel):
         if signal is not None:
             self._field = field
             signal.connect(self._data)
+        if field is not None:
+            self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
 
     @Slot(map)
     def _data(self, data):
@@ -322,35 +344,128 @@ class Arcsec(UnitLabel):
         super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
 
 
-class Percent(UnitLabel):
+class Ampere(DataUnitLabel):
+    """Displays Ampere.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.A)
+
+
+class Percent(DataUnitLabel):
     """Displays percents.
 
     Parameters
     ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
     fmt : `str`, optional
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, fmt="0.02f"):
-        super().__init__(fmt, u.percent)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.percent)
 
 
-class Volt(UnitLabel):
+class Volt(DataUnitLabel):
     """Displays Volts.
 
     Parameters
     ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
     fmt : `str`, optional
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, fmt="0.02f"):
-        super().__init__(fmt, u.V)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.V)
+
+
+class RPM(DataUnitLabel):
+    """Displays RPM.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to .0f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt=".0f"):
+        super().__init__(signal, field, fmt, u.Unit("min^-1"))
+
+
+class PressureInBar(DataLabel):
+    """Display pressure in bar and psi"""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+        self.unit_name = "bar"
+
+    def setValue(self, value):
+        psi = value * 14.5038
+        self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
+
+
+class PressureInmBar(DataLabel):
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+        self.unit_name = "mbar"  # this is only for display
+
+    def setValue(self, value):
+        mbar = value * u.mbar
+        bar = (mbar).to(u.bar).value
+        psi = mbar.to(u.imperial.psi).value
+        self.setText(f"{bar:.04f} bar ({psi:.02f} psi)")
+
+
+class Hours(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.h)
+
+
+class Seconds(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.s)
+
+
+class KiloWatt(DataUnitLabel):
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field, ".01f", u.kW)
 
 
 class DataDegC(DataUnitLabel):
-    def __init__(self, signal=None, field=None):
-        super().__init__(signal, field, "0.02f", u.deg_C)
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.deg_C)
 
 
 class ArcsecWarning(Arcsec):
@@ -417,11 +532,11 @@ class OnOffLabel(DataLabel):
             self.setText("<font color='green'>Off</font>")
 
 
-class PowerOnOffLabel(QLabel):
+class PowerOnOffLabel(DataLabel):
     """Displays on/off power state"""
 
-    def __init__(self):
-        super().__init__("---")
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
 
     def __copy__(self):
         return PowerOnOffLabel()
@@ -460,7 +575,7 @@ class ErrorLabel(DataLabel):
         super().__init__(signal, field)
 
     def __copy__(self):
-        return WarningLabel()
+        return ErrorLabel()
 
     def setValue(self, value):
         """Sets formatted value. Color codes ERROR (red)/OK (green).
@@ -752,6 +867,27 @@ class Heartbeat(QWidget):
             )
 
         self._initTimer(2001)
+
+
+class SummaryStateLabel(DataLabel):
+    """Display state label."""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+        self.setAlignment(Qt.AlignCenter)
+
+    def setValue(self, value):
+        states = {
+            State.DISABLED: "Disabled",
+            State.ENABLED: "Enabled",
+            State.FAULT: "Fault",
+            State.OFFLINE: "Offline",
+            State.STANDBY: "Standby",
+        }
+        try:
+            self.setText(states[value])
+        except KeyError:
+            self.setText(f"Unknown ({value})")
 
 
 class LogEventWarning(QLabel):

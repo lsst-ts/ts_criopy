@@ -7,6 +7,7 @@ from .ApplicationStatusWidget import ApplicationStatusWidget
 from .CellLightPageWidget import CellLightPageWidget
 from .CompressorsPageWidget import CompressorsPageWidget
 from .CustomLabels import *
+from .DataFormWidget import DataFormWidget, DataFormButton
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget
 from .EnabledForceActuators import EnabledForceActuators
@@ -30,7 +31,13 @@ from .SALStatusBar import SALStatusBar
 from .StateEnabled import DetailedStateEnabledButton, StateEnabledWidget
 from .SplashScreen import SplashScreen
 from .TimeDeltaLabel import TimeDeltaLabel
-from .TimeChart import TimeChart, TimeChartView, SALAxis, SALChartWidget
+from .TimeChart import (
+    TimeChart,
+    UserSelectedTimeChart,
+    TimeChartView,
+    SALAxis,
+    SALChartWidget,
+)
 from .TopicData import TopicData
 from .TopicWindow import TopicWindow
 from .ValueGrid import StatusGrid, WarningGrid

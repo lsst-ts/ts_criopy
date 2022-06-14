@@ -17,15 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from .CustomLabels import DataLabel, OnOffLabel, ErrorLabel, WarningLabel
-from .DataFormWidget import DataFormWidget
-from .SALComm import warning
-
 from PySide2.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QFormLayout,
     QPushButton,
     QButtonGroup,
 )
@@ -33,6 +28,29 @@ from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
 
 from lsst.ts import salobj
+
+from .CustomLabels import (
+    DataLabel,
+    DataUnitLabel,
+    Ampere,
+    DataDegC,
+    Percent,
+    PressureInmBar,
+    KiloWatt,
+    Hours,
+    Seconds,
+    Volt,
+    RPM,
+    OnOffLabel,
+    PowerOnOffLabel,
+    ErrorLabel,
+    WarningLabel,
+    SummaryStateLabel,
+)
+from .DataFormWidget import DataFormWidget, DataFormButton
+from .SALComm import warning
+from .SALLog import Widget as SALLogWidget
+from .TimeChart import UserSelectedTimeChart, TimeChartView
 
 
 class CompressorsPageWidget(QWidget):
@@ -49,13 +67,16 @@ class CompressorsPageWidget(QWidget):
 
         self._lastEnabled = None
 
-        layout = QHBoxLayout()
-
+        masterLayout = QVBoxLayout()
+        topLayout = QHBoxLayout()
         commandLayout = QVBoxLayout()
-        dataLayout = QFormLayout()
-        statusLayout = QFormLayout()
 
-        errorsWidget = DataFormWidget(
+        userTimeChart = UserSelectedTimeChart(
+            {compressor.remote.tel_analogData: compressor.analogData}
+        )
+
+        errorsWidget = DataFormButton(
+            "Errors",
             compressor.errors,
             [
                 ("Power supply failure", ErrorLabel(field="powerSupplyFailureE400")),
@@ -96,7 +117,7 @@ class CompressorsPageWidget(QWidget):
                 ("Oil Pressure Low", ErrorLabel(field="oilPressureLowE411")),
                 ("External Fault", ErrorLabel(field="externalFaultE412")),
                 ("Dryer", ErrorLabel(field="dryerE413")),
-                ("Condensate Darin", ErrorLabel(field="condensateDrainE414")),
+                ("Condensate Drain", ErrorLabel(field="condensateDrainE414")),
                 ("No Pressure Build Up", ErrorLabel(field="noPressureBuildUpE415")),
                 ("Heavy Startup", ErrorLabel(field="heavyStartupE416")),
                 ("Pre Adjustment VSD", ErrorLabel(field="preAdjustmentVSDE500")),
@@ -116,7 +137,8 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        warningsWidget = DataFormWidget(
+        warningsWidget = DataFormButton(
+            "Warnings",
             compressor.warnings,
             [
                 ("Service Due", WarningLabel(field="serviceDueA600")),
@@ -156,13 +178,6 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        layout.addLayout(commandLayout)
-        layout.addLayout(dataLayout)
-        layout.addLayout(statusLayout)
-        layout.addWidget(errorsWidget)
-        layout.addWidget(warningsWidget)
-        layout.addStretch()
-
         self.commandButtons = QButtonGroup(self)
         self.commandButtons.buttonClicked.connect(self._buttonClicked)
 
@@ -177,139 +192,154 @@ class CompressorsPageWidget(QWidget):
         _addButton(self.TEXT_ENABLE)
         _addButton(self.TEXT_EXIT_CONTROL)
 
+        dataLayout = QVBoxLayout()
+        dataLayout.addWidget(
+            DataFormWidget(
+                self.compressor.compressorInfo,
+                [
+                    ("Compressor Software Version", DataLabel(field="softwareVersion")),
+                    ("Serial Number", DataLabel(field="serialNumber")),
+                ],
+            )
+        )
+
+        dataLayout.addWidget(
+            DataFormWidget(
+                self.compressor.analogData,
+                [
+                    ("Water level", Percent(field="waterLevel", fmt=".0f")),
+                    ("Target speed", RPM(field="targetSpeed")),
+                    ("Motor current", Ampere(field="motorCurrent")),
+                    (
+                        "Heatsink temperature",
+                        DataDegC(field="heatsinkTemperature", fmt=".0f"),
+                    ),
+                    ("DC link voltage", Volt(field="dclinkVoltage", fmt=".0f")),
+                    (
+                        "Motor speed percentage",
+                        Percent(field="motorSpeedPercentage", fmt=".0f"),
+                    ),
+                    ("Motor speed RPM", RPM(field="motorSpeedRPM")),
+                    ("Motor input", KiloWatt(field="motorInput")),
+                    (
+                        "Power consumption",
+                        KiloWatt(field="compressorPowerConsumption"),
+                    ),
+                    (
+                        "Volume percentage",
+                        Percent(field="compressorVolumePercentage", fmt=".0f"),
+                    ),
+                    (
+                        "Volume",
+                        DataUnitLabel(
+                            field="compressorVolume", unit="m3/min", fmt=".01f"
+                        ),
+                    ),
+                    (
+                        "Stage 1 output pressure",
+                        PressureInmBar(field="stage1OutputPressure"),
+                    ),
+                    ("Line pressure", PressureInmBar(field="linePressure")),
+                    (
+                        "Stage 1 output temperature",
+                        DataDegC(field="stage1OutputTemperature", fmt=".0f"),
+                    ),
+                ],
+                userTimeChart,
+            )
+        )
+
+        dataLayout.addWidget(
+            DataFormWidget(
+                self.compressor.timerInfo,
+                [
+                    ("Running hours", Hours("runningHours")),
+                    (
+                        "Loaded hours",
+                        Hours("loadedHours"),
+                    ),
+                    ("Lowest service counter", Hours("lowestServiceCounter")),
+                    ("Run-On timer", Hours("runOnTimer")),
+                    ("Loaded hours 50 percent", Seconds("loadedHours50Percent")),
+                ],
+            )
+        )
+
+        startInhibitDetail = DataFormButton(
+            "Inhibit status",
+            compressor.status,
+            [
+                ("Start by remote", OnOffLabel(field="startByRemote")),
+                (
+                    "Start with timer control",
+                    OnOffLabel(field="startWithTimerControl"),
+                ),
+                (
+                    "Start with pressure requirement",
+                    OnOffLabel(field="startWithPressureRequirement"),
+                ),
+                (
+                    "Start after de-pressurise",
+                    OnOffLabel(field="startAfterDePressurise"),
+                ),
+                (
+                    "Start after power-loss",
+                    OnOffLabel(field="startAfterPowerLoss"),
+                ),
+                (
+                    "Start after dryer pre-run",
+                    OnOffLabel(field="startAfterDryerPreRun"),
+                ),
+            ],
+        )
+
+        statusLayout = QVBoxLayout()
+        statusLayout.addWidget(
+            DataFormWidget(
+                self.compressor.status,
+                [
+                    ("Ready to start", OnOffLabel(field="readyToStart")),
+                    ("Operating", PowerOnOffLabel(field="operating")),
+                    ("Start inhibit", OnOffLabel(field="startInhibit")),
+                    (None, startInhibitDetail),
+                    ("Motor start phase", OnOffLabel(field="motorStartPhase")),
+                    ("Off load", OnOffLabel(field="offLoad")),
+                    ("Soft stop", OnOffLabel(field="softStop")),
+                    ("Run on timer", OnOffLabel(field="runOnTimer")),
+                    ("Fault", WarningLabel(field="fault")),
+                    ("Warning", WarningLabel(field="warning")),
+                    ("Service required", WarningLabel(field="serviceRequired")),
+                    (
+                        "Min. allowed speed",
+                        WarningLabel(field="minAllowedSpeedAchieved"),
+                    ),
+                    (
+                        "Max. allowed speed",
+                        WarningLabel(field="maxAllowedSpeedAchieved"),
+                    ),
+                ],
+            )
+        )
+
+        commandLayout.addWidget(
+            SummaryStateLabel(self.compressor.summaryState, "summaryState")
+        )
+
+        commandLayout.addSpacing(15)
+        commandLayout.addWidget(errorsWidget)
+        commandLayout.addWidget(warningsWidget)
+
         commandLayout.addStretch()
 
-        dataLayout.addRow(
-            "Compressor Software Version",
-            DataLabel(self.compressor.compressorInfo, "softwareVersion"),
-        )
-        dataLayout.addRow(
-            "Serial Number", DataLabel(self.compressor.compressorInfo, "serialNumber")
-        )
+        topLayout.addLayout(commandLayout)
+        topLayout.addLayout(dataLayout)
+        topLayout.addLayout(statusLayout)
+        topLayout.addWidget(TimeChartView(userTimeChart))
 
-        dataLayout.addRow(
-            "Water level", DataLabel(self.compressor.analogData, "waterLevel")
-        )
-        dataLayout.addRow(
-            "Target speed", DataLabel(self.compressor.analogData, "targetSpeed")
-        )
-        dataLayout.addRow(
-            "Motor current", DataLabel(self.compressor.analogData, "motorCurrent")
-        )
-        dataLayout.addRow(
-            "Heatsink temperature",
-            DataLabel(self.compressor.analogData, "heatsinkTemperature"),
-        )
-        dataLayout.addRow(
-            "DC link voltage", DataLabel(self.compressor.analogData, "dclinkVoltage")
-        )
-        dataLayout.addRow(
-            "Motor speed percentage",
-            DataLabel(self.compressor.analogData, "motorSpeedPercentage"),
-        )
-        dataLayout.addRow(
-            "Motor speed RPM", DataLabel(self.compressor.analogData, "motorSpeedRPM")
-        )
-        dataLayout.addRow(
-            "Motor input", DataLabel(self.compressor.analogData, "motorInput")
-        )
-        dataLayout.addRow(
-            "Power consumption",
-            DataLabel(self.compressor.analogData, "compressorPowerConsumption"),
-        )
-        dataLayout.addRow(
-            "Volume percentage",
-            DataLabel(self.compressor.analogData, "compressorVolumePercentage"),
-        )
-        dataLayout.addRow(
-            "Volume", DataLabel(self.compressor.analogData, "compressorVolume")
-        )
-        dataLayout.addRow(
-            "Stage 1 output pressure",
-            DataLabel(self.compressor.analogData, "stage1OutputPressure"),
-        )
-        dataLayout.addRow(
-            "Line pressure", DataLabel(self.compressor.analogData, "linePressure")
-        )
-        dataLayout.addRow(
-            "Stage 1 output temperature",
-            DataLabel(self.compressor.analogData, "stage1OutputTemperature"),
-        )
-        dataLayout.addRow(
-            "Running hours", DataLabel(self.compressor.timerInfo, "runningHours")
-        )
-        dataLayout.addRow(
-            "Loaded hours", DataLabel(self.compressor.timerInfo, "loadedHours")
-        )
-        dataLayout.addRow(
-            "Lowest service counter",
-            DataLabel(self.compressor.timerInfo, "lowestServiceCounter"),
-        )
-        dataLayout.addRow(
-            "Run-On timer", DataLabel(self.compressor.timerInfo, "runOnTimer")
-        )
-        dataLayout.addRow(
-            "Loaded hours 50 percent",
-            DataLabel(self.compressor.timerInfo, "loadedHours50Percent"),
-        )
+        masterLayout.addLayout(topLayout)
+        masterLayout.addWidget(SALLogWidget(self.compressor))
 
-        statusLayout.addRow(
-            "Read to start", OnOffLabel(self.compressor.status, "readyToStart")
-        )
-        statusLayout.addRow(
-            "Operating", OnOffLabel(self.compressor.status, "operating")
-        )
-        statusLayout.addRow(
-            "Start Inhibit", OnOffLabel(self.compressor.status, "startInhibit")
-        )
-        statusLayout.addRow(
-            "Motor start phase", OnOffLabel(self.compressor.status, "motorStartPhase")
-        )
-        statusLayout.addRow("Off load", OnOffLabel(self.compressor.status, "offLoad"))
-        statusLayout.addRow("On load", OnOffLabel(self.compressor.status, "onLoad"))
-        statusLayout.addRow("Soft stop", OnOffLabel(self.compressor.status, "softStop"))
-        statusLayout.addRow(
-            "Run on timer", OnOffLabel(self.compressor.status, "runOnTimer")
-        )
-        statusLayout.addRow("Fault", OnOffLabel(self.compressor.status, "fault"))
-        statusLayout.addRow("Warning", OnOffLabel(self.compressor.status, "warning"))
-        statusLayout.addRow(
-            "Service required", OnOffLabel(self.compressor.status, "serviceRequired")
-        )
-        statusLayout.addRow(
-            "Min. allowed speed",
-            OnOffLabel(self.compressor.status, "minAllowedSpeedAchieved"),
-        )
-        statusLayout.addRow(
-            "Max. allowed speed",
-            OnOffLabel(self.compressor.status, "maxAllowedSpeedAchieved"),
-        )
-
-        statusLayout.addRow(
-            "Start by remote", OnOffLabel(self.compressor.status, "startByRemote")
-        )
-        statusLayout.addRow(
-            "Start with timer control",
-            OnOffLabel(self.compressor.status, "startWithTimerControl"),
-        )
-        statusLayout.addRow(
-            "Start with pressure requirement",
-            OnOffLabel(self.compressor.status, "startWithPressureRequirement"),
-        )
-        statusLayout.addRow(
-            "Start after de-pressurise",
-            OnOffLabel(self.compressor.status, "startAfterDePressurise"),
-        )
-        statusLayout.addRow(
-            "Start after power-loss",
-            OnOffLabel(self.compressor.status, "startAfterPowerLoss"),
-        )
-        statusLayout.addRow(
-            "Start after dryer pre-run",
-            OnOffLabel(self.compressor.status, "startAfterDryerPreRun"),
-        )
-
-        self.setLayout(layout)
+        self.setLayout(masterLayout)
 
         self.compressor.summaryState.connect(self.summaryState)
 
@@ -349,8 +379,8 @@ class CompressorsPageWidget(QWidget):
                 self.TEXT_DISABLE,
                 None,
             ],
-            salobj.State.FAULT: [None, None, None, self.TEXT_STANDBY],
-            salobj.State.OFFLINE: [None, None, None, None, None],
+            salobj.State.FAULT: [None, None, self.TEXT_STANDBY],
+            salobj.State.OFFLINE: [None, None, None],
         }
 
         self._lastEnabled = None

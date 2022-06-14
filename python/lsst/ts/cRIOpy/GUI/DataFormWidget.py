@@ -19,9 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QFormLayout, QWidget
+from PySide2.QtCore import Slot, Qt
+from PySide2.QtGui import QPalette
+from PySide2.QtWidgets import QFormLayout, QWidget, QPushButton
 
-__all__ = ["DataFormWidget"]
+__all__ = ["DataFormWidget", "DataFormButton"]
 
 
 class DataFormWidget(QWidget):
@@ -43,12 +45,16 @@ class DataFormWidget(QWidget):
        myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
     """
 
-    def __init__(self, signal, fields):
+    def __init__(self, signal, fields, timeChart=None):
         super().__init__()
+        self._timeChart = timeChart
 
         layout = QFormLayout()
         for (text, label) in fields:
-            layout.addRow(text, label)
+            if text is None:
+                layout.addRow(label)
+            else:
+                layout.addRow(text, label)
         self.setLayout(layout)
 
         signal.connect(self._process_signal)
@@ -58,3 +64,54 @@ class DataFormWidget(QWidget):
             ch = self.findChild(QWidget, e)
             if ch is not None:
                 ch.setValue(getattr(data, e))
+
+    def mousePressEvent(self, ev):
+        if self._timeChart is not None:
+            child = self.childAt(ev.pos())
+            if child is not None:
+                self._timeChart.topicSelected.emit(child)
+
+
+class DataFormButton(QPushButton):
+    """
+    Creates button displaying overall status. On click, . Update fields on signal with new values.
+
+    Parameters
+    ----------
+    signal : `QSignal`
+        Signal with new data. It is assumed DataLabel childs passed in fields
+        contain DataLabel with field corresponding to fields in the signal.
+
+    fields : `[(str, DataLabel)]`
+        Tuple of text and label. Label shall be child of DataLabel with
+        fieldname set.
+
+    Usage
+    -----
+       myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
+    """
+
+    def __init__(self, title, signal, fields):
+        super().__init__(title)
+
+        self._fields = fields
+
+        self._dataWidget = DataFormWidget(signal, self._fields)
+        self._dataWidget.setWindowTitle(self.text())
+
+        signal.connect(self._dataChanged)
+        self.clicked.connect(self._displayDetails)
+
+    @Slot(map)
+    def _dataChanged(self, data):
+        pal = self.palette()
+        pal.setColor(QPalette.Button, Qt.green)
+        for f in self._fields:
+            if getattr(data, f[1].objectName()) is True:
+                pal.setColor(QPalette.Button, Qt.red)
+                break
+        self.setPalette(pal)
+
+    @Slot()
+    def _displayDetails(self):
+        self._dataWidget.show()
