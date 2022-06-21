@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
+from PySide2.QtCore import Slot
+import astropy.units as u
+
 from .CustomLabels import (
     Force,
     Moment,
@@ -25,9 +29,6 @@ from .CustomLabels import (
     Heartbeat,
     WarningButton,
 )
-
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
-from PySide2.QtCore import Slot
 
 
 class OverviewPageWidget(QWidget):
@@ -106,6 +107,10 @@ class OverviewPageWidget(QWidget):
         self.inclinometerElevationLabel = QLabel("UNKNOWN")
         self.tmaAzimuthLabel = QLabel("UNKNOWN")
         self.tmaElevationLabel = QLabel("UNKNOWN")
+
+        self.broadcastCounter = QLabel("---")
+        self.slewFlag = QLabel("---")
+        self.executionTime = QLabel("---")
 
         self.cscVersion = QLabel("---")
         self.salVersion = QLabel("---")
@@ -201,9 +206,13 @@ class OverviewPageWidget(QWidget):
 
         row += 1
         dataLayout.addWidget(QLabel("Angular Acceleration"), row, col)
-        dataLayout.addWidget(QLabel("X (?)"), row, col + 1)
-        dataLayout.addWidget(QLabel("Y (?)"), row, col + 2)
-        dataLayout.addWidget(QLabel("Z (?)"), row, col + 3)
+        dataLayout.addWidget(QLabel("X"), row, col + 1)
+        dataLayout.addWidget(QLabel("Y"), row, col + 2)
+        dataLayout.addWidget(QLabel("Z"), row, col + 3)
+        dataLayout.addWidget(QLabel("<b>Outer Loop</b>"), row, col + 4)
+        dataLayout.addWidget(self.broadcastCounter, row, col + 5)
+        dataLayout.addWidget(self.slewFlag, row, col + 6)
+        dataLayout.addWidget(self.executionTime, row, col + 7)
         row += 1
         dataLayout.addWidget(self.accelationXLabel, row, col + 1)
         dataLayout.addWidget(self.accelationYLabel, row, col + 2)
@@ -262,6 +271,7 @@ class OverviewPageWidget(QWidget):
         m1m3.inclinometerData.connect(self.inclinometerData)
         m1m3.softwareVersions.connect(self.softwareVersions)
         m1m3.forceActuatorSettings.connect(self.forceActuatorSettings)
+        m1m3.outerLoopData.connect(self.outerLoopData)
 
         mtmount.azimuth.connect(self.azimuth)
         mtmount.elevation.connect(self.elevation)
@@ -330,7 +340,7 @@ class OverviewPageWidget(QWidget):
 
     @Slot(map)
     def inclinometerData(self, data):
-        self.inclinometerElevationLabel.setText("%0.3f" % (data.inclinometerAngle))
+        self.inclinometerElevationLabel.setText(f"{data.inclinometerAngle:.3f}")
 
     @Slot(map)
     def softwareVersions(self, data):
@@ -352,6 +362,12 @@ class OverviewPageWidget(QWidget):
             self.inclinometerTMALabel.setText("<b>Inclinometer</b>")
         else:
             self.inclinometerTMALabel.setText("<b>TMA</b>")
+
+    @Slot(map)
+    def outerLoopData(self, data):
+        self.broadcastCounter.setText(str(data.broadcastCounter))
+        self.slewFlag.setText("True" if data.slewFlag else "False")
+        self.executionTime.setText(f"{(data.executionTime * u.s.to(u.ms)):.2f}")
 
     @Slot(map)
     def azimuth(self, data):
