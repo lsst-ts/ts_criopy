@@ -25,7 +25,7 @@ from .CustomLabels import (
     InterlockOffLabel,
 )
 
-from PySide2.QtWidgets import QGroupBox, QGridLayout, QLabel
+from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QFormLayout, QWidget
 from PySide2.QtCore import Slot
 
 
@@ -35,96 +35,115 @@ class ValueGrid(QGroupBox):
 
     Parameters
     ----------
-    valueLabel : `class`
-        Type of values.
-    states : `map(str, str)`
+    valueLabel : `DataLabel or UnitLabel`
+        Type of values. A class which provides setValue method to change its
+        value.
+    items : `map(str, str)`
         Keys are event items, values are labels for those items.
     event : `Signal`
         Event emitted when new data arrives.
     cols : `int`
         Number of columns.
     extraLabels : `array((str, QLabel))`
-        Extra labels added to beginning.
+        Extra labels added to beginning. Those are responsible for signal
+        processing.
     """
 
-    def __init__(self, valueLabel, states, event, cols, extraLabels=[]):
+    def __init__(self, valueLabel, items, event, cols, extraLabels=[]):
         super().__init__()
-        self.states = {}
 
-        layout = QGridLayout()
+        layout = QHBoxLayout()
+        columns = []
 
-        lw = len(states)
+        for c in range(cols):
+            fl = QFormLayout()
+            columns.append(fl)
+            layout.addLayout(fl)
+
+        lw = len(items) + len(extraLabels)
         rows = lw / cols
         i = 0
         for (l, w) in extraLabels:
-            r = i % rows
-            c = int(i / rows) * 2
+            c = int(i / rows)
             i += 1
-            layout.addWidget(QLabel(l), r, c)
-            layout.addWidget(w, r, c + 1)
+            columns[c].addRow(l, w)
 
-        for s in states.items():
-            r = i % rows
-            c = int(i / rows) * 2
+        for (n, l) in items.items():
+            c = int(i / rows)
             i += 1
 
-            layout.addWidget(QLabel(s[1]), r, c)
+            dataLabel = valueLabel()
+            dataLabel.setObjectName(n)
 
-            label = valueLabel()
-            layout.addWidget(label, r, c + 1)
-
-            self.states[s[0]] = label
+            columns[c].addRow(l, dataLabel)
 
         self.setLayout(layout)
 
-        event.connect(self.data)
+        event.connect(self._dataChanged)
 
     @Slot(map)
-    def data(self, data):
-        for s in self.states.items():
-            s[1].setValue(getattr(data, s[0]))
+    def _dataChanged(self, data):
+        for e in dir(data):
+            ch = self.findChild(QWidget, e)
+            if ch is not None:
+                ch.setValue(getattr(data, e))
 
 
 class StatusGrid(ValueGrid):
-    def __init__(self, states, event, cols):
-        super().__init__(StatusLabel, states, event, cols)
+    """A variation of ValueGrid, assuming all labels are StatusLabel."""
+
+    def __init__(self, items, event, cols):
+        super().__init__(StatusLabel, items, event, cols)
 
 
 class WarningGrid(ValueGrid):
-    def __init__(self, states, event, cols):
-        super().__init__(WarningLabel, states, event, cols)
+    """A variation of ValueGrid, assuming all labels are WarningLabel."""
+
+    def __init__(self, items, event, cols):
+        super().__init__(WarningLabel, items, event, cols)
 
 
 class OnOffGrid(ValueGrid):
-    def __init__(self, states, event, cols):
-        super().__init__(OnOffLabel, states, event, cols)
+    """A variation of ValueGrid, assuming all labels are OnOffLabel."""
+
+    def __init__(self, items, event, cols):
+        super().__init__(OnOffLabel, items, event, cols)
 
 
 class PowerOnOffGrid(ValueGrid):
-    def __init__(self, states, event, cols):
-        super().__init__(PowerOnOffLabel, states, event, cols)
+    """A variation of ValueGrid, assuming all labels are PowerOnOffLabel."""
+
+    def __init__(self, items, event, cols):
+        super().__init__(PowerOnOffLabel, items, event, cols)
 
 
 class InterlockOffGrid(ValueGrid):
-    def __init__(self, states, event, cols, showAnyWarning=True):
+    """A variation of ValueGrid, assuming all labels are InterlockOffLabel.
+    Adds anyWarning to display if any interlock is locked.
+    """
+
+    def __init__(self, items, event, cols, showAnyWarning=True):
         if showAnyWarning:
             self.anyWarningLabel = WarningLabel()
             super().__init__(
                 InterlockOffLabel,
-                states,
+                items,
                 event,
                 cols,
                 [("Any Warning", self.anyWarningLabel)],
             )
         else:
             self.anyWarningLabel = None
-            super().__init__(InterlockOffLabel, states, event, cols)
+            super().__init__(InterlockOffLabel, items, event, cols)
 
     @Slot(map)
-    def data(self, data):
-        super().data(data)
+    def _dataChanged(self, data):
+        super()._dataChanged(data)
         if self.anyWarningLabel:
             anyWarning = False
-            for s in self.states.items():
-                anyWarning |= getattr(data, s[0])
+            for e in dir(data):
+                ch = self.findChild(QWidget, e)
+                if ch is not None:
+                    anyWarning |= getattr(data, e)
+
             self.anyWarningLabel.setValue(anyWarning)

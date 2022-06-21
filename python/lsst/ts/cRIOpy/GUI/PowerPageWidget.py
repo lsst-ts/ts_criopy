@@ -100,30 +100,6 @@ class PowerPageWidget(QWidget):
         self.auxOnButtons = createButtons("Aux", "On", 2)
         self.auxOffButtons = createButtons("Aux", "Off", 3)
 
-        self.rcpMirrorCellUtility220VAC1StatusLabel = QLabel("UNKNOWN")
-        self.rcpCabinetUtility220VACStatusLabel = QLabel("UNKNOWN")
-        self.rcpExternalEquipment220VACStatusLabel = QLabel("UNKNOWN")
-        self.rcpMirrorCellUtility220VAC2StatusLabel = QLabel("UNKNOWN")
-        self.rcpMirrorCellUtility220VAC3StatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkARedundancyControlStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkBRedundancyControlStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkCRedundancyControlStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkDRedundancyControlStatusLabel = QLabel("UNKNOWN")
-        self.controlsPowerNetworkRedundancyControlStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkAStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkARedundantStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkBStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkBRedundantStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkCStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkCRedundantStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkDStatusLabel = QLabel("UNKNOWN")
-        self.powerNetworkDRedundantStatusLabel = QLabel("UNKNOWN")
-        self.controlsPowerNetworkStatusLabel = QLabel("UNKNOWN")
-        self.controlsPowerNetworkRedundantStatusLabel = QLabel("UNKNOWN")
-        self.lightPowerNetworkStatusLabel = QLabel("UNKNOWN")
-        self.externalEquipmentPowerNetworkStatusLabel = QLabel("UNKNOWN")
-        self.laserTrackerPowerNetworkStatusLabel = QLabel("UNKNOWN")
-
         self.mainCommandedLabels = []
         self.mainOutputLabels = []
         self.mainMismatchLabels = []
