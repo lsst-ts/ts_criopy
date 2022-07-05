@@ -54,14 +54,14 @@ class TimeCacheTestCase(unittest.TestCase):
         self.assertEqual(cache.columns(), ("timestamp", "data1", "data2"))
 
         for i in range(103):
-            cache.append((i, i * 2, i ** 2))
+            cache.append((i, i * 2, i**2))
 
         self.assertEqual(len(cache), 5)
         for i in range(5):
             testValue = i + 98
             self.assertEqual(cache["timestamp"][i], testValue)
             self.assertEqual(cache["data1"][i], testValue * 2)
-            self.assertEqual(cache["data2"][i], testValue ** 2)
+            self.assertEqual(cache["data2"][i], testValue**2)
 
     def test_resize(self):
         cache = TimeCache(5, [("timestamp", "i4"), ("data1", "i4"), ("data2", "i4")])
@@ -69,12 +69,12 @@ class TimeCacheTestCase(unittest.TestCase):
         self.assertEqual(cache.columns(), ("timestamp", "data1", "data2"))
 
         for i in range(1025):
-            cache.append((i ** 2, i * 2, i * 3))
+            cache.append((i**2, i * 2, i * 3))
 
         self.assertEqual(len(cache), 5)
         for i in range(5):
             testValue = i + 1020
-            self.assertEqual(cache["timestamp"][i], testValue ** 2)
+            self.assertEqual(cache["timestamp"][i], testValue**2)
             self.assertEqual(cache["data1"][i], testValue * 2)
             self.assertEqual(cache["data2"][i], testValue * 3)
 
@@ -82,19 +82,19 @@ class TimeCacheTestCase(unittest.TestCase):
 
         for i in range(995):
             self.assertEqual(len(cache), 5 + i)
-            cache.append((i * 4, i ** 2, i * 5))
+            cache.append((i * 4, i**2, i * 5))
 
         self.assertEqual(len(cache), 1000)
         for i in range(5):
             testvalue = i + 1020
-            self.assertEqual(cache["timestamp"][i], testvalue ** 2)
+            self.assertEqual(cache["timestamp"][i], testvalue**2)
             self.assertEqual(cache["data1"][i], testvalue * 2)
             self.assertEqual(cache["data2"][i], testvalue * 3)
 
         for i in range(5, 1000):
             testvalue = i - 5
             self.assertEqual(cache["timestamp"][i], testvalue * 4)
-            self.assertEqual(cache["data1"][i], testvalue ** 2)
+            self.assertEqual(cache["data1"][i], testvalue**2)
             self.assertEqual(cache["data2"][i], testvalue * 5)
 
         for i in range(14568):
@@ -116,12 +116,12 @@ class TimeCacheTestCase(unittest.TestCase):
 
         for i in range(14568):
             self.assertEqual(len(cache), 25)
-            cache.append((i * 3, i ** 2, i * 6))
+            cache.append((i * 3, i**2, i * 6))
 
         for i in range(25):
             testvalue = i + 14543
             self.assertEqual(cache["timestamp"][i], testvalue * 3)
-            self.assertEqual(cache["data1"][i], testvalue ** 2)
+            self.assertEqual(cache["data1"][i], testvalue**2)
             self.assertEqual(cache["data2"][i], testvalue * 6)
 
 

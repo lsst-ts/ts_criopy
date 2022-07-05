@@ -1,7 +1,16 @@
 #!/usr/bin/env python3.8
 
-from lsst.ts.cRIOpy.GUI import SALLog, Application
-from lsst.ts.cRIOpy.VMS import (
+from functools import partial
+
+from PySide2.QtCore import Slot, Signal, QSettings, Qt
+from PySide2.QtWidgets import QMainWindow
+
+import astropy.units as u
+from asyncqt import asyncClose
+import numpy as np
+
+from .GUI.SAL import SALLog, Application
+from .VMS import (
     BoxChartWidget,
     Cache,
     DisplacementWidget,
@@ -11,14 +20,6 @@ from lsst.ts.cRIOpy.VMS import (
     VelocityWidget,
     RawAccelerationWidget,
 )
-
-from PySide2.QtCore import Slot, Signal, QSettings, Qt
-from PySide2.QtWidgets import QMainWindow
-
-import astropy.units as u
-from asyncqt import asyncClose
-from functools import partial
-import numpy as np
 
 
 class EUI(QMainWindow):

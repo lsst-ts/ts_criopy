@@ -1,22 +1,18 @@
 #!/usr/bin/env python3.8
 
-from lsst.ts.cRIOpy.GUI import (
-    Application,
-    SALStatusBar,
-    SALLog,
-)
-
-from lsst.ts.cRIOpy.M1M3TS import (
-    ThermalValuePageWidget,
-    MixingValveWidget,
-    GlycolLoopTemperatureWidget,
-)
-from lsst.ts.cRIOpy.M1M3TS.M1M3TSGUI import ThermalStatesDock
-
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QMainWindow
 
 from asyncqt import asyncClose
+
+from .GUI.SAL import Application, SALStatusBar, SALLog
+
+from .M1M3TS import (
+    ThermalValuePageWidget,
+    MixingValveWidget,
+    GlycolLoopTemperatureWidget,
+)
+from .M1M3TS.M1M3TSGUI import ThermalStatesDock
 
 
 class EUI(QMainWindow):

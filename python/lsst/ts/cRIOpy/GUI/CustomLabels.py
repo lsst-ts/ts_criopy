@@ -32,14 +32,13 @@ from PySide2.QtGui import QPalette
 import astropy.units as u
 from datetime import datetime
 
-from lsst.ts.salobj import State
-
 from .EventWindow import EventWindow
 
 __all__ = [
     "VLine",
     "DataLabel",
     "UnitLabel",
+    "DataUnitLabel",
     "Force",
     "Moment",
     "Mm",
@@ -64,7 +63,6 @@ __all__ = [
     "InterlockOffLabel",
     "StatusLabel",
     "Clipped",
-    "SummaryStateLabel",
     "Heartbeat",
     "LogEventWarning",
     "SimulationStatus",
@@ -773,7 +771,7 @@ class Heartbeat(QWidget):
 
     .. code-block:: python
        import SALComm
-       from CustomLabels import *
+       from CustomLabels import Heartbeat
 
        ...
 
@@ -867,27 +865,6 @@ class Heartbeat(QWidget):
             )
 
         self._initTimer(2001)
-
-
-class SummaryStateLabel(DataLabel):
-    """Display state label."""
-
-    def __init__(self, signal=None, field=None):
-        super().__init__(signal, field)
-        self.setAlignment(Qt.AlignCenter)
-
-    def setValue(self, value):
-        states = {
-            State.DISABLED: "Disabled",
-            State.ENABLED: "Enabled",
-            State.FAULT: "Fault",
-            State.OFFLINE: "Offline",
-            State.STANDBY: "Standby",
-        }
-        try:
-            self.setText(states[value])
-        except KeyError:
-            self.setText(f"Unknown ({value})")
 
 
 class LogEventWarning(QLabel):

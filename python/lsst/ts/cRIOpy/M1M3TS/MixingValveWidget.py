@@ -34,9 +34,9 @@ from ..GUI import (
     DockWindow,
     TimeChart,
     TimeChartView,
-    SALCommand,
     DataFormWidget,
 )
+from ..GUI.SAL import SALCommand
 
 
 class MixingValveWidget(DockWindow):

@@ -19,17 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
+import asyncio
+import concurrent.futures
+from functools import partial
+import time
+
 from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
 from PySide2.QtWidgets import QMenu
 
-from lsst.ts.utils import make_done_future
-from lsst.ts.cRIOpy import TimeCache
-import time
+from .. import TimeCache
 
-import concurrent.futures
-from functools import partial
 
 __all__ = [
     "TimeChart",
@@ -109,7 +110,9 @@ class TimeChart(AbstractChart):
 
         self._next_update = 0
         self.updateInterval = updateInterval
-        self.updateTask = make_done_future()
+
+        self.updateTask: asyncio.Future = asyncio.Future()
+        self.updateTask.set_result(None)
 
         self._createCaches(items, maxItems)
 

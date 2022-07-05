@@ -29,7 +29,7 @@ from PySide2.QtWidgets import (
     QAbstractItemView,
 )
 from PySide2.QtCore import Slot
-from ..GUI import TopicWindow, SALCommand
+from ..GUI.SAL import SALCommand, TopicWindow
 from .ThermalData import Thermals
 
 from asyncqt import asyncSlot

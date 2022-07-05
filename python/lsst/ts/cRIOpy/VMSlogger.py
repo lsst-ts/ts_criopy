@@ -23,16 +23,16 @@ import os
 import os.path
 import signal
 import sys
-import traceback
-
-from lsst.ts.salobj import Domain, Remote
-from lsst.ts.cRIOpy import parseDuration, VMSCache
 
 import argparse
 import asyncio
 import click
 from datetime import datetime
 import logging
+
+from lsst.ts.salobj import Domain, Remote
+from . import parseDuration
+from .VMS import Cache
 
 FREQ = 1000  # Hz
 
@@ -95,7 +95,7 @@ parser.add_argument(
     dest="template",
     default="${name}_%Y-%m-%dT%H:%M:%S.${ext}",
     type=str,
-    help="template used to construct output file path. Default to ${name}_%Y-%m-%dT%H:%M:%S.${ext}. strftime (%) expansions are performed (see man strftime for details, %Y for full (4 digit) year, %m for calendar month,..) together with custom ${xx} expansion (${name} for device name, ${ext} for extension - hd5, cvs or cvs.gz). Directories in expanded file path are created as needed.",
+    help="template used to construct output file path. Default to ${name}_%%Y-%%m-%%dT%%H:%%M:%%S.${ext}. strftime (%%) expansions are performed (see man strftime for details, %%Y for full (4 digit) year, %%m for calendar month,..) together with custom ${xx} expansion (${name} for device name, ${ext} for extension - hd5, cvs or cvs.gz). Directories in expanded file path are created as needed.",
 )
 parser.add_argument(
     "--workdir",
@@ -175,7 +175,7 @@ class Collector:
 
         self.cache_size = self.chunk_size + 50000
 
-        self.cache = VMSCache(self.cache_size, device_sensors[self.index])
+        self.cache = Cache(self.cache_size, device_sensors[self.index])
 
     def _need_rotate(self, timestamp):
         if self.rotate is None:
@@ -330,9 +330,7 @@ class Collector:
                         break
 
         except Exception:
-            logger.error(f"Cannot collect data for {devices[self.index]}")
-            for line in traceback.format_exc().split("\n"):
-                logger.error(f"> {line}")
+            logger.exception(f"Cannot collect data for {devices[self.index]}")
 
 
 async def main(args, pipe=None):
