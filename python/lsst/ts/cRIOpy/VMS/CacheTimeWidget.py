@@ -19,12 +19,12 @@
 
 __all__ = ["CacheTimeWidget"]
 
-from .CacheWidget import CacheWidget
+import time
 
 from PySide2.QtCore import Qt, Slot, QPointF, QDateTime
 from PySide2.QtCharts import QtCharts
 
-import time
+from .CacheWidget import CacheWidget
 
 
 class CacheTimeWidget(CacheWidget):
@@ -34,7 +34,7 @@ class CacheTimeWidget(CacheWidget):
     ----------
     title : `str`
         QDockWidget title and object name.
-    cache : `VMSCache`
+    cache : `VMS.Cache`
         Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.

@@ -19,17 +19,18 @@
 
 __all__ = ["CacheWidget"]
 
-from ..GUI.TimeChart import AbstractChart
-from .ChartView import ChartView
-from .Unit import units, coefficients
-from ..GUI.CustomLabels import DockWindow
+import concurrent.futures
+import time
 
 from PySide2.QtCore import Slot
 from PySide2.QtCharts import QtCharts
 
-import concurrent.futures
-import time
 from lsst.ts.utils import make_done_future
+
+from ..GUI.TimeChart import AbstractChart
+from .ChartView import ChartView
+from .Unit import units, coefficients
+from ..GUI.CustomLabels import DockWindow
 
 
 class CacheWidget(DockWindow):
@@ -40,7 +41,7 @@ class CacheWidget(DockWindow):
     ----------
     title : `str`
         QDockWidget title and object name.
-    cache : `VMSCache`
+    cache : `VMS.Cache`
         Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.

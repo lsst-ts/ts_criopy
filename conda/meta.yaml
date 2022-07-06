@@ -10,6 +10,11 @@ source:
 build:
   noarch: generic
   script: python -m pip install --no-deps --ignore-installed .
+  entry_points:
+    - M1M3GUI = lsst.ts.cRIO.M1M3GUI:run
+    - M1M3TSGUI = "lsst.ts.cRIOpy.M1M3TSGUI:run"
+    - VMSGUI = "lsst.ts.cRIOpy.VMSGUI:run"
+    - VMSlogger = "lsst.ts.cRIOpy.VMSlogger:run"
 
 test:
   requires:
@@ -24,7 +29,7 @@ test:
     - tests
     - setup.cfg
   commands:
-    - pytest -vsx
+    - pytest
 
 requirements:
   host:
@@ -43,9 +48,3 @@ requirements:
     - asyncqt
     - ts-idl
     - ts-salobj
-
-about:
-    home: https://github.com/lsst-ts/ts_cRIOpy
-    license: GPL3
-    summary: 'Various utilities for NI cRIO CSC'
-    description: |

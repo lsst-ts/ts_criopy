@@ -19,13 +19,13 @@
 
 __all__ = ["PSDWidget"]
 
-from .CacheWidget import CacheWidget
+import time
 
+import numpy as np
 from PySide2.QtCore import Qt, Slot, QPointF
 from PySide2.QtCharts import QtCharts
 
-import numpy as np
-import time
+from .CacheWidget import CacheWidget
 
 
 class PSDWidget(CacheWidget):
@@ -35,7 +35,7 @@ class PSDWidget(CacheWidget):
     ----------
     title : `str`
         QDockWidget title and object name.
-    cache : `VMSCache`
+    cache : `VMS.Cache`
         Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.
