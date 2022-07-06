@@ -17,7 +17,6 @@ M1M3TSGUI = "lsst.ts.cRIOpy.M1M3TSGUI:run"
 VMSGUI = "lsst.ts.cRIOpy.VMSGUI:run"
 VMSlogger = "lsst.ts.cRIOpy.VMSlogger:run"
 
-
 [tool.setuptools.dynamic]
 version = { attr = "setuptools_scm.get_version" }
 

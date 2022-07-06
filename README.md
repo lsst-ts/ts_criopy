@@ -1,6 +1,6 @@
 # Python EUI/GUI for M1M3 Support System
 
-Engineering / User Graphical Interface for cRIO systems. Provides generics GUI
+Engineering / User Graphical Interface for cRIO systems. Provides generic GUI
 classes as well as SALobj specific classes.
 
 ## Directory structure
@@ -22,18 +22,18 @@ Under python/lsst/ts/cRIOpy, the directories are:
 Applications are located in bin directory. Before running those, please make
 sure that required Python packages (in python directory) are available:
 
-```
+```bash
 python3.8 -c "from lsst.ts.cRIOpy.GUI import *"
 ```
 
 shall pass without error.
 
+The following command shall install those commands and packages needed for
+running them for you.
 
-```
+```bash
 pip install .
 ```
-
-shall install those commands and packages needed for running them for you.
 
 ### M1M3GUI 
 
@@ -60,14 +60,33 @@ CLI for VMS logging. Can save VMS data as cvs or, with optional
 
 ## Dependencies
 
-Python 3.8
-[PySide2 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide2)
-[asyncqt](https://pypi.org/project/asyncqt)
-[LSST ts_salobj](https://github.com/lsst-ts/ts_salobj)
+* Python 3.8 or later
+* [numpy](https://numpy.org)
+* [astropy](https://astropy.org)
+* [PySide2 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide2)
+* [asyncqt](https://pypi.org/project/asyncqt)
+
+For SAL etc:
+
+* [LSST ts_salobj](https://github.com/lsst-ts/ts_salobj)
+
 
 # SAL binding
 
-The GUI/EUI
+The GUI/EUI contains code which depends on ts\_salobj and related
+infrastructure. Files in (and only in) python/lsst/ts/cRIOpy/GUI directory are
+generics and don't depend on ts\_salobj. All other code usually depends on
+ts\_salobj, including code in GUI subdirectories (ActuatorsDisplay, SAL).
+
+You shall be able to:
+
+```python
+from lsst.ts.cRIOpy.GUI import *
+```
+
+to get access to common GUI widgets (UnitLabel & friends, various improved
+layouts,..).
+
 
 ## Prerequsities
 
