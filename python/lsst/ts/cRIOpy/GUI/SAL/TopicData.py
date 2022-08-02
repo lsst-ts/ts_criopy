@@ -76,6 +76,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAccelerationForces",
+                False,
             ),
             TopicData(
                 "Applied Active Optic Forces",
@@ -90,6 +91,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAzimuthForces",
+                False,
             ),
             TopicData(
                 "Applied Balance Forces",
@@ -99,6 +101,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedBalanceForces",
+                False,
             ),
             TopicData(
                 "Applied Cylinder Forces",
@@ -115,6 +118,7 @@ class Topics:
                     ),
                 ],
                 "appliedCylinderForces",
+                False,
             ),
             TopicData(
                 "Applied Elevation Forces",
@@ -124,6 +128,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedElevationForces",
+                False,
             ),
             TopicData(
                 "Applied Forces",
@@ -133,6 +138,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedForces",
+                False,
             ),
             TopicData(
                 "Applied Offset Forces",
@@ -160,6 +166,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedThermalForces",
+                False,
             ),
             TopicData(
                 "Applied Velocity Forces",
@@ -169,6 +176,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedVelocityForces",
+                False,
             ),
             TopicData(
                 "Pre-clipped Acceleration Forces",
