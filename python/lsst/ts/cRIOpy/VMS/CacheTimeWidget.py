@@ -82,7 +82,8 @@ class CacheTimeWidget(CacheWidget):
 
     def calculateValues(self, timestamps, signal):
         raise RuntimeError(
-            "Abstract CacheTimeWidget.calculateValues called - please make sure all child classes implements getPoints method."
+            "Abstract CacheTimeWidget.calculateValues called - please make sure"
+            " all child classes implements getPoints method."
         )
 
     def plotAll(self):

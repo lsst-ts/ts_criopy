@@ -42,7 +42,8 @@ class SignalButton(QPushButton):
     variable : `str`
         Name of variable governing enable/disable switching. Part of signal.
     enabledValues : `[]`
-        When variable value is in this list, button is enabled. It is disabled otherwise.
+        When variable value is in this list, button is enabled. It is disabled
+        otherwise.
     """
 
     def __init__(
@@ -87,9 +88,11 @@ class DetailedStateEnabledButton(SignalButton):
     title : `str`
         Button title. Passed to QPushButton.
     m1m3 : `SALComm`
-        SALComm. Its detailed state is connected to a handler enabling/disabling the button.
+        SALComm. Its detailed state is connected to a handler
+        enabling/disabling the button.
     enabledStates : `[DetailedState.*]`
-        States in which button shall be enabled. It will be disabled in all other states.
+        States in which button shall be enabled. It will be disabled in all
+        other states.
     """
 
     def __init__(
@@ -127,7 +130,8 @@ class EngineeringButton(DetailedStateEnabledButton):
 
 
 class StateEnabledWidget(QWidget):
-    """Widget linked to mirror detailed state, enabled only when mirror is in specified state(s).
+    """Widget linked to mirror detailed state, enabled only when mirror is in
+    specified state(s).
 
     Parameters
     ----------

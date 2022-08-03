@@ -42,7 +42,10 @@ class DataFormWidget(QWidget):
 
     Usage
     -----
-       myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
+       myWidget = DataFormWidget(sal.errors, [(
+           "Power",
+           WarningLabel(None, "state")
+       )])
     """
 
     def __init__(self, signal, fields, timeChart=None):
@@ -74,7 +77,8 @@ class DataFormWidget(QWidget):
 
 class DataFormButton(QPushButton):
     """
-    Creates button displaying overall status. On click, . Update fields on signal with new values.
+    Creates button displaying overall status. On click, . Update fields on
+    signal with new values.
 
     Parameters
     ----------
@@ -88,7 +92,9 @@ class DataFormButton(QPushButton):
 
     Usage
     -----
-       myWidget = DataFormWidget(sal.errors, [("Power", WarningLabel(None, "state"))])
+       myWidget = DataFormWidget(sal.errors, [(
+           "Power", WarningLabel(None, "state")
+       )])
     """
 
     def __init__(self, title, signal, fields):

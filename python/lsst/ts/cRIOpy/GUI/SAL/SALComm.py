@@ -39,7 +39,7 @@ class MetaSAL(type(QObject)):
     read topics. Remote arguments are read from class variable _args. SALObj
     remote is accessible through 'remote' class variable."""
 
-    def __new__(mcs, classname, bases, dictionary):
+    def __new__(cls, classname, bases, dictionary):
         dictionary["domain"] = Domain()
 
         if dictionary["_manual"] is None:
@@ -76,8 +76,8 @@ class MetaSAL(type(QObject)):
                 getattr(self.remote, m).callback = getattr(self, m[4:]).emit
 
         def reemit_remote(self):
-            """
-            Re-emits all telemetry and event data from a single remote as Qt messages.
+            """Re-emits all telemetry and event data from a single remote as Qt
+            messages.
             """
             for m in filter(_filterEvtTel, dir(self.remote)):
                 data = getattr(self.remote, m).get()
@@ -88,7 +88,7 @@ class MetaSAL(type(QObject)):
             await self.remote.close()
             await self.domain.close()
 
-        newclass = super(MetaSAL, mcs).__new__(mcs, classname, bases, dictionary)
+        newclass = super(MetaSAL, cls).__new__(cls, classname, bases, dictionary)
 
         # creates class methods
         setattr(newclass, connect_callbacks.__name__, connect_callbacks)
@@ -135,7 +135,11 @@ def create(name, manual=None, **kwargs):
        my_mount = SALComm.create("MTMount")
 
        # tel_data will be created with 400 items queue
-       my_vms = SALComm.create("MTVMS", index=1, manual={"data" : {"queue_len" : 400}})
+       my_vms = SALComm.create(
+           "MTVMS",
+           index=1,
+           manual={"data" : {"queue_len" : 400}}
+       )
 
        @Slot(map)
        def update_labels_azimuth(data):
@@ -273,7 +277,8 @@ def SALListCommand(cmd):
     Parameters
     ----------
     comms : `[SALComm]`
-        List of SALComm objects. The command will be executed for each member of the list.
+        List of SALComm objects. The command will be executed for each member
+        of the list.
     cmd : `str`
         SAL command name
     **kwargs : `dict`
@@ -289,7 +294,11 @@ def SALListCommand(cmd):
         class MyCommandClass(QWidget):
            def __init__(self):
                super().__init__()
-               self.cscs = [SALComm('MTVMS', index=1), SALComm('MTVMS', index=2)]
+               self.cscs = [SALComm(
+                   'MTVMS',
+                   index=1),
+                   SALComm('MTVMS', index=2
+               )]
 
                button = QPushButton("Run!")
                button.clicked.connect(self.runIt)
@@ -314,14 +323,20 @@ def SALListCommand(cmd):
                 except base.AckError as ackE:
                     warning(
                         self,
-                        f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index} {called.name}",
-                        f"Executing SAL/DDS command <i>{called.name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
+                        f"Error executing"
+                        f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
+                        f" {called.name}",
+                        f"Executing SAL/DDS command"
+                        f" <i>{called.name}"
+                        f"({kwargs}</i>):<br/>{ackE.ackcmd.result}",
                     )
                 except RuntimeError as rte:
                     warning(
                         self,
-                        f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index} {called.name}",
-                        f"Executing SAL/DDS command <b>{called.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
+                        f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
+                        f" {called.name}",
+                        f"Executing SAL/DDS command <b>{called.name}"
+                        f"</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
                     )
 
         return wrapper_f

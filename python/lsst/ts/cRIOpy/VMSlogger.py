@@ -48,7 +48,11 @@ devices = ["M1M3", "M2", "Rotator"]
 
 parser = argparse.ArgumentParser(
     description="Save VMS data to a file, either HDF5 or CSV.",
-    epilog="Data are read as they arrive in DDS messages, matched by timestamps. Only complete (from all accelerometers the device provides) records are stored. Allows either single or multiple devices recording. Can be launched as daemon, running on background. Recorded data can be analysed offline with VMSGUI.",
+    epilog="Data are read as they arrive in DDS messages, matched by"
+    " timestamps. Only complete (from all accelerometers the device provides)"
+    " records are stored. Allows either single or multiple devices recording. Can"
+    " be launched as daemon, running on background. Recorded data can be analysed"
+    " offline with VMSGUI.",
 )
 parser.add_argument(
     "devices", type=str, nargs="+", help="name or index of CSC", choices=devices
@@ -64,7 +68,9 @@ parser.add_argument(
     dest="chunk_size",
     default=5000,
     type=int,
-    help="receiving chunk size. After receiving this number of records, data are added to HDF5 file (and the file flushed to disk). Has no effect if CSV (default) format is used. Defaults to 5000.",
+    help="receiving chunk size. After receiving this number of records, data"
+    " are added to HDF5 file (and the file flushed to disk). Has no effect if CSV"
+    " (default) format is used. Defaults to 5000.",
 )
 parser.add_argument(
     "-d", dest="debug", default=0, action="count", help="increase debug level"
@@ -78,7 +84,9 @@ parser.add_argument(
     type=int,
     dest="size",
     default=None,
-    help="number of records to save in a file. Default to 86400 seconds (assuming --rotate isn't specified and data are producet on FREQ, e.g 1kHz)..",
+    help="number of records to save in a file. Default to 86400 seconds"
+    " (assuming --rotate isn't specified and data are producet on FREQ, e.g"
+    " 1kHz)..",
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
@@ -95,7 +103,12 @@ parser.add_argument(
     dest="template",
     default="${name}_%Y-%m-%dT%H:%M:%S.${ext}",
     type=str,
-    help="template used to construct output file path. Default to ${name}_%%Y-%%m-%%dT%%H:%%M:%%S.${ext}. strftime (%%) expansions are performed (see man strftime for details, %%Y for full (4 digit) year, %%m for calendar month,..) together with custom ${xx} expansion (${name} for device name, ${ext} for extension - hd5, cvs or cvs.gz). Directories in expanded file path are created as needed.",
+    help="template used to construct output file path. Default to"
+    " ${name}_%%Y-%%m-%%dT%%H:%%M:%%S.${ext}. strftime (%%) expansions are"
+    " performed (see man strftime for details, %%Y for full (4 digit) year, %%m"
+    " for calendar month,..) together with custom ${xx} expansion (${name} for"
+    " device name, ${ext} for extension - hd5, cvs or cvs.gz). Directories in"
+    " expanded file path are created as needed.",
 )
 parser.add_argument(
     "--workdir",
@@ -123,7 +136,8 @@ parser.add_argument(
     dest="rotate",
     default=None,
     type=parseDuration,
-    help="rotate on given interval. Default to not rotate - rotate on reaching size number of entriers. Can be used only for HDF5 output.",
+    help="rotate on given interval. Default to not rotate - rotate on reaching"
+    " size number of entriers. Can be used only for HDF5 output.",
 )
 parser.add_argument(
     "--rotate-offset",
@@ -165,7 +179,8 @@ class Collector:
         self.h5file = None
 
         logger.debug(
-            f"Creating cache: index={self.index+1} device={device_sensors[self.index]} type={self.file_type}"
+            f"Creating cache: index={self.index+1}"
+            f" device={device_sensors[self.index]} type={self.file_type}"
         )
 
         if "5" in self.file_type:
@@ -230,7 +245,8 @@ class Collector:
         if self.h5file is None or len(self.cache) < self.chunk_size:
             return False
         logger.debug(
-            f"Saving device {devices[self.index]} data to {self.h5file.file.filename} from {self.cache.hdf5_index}"
+            f"Saving device {devices[self.index]} data to"
+            f" {self.h5file.file.filename} from {self.cache.hdf5_index}"
         )
         self.cache.savehdf5(self.chunk_size)
         self.h5file.flush()
@@ -252,7 +268,8 @@ class Collector:
         while True:
             current_len = saved_len + len(self.cache)
             logger.debug(
-                f"Waiting {devices[self.index]}..{100 * (current_len)/self.size:.02f}% {current_len} of {self.size}"
+                f"Waiting {devices[self.index]}.."
+                f" {100 * (current_len)/self.size:.02f}% {current_len} of {self.size}"
             )
             if self.h5file is None:
                 if current_len >= self.size:
@@ -382,7 +399,8 @@ async def main(args, pipe=None):
     if args.h5py:
         if has_h5py is False:
             logger.error(
-                "Python is missing h5py module, saving HDF 5 file is not supported. Please install h5py first (pip install h5py)."
+                "Python is missing h5py module, saving HDF 5 file is not"
+                " supported. Please install h5py first (pip install h5py)."
             )
             sys.exit(1)
         file_type += "5"

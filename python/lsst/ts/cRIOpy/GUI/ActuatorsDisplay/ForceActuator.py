@@ -77,7 +77,8 @@ class ForceActuator(QGraphicsItem):
     """
 
     STATE_WARNING = 2
-    """Force Actuator is active, but the value / actuator has some warning attached (`int`).
+    """Force Actuator is active, but the value / actuator has some warning
+    attached (`int`).
     """
 
     def __init__(self, id, index, x, y, orientation, data, dataIndex, state, kind):
@@ -103,12 +104,14 @@ class ForceActuator(QGraphicsItem):
     def updateData(self, data, state):
         """Updates actuator data.
 
-        If new data differs from the current data, calls update() to force actuator redraw.
+        If new data differs from the current data, calls update() to force
+        actuator redraw.
 
         Parameters
         ----------
         data : `float`
-             New data associated with the actuator (actual force, calculated force, ..).
+             New data associated with the actuator (actual force, calculated
+             force, ..).
         state : `state`
              New actuator state value.
         """
@@ -184,7 +187,8 @@ class ForceActuator(QGraphicsItem):
         Parameters
         ----------
         v : `scalar`
-            Value to format. Type can vary depending on which value is being formated (boolean, float, int,..).
+            Value to format. Type can vary depending on which value is being
+            formated (boolean, float, int,..).
 
         Returns
         -------

@@ -89,7 +89,8 @@ class CacheWidget(DockWindow):
 
     def setupAxes(self):
         raise RuntimeError(
-            "Abstract CacheWidget.setupAxes called - please make sure the method is implemented in all child classes"
+            "Abstract CacheWidget.setupAxes called - please make sure the"
+            " method is implemented in all child classes"
         )
 
     def _plotAll(self):
@@ -101,7 +102,8 @@ class CacheWidget(DockWindow):
     def plotAll(self):
         """Plot all signals. Run as task in a thread. Should be overriden."""
         raise RuntimeError(
-            "Abstract CacheWidget.plotAll called - please make sure the method is implemented in all child classes"
+            "Abstract CacheWidget.plotAll called - please make sure the method"
+            " is implemented in all child classes"
         )
 
     @Slot(int, int, float, float)

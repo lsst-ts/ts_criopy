@@ -188,7 +188,8 @@ def detailedStateString(detailedState):
         MTM1M3.DetailedState.ACTIVEENGINEERING: "<font color='blue'>Active Engineering</font>",
         MTM1M3.DetailedState.LOWERINGENGINEERING: "<font color='magenta'>Lowering Engineering</font>",
         MTM1M3.DetailedState.LOWERINGFAULT: "<font color='red'>Lowering Fault</font>",
-        MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS: "<font color='red'>Profile Hardpoint Corrections</font>",
+        MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS: "<font color='red'>"
+        "Profile Hardpoint Corrections</font>",
     }
     try:
         return _map[detailedState]

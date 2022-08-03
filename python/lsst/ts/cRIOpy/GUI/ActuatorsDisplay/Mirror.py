@@ -36,7 +36,8 @@ class Mirror(QGraphicsScene):
         super().__init__()
 
     def setColorScale(self, scale):
-        """Set display color scale. Provides getColor method, returning color to be used with value.
+        """Set display color scale. Provides getColor method, returning color
+        to be used with value.
 
         Parameters
         ----------
@@ -68,8 +69,8 @@ class Mirror(QGraphicsScene):
         dataIndex : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
-            ForceActuator.STATE_WARNING.
+            Force Actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
         kind : `FASelection`
             Force actuator kind - normal, selected or selected neighbour.
         """
@@ -110,7 +111,8 @@ class Mirror(QGraphicsScene):
         data : `float`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
 
         Raises
         ------

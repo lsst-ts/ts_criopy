@@ -25,7 +25,9 @@ import argparse
 
 
 def parseDuration(duration):
-    """Accept string depicting duration. Numbers can be suffixed with character, denomination their lengths.
+    """Accept string depicting duration.
+
+    Numbers can be suffixed with character, denomination their lengths.
 
     Length denominators
     -------------------
@@ -42,7 +44,8 @@ def parseDuration(duration):
     Parameters
     ----------
     duration : `str`
-        Duration string. Numbers with know suffixed. Non-sufficed number will be treated as seconds.
+        Duration string. Numbers with know suffixed. Non-sufficed number will
+        be treated as seconds.
 
     Returns
     -------

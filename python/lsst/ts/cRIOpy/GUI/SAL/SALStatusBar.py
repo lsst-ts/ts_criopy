@@ -34,7 +34,8 @@ class SALStatusBar(QStatusBar):
     Parameters
     ----------
     comms : `[SALComm]`
-        SALComms for heartbeat displays. ErrorCode from the first SALComm will be displayed as well.
+        SALComms for heartbeat displays. ErrorCode from the first SALComm will
+        be displayed as well.
     detailedStateFunction : `def(int)`, optional
         If provided, a label showing detailedState (result of
         detailedStateFunction call with detailedState as argument) will be
@@ -96,5 +97,7 @@ class SALStatusBar(QStatusBar):
             sep=" ", timespec="milliseconds"
         )
         self.errorCodeLabel.setText(
-            f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:{'green' if data.errorCode==0 else 'red'}'>{escape(data.errorReport)}</span>"
+            f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
+            f"{'green' if data.errorCode==0 else 'red'}"
+            f"'>{escape(data.errorReport)}</span>"
         )

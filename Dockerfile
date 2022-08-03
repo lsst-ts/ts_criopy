@@ -1,4 +1,4 @@
-ARG DEVELOP_TAG=c0023.001
+ARG DEVELOP_TAG=c0025.008
 
 FROM lsstts/develop-env:$DEVELOP_TAG AS crio-develop
 
@@ -7,8 +7,8 @@ ARG cRIO_PY=develop
 WORKDIR /home/saluser
 
 RUN source .setup.sh \
-    && conda install -y pyside2 asyncqt \
-    && conda install -y -c lsstts ts-salobj ts-idl
+    && mamba install -y pyside2 asyncqt numpy pytest \
+    && mamba install -y -c lsstts ts-salobj ts-idl
 
 RUN cd repos && git clone --branch $cRIO_PY https://github.com/lsst-ts/ts_cRIOpy
 

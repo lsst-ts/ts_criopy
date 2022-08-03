@@ -71,7 +71,8 @@ class MirrorView(QGraphicsView):
 
     @property
     def selected(self):
-        """Selected actuator or None if no actuator selected (ForceActuator)."""
+        """Selected actuator or None if no actuator selected
+        (ForceActuator)."""
         return self.getForceActuator(self._selectedId)
 
     def _setNeighbour(self, index, activate):
@@ -136,8 +137,8 @@ class MirrorView(QGraphicsView):
         dataIndex : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
-            ForceActuator.STATE_WARNING.
+            Force Actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
         """
         self._mirror.addForceActuator(
             id,
@@ -161,7 +162,8 @@ class MirrorView(QGraphicsView):
         data : `float`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
 
         Raises
         ------

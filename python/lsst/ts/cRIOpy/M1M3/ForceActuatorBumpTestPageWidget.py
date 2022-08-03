@@ -290,7 +290,8 @@ class ForceActuatorBumpTestPageWidget(QWidget):
 
     @Slot(map)
     def detailedState(self, data):
-        """Called when detailedState event is received. Intercept to enable/disable form buttons."""
+        """Called when detailedState event is received. Intercept to
+        enable/disable form buttons."""
         if data.detailedState == MTM1M3.DetailedState.PARKEDENGINEERING:
             self.bumpTestAllButton.setEnabled(True)
             self.bumpTestButton.setEnabled(
@@ -331,7 +332,8 @@ class ForceActuatorBumpTestPageWidget(QWidget):
 
     @asyncSlot(map)
     async def forceActuatorBumpTestStatus(self, data):
-        """Received when an actuator finish/start running bump tests or the actuator reports progress of the bump test."""
+        """Received when an actuator finish/start running bump tests or the
+        actuator reports progress of the bump test."""
 
         testProgress = [
             "Not tested",

@@ -98,9 +98,11 @@ class TimeChart(AbstractChart):
         Items stored in plot. Key is axis, items are labels.
     maxItems : `int`, optional
         Number of items to keep in graph. When series grows above the specified
-        number of points, oldest points are removed. Defaults to 50 * 30 = 50Hz * 30s.
+        number of points, oldest points are removed. Defaults to 50 * 30 = 50Hz
+        * 30s.
     updateInterval: `float`, optional
-        Interval for chart redraws responding to append call. Defaults to 0.1 second.
+        Interval for chart redraws responding to append call. Defaults to 0.1
+        second.
     """
 
     def __init__(self, items, maxItems=50 * 30, updateInterval=0.1):
@@ -135,8 +137,9 @@ class TimeChart(AbstractChart):
         s.attachAxis(a)
 
     def _attachSeries(self):
-        # Caveat emptor, the order here is important. Hard to find, but the order in
-        # which chart, axis and series are constructed and attached should always be:
+        # Caveat emptor, the order here is important. Hard to find, but the
+        # order in which chart, axis and series are constructed and attached
+        # should always be:
         # - construct Axis, Chart, Serie
         # - addAxis to chart
         # - attach series to axis
@@ -364,7 +367,10 @@ class SALChartWidget(TimeChartView):
         a2 = SALAxis("Applied Forces (N)", m1m3.appliedForces)
         a2.addValues({"X" : "xForce", "Y" : "yForce", "Z" : "zForce"})
 
-        chart = SALChartWidget(a1, a2, SALAxis("Pre-clipped Forces (N)", m1m3.preclippedForces).addValue("X", "xForce"))
+        chart = SALChartWidget(a1, a2, SALAxis(
+            "Pre-clipped Forces (N)",
+            m1m3.preclippedForces,
+        ).addValue("X", "xForce"))
     """
 
     def __init__(self, *values, **kwargs):

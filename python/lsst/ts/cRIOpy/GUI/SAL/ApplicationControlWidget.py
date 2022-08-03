@@ -97,10 +97,12 @@ class HPWarnings:
 
 
 class ApplicationControlWidget(QWidget):
-    """Widget with control buttons for M1M3 operations. Buttons are disabled/enabled and reasonable defaults sets on DetailedState changes."""
+    """Widget with control buttons for M1M3 operations. Buttons are
+    disabled/enabled and reasonable defaults sets on DetailedState changes."""
 
     TEXT_START = "&Start"
-    """Constants for button titles. Titles are used to select command send to SAL."""
+    """Constants for button titles. Titles are used to select command send to
+    SAL."""
     TEXT_ENABLE = "&Enable"
     TEXT_DISABLE = "&Disable"
     TEXT_STANDBY = "&Standby"
@@ -246,7 +248,8 @@ class ApplicationControlWidget(QWidget):
 
     @Slot(map)
     def detailedState(self, data):
-        # text mean button is enabled and given text shall be displayed. None for disabled buttons.
+        # text mean button is enabled and given text shall be displayed. None
+        # for disabled buttons.
         stateMap = {
             DetailedState.STANDBY: [
                 self.TEXT_START,

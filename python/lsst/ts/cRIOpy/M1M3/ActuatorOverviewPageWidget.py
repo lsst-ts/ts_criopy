@@ -51,9 +51,6 @@ class ActuatorOverviewPageWidget(QWidget):
         self.accelerationMyLabel = QLabel("UNKNOWN")
         self.accelerationMzLabel = QLabel("UNKNOWN")
         self.accelerationMagLabel = QLabel("UNKNOWN")
-        self.aberrationZLabel = QLabel("UNKNOWN")
-        self.aberrationMxLabel = QLabel("UNKNOWN")
-        self.aberrationMyLabel = QLabel("UNKNOWN")
         self.activeOpticZLabel = QLabel("UNKNOWN")
         self.activeOpticMxLabel = QLabel("UNKNOWN")
         self.activeOpticMyLabel = QLabel("UNKNOWN")
@@ -176,14 +173,6 @@ class ActuatorOverviewPageWidget(QWidget):
         self.dataLayout.addWidget(self.accelerationMzLabel, row, col + 6)
         self.dataLayout.addWidget(self.accelerationMagLabel, row, col + 7)
         row += 1
-        self.dataLayout.addWidget(QLabel("Aberration"), row, col)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 2)
-        self.dataLayout.addWidget(self.aberrationZLabel, row, col + 3)
-        self.dataLayout.addWidget(self.aberrationMxLabel, row, col + 4)
-        self.dataLayout.addWidget(self.aberrationMyLabel, row, col + 5)
-        self.dataLayout.addWidget(QLabel("-"), row, col + 6)
-        row += 1
         self.dataLayout.addWidget(QLabel("Active Optic"), row, col)
         self.dataLayout.addWidget(QLabel("-"), row, col + 1)
         self.dataLayout.addWidget(QLabel("-"), row, col + 2)
@@ -262,7 +251,6 @@ class ActuatorOverviewPageWidget(QWidget):
 
         self.layout.addLayout(plotLayout)
 
-        self.m1m3.appliedAberrationForces.connect(self.appliedAberrationForces)
         self.m1m3.appliedAccelerationForces.connect(self.appliedAccelerationForces)
         self.m1m3.appliedActiveOpticForces.connect(self.appliedActiveOpticForces)
         self.m1m3.appliedAzimuthForces.connect(self.appliedAzimuthForces)
@@ -273,12 +261,6 @@ class ActuatorOverviewPageWidget(QWidget):
         self.m1m3.appliedStaticForces.connect(self.appliedStaticForces)
         self.m1m3.appliedThermalForces.connect(self.appliedThermalForces)
         self.m1m3.appliedVelocityForces.connect(self.appliedVelocityForces)
-
-    @Slot(map)
-    def appliedAberrationForces(self, data):
-        self.aberrationZLabel.setText("%0.1f" % data.fz)
-        self.aberrationMxLabel.setText("%0.1f" % data.mx)
-        self.aberrationMyLabel.setText("%0.1f" % data.my)
 
     @Slot(map)
     def appliedAccelerationForces(self, data):

@@ -35,7 +35,8 @@ class GaugeScale(QWidget):
         self.setMaximumWidth(200)
 
     def setRange(self, min, max):
-        """Set value range. Color is mapped between min and max values, using change in hue.
+        """Set value range. Color is mapped between min and max values, using
+        change in hue.
 
         Parameters
         ----------
@@ -90,7 +91,8 @@ class GaugeScale(QWidget):
         return QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1)
 
     def paintEvent(self, event):
-        """Overridden method. Paint gauge as series of lines, and adds text labels."""
+        """Overridden method. Paint gauge as series of lines, and adds text
+        labels."""
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         swidth = max(self.width() - 100, 20)

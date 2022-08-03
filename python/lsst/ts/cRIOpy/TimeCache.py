@@ -92,7 +92,8 @@ class TimeCache:
         Returns
         -------
         endTime : `float`
-            None if cache is empty. Otherwise timestamp of the first data point."""
+            None if cache is empty. Otherwise timestamp of the first data
+            point."""
         if self.filled is False:
             if self.current_index > 0:
                 return self.data[0]["timestamp"]
@@ -108,7 +109,8 @@ class TimeCache:
         Returns
         -------
         endTime : `float`
-            None if cache is empty. Otherwise timestamp of the last data point."""
+            None if cache is empty. Otherwise timestamp of the last data
+            point."""
         if self.current_index == 0:
             if self.filled is False:
                 return None
@@ -173,7 +175,8 @@ class TimeCache:
             HDF5 group.
         group_args : `dict`
             Keyword arguments passed to create_group call. It is recommended to
-            pass at least chunks=True. Please See h5py.Group.create_dataset for details.
+            pass at least chunks=True. Please See h5py.Group.create_dataset for
+            details.
         """
         self._hdf5_datasets = {}
 

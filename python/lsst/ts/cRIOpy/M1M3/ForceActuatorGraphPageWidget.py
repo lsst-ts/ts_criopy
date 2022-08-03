@@ -12,7 +12,8 @@ from ..GUI.ActuatorsDisplay import MirrorWidget, ForceActuator
 
 class ForceActuatorGraphPageWidget(ForceActuatorWidget):
     """
-    Draw distribution of force actuators, and selected value. Intercept events callbacks to trigger updates.
+    Draw distribution of force actuators, and selected value. Intercept events
+    callbacks to trigger updates.
     """
 
     def __init__(self, m1m3):

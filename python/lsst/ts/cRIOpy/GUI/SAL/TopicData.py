@@ -69,11 +69,6 @@ class Topics:
 
         self.topics = [
             TopicData(
-                "Applied Aberration Forces",
-                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
-                "appliedAberrationForces",
-            ),
-            TopicData(
                 "Applied Acceleration Forces",
                 [
                     TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
@@ -81,6 +76,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAccelerationForces",
+                False,
             ),
             TopicData(
                 "Applied Active Optic Forces",
@@ -95,6 +91,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedAzimuthForces",
+                False,
             ),
             TopicData(
                 "Applied Balance Forces",
@@ -104,6 +101,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedBalanceForces",
+                False,
             ),
             TopicData(
                 "Applied Cylinder Forces",
@@ -120,6 +118,7 @@ class Topics:
                     ),
                 ],
                 "appliedCylinderForces",
+                False,
             ),
             TopicData(
                 "Applied Elevation Forces",
@@ -129,6 +128,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedElevationForces",
+                False,
             ),
             TopicData(
                 "Applied Forces",
@@ -138,6 +138,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedForces",
+                False,
             ),
             TopicData(
                 "Applied Offset Forces",
@@ -165,6 +166,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedThermalForces",
+                False,
             ),
             TopicData(
                 "Applied Velocity Forces",
@@ -174,11 +176,7 @@ class Topics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedVelocityForces",
-            ),
-            TopicData(
-                "Pre-clipped Aberration Forces",
-                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
-                "preclippedAberrationForces",
+                False,
             ),
             TopicData(
                 "Pre-clipped Acceleration Forces",
@@ -706,11 +704,6 @@ class Topics:
                     WarningField(
                         "Static force",
                         "staticForceWarning",
-                        FATABLE_ZINDEX,
-                    ),
-                    WarningField(
-                        "Aberration force",
-                        "aberrationForceWarning",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
