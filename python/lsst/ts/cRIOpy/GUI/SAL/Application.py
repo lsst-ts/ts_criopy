@@ -93,8 +93,9 @@ class Application:
         name : `str`
             Remote name.
         manual : `hash`
-            Events and telemetry topics created with optional arguments. Keys are
-            events and telemetry names, values is a hash of additional arguments.
+            Events and telemetry topics created with optional arguments. Keys
+            are events and telemetry names, values is a hash of additional
+            arguments.
 
         **kwargs : `dict`
             Optional parameters passed to remote.
@@ -102,8 +103,9 @@ class Application:
         self._comms.append(create(name, manual=manual, **kwargs))
 
     def run(self):
-        """Runs the application. Creates splash screen, display it if requested.
-        Creates and display main window after SAL/DDS is initialized."""
+        """Runs the application. Creates splash screen, display it if
+        requested. Creates and display main window after SAL/DDS is
+        initialized."""
 
         if self._salInfo:
             for c in self._comms:
@@ -117,7 +119,7 @@ class Application:
             sys.exit(0)
 
         class AppSplashScreen(SplashScreen):
-            def started(splash, *comms):
+            def started(splash, *comms):  # noqa: N805
                 self._eui = self._eui_class(*comms)
                 splash.finish(self._eui)
                 self._eui.show()

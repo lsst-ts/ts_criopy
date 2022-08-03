@@ -25,8 +25,8 @@ from PySide2.QtWidgets import QWidget
 
 class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
-    progress,..) values. Subclasses shall implement formatValue() and getColor()
-    methods.
+    progress,..) values. Subclasses shall implement formatValue() and
+    getColor() methods.
 
     Parameters
     ----------
@@ -62,7 +62,8 @@ class EnumScale(QWidget):
         Parameters
         ----------
         value : `bool`
-            Value for which color shall be returned. True is assumed to be good (=green).
+            Value for which color shall be returned. True is assumed to be good
+            (=green).
 
         Returns
         -------
@@ -72,7 +73,8 @@ class EnumScale(QWidget):
         return self._levels[value][1]
 
     def paintEvent(self, event):
-        """Overridden method. Paint gauge as series of lines, and adds text labels."""
+        """Overridden method. Paint gauge as series of lines, and adds text
+        labels."""
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         palette = QGuiApplication.palette()

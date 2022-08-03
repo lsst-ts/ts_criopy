@@ -55,7 +55,8 @@ from ..GUI.SAL.SALComm import warning
 
 
 class CompressorsPageWidget(QWidget):
-    # Constants for button titles. Titles are used to select command send to SAL.
+    # Constants for button titles. Titles are used to select command send to
+    # SAL.
     TEXT_START = "&Start"
     TEXT_ENABLE = "&Enable"
     TEXT_DISABLE = "&Disable"
@@ -363,7 +364,8 @@ class CompressorsPageWidget(QWidget):
 
     @Slot(map)
     def summaryState(self, data):
-        # text mean button is enabled and given text shall be displayed. None for disabled buttons.
+        # text mean button is enabled and given text shall be displayed. None
+        # for disabled buttons.
         stateMap = {
             salobj.State.STANDBY: [
                 self.TEXT_START,

@@ -40,7 +40,8 @@ from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 
 
 class OffsetsTypeButton(QPushButton):
-    """Button to change units of offset movement. Knows how to convert value from selected units into steps.
+    """Button to change units of offset movement. Knows how to convert value
+    from selected units into steps.
 
     Attributes
     ----------
@@ -97,7 +98,8 @@ class OffsetsTypeButton(QPushButton):
         return self._units[self._selectedIndex][1]
 
     def getDecimals(self):
-        """Returns number of decimals suggested for display. 0 for integer values."""
+        """Returns number of decimals suggested for display. 0 for integer
+        values."""
         return self._units[self._selectedIndex][2]
 
     def getUnit(self):

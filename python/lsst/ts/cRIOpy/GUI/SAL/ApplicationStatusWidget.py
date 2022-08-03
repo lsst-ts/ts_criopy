@@ -75,7 +75,8 @@ class ApplicationStatusWidget(QWidget):
         try:
             self.m1m3.forceActuatorState.disconnect(self.forceActuatorState)
         except RuntimeError:
-            # raised when disconnecting not connected slot - ignore it, as the code might try to disconnect not connected slot
+            # raised when disconnecting not connected slot - ignore it, as the
+            # code might try to disconnect not connected slot
             pass
 
     @Slot(map)
@@ -100,7 +101,8 @@ class ApplicationStatusWidget(QWidget):
             self._disconnectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.RAISING:
             modeStateText = "Automatic"
-            mirrorStateText = f"Raising ({self.m1m3.remote.evt_forceActuatorState.get().supportPercentage:.03f}%)"
+            percent = self.m1m3.remote.evt_forceActuatorState.get().supportPercentage
+            mirrorStateText = f"Raising ({percent:.03f}%)"
             self._connectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.ACTIVE:
             modeStateText = "Automatic"

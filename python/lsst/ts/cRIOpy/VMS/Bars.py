@@ -150,5 +150,8 @@ class StatusBar(QStatusBar):
             End timestamp.
         """
         self.cacheStatus[index].setText(
-            f"Size: {length} {datetime.fromtimestamp(start).strftime('%H:%M:%S.%f')} - {datetime.fromtimestamp(end).strftime('%H:%M:%S.%f')} {end-start+self.SAMPLE_TIME:.03f}s"
+            f"Size: {length}"
+            f" {datetime.fromtimestamp(start).strftime('%H:%M:%S.%f')} -"
+            f" {datetime.fromtimestamp(end).strftime('%H:%M:%S.%f')}"
+            f" {end-start+self.SAMPLE_TIME:.03f}s"
         )

@@ -157,7 +157,8 @@ class TopicWindow(DockWindow):
         ----------
 
         s : `map`
-            Contains id (selected actuator ID), data (selected actuator current value) and warning (boolean, true if value is in warning).
+            Contains id (selected actuator ID), data (selected actuator current
+            value) and warning (boolean, true if value is in warning).
         """
         if s is None:
             self.selectedActuatorIdLabel.setText("not selected")

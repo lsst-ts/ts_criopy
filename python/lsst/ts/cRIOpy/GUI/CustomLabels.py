@@ -188,7 +188,8 @@ class UnitLabel(QLabel):
         )
 
     def setValue(self, value):
-        """Sets value. Transformation and formatting is done according to unit, convert and fmt constructor arguments.
+        """Sets value. Transformation and formatting is done according to unit,
+        convert and fmt constructor arguments.
 
         Parameters
         ----------
@@ -204,9 +205,9 @@ class UnitLabel(QLabel):
             self.setText(text)
 
 
-# TODO: tried to combine UnitLabel and DataLabel directly, but failed.
-# the closest I was able to get was probably using **kwargs for DataLabel and UnitLabel, and
-# keep Python super().__init__(... call
+# TODO: tried to combine UnitLabel and DataLabel directly, but failed.  the
+# closest I was able to get was probably using **kwargs for DataLabel and
+# UnitLabel, and keep Python super().__init__(... call
 class DataUnitLabel(UnitLabel):
     """Combines DataLabel and UnitLabel. Parameters specify signal and field
     name (as in DataLabel) and display options (as in UnitLabel).
@@ -476,7 +477,8 @@ class ArcsecWarning(Arcsec):
         Float formatting. Defaults to 0.02f.
     warning_threshold : `float`, optional
         If abs(value) is above the threshold, display value as warning (bright
-        text). Defaults to 0.73 arcsecond, half of the allowed measurement error.
+        text). Defaults to 0.73 arcsecond, half of the allowed measurement
+        error.
 
     error_threshold : `float`, optional
         If abs(value) is above the threshold, display value as error (red
@@ -522,7 +524,8 @@ class OnOffLabel(DataLabel):
         Parameters
         ----------
         value : `bool`
-            Current (=to be displayed) variable value. True means warning/error is raised.
+            Current (=to be displayed) variable value. True means warning/error
+            is raised.
         """
         if value:
             self.setText("<font color='red'>On</font>")
@@ -634,7 +637,8 @@ class WarningButton(QPushButton):
     comm : `SALComm`
         SALComm object representing the signals
     topic : `str`
-        Topic name. Should be event/telemetry name without leading evt_ (for events).
+        Topic name. Should be event/telemetry name without leading evt_ (for
+        events).
     field : `str`, optional
         Field from topic used to display button state. Defaults to anyWarning
     """
@@ -707,7 +711,8 @@ class InterlockOffLabel(QLabel):
         Parameters
         ----------
         interlockOff : `bool`
-            Current interlock off state. True means interlock is locked (=PROBLEM).
+            Current interlock off state. True means interlock is locked
+            (=PROBLEM).
         """
         if value:
             self.setText("<font color='red'>PROBLEM</font>")
