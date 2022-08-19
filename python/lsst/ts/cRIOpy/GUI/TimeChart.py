@@ -223,7 +223,7 @@ class TimeChart(AbstractChart):
                 serie.replace(points)
 
             self.timeAxis.setRange(
-                *(map(QDateTime().fromMSecsSinceEpoch, cache.timeRange()))
+                *(map(QDateTime().fromMSecsSinceEpoch, map(int, cache.timeRange())))
             )
             if d_min == d_max:
                 if d_min == 0:

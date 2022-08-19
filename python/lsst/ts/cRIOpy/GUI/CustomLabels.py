@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Slot, QTimer, Qt
 from PySide2.QtWidgets import (
     QFrame,
@@ -62,6 +64,7 @@ __all__ = [
     "WarningButton",
     "InterlockOffLabel",
     "StatusLabel",
+    "EnumLabel",
     "Clipped",
     "Heartbeat",
     "LogEventWarning",
@@ -741,6 +744,28 @@ class StatusLabel(QLabel):
             self.setText("<font color='green'>OK</font>")
         else:
             self.setText("<font color='red'>Error</font>")
+
+class EnumLabel(QLabel):
+    """Display enumeration values.
+
+    Uses map supplied in constructor to find matching status string.
+    """
+    def __init__(self, mapping : typing.Dict[int, str]):
+        """Construct EnumLable using provided mapping.
+
+        Parameters
+        ----------
+        mapping : `map(int, str)`
+            Enumeration mapping. Key is variable value, value is string (can include Qt/html) to display.
+        """
+        super().__init__("---")
+        self._mapping = mapping
+
+    def setValue(self, value):
+        try:
+            self.setText(self._mapping[value])
+        except KeyError:
+            self.setText(f"<fonr color='red'>Unknown {value}</font>")
 
 
 class Clipped(QLabel):
