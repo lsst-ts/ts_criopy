@@ -45,7 +45,7 @@ class Application:
     Usage
     -----
     .. code-block:: python
-       from PySide2.QtWidgets import QApplication
+       from lsst.ts.cRIOpy.GUI import Application
 
 
        class EUI(QMainWindow):
@@ -55,6 +55,7 @@ class Application:
            app = Application(EUI)
            app.addComm("MTM1M3")
            app.addComm("MTMount", include=["azimuth", "elevation"])
+           app.addComm("MTAirCompressor", index=2)
            app.run()
     """
 

@@ -745,12 +745,14 @@ class StatusLabel(QLabel):
         else:
             self.setText("<font color='red'>Error</font>")
 
+
 class EnumLabel(QLabel):
     """Display enumeration values.
 
     Uses map supplied in constructor to find matching status string.
     """
-    def __init__(self, mapping : typing.Dict[int, str]):
+
+    def __init__(self, mapping: typing.Dict[int, str]):
         """Construct EnumLable using provided mapping.
 
         Parameters

@@ -19,19 +19,16 @@
 
 from functools import partial
 
-from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QWidget,
     QVBoxLayout,
 )
-from asyncqt import asyncSlot
 
 from lsst.ts.idl.enums.MTM1M3 import HardpointTest
 
 from ..GUI import ArrayItem, ArraySignal, ArrayButton, ArrayGrid, Force, Mm, EnumLabel
 from ..GUI.TimeChart import TimeChart, TimeChartView
-from ..GUI.SAL import SALComm, SALLog
-from ..GUI.ArrayGrid import ArrayGrid
+from ..GUI.SAL import SALComm
 
 
 class HardpointTestPageWidget(QWidget):
@@ -68,19 +65,18 @@ class HardpointTestPageWidget(QWidget):
                             ArrayItem(
                                 "measuredForce",
                                 "Measuerd force",
-                                unit=partial(Force, ".03f"),
+                                partial(Force, ".03f"),
                             ),
                             ArrayItem(
                                 "displacement",
                                 "Displacement",
-                                unit=Mm,
+                                Mm,
                             ),
                         ],
                     ),
                     ArrayItem(
                         "testState",
                         "Test state",
-                        self.m1m3.hardpointTestStatus,
                         partial(
                             EnumLabel,
                             {
@@ -93,6 +89,7 @@ class HardpointTestPageWidget(QWidget):
                                 HardpointTest.FAILED: "<font color='red'>Failed</font>",
                             },
                         ),
+                        self.m1m3.hardpointTestStatus,
                     ),
                     ArrayButton(
                         lambda i: self.m1m3.remote.cmd_testHardpoint.set_start(
