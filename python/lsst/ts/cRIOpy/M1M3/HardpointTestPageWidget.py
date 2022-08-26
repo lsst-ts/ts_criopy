@@ -19,6 +19,7 @@
 
 from functools import partial
 
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -27,7 +28,7 @@ from PySide2.QtWidgets import (
 from lsst.ts.idl.enums.MTM1M3 import HardpointTest
 
 from ..GUI import ArrayItem, ArraySignal, ArrayButton, ArrayGrid, Force, Mm, EnumLabel
-from ..GUI.TimeChart import TimeChart, TimeChartView
+from ..GUI.TimeChart import UserSelectedTimeChart, TimeChartView
 from ..GUI.SAL import SALComm
 
 
@@ -44,9 +45,15 @@ class HardpointTestPageWidget(QWidget):
 
     def __init__(self, m1m3: SALComm):
         super().__init__()
-        self.m1m3 = m1m3
 
         layout = QVBoxLayout()
+
+        chart = UserSelectedTimeChart(
+            {
+                m1m3.remote.tel_hardpointActuatorData: m1m3.hardpointActuatorData,
+                m1m3.remote.evt_hardpointTestStatus: m1m3.hardpointTestStatus,
+            }
+        )
 
         layout.addWidget(
             ArrayGrid(
@@ -54,7 +61,7 @@ class HardpointTestPageWidget(QWidget):
                 [f"<b>{x}</b>" for x in range(1, 7)],
                 [
                     ArraySignal(
-                        self.m1m3.hardpointActuatorData,
+                        m1m3.hardpointActuatorData,
                         [
                             ArrayItem("stepsQueued", "Steps queued"),
                             ArrayItem(
@@ -89,26 +96,26 @@ class HardpointTestPageWidget(QWidget):
                                 HardpointTest.FAILED: "<font color='red'>Failed</font>",
                             },
                         ),
-                        self.m1m3.hardpointTestStatus,
+                        m1m3.hardpointTestStatus,
                     ),
                     ArrayButton(
-                        lambda i: self.m1m3.remote.cmd_testHardpoint.set_start(
+                        lambda i: m1m3.remote.cmd_testHardpoint.set_start(
                             hardpointActuator=i + 1
                         ),
                         "Start test",
                     ),
                     ArrayButton(
-                        lambda i: self.m1m3.remote.cmd_killHardpointTest.set_start(
+                        lambda i: m1m3.remote.cmd_killHardpointTest.set_start(
                             hardpointActuator=i + 1
                         ),
                         "Abort",
                     ),
                 ],
+                Qt.Vertical,
+                chart,
             )
         )
 
-        self.chart = TimeChart({})
-
-        layout.addWidget(TimeChartView(self.chart))
+        layout.addWidget(TimeChartView(chart))
 
         self.setLayout(layout)

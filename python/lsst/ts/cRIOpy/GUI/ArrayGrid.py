@@ -20,9 +20,9 @@
 
 Creates widget utilising QGridLayout to display multi-indexed variables.
 Provides functions to add variables into TimeChart. In default, Vertical
-orientation, rows represents data items, while columns are used to display
-array items. For example for hardpoints, rows are forces, encoder values and
-columns are hardpoint numbers.
+orientation, columns represents data items, while rows are used to display
+array items. For example for hardpoints, columns are forces, encoder values and
+rows are hardpoint numbers.
 
 Usage
 -----
@@ -43,7 +43,7 @@ from asyncqt import asyncSlot
 
 from lsst.ts.salobj import base
 
-from . import UnitLabel
+from . import UnitLabel, TimeChart
 from .SAL.SALComm import warning
 
 
@@ -147,6 +147,8 @@ class ArrayItem(AbstractColumn):
 
         for c, i in enumerate(self.items):
             parent.add_widget(i, row, c + 1)
+            i.setObjectName(self.objectName() + f"[{c}]")
+            i.setCursor(Qt.PointingHandCursor)
         return row + 1
 
 
@@ -234,6 +236,7 @@ class ArrayGrid(QWidget):
         rows: list[str],
         items: list[AbstractColumn],
         orientation: Qt.Orientation = Qt.Vertical,
+        chart: TimeChart = None,
     ):
         """Construct grid item holding ArrayItems.
 
@@ -248,11 +251,14 @@ class ArrayGrid(QWidget):
             displays in columns indices (e.g. for hardpoints, 1, 2, 3..), and
             in rows values (Force,..). Qt.Horizontal swaps rows for columns and
             vice versa.
+        chart : `TimeChart`, optional
+            Timechart to display values from clicked label.
         """
         super().__init__()
         self._items = items
         self.rows = rows
         self.orientation = orientation
+        self._chart = chart
 
         self.setLayout(QGridLayout())
 
@@ -273,3 +279,9 @@ class ArrayGrid(QWidget):
 
     def get_data_rows(self) -> int:
         return len(self.rows)
+
+    def mousePressEvent(self, ev):
+        if self._chart is not None:
+            child = self.childAt(ev.pos())
+            if child is not None:
+                self._chart.topicSelected.emit(child)

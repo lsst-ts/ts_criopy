@@ -132,7 +132,7 @@ class EUI(QMainWindow):
         id = 1
         for child in self.children():
             if child.objectName().startswith(prefix):
-                id = int(child.objectName()[len(prefix):]) + 1
+                id = int(child.objectName()[len(prefix) :]) + 1
         return id
 
     @Slot(map)
