@@ -2705,9 +2705,9 @@ def actuatorIDToIndex(actuatorId, valueIndex=FATABLE_INDEX):
 def nearNeighborIndices(index, valueIndex=FATABLE_INDEX):
     return filter(
         lambda n: n is not None,
-        map(
-            lambda f: actuatorIDToIndex(f, valueIndex),
-            FATABLE[index][FATABLE_NEAR_NEIGHBOR_INDEX],
+        (
+            actuatorIDToIndex(f, valueIndex)
+            for f in FATABLE[index][FATABLE_NEAR_NEIGHBOR_INDEX]
         ),
     )
 
@@ -2715,9 +2715,9 @@ def nearNeighborIndices(index, valueIndex=FATABLE_INDEX):
 def farNeighborIndices(index, valueIndex=FATABLE_INDEX):
     return filter(
         lambda n: n is not None,
-        map(
-            lambda f: actuatorIDToIndex(f, valueIndex),
-            FATABLE[index][FATABLE_FAR_NEIGHBOR_INDEX],
+        (
+            actuatorIDToIndex(f, valueIndex)
+            for f in FATABLE[index][FATABLE_FAR_NEIGHBOR_INDEX]
         ),
     )
 
@@ -2725,11 +2725,11 @@ def farNeighborIndices(index, valueIndex=FATABLE_INDEX):
 def onlyFarNeighborIndices(index, valueIndex=FATABLE_INDEX):
     return filter(
         lambda n: n is not None,
-        map(
-            lambda f: actuatorIDToIndex(f, valueIndex),
-            filter(
+        (
+            actuatorIDToIndex(f, valueIndex)
+            for f in filter(
                 lambda faid: faid not in FATABLE[index][FATABLE_NEAR_NEIGHBOR_INDEX],
                 FATABLE[index][FATABLE_FAR_NEIGHBOR_INDEX],
-            ),
+            )
         ),
     )

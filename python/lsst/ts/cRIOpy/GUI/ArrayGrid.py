@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 """Module displaying grid of UnitLabels.
 
-Creates widget utilising QGridLayout to display multi-indexed variables.
+Creates widget utilizing QGridLayout to display multi-indexed variables.
 Provides functions to add variables into TimeChart. In default, Vertical
 orientation, columns represents data items, while rows are used to display
 array items. For example for hardpoints, columns are forces, encoder values and
@@ -27,11 +27,23 @@ rows are hardpoint numbers.
 Usage
 -----
 .. code-block:: python
-   from lsst.ts.cRIOpy.GUI import ArraySignal, ArrayGrid, ArrayItem
+   from lsst.ts.cRIOpy.GUI import ArraySignal, ArrayGrid, ArrayItem, Mm
+
+   # sal holds SALComm remote with signal "sig1" and "sig2"
 
    grid = ArrayGrid(
+       ArrayItem("myField", "Label 1", Mm, sal.sig1),
+       ArraySignal(
+           sal.sig2,
+           [
+               ArrayItem("fieldA", "A"),
+               ArrayItem("fieldB", "B"),
+               ArrayItem("fieldC", "C")
+           ]
+       )
+   )
 
-
+   self.addWidget(grid)
 """
 
 __all__ = ["ArrayItem", "ArraySignal", "ArrayButton", "ArrayGrid"]
@@ -47,6 +59,7 @@ from . import UnitLabel, TimeChart
 from .SAL.SALComm import warning
 
 
+# forward declaration for MyPy
 class ArrayGrid:
     pass
 
@@ -109,6 +122,11 @@ class AbstractColumn(QObject):
         -------
         row : `int`
             New row index after current member was added.
+
+        Raises
+        ------
+        RuntimeError
+            Raised when abstract method is used.
         """
         raise RuntimeError("Abstract attach_into called")
 
@@ -155,7 +173,8 @@ class ArrayItem(AbstractColumn):
 class ArraySignal(AbstractColumn):
     def __init__(self, signal: Signal, items: list[ArrayItem]):
         """Construct member holding multiple array items. Shall be used to
-        group together ArrayItems receiving data from a single signal/SAL topic.
+        group together ArrayItems receiving data from a single signal/SAL
+        topic.
 
         Parameters
         ----------
@@ -182,7 +201,17 @@ class ArraySignal(AbstractColumn):
 
 
 class ArrayButton(AbstractColumn):
+    """Buttons for actions performed per array member.
+
+    Attributes
+    ----------
+    action : `func(int)`
+    buttonGroup : `QButtonGroup`
+
+    """
+
     def __init__(self, action, text: str):
+        """ """
         super().__init__("", text)
         self.action = action
         self.buttonGroup = QButtonGroup()
@@ -225,9 +254,12 @@ class ArrayGrid(QWidget):
     Attributes
     ----------
     rows : `[str]`
-        Labels for array items. Length of the
+        Labels for array items. Length of the array is number of rows, which
+        equals to number of items/variables.
 
     orientation : `Qt.Orientation`
+        Grid orientation. Vertical displays in columns indices and in rows
+        values. Horizontal swaps rows and columns.
     """
 
     def __init__(

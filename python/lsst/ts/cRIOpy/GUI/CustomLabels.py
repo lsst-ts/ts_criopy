@@ -758,7 +758,8 @@ class EnumLabel(QLabel):
         Parameters
         ----------
         mapping : `map(int, str)`
-            Enumeration mapping. Key is variable value, value is string (can include Qt/html) to display.
+            Enumeration mapping. Key is variable value, value is string (can
+            include Qt/html) to display.
         """
         super().__init__("---")
         self._mapping = mapping

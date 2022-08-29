@@ -38,7 +38,6 @@ class HardpointTestPageWidget(QWidget):
 
     Parameters
     ----------
-
     m1m3 : `SALComm object`
         SALComm communication object.
     """

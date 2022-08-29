@@ -285,8 +285,8 @@ class UserSelectedTimeChart(TimeChart):
         name = obj.objectName()
         index = None
         try:
-            s = name.index('[')
-            index = int(name[s+1:-1])
+            s = name.index("[")
+            index = int(name[s + 1 : -1])
             name = name[:s]
         except ValueError:
             index = None
@@ -396,9 +396,7 @@ class SALChartWidget(TimeChartView):
     """
 
     def __init__(self, *values, **kwargs):
-        self.chart = TimeChart(
-            dict([(v.title, v.fields.keys()) for v in values]), **kwargs
-        )
+        self.chart = TimeChart({v.title: v.fields.keys() for v in values}, **kwargs)
         axis_index = 0
         for v in values:
             v.signal.connect(

@@ -395,7 +395,7 @@ class HardpointsWidget(QWidget):
 
     @asyncSlot()
     async def _moveHP(self):
-        steps = list(map(lambda x: self.offsetType.getSteps(x.value()), self.hpOffsets))
+        steps = [self.offsetType.getSteps(x.value()) for x in self.hpOffsets]
         await self._moveIt(steps=steps)
 
     @SALCommand
