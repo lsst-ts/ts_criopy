@@ -4,6 +4,10 @@ FROM lsstts/develop-env:$DEVELOP_TAG AS crio-develop
 
 ARG cRIO_PY=develop
 
+USER root
+RUN yum install -y openssh
+USER saluser
+
 WORKDIR /home/saluser
 
 RUN source .setup.sh \
