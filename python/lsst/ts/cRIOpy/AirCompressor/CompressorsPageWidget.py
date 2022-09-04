@@ -413,9 +413,7 @@ class CompressorsPageWidget(QWidget):
         self.disableAllButtons()
         try:
             if text == self.TEXT_START:
-                await self.compressor.remote.cmd_start.set_start(
-                    configurationOverride="Default", timeout=60
-                )
+                await self.compressor.remote.cmd_start.set_start()
             elif text == self.TEXT_EXIT_CONTROL:
                 await self.compressor.remote.cmd_exitControl.start()
             elif text == self.TEXT_ENABLE:
