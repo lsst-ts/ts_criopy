@@ -34,7 +34,8 @@ from ..GUI.SAL import SALComm
 
 class HardpointTestPageWidget(QWidget):
     """
-    User interface for hardpoint testing. Includes buttons to run the tests, Show test progress,
+    User interface for hardpoint testing. Includes buttons to run the tests,
+    Show test progress,
 
     Parameters
     ----------
@@ -52,6 +53,19 @@ class HardpointTestPageWidget(QWidget):
                 m1m3.remote.tel_hardpointActuatorData: m1m3.hardpointActuatorData,
                 m1m3.remote.evt_hardpointTestStatus: m1m3.hardpointTestStatus,
             }
+        )
+
+        testLabel = partial(
+            EnumLabel,
+            {
+                HardpointTest.NOTTESTED: "<font color='gray'>Not tested</font>",
+                HardpointTest.MOVINGNEGATIVE: "<font color='blue'>Moving negative</font>",
+                HardpointTest.TESTINGPOSITIVE: "<font color='orange'>Testing positive</font>",
+                HardpointTest.TESTINGNEGATIVE: "<font color='lime'>Testing negative</font>",
+                HardpointTest.MOVINGREFERENCE: "<font color='blue'>Moving to reference</font>",
+                HardpointTest.PASSED: "<font color='green'>Passed</font>",
+                HardpointTest.FAILED: "<font color='red'>Failed</font>",
+            },
         )
 
         layout.addWidget(
@@ -83,18 +97,7 @@ class HardpointTestPageWidget(QWidget):
                     ArrayItem(
                         "testState",
                         "Test state",
-                        partial(
-                            EnumLabel,
-                            {
-                                HardpointTest.NOTTESTED: "<font color='gray'>Not tested</font>",
-                                HardpointTest.MOVINGNEGATIVE: "<font color='blue'>Moving negative</font>",
-                                HardpointTest.TESTINGPOSITIVE: "<font color='orange'>Testing positive</font>",
-                                HardpointTest.TESTINGNEGATIVE: "<font color='lime'>Testing negative</font>",
-                                HardpointTest.MOVINGREFERENCE: "<font color='blue'>Moving to reference</font>",
-                                HardpointTest.PASSED: "<font color='green'>Passed</font>",
-                                HardpointTest.FAILED: "<font color='red'>Failed</font>",
-                            },
-                        ),
+                        testLabel,
                         m1m3.hardpointTestStatus,
                     ),
                     ArrayButton(
