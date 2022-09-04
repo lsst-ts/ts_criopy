@@ -45,11 +45,13 @@ from ..GUI import (
     RPM,
     OnOffLabel,
     PowerOnOffLabel,
+    ConnectedLabel,
     ErrorLabel,
     WarningLabel,
+    Heartbeat,
 )
 from ..GUI import UserSelectedTimeChart, TimeChartView
-from ..GUI.SAL import SummaryStateLabel
+from ..GUI.SAL import SummaryStateLabel, SALCommand
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
 from ..GUI.SAL.SALComm import warning
 
@@ -62,6 +64,10 @@ class CompressorsPageWidget(QWidget):
     TEXT_DISABLE = "&Disable"
     TEXT_STANDBY = "&Standby"
     TEXT_EXIT_CONTROL = "&Exit Control"
+
+    TEXT_POWER_ON = "Power &On"
+    TEXT_POWER_OFF = "Power O&ff"
+    TEXT_RESET = "&Reset"
 
     def __init__(self, compressor):
         super().__init__()
@@ -328,6 +334,29 @@ class CompressorsPageWidget(QWidget):
         )
 
         commandLayout.addSpacing(15)
+        commandLayout.addWidget(
+            ConnectedLabel(self.compressor.connectionStatus, "connected")
+        )
+
+        hb = Heartbeat(indicator=False)
+        self.compressor.heartbeat.connect(hb.heartbeat)
+        commandLayout.addWidget(hb)
+
+        def _addCommandButton(text, clicked):
+            but = QPushButton(text)
+            but.setEnabled(False)
+            but.clicked.connect(clicked)
+            commandLayout.addWidget(but)
+            return but
+
+        self.powerOn = _addCommandButton(self.TEXT_POWER_ON, self._powerOn)
+        self.powerOff = _addCommandButton(self.TEXT_POWER_OFF, self._powerOff)
+        self.reset = _addCommandButton(self.TEXT_RESET, self._reset)
+
+        commandLayout.addWidget(self.powerOn)
+        commandLayout.addWidget(self.powerOff)
+        commandLayout.addWidget(self.reset)
+
         commandLayout.addWidget(errorsWidget)
         commandLayout.addWidget(warningsWidget)
 
@@ -344,6 +373,7 @@ class CompressorsPageWidget(QWidget):
         self.setLayout(masterLayout)
 
         self.compressor.summaryState.connect(self.summaryState)
+        self.compressor.status.connect(self.status)
 
     def disableAllButtons(self):
         if self._lastEnabled is None:
@@ -391,8 +421,7 @@ class CompressorsPageWidget(QWidget):
         try:
             dbSet = True
             stateData = stateMap[data.summaryState]
-            bi = 0
-            for b in self.commandButtons.buttons():
+            for bi, b in enumerate(self.commandButtons.buttons()):
                 text = stateData[bi]
                 if text is None:
                     b.setEnabled(False)
@@ -402,10 +431,33 @@ class CompressorsPageWidget(QWidget):
                     b.setEnabled(True)
                     b.setDefault(dbSet)
                     dbSet = False
-                bi += 1
+            if data.summaryState == salobj.State.ENABLED:
+                self._setPowerButtons(
+                    data.summaryState, self.compressor.remote.evt_status.get()
+                )
+                self.reset.setEnabled(True)
+            else:
+                self.powerOn.setEnabled(False)
+                self.powerOff.setEnabled(False)
+                self.reset.setEnabled(False)
 
         except KeyError:
-            print(f"Unhandled detailed state {data.detailedState}")
+            print(f"Unhandled summary state {data.summaryState}")
+
+    @Slot(map)
+    def status(self, data):
+        self._setPowerButtons(
+            self.compressor.remote.evt_summaryState.get().summaryState, data
+        )
+
+    def _setPowerButtons(self, summaryState, status):
+        if summaryState == salobj.State.ENABLED and status.readyToStart:
+            on = status.operating
+            self.powerOn.setEnabled(not on)
+            self.powerOff.setEnabled(on)
+        else:
+            self.powerOn.setEnabled(False)
+            self.powerOff.setEnabled(False)
 
     @asyncSlot()
     async def _buttonClicked(self, bnt):
@@ -413,7 +465,7 @@ class CompressorsPageWidget(QWidget):
         self.disableAllButtons()
         try:
             if text == self.TEXT_START:
-                await self.compressor.remote.cmd_start.set_start()
+                await self.compressor.remote.cmd_start.start()
             elif text == self.TEXT_EXIT_CONTROL:
                 await self.compressor.remote.cmd_exitControl.start()
             elif text == self.TEXT_ENABLE:
@@ -438,3 +490,27 @@ class CompressorsPageWidget(QWidget):
             )
         finally:
             self.restoreEnabled()
+
+    @SALCommand
+    def __powerOn(self):
+        return self.compressor.remote.cmd_powerOn
+
+    @asyncSlot()
+    async def _powerOn(self):
+        await self.__powerOn()
+
+    @SALCommand
+    def __powerOff(self):
+        return self.compressor.remote.cmd_powerOn
+
+    @asyncSlot()
+    async def _powerOff(self):
+        await self.__powerOff()
+
+    @SALCommand
+    def __reset(self):
+        return self.compressor.remote.cmd_reset
+
+    @asyncSlot()
+    async def _reset(self):
+        await self.__reset()

@@ -21,6 +21,7 @@ from .CustomLabels import (
     MmWarning,
     OnOffLabel,
     PowerOnOffLabel,
+    ConnectedLabel,
     ErrorLabel,
     WarningLabel,
     WarningButton,
