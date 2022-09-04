@@ -27,7 +27,7 @@ import time
 from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
-from PySide2.QtWidgets import QMenu
+from PySide2.QtWidgets import QMenu, QApplication
 
 from .. import TimeCache
 
@@ -160,6 +160,11 @@ class TimeChart(AbstractChart):
             serie.attachAxis(self.timeAxis)
 
     def _createCaches(self, items, maxItems=50 * 30):
+        # prevents race conditions by processing any outstanding events
+        # (paint,..) before manipulating axes
+        self.updateTask.cancel()
+        QApplication.instance().processEvents()
+
         for a in self.axes():
             self.removeAxis(a)
 
@@ -220,10 +225,11 @@ class TimeChart(AbstractChart):
                     d_min = min(d_min, min(data))
                     d_max = max(d_max, max(data))
                 points = [QPointF(*i) for i in zip(cache["timestamp"], data)]
+
                 serie.replace(points)
 
             self.timeAxis.setRange(
-                *(map(QDateTime().fromMSecsSinceEpoch, cache.timeRange()))
+                *(map(QDateTime().fromMSecsSinceEpoch, map(int, cache.timeRange())))
             )
             if d_min == d_max:
                 if d_min == 0:
@@ -271,13 +277,20 @@ class UserSelectedTimeChart(TimeChart):
         self._topics = topics
         self._signal = None
         self._name = None
+        self._index = None
         self.topicSelected.connect(self._topicSelected)
 
     @Slot(str)
     def _topicSelected(self, obj):
         name = obj.objectName()
-        self._createCaches({obj.unit_name: [name]})
-        self._attachSeries()
+        index = None
+        try:
+            s = name.index("[")
+            index = int(name[s + 1 : -1])
+            name = name[:s]
+        except ValueError:
+            index = None
+
         for (t, s) in self._topics.items():
             for n in vars(t.DataType()):
                 if n != name:
@@ -286,15 +299,24 @@ class UserSelectedTimeChart(TimeChart):
                 if self._signal is not None:
                     self._signal.disconnect(self._appendData)
 
+                self._createCaches({obj.unit_name: [name]})
+                self._attachSeries()
+
                 self._signal = s
                 self._name = name
+                self._index = index
 
                 self._signal.connect(self._appendData)
+                self._next_update = 0
+
                 break
 
     @Slot(map)
     def _appendData(self, data):
-        self.append(data.private_sndStamp, [getattr(data, self._name)])
+        if self._index is not None:
+            self.append(data.private_sndStamp, [getattr(data, self._name)[self._index]])
+        else:
+            self.append(data.private_sndStamp, [getattr(data, self._name)])
 
 
 class TimeChartView(QtCharts.QChartView):
@@ -374,9 +396,7 @@ class SALChartWidget(TimeChartView):
     """
 
     def __init__(self, *values, **kwargs):
-        self.chart = TimeChart(
-            dict([(v.title, v.fields.keys()) for v in values]), **kwargs
-        )
+        self.chart = TimeChart({v.title: v.fields.keys() for v in values}, **kwargs)
         axis_index = 0
         for v in values:
             v.signal.connect(

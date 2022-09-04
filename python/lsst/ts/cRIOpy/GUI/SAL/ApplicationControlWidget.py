@@ -240,8 +240,8 @@ class ApplicationControlWidget(QWidget):
         except RuntimeError as rte:
             warning(
                 self,
-                f"Error executing {text()}",
-                f"Executing button <i>{text()}</i>:<br/>{str(rte)}",
+                f"Error executing {text}",
+                f"Executing button <i>{text}</i>:<br/>{str(rte)}",
             )
         finally:
             self.restoreEnabled()

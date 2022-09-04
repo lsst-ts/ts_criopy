@@ -42,6 +42,15 @@ pipeline {
             }
         }
 
+        stage("Updating dependencies") {
+            steps {
+                sh """
+                    cd /home/saluser/repos/ts_idl
+                    git checkout develop
+                """
+            }
+        }
+
         stage("Running unit tests") {
             steps {
                 withEnv(["HOME=${env.WORKSPACE}"]) {

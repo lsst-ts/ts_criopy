@@ -57,6 +57,7 @@ from .M1M3 import (
     ForceActuatorBumpTestPageWidget,
     GyroPageWidget,
     HardpointsWidget,
+    HardpointTestPageWidget,
     IMSPageWidget,
     InclinometerPageWidget,
     InterlockPageWidget,
@@ -105,6 +106,7 @@ class EUI(QMainWindow):
         self.addPage(
             "Force Actuator Bump Test", ForceActuatorBumpTestPageWidget(self.m1m3)
         )
+        self.addPage("Hardpoint Test", HardpointTestPageWidget(self.m1m3))
         self.addPage("Enabled Force Actuators", EnabledForceActuators(self.m1m3))
         self.addPage("Force Actuator Graph", ForceActuatorGraphPageWidget(self.m1m3))
         self.addPage("Force Actuator Value", ForceActuatorValuePageWidget(self.m1m3))

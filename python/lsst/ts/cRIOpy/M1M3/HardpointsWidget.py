@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+from functools import partial
 
 import astropy.units as u
 from PySide2.QtWidgets import (
@@ -30,12 +31,21 @@ from PySide2.QtWidgets import (
     QPushButton,
     QApplication,
 )
-from PySide2.QtCore import Signal, Slot
+from PySide2.QtCore import Signal, Slot, Qt
 from asyncqt import asyncSlot
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
 
-from ..GUI import Force, Moment, Mm, UnitLabel, OnOffLabel
+from ..GUI import (
+    Force,
+    Moment,
+    Mm,
+    UnitLabel,
+    OnOffLabel,
+    ArrayItem,
+    ArraySignal,
+    ArrayGrid,
+)
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 
 
@@ -131,6 +141,107 @@ class HardpointsWidget(QWidget):
 
         layout = QVBoxLayout()
 
+        data = ArrayGrid(
+            "<b>Hardpoint</b>",
+            [f"<b>{x}</b>" for x in range(1, 7)],
+            [
+                ArraySignal(
+                    self.m1m3.hardpointActuatorData,
+                    [
+                        ArrayItem("stepsQueued", "Steps queued"),
+                        ArrayItem(
+                            "stepsCommanded",
+                            "Steps commanded",
+                        ),
+                        ArrayItem("encoder", "Encoder"),
+                        ArrayItem(
+                            "measuredForce",
+                            "Measuerd force",
+                            partial(Force, ".03f"),
+                        ),
+                        ArrayItem(
+                            "displacement",
+                            "Displacement",
+                            Mm,
+                        ),
+                    ],
+                ),
+                ArraySignal(
+                    self.m1m3.hardpointMonitorData,
+                    [
+                        ArrayItem(
+                            "breakawayLVDT",
+                            "Breakaway LVDT",
+                            partial(UnitLabel, ".02f"),
+                        ),
+                        ArrayItem(
+                            "breakawayPressure",
+                            "Breakaway Pressure",
+                            partial(UnitLabel, ".02f"),
+                        ),
+                        ArrayItem(
+                            "pressureSensor1",
+                            "Pressure Sensor 1",
+                            partial(UnitLabel, ".04f"),
+                        ),
+                        ArrayItem(
+                            "pressureSensor2",
+                            "Pressure Sensor 2",
+                            partial(UnitLabel, ".04f"),
+                        ),
+                        ArrayItem(
+                            "pressureSensor3",
+                            "Pressure Sensor 3",
+                            partial(UnitLabel, ".04f"),
+                        ),
+                    ],
+                ),
+                ArraySignal(
+                    self.m1m3.hardpointActuatorWarning,
+                    [
+                        ArrayItem(
+                            "majorFault",
+                            "Major fault",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "minorFault",
+                            "Minor fault",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "faultOverride",
+                            "Fault override",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "mainCalibrationError",
+                            "Main calibration error",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "backupCalibrationError",
+                            "Backup calibration error",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "limitSwitch1Operated",
+                            "Limit switch 1",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "limitSwitch2Operated",
+                            "Limit switch 2",
+                            OnOffLabel,
+                        ),
+                    ],
+                ),
+            ],
+            Qt.Horizontal,
+        )
+
+        layout.addWidget(data)
+
         self.dataLayout = QGridLayout()
 
         layout.addLayout(self.dataLayout)
@@ -139,14 +250,6 @@ class HardpointsWidget(QWidget):
         self.dataLayout.addWidget(QLabel("<b>Hardpoint</b>"), 0, 0)
         for hp in range(1, 7):
             self.dataLayout.addWidget(QLabel(f"<b>{hp}</b>"), 0, hp)
-
-        self.variables = {
-            "stepsQueued": ("Steps queued", UnitLabel()),
-            "stepsCommanded": ("Steps commanded", UnitLabel()),
-            "encoder": ("Encoder", UnitLabel()),
-            "measuredForce": ("Measured force", Force(".03f")),
-            "displacement": ("Displacement", Mm()),
-        }
 
         row = 1
 
@@ -158,10 +261,6 @@ class HardpointsWidget(QWidget):
                 self.dataLayout.addWidget(label, row, 1 + hp)
                 ret.append(label)
             return ret
-
-        for k, v in self.variables.items():
-            setattr(self, k, addRow(v, row))
-            row += 1
 
         self.lastEditedSteps = [0] * 6
 
@@ -200,33 +299,6 @@ class HardpointsWidget(QWidget):
         self.dataLayout.addWidget(reset, row, 5, 1, 2)
 
         row += 1
-
-        self.monitorData = {
-            "breakawayLVDT": ("Breakaway LVDT", UnitLabel(".02f")),
-            "displacementLVDT": ("Displacement LVDT", UnitLabel(".02f")),
-            "breakawayPressure": ("Breakaway Pressure", UnitLabel(".02f")),
-            "pressureSensor1": ("Pressure Sensor 1", UnitLabel(".04f")),
-            "pressureSensor2": ("Pressure Sensor 2", UnitLabel(".04f")),
-            "pressureSensor3": ("Pressure Sensor 3", UnitLabel(".04f")),
-        }
-
-        for k, v in self.monitorData.items():
-            setattr(self, k, addRow(v, row))
-            row += 1
-
-        self.warnings = {
-            "majorFault": ("Major fault", OnOffLabel()),
-            "minorFault": ("Minor fault", OnOffLabel()),
-            "faultOverride": ("Fault override", OnOffLabel()),
-            "mainCalibrationError": ("Main calibration error", OnOffLabel()),
-            "backupCalibrationError": ("Backup calibration error", OnOffLabel()),
-            "limitSwitch1Operated": ("Limit switch 1", OnOffLabel()),
-            "limitSwitch2Operated": ("Limit switch 2", OnOffLabel()),
-        }
-
-        for k, v in self.warnings.items():
-            setattr(self, k, addRow(v, row))
-            row += 1
 
         self.dataLayout.addWidget(QLabel("Motion state"), row, 0)
         self.hpStates = []
@@ -277,8 +349,6 @@ class HardpointsWidget(QWidget):
 
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
         self.m1m3.hardpointActuatorState.connect(self.hardpointActuatorState)
-        self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
-        self.m1m3.hardpointActuatorWarning.connect(self.hardpointActuatorWarning)
 
     @Slot(QWidget, QWidget)
     def focusChanged(self, old, new):
@@ -325,7 +395,7 @@ class HardpointsWidget(QWidget):
 
     @asyncSlot()
     async def _moveHP(self):
-        steps = list(map(lambda x: self.offsetType.getSteps(x.value()), self.hpOffsets))
+        steps = [self.offsetType.getSteps(x.value()) for x in self.hpOffsets]
         await self._moveIt(steps=steps)
 
     @SALCommand
@@ -351,9 +421,6 @@ class HardpointsWidget(QWidget):
 
     @Slot(map)
     def hardpointActuatorData(self, data):
-        for k, v in self.variables.items():
-            self._fillRow(getattr(data, k), getattr(self, k))
-
         for k, v in self.forces.items():
             getattr(self, k).setValue(getattr(data, k))
 
@@ -378,13 +445,3 @@ class HardpointsWidget(QWidget):
 
         for hp in range(6):
             self.hpStates[hp].setText(getHpState(data.motionState[hp]))
-
-    @Slot(map)
-    def hardpointMonitorData(self, data):
-        for k, v in self.monitorData.items():
-            self._fillRow(getattr(data, k), getattr(self, k))
-
-    @Slot(map)
-    def hardpointActuatorWarning(self, data):
-        for k, v in self.warnings.items():
-            self._fillRow(getattr(data, k), getattr(self, k))

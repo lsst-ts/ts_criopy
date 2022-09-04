@@ -19,9 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot, Qt
+from PySide2.QtCore import Slot, Qt, Signal
 from PySide2.QtGui import QPalette
 from PySide2.QtWidgets import QFormLayout, QWidget, QPushButton
+
+from . import TimeChart, DataLabel
 
 __all__ = ["DataFormWidget", "DataFormButton"]
 
@@ -40,6 +42,9 @@ class DataFormWidget(QWidget):
         Tuple of text and label. Label shall be child of DataLabel with
         fieldname set.
 
+    timeChart : `TimeChart`
+        Time chart receiving "topicSelected" when label is clicked.
+
     Usage
     -----
        myWidget = DataFormWidget(sal.errors, [(
@@ -48,7 +53,12 @@ class DataFormWidget(QWidget):
        )])
     """
 
-    def __init__(self, signal, fields, timeChart=None):
+    def __init__(
+        self,
+        signal: Signal,
+        fields: list[tuple[str, DataLabel]],
+        timeChart: TimeChart = None,
+    ):
         super().__init__()
         self._timeChart = timeChart
 

@@ -302,14 +302,14 @@ class OffsetsWidget(QWidget):
     @asyncSlot()
     async def _moveMirror(self):
         targets = self.getTargets()
-        self.dirPad.setPosition(map(lambda p: targets[p], self.POSITIONS))
+        self.dirPad.setPosition(targets[p] for p in self.POSITIONS)
         await self.moveMirror(**self.getTargets())
 
     @Slot()
     def _copyCurrent(self):
         args = {k: getattr(self._hpData, k) for k in self.POSITIONS}
         self.setTargets(args)
-        self.dirPad.setPosition(map(lambda p: args[p], self.POSITIONS))
+        self.dirPad.setPosition(args[p] for p in self.POSITIONS)
 
     @asyncSlot()
     async def _applyOffsetForces(self):

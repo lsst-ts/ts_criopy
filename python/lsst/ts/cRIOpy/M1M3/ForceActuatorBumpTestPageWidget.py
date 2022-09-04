@@ -256,9 +256,7 @@ class ForceActuatorBumpTestPageWidget(QWidget):
             items.append("Y")
         items.append("Z")
         items = (
-            list(map(lambda s: "Applied " + s, items))
-            + [None]
-            + list(map(lambda s: "Measured " + s, items))
+            ["Applied " + s for s in items] + [None] + ["Measured " + s for s in items]
         )
 
         if self.chart is not None:

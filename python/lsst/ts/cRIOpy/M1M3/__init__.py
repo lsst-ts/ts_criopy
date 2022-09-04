@@ -12,6 +12,7 @@ from .ForceActuatorWidget import ForceActuatorWidget
 from .ForceBalanceSystemPageWidget import ForceBalanceSystemPageWidget
 from .GyroPageWidget import GyroPageWidget
 from .HardpointsWidget import HardpointsWidget
+from .HardpointTestPageWidget import HardpointTestPageWidget
 from .IMSPageWidget import IMSPageWidget
 from .InclinometerPageWidget import InclinometerPageWidget
 from .InterlockPageWidget import InterlockPageWidget
