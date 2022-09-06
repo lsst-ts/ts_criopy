@@ -59,6 +59,7 @@ __all__ = [
     "MmWarning",
     "OnOffLabel",
     "PowerOnOffLabel",
+    "ConnectedLabel",
     "ErrorLabel",
     "WarningLabel",
     "WarningButton",
@@ -557,6 +558,42 @@ class PowerOnOffLabel(DataLabel):
             self.setText("<font color='green'>On</font>")
         else:
             self.setText("<font color='gold'>Off</font>")
+
+
+class ConnectedLabel(DataLabel):
+    """Displays connection status. Constructor can be passed parameters
+    allowing connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return ErrorLabel()
+
+    def setValue(self, is_connected: bool) -> None:
+        """Sets formatted value. Color codes ERROR (red)/OK (green).
+
+        Parameters
+        ----------
+        is_connected : `bool`
+            Current (=to be displayed) variable value. True means connected.
+        """
+        if is_connected:
+            self.setText("<font color='green'>Connected</font>")
+        else:
+            self.setText("<font color='red'>Disconnected</font>")
 
 
 class ErrorLabel(DataLabel):
