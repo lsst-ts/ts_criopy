@@ -115,8 +115,8 @@ class CacheTimeWidget(CacheWidget):
             else:
                 self.chart.axes(Qt.Vertical)[0].setRange(min(min_value), max(max_value))
                 self.chart.axes(Qt.Horizontal)[0].setRange(
-                    QDateTime.fromMSecsSinceEpoch(min(min_timestamps)),
-                    QDateTime.fromMSecsSinceEpoch(max(max_timestamps)),
+                    QDateTime.fromMSecsSinceEpoch(int(min(min_timestamps))),
+                    QDateTime.fromMSecsSinceEpoch(int(max(max_timestamps))),
                 )
         self.update_after = time.monotonic() + 0.5
 
