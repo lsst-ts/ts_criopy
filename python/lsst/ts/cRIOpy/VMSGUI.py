@@ -137,11 +137,11 @@ class EUI(QMainWindow):
 
     @Slot(map)
     def data(self, data):
-        cache = self.caches[data.MTVMSID - 1]
+        cache = self.caches[data.salIndex - 1]
         added, chunk_removed = cache.newChunk(data, self.SAMPLE_TIME)
         if added:
             self.cacheUpdated.emit(
-                data.MTVMSID - 1,
+                data.salIndex - 1,
                 len(cache),
                 cache.startTime(),
                 cache.endTime(),
