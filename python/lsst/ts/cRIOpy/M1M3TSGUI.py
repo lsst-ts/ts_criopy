@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python
 
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QMainWindow

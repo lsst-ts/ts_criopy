@@ -45,6 +45,7 @@ from ..GUI import (
     ArrayItem,
     ArraySignal,
     ArrayGrid,
+    Colors,
 )
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 
@@ -141,7 +142,7 @@ class HardpointsWidget(QWidget):
 
         layout = QVBoxLayout()
 
-        data = ArrayGrid(
+        self.grid = ArrayGrid(
             "<b>Hardpoint</b>",
             [f"<b>{x}</b>" for x in range(1, 7)],
             [
@@ -156,7 +157,7 @@ class HardpointsWidget(QWidget):
                         ArrayItem("encoder", "Encoder"),
                         ArrayItem(
                             "measuredForce",
-                            "Measuerd force",
+                            "Measured force",
                             partial(Force, ".03f"),
                         ),
                         ArrayItem(
@@ -240,7 +241,7 @@ class HardpointsWidget(QWidget):
             Qt.Horizontal,
         )
 
-        layout.addWidget(data)
+        layout.addWidget(self.grid)
 
         self.dataLayout = QGridLayout()
 
@@ -421,6 +422,26 @@ class HardpointsWidget(QWidget):
 
     @Slot(map)
     def hardpointActuatorData(self, data):
+        hs = self.m1m3.remote.evt_hardpointActuatorSettings.get()
+        if hs is not None:
+            for idx, f in enumerate(data.measuredForce):
+                color = Colors.OK
+                if (
+                    f < hs.hardpointMeasuredForceWarningLow
+                    or f > hs.hardpointMeasuredForceWarningHigh
+                ):
+                    color = Colors.WARNING
+                if (
+                    f < hs.hardpointMeasuredForceFaultLow
+                    or f > hs.hardpointMeasuredForceFaultHigh
+                ):
+                    color = Colors.ERROR
+
+                label = self.grid.get_label("measuredForce", idx)
+                pal = label.palette()
+                pal.setColor(pal.WindowText, color)
+                label.setPalette(pal)
+
         for k, v in self.forces.items():
             getattr(self, k).setValue(getattr(data, k))
 

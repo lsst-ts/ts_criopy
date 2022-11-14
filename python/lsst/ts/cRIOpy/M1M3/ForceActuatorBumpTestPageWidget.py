@@ -47,6 +47,7 @@ from ..M1M3FATable import (
 )
 from ..GUI.TimeChart import TimeChart, TimeChartView
 from ..GUI.SAL import SALLog
+from ..GUI import Colors
 
 
 class ForceActuatorBumpTestPageWidget(QWidget):
@@ -369,9 +370,9 @@ class ForceActuatorBumpTestPageWidget(QWidget):
 
             def getColor(value):
                 if value == 6:
-                    return Qt.green
+                    return Colors.OK
                 elif value == 7:
-                    return Qt.red
+                    return Colors.ERROR
                 elif not (value == 0):
                     return Qt.magenta
                 return Qt.transparent

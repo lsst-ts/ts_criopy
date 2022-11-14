@@ -18,11 +18,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import enum
+
 from PySide2.QtCore import QRect, Qt, QPointF
 from PySide2.QtGui import QPen, QPainter, QBrush, QTransform, QGuiApplication
 from PySide2.QtWidgets import QGraphicsItem
 
-import enum
+from ...GUI import Colors
 
 
 class FASelection(enum.IntEnum):
@@ -229,7 +231,7 @@ class ForceActuator(QGraphicsItem):
 
         # draw actuator with warning in red color
         if self._state == self.STATE_WARNING:
-            painter.setBrush(Qt.red)
+            painter.setBrush(Colors.ERROR)
         else:
             color = self._color_scale.getColor(self._data)
             if color is None:

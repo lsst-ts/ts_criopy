@@ -35,6 +35,7 @@ import astropy.units as u
 from datetime import datetime
 
 from .EventWindow import EventWindow
+from . import Colors
 
 __all__ = [
     "VLine",
@@ -712,10 +713,10 @@ class WarningButton(QPushButton):
         pal = self.palette()
         if value:
             self.setText("WARNING")
-            pal.setColor(QPalette.Button, Qt.red)
+            pal.setColor(QPalette.Button, Colors.ERROR)
         else:
             self.setText("OK")
-            pal.setColor(QPalette.Button, Qt.green)
+            pal.setColor(QPalette.Button, Colors.OK)
         self.setPalette(pal)
 
 

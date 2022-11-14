@@ -20,9 +20,10 @@
 
 from PySide2.QtCore import Qt
 
-from .EnumScale import EnumScale
-
 from lsst.ts.idl.enums.MTM1M3 import BumpTest
+
+from .EnumScale import EnumScale
+from ...GUI import Colors
 
 
 class BumpTestScale(EnumScale):
@@ -36,7 +37,7 @@ class BumpTestScale(EnumScale):
                 BumpTest.TESTINGPOSITIVEWAIT: ("Testing + Wait", Qt.darkBlue),
                 BumpTest.TESTINGNEGATIVE: ("Testing -", Qt.yellow),
                 BumpTest.TESTINGNEGATIVEWAIT: ("Testing - Wait", Qt.darkYellow),
-                BumpTest.PASSED: ("Passed", Qt.green),
-                BumpTest.FAILED: ("Failed", Qt.red),
+                BumpTest.PASSED: ("Passed", Colors.OK),
+                BumpTest.FAILED: ("Failed", Colors.ERROR),
             }
         )
