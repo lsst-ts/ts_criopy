@@ -87,7 +87,7 @@ class DataFormWidget(QWidget):
 
 class DataFormButton(QPushButton):
     """
-    Creates button displaying overall status. On click, creates Widget showing
+    Creates button displaying overall status. On click, creates widget showing
     data value. Update fields on signal with new values.
 
     Parameters

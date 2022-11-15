@@ -136,7 +136,14 @@ class AbstractColumn(QObject):
         Parameters
         ----------
         name : `str`
+            Row name - string with name of the variable.
         index : `int`
+            Value index.
+
+        Returns
+        -------
+        widget : `QLabel`
+            Label representing value with given name and index.
         """
         if self.objectName() == name:
             return self.items[index]
@@ -340,7 +347,14 @@ class ArrayGrid(QWidget):
         Parameters
         ----------
         name : `str`
+            Row name - string with name of the variable.
         index : `int`
+            Value index.
+
+        Returns
+        -------
+        widget : `QLabel`
+            Label representing value with given name and index.
         """
         for i in self._items:
             label = i.get_label(name, index)
