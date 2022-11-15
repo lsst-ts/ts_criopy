@@ -1,4 +1,4 @@
-ARG DEVELOP_TAG=c0025.008
+ARG DEVELOP_TAG=c0026.010
 
 FROM lsstts/develop-env:$DEVELOP_TAG AS crio-develop
 

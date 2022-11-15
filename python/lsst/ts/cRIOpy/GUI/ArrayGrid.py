@@ -130,6 +130,25 @@ class AbstractColumn(QObject):
         """
         raise RuntimeError("Abstract attach_into called")
 
+    def get_label(self, name: str, index: int) -> QWidget:
+        """Returns label with given name and index.
+
+        Parameters
+        ----------
+        name : `str`
+            Row name - string with name of the variable.
+        index : `int`
+            Value index.
+
+        Returns
+        -------
+        widget : `QLabel`
+            Label representing value with given name and index.
+        """
+        if self.objectName() == name:
+            return self.items[index]
+        return None
+
     @Slot(map)
     def data(self, data: map):
         """Process incoming data.
@@ -191,6 +210,13 @@ class ArraySignal(AbstractColumn):
             c.attach_into(parent, row)
             row += 1
         return row
+
+    def get_label(self, name: str, index: int) -> QWidget:
+        for a in self.array_items:
+            label = a.get_label(name, index)
+            if label:
+                return label
+        return None
 
     @Slot(map)
     def data(self, data):
@@ -274,6 +300,8 @@ class ArrayGrid(QWidget):
 
         Parameters
         ----------
+        title : `str`
+            Title label. Displayed in top left cell.
         rows : `[str]`
             Labels for rows.
         items : `[AbstractColumn]`
@@ -287,8 +315,8 @@ class ArrayGrid(QWidget):
             Timechart to display values from clicked label.
         """
         super().__init__()
-        self._items = items
         self.rows = rows
+        self._items = items
         self.orientation = orientation
         self._chart = chart
 
@@ -300,6 +328,7 @@ class ArrayGrid(QWidget):
             self.add_widget(QLabel(r), 0, c + 1)
 
         r = 1
+        self.labels_rows = {}
         for i in items:
             r = i.attach_into(self, r)
 
@@ -311,6 +340,27 @@ class ArrayGrid(QWidget):
 
     def get_data_rows(self) -> int:
         return len(self.rows)
+
+    def get_label(self, name: str, index: int) -> QWidget:
+        """Returns label with given name and index.
+
+        Parameters
+        ----------
+        name : `str`
+            Row name - string with name of the variable.
+        index : `int`
+            Value index.
+
+        Returns
+        -------
+        widget : `QLabel`
+            Label representing value with given name and index.
+        """
+        for i in self._items:
+            label = i.get_label(name, index)
+            if label is not None:
+                return label
+        return None
 
     def mousePressEvent(self, ev):
         if self._chart is not None:

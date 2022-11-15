@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.8
 # -'''- coding: utf-8 -'''-
 
 # This file is part of M1M3 SS GUI.

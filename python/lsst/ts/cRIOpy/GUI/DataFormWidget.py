@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot, Qt, Signal
+from PySide2.QtCore import Slot, Signal
 from PySide2.QtGui import QPalette
 from PySide2.QtWidgets import QFormLayout, QWidget, QPushButton
 
-from . import TimeChart, DataLabel
+from . import TimeChart, DataLabel, Colors
 
 __all__ = ["DataFormWidget", "DataFormButton"]
 
@@ -87,8 +87,8 @@ class DataFormWidget(QWidget):
 
 class DataFormButton(QPushButton):
     """
-    Creates button displaying overall status. On click, . Update fields on
-    signal with new values.
+    Creates button displaying overall status. On click, creates widget showing
+    data value. Update fields on signal with new values.
 
     Parameters
     ----------
@@ -121,10 +121,10 @@ class DataFormButton(QPushButton):
     @Slot(map)
     def _dataChanged(self, data):
         pal = self.palette()
-        pal.setColor(QPalette.Button, Qt.green)
+        pal.setColor(QPalette.Button, Colors.OK)
         for f in self._fields:
             if getattr(data, f[1].objectName()) is True:
-                pal.setColor(QPalette.Button, Qt.red)
+                pal.setColor(QPalette.Button, Colors.ERROR)
                 break
         self.setPalette(pal)
 

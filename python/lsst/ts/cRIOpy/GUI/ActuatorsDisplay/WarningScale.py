@@ -18,13 +18,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Qt
-
 from .EnumScale import EnumScale
+from ...GUI import Colors
 
 
 class WarningScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self):
-        super().__init__({False: ("OK", Qt.green), True: ("Warning\nError", Qt.red)})
+        super().__init__(
+            {False: ("OK", Colors.OK), True: ("Warning\nError", Colors.ERROR)}
+        )

@@ -19,6 +19,7 @@ build:
 test:
   requires:
     - ts-conda-build =0.3
+    - numpy
     - pyside2
     - asyncqt
     - ts-idl {{ idl_version }}
@@ -33,6 +34,7 @@ test:
 
 requirements:
   host:
+    - numpy
     - python
     - pip
     - setuptools_scm
