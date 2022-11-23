@@ -17,6 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtGui import QColor
+from asyncqt import asyncSlot
+
+from lsst.ts.salobj import base
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
+
 from PySide2.QtWidgets import (
     QWidget,
     QPushButton,
@@ -28,13 +35,9 @@ from PySide2.QtWidgets import (
     QSizePolicy,
     QButtonGroup,
 )
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtGui import QColor
-from asyncqt import asyncSlot
 
-from lsst.ts.salobj import base
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
+from ..GUI import Colors
+from ..GUI.SAL import SALCommand
 from ..GUI.SAL.SALComm import warning
 
 
@@ -94,6 +97,51 @@ class HPWarnings:
         self.faultHigh = data.airPressureFaultHigh
         self._faultLow = data.airPressureFaultLow
         self._faultLowRaising = data.airPressureFaultLowRaising
+
+
+class SlewWidget(QWidget):
+    """Class to display and interact with slew flag status."""
+
+    def __init__(self, m1m3):
+        super().__init__()
+        self.m1m3 = m1m3
+        slewLayout = QHBoxLayout()
+        self.slewFlagOn = QPushButton("Slew ON")
+        self.slewFlagOff = QPushButton("Slew OFF")
+        pal = self.slewFlagOn.palette()
+        self._defaultColor = pal.color(pal.Button)
+        slewLayout.addWidget(self.slewFlagOn)
+        slewLayout.addWidget(self.slewFlagOff)
+        self.setLayout(slewLayout)
+
+        self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
+        self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
+        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
+
+    @asyncSlot()
+    async def issueCommandSlewFlagOn(self):
+        await self._issueCommandSlewFlag(slewFlag=True)
+
+    @asyncSlot()
+    async def issueCommandSlewFlagOff(self):
+        await self._issueCommandSlewFlag(slewFlag=False)
+
+    @SALCommand
+    def _issueCommandSlewFlag(self, **kwargs):
+        return self.m1m3.remote.cmd_setAirSlewFlag
+
+    @Slot(map)
+    def forceActuatorState(self, data):
+        palOn = self.slewFlagOn.palette()
+        palOff = self.slewFlagOff.palette()
+        if data.slewFlag:
+            palOn.setColor(palOn.Button, Colors.WARNING)
+            palOff.setColor(palOff.Button, self._defaultColor)
+        else:
+            palOn.setColor(palOn.Button, self._defaultColor)
+            palOff.setColor(palOff.Button, Colors.OK)
+        self.slewFlagOn.setPalette(palOn)
+        self.slewFlagOff.setPalette(palOff)
 
 
 class ApplicationControlWidget(QWidget):
@@ -161,6 +209,10 @@ class ApplicationControlWidget(QWidget):
         dataLayout.addRow("Max pressure", self.maxPressure)
 
         commandLayout.addLayout(dataLayout)
+        self.slewWidget = SlewWidget(m1m3)
+        self.slewWidget.setEnabled(False)
+        commandLayout.addWidget(self.slewWidget)
+
         commandLayout.addStretch()
 
         self.supportPercentage = QProgressBar()
@@ -313,6 +365,17 @@ class ApplicationControlWidget(QWidget):
 
         self.commandButtons.buttons()[0].setEnabled(
             not (data.detailedState == DetailedState.OFFLINE)
+        )
+        self.slewWidget.setEnabled(
+            not (
+                data.detailedState
+                in (
+                    DetailedState.OFFLINE,
+                    DetailedState.STANDBY,
+                    DetailedState.DISABLED,
+                    DetailedState.FAULT,
+                )
+            )
         )
 
         try:
