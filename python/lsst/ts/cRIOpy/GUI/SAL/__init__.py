@@ -1,5 +1,4 @@
 from .Application import Application
-from .ApplicationControlWidget import ApplicationControlWidget
 from .ApplicationStatusWidget import ApplicationStatusWidget
 from .SALComm import *
 from .SALErrorCodeWidget import SALErrorCodeWidget
