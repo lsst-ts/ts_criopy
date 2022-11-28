@@ -38,7 +38,6 @@ from lsst.ts.idl.enums import MTM1M3
 
 from .GUI.SAL import (
     Application,
-    ApplicationControlWidget,
     SALLog,
     SALErrorCodeWidget,
     SALStatusBar,
@@ -47,6 +46,7 @@ from .GUI.SAL import (
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
+    ApplicationControlWidget,
     CellLightPageWidget,
     DCAccelerometerPageWidget,
     EnabledForceActuators,
