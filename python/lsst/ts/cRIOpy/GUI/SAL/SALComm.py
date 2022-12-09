@@ -57,7 +57,7 @@ class MetaSAL(type(QObject)):
                     setattr(dictionary["remote"], tel.attr_name, tel)
                 elif name in dictionary["remote"].salinfo.event_names:
                     evt = RemoteEvent(dictionary["remote"].salinfo, name, **args)
-                    setattr(dictionary["remote"], evt.attr_name, tel)
+                    setattr(dictionary["remote"], evt.attr_name, evt)
                 else:
                     print(f"Unknown manual {name} - is not a telemetry or event topics")
 

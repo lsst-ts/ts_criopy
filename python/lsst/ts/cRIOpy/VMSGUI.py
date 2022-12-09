@@ -14,6 +14,7 @@ from .VMS import (
     BoxChartWidget,
     Cache,
     DisplacementWidget,
+    MiscellaneousWidget,
     ToolBar,
     StatusBar,
     PSDWidget,
@@ -49,8 +50,9 @@ class EUI(QMainWindow):
         viewMenu.addSeparator()
         viewMenu.addAction("Remove all", self.removeAll)
 
-        i = 0
-        for s in self.SYSTEMS:
+        self._miscellaneous = []
+
+        for i, s in enumerate(self.SYSTEMS):
             m = menuBar.addMenu(s)
             m.addAction(
                 "New &raw graph",
@@ -58,7 +60,7 @@ class EUI(QMainWindow):
                     self._addCacheWidget, i, "Raw acceleration", RawAccelerationWidget
                 ),
             )
-            m.addAction("New &box graph", partial(self.addBox, i))
+            m.addAction("New &box graph", partial(self._addBox, i))
             m.addAction(
                 "New &PSD graph", partial(self._addCacheWidget, i, "PSD", PSDWidget)
             )
@@ -70,7 +72,12 @@ class EUI(QMainWindow):
                 "New &Displacement graph",
                 partial(self._addCacheWidget, i, "Displacement", DisplacementWidget),
             )
-            i += 1
+            m.addSeparator()
+
+            self._miscellaneous.append(
+                MiscellaneousWidget("Miscellaneous " + s, self.comms[i])
+            )
+            m.addAction("&Miscellaneous", partial(self._showMiscellaneous, i))
 
         self.toolBar = ToolBar()
         self.addToolBar(self.toolBar)
@@ -114,13 +121,19 @@ class EUI(QMainWindow):
         self.toolBar.integralBinningChanged.connect(aWidget.integralBinningChanged)
         self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
 
-    def addBox(self, index):
+    def _addBox(self, index):
         prefix = "Box " + self.SYSTEMS[index] + ":"
         id = self.getNextId(prefix)
         self.addDockWidget(
             Qt.TopDockWidgetArea,
             BoxChartWidget(prefix + str(id), self.comms[index], []),
         )
+
+    def _showMiscellaneous(self, index):
+        widget = self._miscellaneous[index]
+        if widget.isHidden():
+            self.addDockWidget(Qt.TopDockWidgetArea, widget)
+            widget.show()
 
     def removeAll(self):
         for child in self.children():
