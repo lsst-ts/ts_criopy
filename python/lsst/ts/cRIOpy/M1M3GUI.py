@@ -203,7 +203,14 @@ def run():
     app = Application(EUI)
     app.addComm("MTM1M3")
     app.addComm(
-        "MTMount", include=["azimuth", "elevation", "heartbeat", "simulationMode"]
+        "MTMount",
+        include=[
+            "azimuth",
+            "elevation",
+            "heartbeat",
+            "simulationMode",
+            "softwareVersions",
+        ],
     )
     app.addComm("MTAirCompressor", index=1)
     app.addComm("MTAirCompressor", index=2)

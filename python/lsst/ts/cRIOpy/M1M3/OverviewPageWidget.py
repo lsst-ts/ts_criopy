@@ -25,6 +25,7 @@ from ..GUI import (
     Force,
     Moment,
     Arcsec,
+    DataLabel,
     Mm,
     Heartbeat,
     WarningButton,
@@ -112,10 +113,15 @@ class OverviewPageWidget(QWidget):
         self.slewFlag = QLabel("---")
         self.executionTime = QLabel("---")
 
-        self.cscVersion = QLabel("---")
-        self.salVersion = QLabel("---")
-        self.xmlVersion = QLabel("---")
-        self.osplVersion = QLabel("---")
+        m1m3_cscVersion = DataLabel(m1m3.softwareVersions, "cscVersion")
+        m1m3_salVersion = DataLabel(m1m3.softwareVersions, "salVersion")
+        m1m3_xmlVersion = DataLabel(m1m3.softwareVersions, "xmlVersion")
+        m1m3_osplVersion = DataLabel(m1m3.softwareVersions, "openSpliceVersion")
+
+        mtmount_cscVersion = DataLabel(mtmount.softwareVersions, "cscVersion")
+        mtmount_salVersion = DataLabel(mtmount.softwareVersions, "salVersion")
+        mtmount_xmlVersion = DataLabel(mtmount.softwareVersions, "xmlVersion")
+        mtmount_osplVersion = DataLabel(mtmount.softwareVersions, "openSpliceVersion")
 
         row = 0
         col = 0
@@ -240,23 +246,28 @@ class OverviewPageWidget(QWidget):
         self.tmaLabel = QLabel("TMA")
         dataLayout.addWidget(self.inclinometerLabel, row, col + 1)
         dataLayout.addWidget(self.tmaLabel, row, col + 2)
-        row += 1
-        dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
-        dataLayout.addWidget(QLabel("-"), row, col + 1)
-        dataLayout.addWidget(self.tmaAzimuthLabel, row, col + 2)
         dataLayout.addWidget(QLabel("<b>CsC</b>"), row, col + 4)
         dataLayout.addWidget(QLabel("<b>SAL</b>"), row, col + 5)
         dataLayout.addWidget(QLabel("<b>XML</b>"), row, col + 6)
         dataLayout.addWidget(QLabel("<b>OSPL</b>"), row, col + 7)
         row += 1
+        dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
+        dataLayout.addWidget(QLabel("-"), row, col + 1)
+        dataLayout.addWidget(self.tmaAzimuthLabel, row, col + 2)
+        dataLayout.addWidget(QLabel("<b>M1M3</b>"), row, col + 3)
+        dataLayout.addWidget(m1m3_cscVersion, row, col + 4)
+        dataLayout.addWidget(m1m3_salVersion, row, col + 5)
+        dataLayout.addWidget(m1m3_xmlVersion, row, col + 6)
+        dataLayout.addWidget(m1m3_osplVersion, row, col + 7)
+        row += 1
         dataLayout.addWidget(QLabel("Elevation (deg)"), row, col)
         dataLayout.addWidget(self.inclinometerElevationLabel, row, col + 1)
         dataLayout.addWidget(self.tmaElevationLabel, row, col + 2)
-        dataLayout.addWidget(QLabel("<b>Version</b>"), row, col + 3)
-        dataLayout.addWidget(self.cscVersion, row, col + 4)
-        dataLayout.addWidget(self.salVersion, row, col + 5)
-        dataLayout.addWidget(self.xmlVersion, row, col + 6)
-        dataLayout.addWidget(self.osplVersion, row, col + 7)
+        dataLayout.addWidget(QLabel("<b>MTMount</b>"), row, col + 3)
+        dataLayout.addWidget(mtmount_cscVersion, row, col + 4)
+        dataLayout.addWidget(mtmount_salVersion, row, col + 5)
+        dataLayout.addWidget(mtmount_xmlVersion, row, col + 6)
+        dataLayout.addWidget(mtmount_osplVersion, row, col + 7)
 
         m1m3.appliedForces.connect(self.appliedForces)
         m1m3.detailedState.connect(self.detailedState)
@@ -269,7 +280,6 @@ class OverviewPageWidget(QWidget):
         m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
         m1m3.imsData.connect(self.imsData)
         m1m3.inclinometerData.connect(self.inclinometerData)
-        m1m3.softwareVersions.connect(self.softwareVersions)
         m1m3.forceActuatorSettings.connect(self.forceActuatorSettings)
         m1m3.outerLoopData.connect(self.outerLoopData)
 
@@ -341,13 +351,6 @@ class OverviewPageWidget(QWidget):
     @Slot(map)
     def inclinometerData(self, data):
         self.inclinometerElevationLabel.setText(f"{data.inclinometerAngle:.3f}")
-
-    @Slot(map)
-    def softwareVersions(self, data):
-        self.cscVersion.setText(data.cscVersion)
-        self.salVersion.setText(data.salVersion)
-        self.xmlVersion.setText(data.xmlVersion)
-        self.osplVersion.setText(data.openSpliceVersion)
 
     @Slot(map)
     def forceActuatorSettings(self, data):

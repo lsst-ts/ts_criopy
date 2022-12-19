@@ -51,7 +51,7 @@ from ..GUI import (
     Heartbeat,
 )
 from ..GUI import UserSelectedTimeChart, TimeChartView
-from ..GUI.SAL import SummaryStateLabel, SALCommand
+from ..GUI.SAL import SummaryStateLabel, SALCommand, VersionWidget
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
 from ..GUI.SAL.SALComm import warning
 
@@ -328,6 +328,8 @@ class CompressorsPageWidget(QWidget):
                 ],
             )
         )
+
+        statusLayout.addWidget(VersionWidget(self.compressor))
 
         commandLayout.addWidget(
             SummaryStateLabel(self.compressor.summaryState, "summaryState")
