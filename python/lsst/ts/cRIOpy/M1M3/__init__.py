@@ -8,6 +8,7 @@ from .DirectionPadWidget import DirectionPadWidget
 from .EnabledForceActuators import EnabledForceActuators
 from .ForceActuatorBumpTestPageWidget import ForceActuatorBumpTestPageWidget
 from .ForceActuatorGraphPageWidget import ForceActuatorGraphPageWidget
+from .ForceActuatorHistogramPageWidget import ForceActuatorHistogramPageWidget
 from .ForceActuatorValuePageWidget import ForceActuatorValuePageWidget
 from .ForceActuatorWidget import ForceActuatorWidget
 from .ForceBalanceSystemPageWidget import ForceBalanceSystemPageWidget

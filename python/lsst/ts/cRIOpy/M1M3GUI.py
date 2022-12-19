@@ -51,6 +51,7 @@ from .M1M3 import (
     DCAccelerometerPageWidget,
     EnabledForceActuators,
     ForceActuatorGraphPageWidget,
+    ForceActuatorHistogramPageWidget,
     ForceActuatorValuePageWidget,
     ForceBalanceSystemPageWidget,
     ForceActuatorBumpTestPageWidget,
@@ -108,6 +109,9 @@ class EUI(QMainWindow):
         self.addPage("Hardpoint Test", HardpointTestPageWidget(self.m1m3))
         self.addPage("Enabled Force Actuators", EnabledForceActuators(self.m1m3))
         self.addPage("Force Actuator Graph", ForceActuatorGraphPageWidget(self.m1m3))
+        self.addPage(
+            "Force Actuator Histogram", ForceActuatorHistogramPageWidget(self.m1m3)
+        )
         self.addPage("Force Actuator Value", ForceActuatorValuePageWidget(self.m1m3))
         self.addPage("Compressor 1", CompressorsPageWidget(self.compressor_1))
         self.addPage("Compressor 2", CompressorsPageWidget(self.compressor_2))
