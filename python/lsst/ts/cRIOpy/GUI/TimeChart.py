@@ -42,8 +42,22 @@ __all__ = [
 
 
 class AbstractChart(QtCharts.QChart):
-    def __init__(self, parent=None, wFlags=Qt.WindowFlags()):
+    """
+    Parameters
+    ----------
+    updateInterval: `float`, optional
+        Interval for chart redraws responding to append call. Defaults to 0.1
+        second.
+    """
+
+    def __init__(self, parent=None, wFlags=Qt.WindowFlags(), updateInterval=0.1):
         super().__init__(parent, wFlags)
+
+        self._next_update = 0
+        self.updateInterval = updateInterval
+
+        self.updateTask: asyncio.Future = asyncio.Future()
+        self.updateTask.set_result(None)
 
     def findAxis(self, titleText, axisType=Qt.Vertical):
         for a in self.axes(axisType):
@@ -83,6 +97,36 @@ class AbstractChart(QtCharts.QChart):
         for a in self.axes(Qt.Vertical):
             self.removeAxis(a)
 
+    def _attachSeries(self):
+        raise NotImplementedError(
+            "AbstractChart._attachSeries should not be instantiated directly"
+        )
+
+    def _createCaches(self, items, maxItems=50 * 30):
+        # prevents race conditions by processing any outstanding events
+        # (paint,..) before manipulating axes
+        self.updateTask.cancel()
+        QApplication.instance().processEvents()
+
+        for a in self.axes():
+            self.removeAxis(a)
+
+        self.removeAllSeries()
+        self._caches = []
+        if items is None:
+            return
+
+        for axis in items.items():
+            data = [("timestamp", "f8")]
+            for d in axis[1]:
+                if d is None:
+                    self._caches.append(TimeCache(maxItems, data))
+                    data = [("timestamp", "f8")]
+                else:
+                    data.append((d, "f8"))
+                    self._addSerie(d, axis[0])
+            self._caches.append(TimeCache(maxItems, data))
+
 
 class TimeChart(AbstractChart):
     """Class with time axis and value(s). Keeps last n/dt items. Holds axis
@@ -106,18 +150,10 @@ class TimeChart(AbstractChart):
     """
 
     def __init__(self, items, maxItems=50 * 30, updateInterval=0.1):
-        super().__init__()
-        self.maxItems = maxItems
+        super().__init__(updateInterval=updateInterval)
         self.timeAxis = None
 
-        self._next_update = 0
-        self.updateInterval = updateInterval
-
-        self.updateTask: asyncio.Future = asyncio.Future()
-        self.updateTask.set_result(None)
-
         self._createCaches(items, maxItems)
-
         self._attachSeries()
 
     def _addSerie(self, name, axis):
@@ -158,31 +194,6 @@ class TimeChart(AbstractChart):
 
         for serie in self.series():
             serie.attachAxis(self.timeAxis)
-
-    def _createCaches(self, items, maxItems=50 * 30):
-        # prevents race conditions by processing any outstanding events
-        # (paint,..) before manipulating axes
-        self.updateTask.cancel()
-        QApplication.instance().processEvents()
-
-        for a in self.axes():
-            self.removeAxis(a)
-
-        self.removeAllSeries()
-        self._caches = []
-        if items is None:
-            return
-
-        for axis in items.items():
-            data = [("timestamp", "f8")]
-            for d in axis[1]:
-                if d is None:
-                    self._caches.append(TimeCache(maxItems, data))
-                    data = [("timestamp", "f8")]
-                else:
-                    data.append((d, "f8"))
-                    self._addSerie(d, axis[0])
-            self._caches.append(TimeCache(maxItems, data))
 
     def append(self, timestamp, data, axis_index=0, cache_index=None, update=False):
         """Add data to a serie. Creates axis and serie if needed. Shrink if
