@@ -25,7 +25,15 @@ __all__ = ["VersionWidget"]
 
 
 class VersionWidget(DataFormWidget):
-    def __init__(self, remote):
+    """Shows widget with CSC data - versions, simulation mode, .."""
+
+    def __init__(self, remote, simulationMode=True):
+        """
+        Parameters
+        ----------
+        showSimulationMode : `bool`, optional
+            If true (the default), shows simulationMode.mode value.
+        """
         super().__init__(
             remote.softwareVersions,
             [
@@ -36,3 +44,7 @@ class VersionWidget(DataFormWidget):
                 ("Subsystem Versions", DataLabel(field="subsystemVersions")),
             ],
         )
+        if simulationMode:
+            self.layout().addRow(
+                "Simulation mode", DataLabel(signal=remote.simulationMode, field="mode")
+            )
