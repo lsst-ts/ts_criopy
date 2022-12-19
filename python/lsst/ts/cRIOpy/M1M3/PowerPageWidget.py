@@ -217,8 +217,8 @@ class PowerPageWidget(QWidget):
 
             auxCmd = getattr(data, f"auxPowerNetwork{busName}CommandedOn")
             auxOut = getattr(data, f"auxPowerNetwork{busName}OutputOn")
-            self.auxOnButtons[b].setDisabled(mainCmd)
-            self.auxOffButtons[b].setEnabled(mainCmd)
+            self.auxOnButtons[b].setDisabled(auxCmd)
+            self.auxOffButtons[b].setEnabled(auxCmd)
             self.auxCommandedLabels[b].setValue(auxCmd)
             self.auxOutputLabels[b].setValue(auxOut)
 
