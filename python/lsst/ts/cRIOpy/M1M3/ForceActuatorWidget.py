@@ -44,7 +44,7 @@ from ..M1M3FATable import (
 class ForceActuatorWidget(QWidget):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement updateValues(data) method.
+    Children classes must implement updateValues(data, changed) method.
 
     Parameters
     ----------
@@ -58,7 +58,7 @@ class ForceActuatorWidget(QWidget):
     Methods
     -------
 
-    updateValues(data)
+    updateValues(data, changed)
         Must be defined in every child. This is called when selection is
         changed or when new data become available. If data parameter is None,
         then no data has been received for selected read topic.
@@ -186,6 +186,9 @@ class ForceActuatorWidget(QWidget):
 
     def _setUnknown(self):
         self.lastUpdatedLabel.setUnknown()
+
+    def getCurrentFieldName(self) -> (str, str):
+        return (self._topic.topic, self.field.value)
 
     def _getData(self):
         return getattr(self.m1m3.remote, self._topic.getTopic()).get()
