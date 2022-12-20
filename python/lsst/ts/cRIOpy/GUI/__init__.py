@@ -1,3 +1,4 @@
+from .AbstractChart import AbstractChart
 from .CustomLabels import (
     VLine,
     DataLabel,
@@ -36,6 +37,7 @@ from .CustomLabels import (
 )
 
 from .DataFormWidget import DataFormWidget, DataFormButton
+from .Histogram import Histogram
 from .SplashScreen import SplashScreen
 from .TimeChart import (
     TimeChart,

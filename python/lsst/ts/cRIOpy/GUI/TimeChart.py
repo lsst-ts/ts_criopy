@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIOpy package.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-import asyncio
 import concurrent.futures
 from functools import partial
 import time
@@ -27,10 +26,9 @@ import time
 from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
 from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
-from PySide2.QtWidgets import QMenu, QApplication
+from PySide2.QtWidgets import QMenu
 
-from .. import TimeCache
-
+from . import AbstractChart
 
 __all__ = [
     "TimeChart",
@@ -39,49 +37,6 @@ __all__ = [
     "SALAxis",
     "SALChartWidget",
 ]
-
-
-class AbstractChart(QtCharts.QChart):
-    def __init__(self, parent=None, wFlags=Qt.WindowFlags()):
-        super().__init__(parent, wFlags)
-
-    def findAxis(self, titleText, axisType=Qt.Vertical):
-        for a in self.axes(axisType):
-            if a.titleText() == titleText:
-                return a
-        return None
-
-    def findSerie(self, name):
-        """
-        Returns serie with given name.
-
-        Parameters
-        ----------
-        name : `str`
-            Serie name.
-
-        Returns
-        -------
-        serie : `QAbstractSerie`
-            Serie with given name. None if no serie exists.
-        """
-        for s in self.series():
-            if s.name() == name:
-                return s
-        return None
-
-    def remove(self, name):
-        """Removes serie with given name."""
-        s = self.findSerie(name)
-        if s is None:
-            return
-        self.removeSeries(s)
-
-    def clearData(self):
-        """Removes all data from the chart."""
-        self.removeAllSeries()
-        for a in self.axes(Qt.Vertical):
-            self.removeAxis(a)
 
 
 class TimeChart(AbstractChart):
@@ -106,18 +61,10 @@ class TimeChart(AbstractChart):
     """
 
     def __init__(self, items, maxItems=50 * 30, updateInterval=0.1):
-        super().__init__()
-        self.maxItems = maxItems
+        super().__init__(updateInterval=updateInterval)
         self.timeAxis = None
 
-        self._next_update = 0
-        self.updateInterval = updateInterval
-
-        self.updateTask: asyncio.Future = asyncio.Future()
-        self.updateTask.set_result(None)
-
         self._createCaches(items, maxItems)
-
         self._attachSeries()
 
     def _addSerie(self, name, axis):
@@ -158,31 +105,6 @@ class TimeChart(AbstractChart):
 
         for serie in self.series():
             serie.attachAxis(self.timeAxis)
-
-    def _createCaches(self, items, maxItems=50 * 30):
-        # prevents race conditions by processing any outstanding events
-        # (paint,..) before manipulating axes
-        self.updateTask.cancel()
-        QApplication.instance().processEvents()
-
-        for a in self.axes():
-            self.removeAxis(a)
-
-        self.removeAllSeries()
-        self._caches = []
-        if items is None:
-            return
-
-        for axis in items.items():
-            data = [("timestamp", "f8")]
-            for d in axis[1]:
-                if d is None:
-                    self._caches.append(TimeCache(maxItems, data))
-                    data = [("timestamp", "f8")]
-                else:
-                    data.append((d, "f8"))
-                    self._addSerie(d, axis[0])
-            self._caches.append(TimeCache(maxItems, data))
 
     def append(self, timestamp, data, axis_index=0, cache_index=None, update=False):
         """Add data to a serie. Creates axis and serie if needed. Shrink if
