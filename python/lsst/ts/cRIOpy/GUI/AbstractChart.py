@@ -54,9 +54,9 @@ class AbstractChart(QtCharts.QChart):
                 return a
         return None
 
-    def findSerie(self, name):
+    def findSerie(self, name) -> (QtCharts.QAbstractSeries | None):
         """
-        Returns serie with given name.
+        Returns series with given name.
 
         Parameters
         ----------
@@ -65,8 +65,8 @@ class AbstractChart(QtCharts.QChart):
 
         Returns
         -------
-        serie : `QAbstractSerie`
-            Serie with given name. None if no serie exists.
+        serie : `QAbstractSeries` or None
+            Series with given name. None if no series exists.
         """
         for s in self.series():
             if s.name() == name:
@@ -74,7 +74,7 @@ class AbstractChart(QtCharts.QChart):
         return None
 
     def remove(self, name):
-        """Removes serie with given name."""
+        """Removes series with given name."""
         s = self.findSerie(name)
         if s is None:
             return
@@ -98,7 +98,9 @@ class AbstractChart(QtCharts.QChart):
 
     def _createCaches(self, items, maxItems=50 * 30):
         # prevents race conditions by processing any outstanding events
-        # (paint,..) before manipulating axes
+        # (paint,..) before manipulating axes. Lock would work as well, but as
+        # we really care just about latest diagram repaint, better cancel what
+        # shall anyway not make it to screen.
         self.updateTask.cancel()
         QApplication.instance().processEvents()
 
