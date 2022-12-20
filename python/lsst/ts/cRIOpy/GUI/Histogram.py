@@ -26,7 +26,7 @@ from PySide2.QtCharts import QtCharts
 
 
 class Histogram(QtCharts.QChart):
-    def __init__(self, parent=None, wFlags=Qt.WindowFlags(), nbins=50):
+    def __init__(self, parent=None, wFlags=Qt.WindowFlags(), nbins: int = 50):
         """
         Parameters
         ----------
@@ -52,7 +52,14 @@ class Histogram(QtCharts.QChart):
         self.legend().setVisible(True)
         self.legend().setAlignment(Qt.AlignBottom)
 
-    def update(self, values):
+    def update(self, values: [int]):
+        """Update histogram values.
+
+        Parameters
+        ----------
+        values : `[int]`
+            New values for histogram computation.
+        """
         hist, bin_edges = np.histogram(values, self.nbins)
         self.set = QtCharts.QBarSet("Data")
         self.set.append(list(hist))

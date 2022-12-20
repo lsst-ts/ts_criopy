@@ -1,5 +1,6 @@
 from PySide2.QtCharts import QtCharts
 from PySide2.QtGui import QPainter
+from PySide2.QtWidgets import QMenu, QInputDialog
 
 from .ForceActuatorWidget import ForceActuatorWidget
 from ..GUI import Histogram
@@ -14,6 +15,28 @@ class HistogramView(QtCharts.QChartView):
 
     def update(self, values):
         self.histogram.update(values)
+
+    def setNumberOfBins(self, nbins):
+        self.histogram.nbins = nbins
+
+    def contextMenuEvent(self, event):
+        contextMenu = QMenu()
+
+        contextMenu.addAction(f"Number of bins: {self.histogram.nbins}")
+
+        action = contextMenu.exec_(event.globalPos())
+
+        if action.text().startswith("Number of bins:"):
+            nbins, ok = QInputDialog.getInt(
+                self,
+                "Number of bins",
+                "Number of bins",
+                self.histogram.nbins,
+                0,
+                200,
+            )
+            if ok:
+                self.setNumberOfBins(nbins)
 
 
 class ForceActuatorHistogramPageWidget(ForceActuatorWidget):
