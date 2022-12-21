@@ -19,6 +19,9 @@
 
 __all__ = ["ToolBar", "StatusBar"]
 
+from datetime import datetime
+import astropy.units as u
+
 from PySide2.QtCore import Slot, Signal, QSettings
 from PySide2.QtWidgets import (
     QLabel,
@@ -28,8 +31,6 @@ from PySide2.QtWidgets import (
     QDoubleSpinBox,
     QStatusBar,
 )
-
-from datetime import datetime
 
 
 class ToolBar(QToolBar):
@@ -124,9 +125,9 @@ class ToolBar(QToolBar):
 class StatusBar(QStatusBar):
     """Displays cache status on status bar."""
 
-    def __init__(self, systems, SAMPLE_TIME):
+    def __init__(self, systems):
         super().__init__()
-        self.SAMPLE_TIME = SAMPLE_TIME
+        self.sampleTimes = [None] * len(systems)
         self.cacheStatus = []
         for system in systems:
             self.addWidget(QLabel(system))
@@ -149,9 +150,12 @@ class StatusBar(QStatusBar):
         end : `float`
             End timestamp.
         """
-        self.cacheStatus[index].setText(
-            f"Size: {length}"
-            f" {datetime.fromtimestamp(start).strftime('%H:%M:%S.%f')} -"
-            f" {datetime.fromtimestamp(end).strftime('%H:%M:%S.%f')}"
-            f" {end-start+self.SAMPLE_TIME:.03f}s"
-        )
+        if self.sampleTimes[index] is None:
+            self.cacheStatus[index].setText("No data")
+        else:
+            self.cacheStatus[index].setText(
+                f"Size: {length}"
+                f" {datetime.fromtimestamp(start).strftime('%H:%M:%S.%f')} -"
+                f" {datetime.fromtimestamp(end).strftime('%H:%M:%S.%f')}"
+                f" {end-start+self.sampleTimes[index]*u.ms.to(u.s):.03f}s"
+            )

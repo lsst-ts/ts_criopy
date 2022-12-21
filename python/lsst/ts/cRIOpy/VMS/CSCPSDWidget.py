@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["PSDWidget"]
+__all__ = ["CSCPSDWidget"]
 
 import time
 
@@ -28,8 +28,8 @@ from PySide2.QtCharts import QtCharts
 from .CacheWidget import CacheWidget
 
 
-class PSDWidget(CacheWidget):
-    """Display signal PSD.
+class CSCPSDWidget(CacheWidget):
+    """Display CSC calculated PSD.
 
     Parameters
     ----------
@@ -43,8 +43,8 @@ class PSDWidget(CacheWidget):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, toolBar, channels=[]):
-        super().__init__(title, cache, toolBar, channels)
+    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
+        super().__init__(title, cache, SAMPLE_TIME, toolBar, channels)
 
     def setupAxes(self):
         for a in self.chart.axes():
@@ -98,7 +98,7 @@ class PSDWidget(CacheWidget):
             fMin = self.chart.axes(Qt.Horizontal)[0].min()
             fMax = self.chart.axes(Qt.Horizontal)[0].max()
 
-            frequencies = np.fft.rfftfreq(N, self.cache.sampleTime)
+            frequencies = np.fft.rfftfreq(N, self.SAMPLE_TIME)
 
             f = iter(frequencies)
             rMin = 0
@@ -133,7 +133,7 @@ class PSDWidget(CacheWidget):
                 ]
             return (psd, frequencies)
 
-        def plot(serie, signal):
+        def plot(serie, psd):
             """Calculates and plot PSD - Power Spectral Density. Downsamples
             the calculated PSD so reasonable number of points is displayed.
 
@@ -141,8 +141,8 @@ class PSDWidget(CacheWidget):
             ----------
             serie : `QLineSeries`
                 Line serie.
-            signal : `[float]`
-                Input signal.
+            psd : `[float]`
+                CSC calculated PSD
 
             Returns
             -------
@@ -151,11 +151,7 @@ class PSDWidget(CacheWidget):
             max : `float`
                 PSD subplot maximum value.
             """
-            N = len(signal)
-            if N < 10:
-                return 0, 0
-            # as input is real only, fft is symmetric; rfft is enough
-            psd = np.abs(np.fft.rfft(np.array(signal) * self.coefficient)) ** 2
+            N = len(psd)
 
             (psd, frequencies) = downsample(psd, N)
 

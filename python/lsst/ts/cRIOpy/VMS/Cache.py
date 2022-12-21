@@ -44,6 +44,8 @@ class Cache(TimeCache):
     def __init__(self, size, sensors, window=3):
         self._sensors = sensors
         self._window = window
+        self.interval = 1
+        self.sampleTime = 1
         items = [("timestamp", "f8")] + [
             (f"{s} {a}", "f8")
             for s in range(1, self._sensors + 1)
@@ -61,7 +63,18 @@ class Cache(TimeCache):
         """Returns number of sensors stored in cache."""
         return self._sensors
 
-    def newChunk(self, data, sample_period):
+    def _changedIntervalSampleTime(self):
+        self.resize(int(np.ceil(self.interval / self.sampleTime)))
+
+    def setInterval(self, interval):
+        self.interval = interval
+        self._changedIntervalSampleTime()
+
+    def setSampleTime(self, sampleTime):
+        self.sampleTime = sampleTime
+        self._changedIntervalSampleTime()
+
+    def newChunk(self, data):
         """Add new data chunk. Append data to cache if all sensors are
         received. Keeps window cache, removes old entries if over window.
 
@@ -69,8 +82,6 @@ class Cache(TimeCache):
         ----------
         data : `MTVMS_Telemetry_data`
             Data arriving from SAL.
-        sample_period : `float`
-            Sample period in seconds.
 
         Returns
         -------
@@ -98,7 +109,7 @@ class Cache(TimeCache):
             if r[1].count(None) > 0:
                 break
             dl = len(data.accelerationX)
-            timestamps = np.arange(r[0], r[0] + sample_period * dl, sample_period)
+            timestamps = np.arange(r[0], r[0] + self.sampleTime * dl, self.sampleTime)
 
             def copy_data(start, lenght):
                 self.data["timestamp"][

@@ -2,17 +2,17 @@
 
 from functools import partial
 
+import astropy.units as u
 from PySide2.QtCore import Slot, Signal, QSettings, Qt
 from PySide2.QtWidgets import QMainWindow
 
-import astropy.units as u
 from asyncqt import asyncClose
-import numpy as np
 
 from .GUI.SAL import SALLog, Application
 from .VMS import (
     BoxChartWidget,
     Cache,
+    CSCPSDWidget,
     DisplacementWidget,
     MiscellaneousWidget,
     ToolBar,
@@ -24,9 +24,6 @@ from .VMS import (
 
 
 class EUI(QMainWindow):
-    SAMPLE_TIME = 1 * u.ms.to(u.s)
-    """Sample time (seconds)"""
-
     SYSTEMS = ["M1M3", "M2", "Rotator"]
 
     cacheUpdated = Signal(int, int, float, float)
@@ -34,12 +31,13 @@ class EUI(QMainWindow):
     def __init__(self, *comms):
         super().__init__()
 
+        self.caches = [Cache(1000, 3), Cache(1000, 6), Cache(1000, 3)]
+
         self.comms = comms
 
         for comm in self.comms:
             comm.data.connect(self.data)
-
-        self.caches = [Cache(0, 3), Cache(0, 6), Cache(0, 3)]
+            comm.fpgaState.connect(self.fpgaState)
 
         logDock = SALLog.Dock(self.comms)
 
@@ -65,6 +63,10 @@ class EUI(QMainWindow):
                 "New &PSD graph", partial(self._addCacheWidget, i, "PSD", PSDWidget)
             )
             m.addAction(
+                "&CSC PSD graph",
+                partial(self._addCacheWidget, i, "CSC PSD", CSCPSDWidget),
+            )
+            m.addAction(
                 "New &Velocity graph",
                 partial(self._addCacheWidget, i, "Velocity", VelocityWidget),
             )
@@ -82,7 +84,7 @@ class EUI(QMainWindow):
         self.toolBar = ToolBar()
         self.addToolBar(self.toolBar)
 
-        self.statusBar = StatusBar(self.SYSTEMS, self.SAMPLE_TIME)
+        self.statusBar = StatusBar(self.SYSTEMS)
         self.cacheUpdated.connect(self.statusBar.cacheUpdated)
         self.setStatusBar(self.statusBar)
 
@@ -102,18 +104,12 @@ class EUI(QMainWindow):
         self.toolBar.frequencyChanged.emit(*self.toolBar.getFrequencyRange())
         self.toolBar.intervalChanged.emit(self.toolBar.interval.value())
 
-        self.toolBar.intervalChanged.connect(self.intervalChanged)
-
-        self.toolBar.frequencyChanged.emit(*self.toolBar.getFrequencyRange())
-        self.toolBar.intervalChanged.emit(self.toolBar.interval.value())
-
     def _addCacheWidget(self, index, prefix, ChartTypeClass):
         prefix = prefix + " " + self.SYSTEMS[index] + ":"
         id = self.getNextId(prefix)
         aWidget = ChartTypeClass(
             prefix + str(id),
             self.caches[index],
-            self.SAMPLE_TIME,
             self.toolBar,
         )
         self.cacheUpdated.connect(aWidget.cacheUpdated)
@@ -151,7 +147,7 @@ class EUI(QMainWindow):
     @Slot(map)
     def data(self, data):
         cache = self.caches[data.salIndex - 1]
-        added, chunk_removed = cache.newChunk(data, self.SAMPLE_TIME)
+        added, chunk_removed = cache.newChunk(data)
         if added:
             self.cacheUpdated.emit(
                 data.salIndex - 1,
@@ -160,11 +156,16 @@ class EUI(QMainWindow):
                 cache.endTime(),
             )
 
+    @Slot(map)
+    def fpgaState(self, fpgaState):
+        index = fpgaState.salIndex - 1
+        self.statusBar.sampleTimes[index] = fpgaState.period
+        self.caches[index].setSampleTime(fpgaState.period * u.ms.to(u.s))
+
     @Slot(float)
     def intervalChanged(self, interval):
-        newSize = int(np.ceil(interval / self.SAMPLE_TIME))
-        for cache in self.caches:
-            cache.resize(newSize)
+        for i, c in enumerate(self.caches):
+            c.setInterval(interval)
 
     @asyncClose
     async def closeEvent(self, event):

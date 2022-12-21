@@ -19,18 +19,18 @@
 
 __all__ = ["CacheWidget"]
 
-import concurrent.futures
-import time
-
-from PySide2.QtCore import Slot
-from PySide2.QtCharts import QtCharts
-
 from lsst.ts.utils import make_done_future
 
 from ..GUI.TimeChart import AbstractChart
 from .ChartView import ChartView
 from .Unit import units, coefficients
 from ..GUI.CustomLabels import DockWindow
+
+import concurrent.futures
+import time
+
+from PySide2.QtCore import Slot
+from PySide2.QtCharts import QtCharts
 
 
 class CacheWidget(DockWindow):
@@ -49,10 +49,9 @@ class CacheWidget(DockWindow):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
+    def __init__(self, title, cache, toolBar, channels=[]):
         super().__init__(title)
         self.setObjectName(title)
-        self.SAMPLE_TIME = SAMPLE_TIME
         self.toolBar = toolBar
 
         self.chart = AbstractChart()
