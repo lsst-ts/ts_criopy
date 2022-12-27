@@ -26,7 +26,7 @@ from PySide2.QtCharts import QtCharts
 import time
 import numpy as np
 
-from ..GUI.TimeChart import AbstractChart
+from ..GUI import AbstractChart
 from .Unit import units, deltas, coefficients
 
 
