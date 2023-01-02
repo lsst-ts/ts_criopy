@@ -19,32 +19,59 @@
 
 __all__ = ["CSCPSDWidget"]
 
-import time
+import math
 
 import numpy as np
 from PySide2.QtCore import Qt, Slot, QPointF
 from PySide2.QtCharts import QtCharts
 
-from .CacheWidget import CacheWidget
+from ..GUI import AbstractChart
+from .ChartView import ChartView
+from ..GUI.CustomLabels import DockWindow
+from .Unit import units, coefficients
 
 
-class CSCPSDWidget(CacheWidget):
+class CSCPSDWidget(DockWindow):
     """Display CSC calculated PSD.
 
     Parameters
     ----------
     title : `str`
         QDockWidget title and object name.
-    cache : `VMS.Cache`
-        Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.
-    channels : `[(sensor, axis)]`
-        Enabled channels.
     """
 
-    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
-        super().__init__(title, cache, SAMPLE_TIME, toolBar, channels)
+    def __init__(self, title, toolBar, psd, channels=[]):
+        super().__init__(title)
+        self.toolBar = toolBar
+
+        self.chart = AbstractChart()
+
+        self.chartView = ChartView(self.chart, QtCharts.QLineSeries)
+        self.chartView.axisChanged.connect(self.axisChanged)
+        self.chartView.unitChanged.connect(self.unitChanged)
+        for channel in channels:
+            self.chartView.addSerie(str(channel[0]) + " " + channel[1])
+
+        self.coefficient = 1
+        self.unit = units[0]
+        self.callSetupAxes = True
+        self.setupAxes()
+
+        self.setWidget(self.chartView)
+
+        psd.connect(self.psd)
+
+    @Slot(bool, bool)
+    def axisChanged(self, logX, logY):
+        self.callSetupAxes = True
+
+    @Slot(str)
+    def unitChanged(self, unit):
+        self.coefficient = coefficients(unit)
+        self.unit = unit
+        self.callSetupAxes = True
 
     def setupAxes(self):
         for a in self.chart.axes():
@@ -82,67 +109,29 @@ class CSCPSDWidget(CacheWidget):
 
         self.callSetupAxes = False
 
-    def plotAll(self):
-        """Plot all signals. Run as task in a thread."""
+    @Slot(float, float)
+    def frequencyChanged(self, lowFrequency, highFrequency):
+        if len(self.chart.series()) == 0:
+            self.callSetupAxes = True
+            return
 
-        def downsample(psd, N):
-            """Downsample PSD so no too many points are plot. Replace PSD with
-            max of subarray and frequency with mean frequency.
-            Parameters
-            ----------
-            psd : `[float]`
-                Original, full scale PSD. len(psd) ~= N // 2
-            N : `int`
-                Size of original signal.
-            """
-            fMin = self.chart.axes(Qt.Horizontal)[0].min()
-            fMax = self.chart.axes(Qt.Horizontal)[0].max()
+        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)
 
-            frequencies = np.fft.rfftfreq(N, self.SAMPLE_TIME)
-
-            f = iter(frequencies)
-            rMin = 0
-            try:
-                while next(f) < fMin:
-                    rMin += 1
-                rMax = rMin
-                try:
-                    while next(f) < fMax:
-                        rMax += 1
-                except StopIteration:
-                    pass
-                rMin = max(0, rMin - 2)
-                rMax = min(len(frequencies) - 1, rMax + 2)
-            except StopIteration:
-                return (psd[-2:-1], frequencies[-2:-1])
-
-            psd = psd[rMin:rMax]
-            frequencies = frequencies[rMin:rMax]
-            dataPerPixel = len(psd) / self.chart.plotArea().width()
-            # downsample if points are less than 2 pixels apart, so the points
-            # are at least 2 pixels apart
-            if dataPerPixel > 0.5:
-                s = int(np.floor(dataPerPixel * 2.0))
-                N = len(psd)
-                psd = [max(psd[i : i + s]) for i in range(0, N, s)]
-                # frequencies are monotonic constant step. So to calculate
-                # average, only took boundary members and divide by two
-                frequencies = [
-                    (frequencies[i] + frequencies[min(i + s, N - 1)]) / 2
-                    for i in range(0, N, s)
-                ]
-            return (psd, frequencies)
+    @Slot(map)
+    def psd(self, psd):
+        self.chartView.updateMaxSensor(psd.sensor)
+        if self.callSetupAxes is True:
+            self.setupAxes()
 
         def plot(serie, psd):
-            """Calculates and plot PSD - Power Spectral Density. Downsamples
-            the calculated PSD so reasonable number of points is displayed.
+            """Plot recieved PSD.
 
             Parameters
             ----------
             serie : `QLineSeries`
                 Line serie.
-            psd : `[float]`
-                CSC calculated PSD
+            psd : `MTVMS_psd`
+                Data to plot
 
             Returns
             -------
@@ -151,33 +140,32 @@ class CSCPSDWidget(CacheWidget):
             max : `float`
                 PSD subplot maximum value.
             """
-            N = len(psd)
-
-            (psd, frequencies) = downsample(psd, N)
-
-            points = [QPointF(frequencies[r], psd[r]) for r in range(len(psd))]
+            data = list(
+                filter(
+                    lambda x: not math.isnan(x),
+                    getattr(psd, "accelerationPSD" + s.name()[2]),
+                )
+            )
+            frequencies = np.arange(
+                psd.minPSDFrequency,
+                psd.maxPSDFrequency,
+                (psd.maxPSDFrequency - psd.minPSDFrequency) / len(data),
+            )
+            points = [QPointF(frequencies[r], data[r]) for r in range(len(data))]
             serie.replace(points)
 
-            return min(psd), max(psd)
+            return min(data), max(data)
 
         min_psd = []
         max_psd = []
         for s in self.chart.series():
-            min_p, max_p = plot(s, self.cache[s.name()])
-            min_psd.append(min_p)
-            max_psd.append(max_p)
+            if int(s.name()[0]) == psd.sensor:
+                min_p, max_p = plot(s, psd)
+                min_psd.append(min_p)
+                max_psd.append(max_p)
 
         if len(min_psd) > 0:
             if len(self.chart.axes(Qt.Vertical)) == 0:
                 self.callSetupAxes = True
             else:
                 self.chart.axes(Qt.Vertical)[0].setRange(min(min_psd), max(max_psd))
-        self.update_after = time.monotonic() + 0.5
-
-    @Slot(float, float)
-    def frequencyChanged(self, lowFrequency, highFrequency):
-        if len(self.chart.series()) == 0:
-            self.callSetupAxes = True
-            return
-
-        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)

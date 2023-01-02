@@ -107,7 +107,7 @@ class CacheWidget(DockWindow):
 
     @Slot(int, int, float, float)
     def cacheUpdated(self, index, length, startTime, endTime):
-        """Process and plot data. Signalled when new data become available.
+        """Process and plot data. Signaled when new data become available.
 
         Parameters
         ----------

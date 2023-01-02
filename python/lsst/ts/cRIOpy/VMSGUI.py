@@ -62,10 +62,7 @@ class EUI(QMainWindow):
             m.addAction(
                 "New &PSD graph", partial(self._addCacheWidget, i, "PSD", PSDWidget)
             )
-            m.addAction(
-                "&CSC PSD graph",
-                partial(self._addCacheWidget, i, "CSC PSD", CSCPSDWidget),
-            )
+            m.addAction("&CSC PSD graph", partial(self._addCSCPSDWidget, i))
             m.addAction(
                 "New &Velocity graph",
                 partial(self._addCacheWidget, i, "Velocity", VelocityWidget),
@@ -103,6 +100,13 @@ class EUI(QMainWindow):
 
         self.toolBar.frequencyChanged.emit(*self.toolBar.getFrequencyRange())
         self.toolBar.intervalChanged.emit(self.toolBar.interval.value())
+
+    def _addCSCPSDWidget(self, index):
+        prefix = "CSC PSD " + self.SYSTEMS[index] + ":"
+        id = self.getNextId(prefix)
+        aWidget = CSCPSDWidget(prefix + str(id), self.toolBar, self.comms[index].psd)
+        self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
+        self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
 
     def _addCacheWidget(self, index, prefix, ChartTypeClass):
         prefix = prefix + " " + self.SYSTEMS[index] + ":"
