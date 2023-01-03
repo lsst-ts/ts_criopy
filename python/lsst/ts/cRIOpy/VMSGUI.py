@@ -104,7 +104,12 @@ class EUI(QMainWindow):
     def _addCSCPSDWidget(self, index):
         prefix = "CSC PSD " + self.SYSTEMS[index] + ":"
         id = self.getNextId(prefix)
-        aWidget = CSCPSDWidget(prefix + str(id), self.toolBar, self.comms[index].psd)
+        aWidget = CSCPSDWidget(
+            prefix + str(id),
+            self.toolBar,
+            self.comms[index].psd,
+            self.caches[index].sensors(),
+        )
         self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
         self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
 

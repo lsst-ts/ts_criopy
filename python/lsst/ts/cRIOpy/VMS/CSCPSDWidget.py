@@ -40,15 +40,23 @@ class CSCPSDWidget(DockWindow):
         QDockWidget title and object name.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.
+    psd : `QSignal`
+        PSD SAL signal.
+    num_sensor : `int`
+        Number of sensors.
+    channles : `[int]`, optional
+        Channels to plot. Defaults to empty array, user should select channels
+        from context menu.
     """
 
-    def __init__(self, title, toolBar, psd, channels=[]):
+    def __init__(self, title, toolBar, psd, num_sensor: int, channels: [int] = []):
         super().__init__(title)
         self.toolBar = toolBar
 
         self.chart = AbstractChart()
 
         self.chartView = ChartView(self.chart, QtCharts.QLineSeries)
+        self.chartView.updateMaxSensor(num_sensor)
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
         for channel in channels:
@@ -119,7 +127,6 @@ class CSCPSDWidget(DockWindow):
 
     @Slot(map)
     def psd(self, psd):
-        self.chartView.updateMaxSensor(psd.sensor)
         if self.callSetupAxes is True:
             self.setupAxes()
 
