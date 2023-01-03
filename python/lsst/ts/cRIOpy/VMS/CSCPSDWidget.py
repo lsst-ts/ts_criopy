@@ -32,7 +32,12 @@ from .Unit import units, coefficients
 
 
 class CSCPSDWidget(DockWindow):
-    """Display CSC calculated PSD.
+    """Display CSC calculated PSD (Power Spectral Density).
+
+    Attributes
+    ----------
+    coefficient : float
+        Coefficient for conversion from default unit (m/s^2).
 
     Parameters
     ----------
@@ -44,12 +49,16 @@ class CSCPSDWidget(DockWindow):
         PSD SAL signal.
     num_sensor : `int`
         Number of sensors.
-    channles : `[int]`, optional
+    channels : `[(channel, axis)]`, optional
         Channels to plot. Defaults to empty array, user should select channels
         from context menu.
     """
 
-    def __init__(self, title, toolBar, psd, num_sensor: int, channels: [int] = []):
+    coefficient: float = 1
+
+    def __init__(
+        self, title, toolBar, psd, num_sensor: int, channels: [(int, int)] = None
+    ):
         super().__init__(title)
         self.toolBar = toolBar
 
@@ -59,10 +68,11 @@ class CSCPSDWidget(DockWindow):
         self.chartView.updateMaxSensor(num_sensor)
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
-        for channel in channels:
-            self.chartView.addSerie(str(channel[0]) + " " + channel[1])
+        if channels is not None:
+            for channel in channels:
+                self.chartView.addSerie(str(channel[0]) + " " + channel[1])
 
-        self.coefficient = 1
+        # coefficient for conver
         self.unit = units[0]
         self.callSetupAxes = True
         self.setupAxes()
@@ -147,12 +157,16 @@ class CSCPSDWidget(DockWindow):
             max : `float`
                 PSD subplot maximum value.
             """
-            data = list(
-                filter(
-                    lambda x: not math.isnan(x),
-                    getattr(psd, "accelerationPSD" + s.name()[2]),
+            data = np.array(
+                list(
+                    filter(
+                        lambda x: not math.isnan(x),
+                        getattr(psd, "accelerationPSD" + s.name()[2]),
+                    )
                 )
             )
+            if self.coefficient != 1:
+                data = (np.sqrt(data) * self.coefficient) ** 2
             frequencies = np.arange(
                 psd.minPSDFrequency,
                 psd.maxPSDFrequency,

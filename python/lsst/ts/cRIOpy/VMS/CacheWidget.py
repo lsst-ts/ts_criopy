@@ -49,7 +49,7 @@ class CacheWidget(DockWindow):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, toolBar, channels=[]):
+    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
         super().__init__(title)
         self.setObjectName(title)
         self.toolBar = toolBar
@@ -66,8 +66,9 @@ class CacheWidget(DockWindow):
         self.chartView.updateMaxSensor(self.cache.sensors())
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
-        for channel in channels:
-            self.chartView.addSerie(str(channel[0]) + " " + channel[1])
+        if channels is not None:
+            for channel in channels:
+                self.chartView.addSerie(str(channel[0]) + " " + channel[1])
 
         self.coefficient = 1
         self.unit = units[0]
