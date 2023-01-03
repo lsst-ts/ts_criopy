@@ -38,12 +38,12 @@ class CacheTimeWidget(CacheWidget):
         Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.
-    channels : `[(sensor, axis)]`
+    channels : `[(sensor, axis)]`, optional
         Enabled channels.
     """
 
-    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
-        super().__init__(title, cache, SAMPLE_TIME, toolBar, channels)
+    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
+        super().__init__(title, cache, toolBar, channels)
 
     def setupAxes(self):
         for a in self.chart.axes():

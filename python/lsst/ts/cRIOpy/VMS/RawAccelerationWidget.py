@@ -23,7 +23,7 @@ from .CacheTimeWidget import CacheTimeWidget
 
 
 class RawAccelerationWidget(CacheTimeWidget):
-    """Display signal as velocity (first acceleration integral)."""
+    """Display raw accelerometer signal."""
 
     def calculateValues(self, timestamps, signal):
         return (timestamps, signal)

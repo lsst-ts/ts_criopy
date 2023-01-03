@@ -44,12 +44,12 @@ class ValueGrid(QGroupBox):
         Event emitted when new data arrives.
     cols : `int`
         Number of columns.
-    extraLabels : `array((str, QLabel))`
+    extraLabels : `array((str, QLabel))`, optional
         Extra labels added to beginning. Those are responsible for signal
         processing.
     """
 
-    def __init__(self, valueLabel, items, event, cols, extraLabels=[]):
+    def __init__(self, valueLabel, items, event, cols, extraLabels=None):
         super().__init__()
 
         layout = QHBoxLayout()
@@ -59,6 +59,9 @@ class ValueGrid(QGroupBox):
             fl = QFormLayout()
             columns.append(fl)
             layout.addLayout(fl)
+
+        if extraLabels is None:
+            extraLabels = []
 
         lw = len(items) + len(extraLabels)
         rows = lw / cols

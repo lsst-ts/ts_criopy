@@ -19,18 +19,18 @@
 
 __all__ = ["CacheWidget"]
 
-import concurrent.futures
-import time
-
-from PySide2.QtCore import Slot
-from PySide2.QtCharts import QtCharts
-
 from lsst.ts.utils import make_done_future
 
 from ..GUI.TimeChart import AbstractChart
 from .ChartView import ChartView
 from .Unit import units, coefficients
 from ..GUI.CustomLabels import DockWindow
+
+import concurrent.futures
+import time
+
+from PySide2.QtCore import Slot
+from PySide2.QtCharts import QtCharts
 
 
 class CacheWidget(DockWindow):
@@ -49,10 +49,9 @@ class CacheWidget(DockWindow):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, SAMPLE_TIME, toolBar, channels=[]):
+    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
         super().__init__(title)
         self.setObjectName(title)
-        self.SAMPLE_TIME = SAMPLE_TIME
         self.toolBar = toolBar
 
         self.chart = AbstractChart()
@@ -67,8 +66,9 @@ class CacheWidget(DockWindow):
         self.chartView.updateMaxSensor(self.cache.sensors())
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
-        for channel in channels:
-            self.chartView.addSerie(str(channel[0]) + " " + channel[1])
+        if channels is not None:
+            for channel in channels:
+                self.chartView.addSerie(str(channel[0]) + " " + channel[1])
 
         self.coefficient = 1
         self.unit = units[0]
@@ -108,7 +108,7 @@ class CacheWidget(DockWindow):
 
     @Slot(int, int, float, float)
     def cacheUpdated(self, index, length, startTime, endTime):
-        """Process and plot data. Signalled when new data become available.
+        """Process and plot data. Signaled when new data become available.
 
         Parameters
         ----------
