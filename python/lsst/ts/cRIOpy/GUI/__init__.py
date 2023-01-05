@@ -9,6 +9,8 @@ from .CustomLabels import (
     Mm,
     Arcsec,
     Ampere,
+    Liter,
+    LiterMinute,
     Percent,
     Volt,
     RPM,
