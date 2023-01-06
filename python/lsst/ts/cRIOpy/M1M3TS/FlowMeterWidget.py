@@ -27,7 +27,6 @@ class FlowMeterWidget(DockWindow):
 
     Parameters
     ----------
-
     m1m3ts : `SALComm`
         SALComm object for MTM1M3TS.
     """
