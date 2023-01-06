@@ -11,6 +11,7 @@ from .M1M3TS import (
     ThermalValuePageWidget,
     MixingValveWidget,
     GlycolLoopTemperatureWidget,
+    FlowMeterWidget,
 )
 from .M1M3TS.M1M3TSGUI import ThermalStatesDock
 
@@ -26,6 +27,7 @@ class EUI(QMainWindow):
         thermalValues = ThermalValuePageWidget(self.m1m3ts)
         mixingValve = MixingValveWidget(self.m1m3ts)
         glycolLoopTemperature = GlycolLoopTemperatureWidget(self.m1m3ts)
+        flowMeter = FlowMeterWidget(self.m1m3ts)
         stateDock = ThermalStatesDock(self.m1m3ts)
         logDock = SALLog.Dock(self.m1m3ts)
 
@@ -35,6 +37,7 @@ class EUI(QMainWindow):
         viewMenu.addAction(thermalValues.toggleViewAction())
         viewMenu.addAction(mixingValve.toggleViewAction())
         viewMenu.addAction(glycolLoopTemperature.toggleViewAction())
+        viewMenu.addAction(flowMeter.toggleViewAction())
         viewMenu.addSeparator()
         viewMenu.addAction(stateDock.toggleViewAction())
         viewMenu.addAction(logDock.toggleViewAction())
@@ -49,6 +52,7 @@ class EUI(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, thermalValues)
         self.addDockWidget(Qt.RightDockWidgetArea, mixingValve)
         self.addDockWidget(Qt.RightDockWidgetArea, glycolLoopTemperature)
+        self.addDockWidget(Qt.RightDockWidgetArea, flowMeter)
         self.addDockWidget(Qt.LeftDockWidgetArea, stateDock)
         self.addDockWidget(Qt.BottomDockWidgetArea, logDock)
 

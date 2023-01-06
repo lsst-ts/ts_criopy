@@ -42,7 +42,7 @@ class DataFormWidget(QWidget):
         Tuple of text and label. Label shall be child of DataLabel with
         fieldname set.
 
-    timeChart : `TimeChart`
+    timeChart : `TimeChart`, optional
         Time chart receiving "topicSelected" when label is clicked.
 
     Usage

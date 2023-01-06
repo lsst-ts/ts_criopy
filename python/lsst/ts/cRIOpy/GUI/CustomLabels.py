@@ -47,6 +47,8 @@ __all__ = [
     "Mm",
     "Arcsec",
     "Ampere",
+    "Liter",
+    "LiterMinute",
     "Percent",
     "Volt",
     "RPM",
@@ -366,6 +368,46 @@ class Ampere(DataUnitLabel):
 
     def __init__(self, signal=None, field=None, fmt="0.02f"):
         super().__init__(signal, field, fmt, u.A)
+
+
+class Liter(DataUnitLabel):
+    """Displays Liters.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.liter)
+
+
+class LiterMinute(DataUnitLabel):
+    """Displays Liters per Minute.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.liter / u.minute)
 
 
 class Percent(DataUnitLabel):
