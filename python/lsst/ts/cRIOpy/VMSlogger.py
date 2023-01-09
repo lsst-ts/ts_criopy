@@ -420,8 +420,6 @@ async def main(args, pipe=None):
         f.close()
 
     if args.rotate is not None:
-        if args.size is not None:
-            raise RuntimeError("Cannot use --rotate argument with --size")
         if not args.h5py:
             raise RuntimeError("--rotate option works only with HDF5 files")
 
