@@ -339,7 +339,7 @@ class Collector:
         try:
             async with Domain() as domain:
                 remote = Remote(domain, "MTVMS", index=self.index + 1)
-                remote.tel_data.callback = lambda data: self.cache.newChunk(data, 0.001)
+                remote.tel_data.callback = lambda data: self.cache.newChunk(data)
                 while True:
                     self._create_file(datetime.now())
                     await self._sample_file()
