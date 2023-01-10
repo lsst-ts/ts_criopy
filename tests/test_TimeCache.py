@@ -124,6 +124,54 @@ class TimeCacheTestCase(unittest.TestCase):
             self.assertEqual(cache["data1"][i], testvalue**2)
             self.assertEqual(cache["data2"][i], testvalue * 6)
 
+    def test_timestampIndex(self):
+        cache = TimeCache(10, [("timestamp", "f8"), ("data1", "i4"), ("data2", "i4")])
+
+        timestamp = 10
+
+        def addValues(vals):
+            nonlocal cache, timestamp
+            for i in range(vals):
+                cache.append((timestamp, timestamp * 2, timestamp * 3))
+                timestamp += 0.1
+
+        addValues(10)
+        self.assertEqual(len(cache), 10)
+        self.assertEqual(cache.filled, False)
+
+        self.assertEqual(cache.timestampIndex(9), 0)
+        self.assertEqual(cache.timestampIndex(10), 0)
+        self.assertEqual(cache.timestampIndex(10.1), 1)
+        self.assertEqual(cache.timestampIndex(10.2), 2)
+        self.assertEqual(cache.timestampIndex(10.3), 3)
+        self.assertEqual(cache.timestampIndex(10.4), 4)
+        self.assertEqual(cache.timestampIndex(10.5), 5)
+        self.assertEqual(cache.timestampIndex(10.6), 6)
+        self.assertEqual(cache.timestampIndex(10.7), 7)
+        self.assertEqual(cache.timestampIndex(10.8), 8)
+        self.assertEqual(cache.timestampIndex(10.9), 9)
+        self.assertEqual(cache.timestampIndex(10.95), None)
+        self.assertEqual(cache.timestampIndex(11.0), None)
+
+        addValues(1)
+        self.assertEqual(len(cache), 10)
+        self.assertEqual(cache.filled, True)
+
+        self.assertEqual(cache.timestampIndex(10), 0)
+        self.assertEqual(cache.timestampIndex(10.1), 0)
+        self.assertEqual(cache.timestampIndex(10.2), 1)
+        self.assertEqual(cache.timestampIndex(10.3), 2)
+        self.assertEqual(cache.timestampIndex(10.4), 3)
+        self.assertEqual(cache.timestampIndex(10.5), 4)
+        self.assertEqual(cache.timestampIndex(10.6), 5)
+        self.assertEqual(cache.timestampIndex(10.7), 6)
+        self.assertEqual(cache.timestampIndex(10.8), 7)
+        self.assertEqual(cache.timestampIndex(10.85), 8)
+        self.assertEqual(cache.timestampIndex(10.9), 8)
+        self.assertEqual(cache.timestampIndex(10.95), 9)
+        self.assertEqual(cache.timestampIndex(11.0), 9)
+        self.assertEqual(cache.timestampIndex(11.1), None)
+
 
 if __name__ == "__main__":
     unittest.main()
