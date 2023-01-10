@@ -91,7 +91,7 @@ class TimeCache:
 
         Returns
         -------
-        endTime : `float`
+        startTime : `float`
             None if cache is empty. Otherwise timestamp of the first data
             point."""
         if self.filled is False:

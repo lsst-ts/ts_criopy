@@ -23,6 +23,7 @@ import os
 import os.path
 import signal
 import sys
+import numpy as np
 
 import argparse
 import asyncio
@@ -34,7 +35,7 @@ from lsst.ts.salobj import Domain, Remote
 from . import parseDuration
 from .VMS import Cache
 
-FREQ = 1000  # Hz
+TIME_RESERVE = 50  # time cache for 50 second more
 
 try:
     import h5py
@@ -85,8 +86,7 @@ parser.add_argument(
     dest="size",
     default=None,
     help="number of records to save in a file. Default to 86400 seconds"
-    " (assuming --rotate isn't specified and data are producet on FREQ, e.g"
-    " 1kHz)..",
+    " (assuming --rotate isn't specified)",
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
@@ -137,7 +137,7 @@ parser.add_argument(
     default=None,
     type=parseDuration,
     help="rotate on given interval. Default to not rotate - rotate on reaching"
-    " size number of entriers. Can be used only for HDF5 output.",
+    " size number of entries. Can be used only with HDF5 output.",
 )
 parser.add_argument(
     "--rotate-offset",
@@ -169,9 +169,11 @@ class Collector:
     ):
         self.index = index
         self.fn_template = fn_template
+        self.configured_size = size
         self.size = size
         self.file_type = file_type
         self.header = header
+        self.configured_chunk_size = chunk_size
         self.daemonized = daemonized
         self.rotate = rotate
         self.rotate_offset = rotate_offset
@@ -183,12 +185,7 @@ class Collector:
             f" device={device_sensors[self.index]} type={self.file_type}"
         )
 
-        if "5" in self.file_type:
-            self.chunk_size = min(chunk_size, self.size)
-        else:
-            self.chunk_size = self.size
-
-        self.cache_size = self.chunk_size + 50000
+        self.cache_size = self.configured_chunk_size + 50000
 
         self.cache = Cache(self.cache_size, device_sensors[self.index])
 
@@ -198,6 +195,10 @@ class Collector:
         elif self.next_rotate is None:
             (q, r) = divmod(timestamp, self.rotate)
             self.next_rotate = (q + 1) * self.rotate + self.rotate_offset
+            logger.debug(
+                f"Will rotate at {self.next_rotate} - current timestamp is "
+                f"{timestamp}, in {self.next_rotate - timestamp} seconds"
+            )
             return False
         elif self.next_rotate <= timestamp:
             self.next_rotate += self.rotate
@@ -314,7 +315,7 @@ class Collector:
             bar.update(self.size)
 
     async def _sample_file(self):
-        if self.daemonized or logger.getEffectiveLevel() == logging.DEBUG:
+        if self.daemonized:
             await self._sample_daemon()
         else:
             await self._sample_cli()
@@ -329,7 +330,7 @@ class Collector:
         self.cache.savetxt(self.filename, self.size, **kwargs)
 
     async def collect_data(self, single_shot):
-        """Create data files, filled them with data.
+        """Create data files, fills them with data.
 
         Parameters
         ----------
@@ -338,8 +339,14 @@ class Collector:
         """
         try:
             async with Domain() as domain:
-                remote = Remote(domain, "MTVMS", index=self.index + 1)
+                remote = Remote(domain, "MTVMS", index=self.index + 1, start=False)
                 remote.tel_data.callback = lambda data: self.cache.newChunk(data)
+                remote.evt_fpgaState.callback = self._fpgaState
+
+                await remote.start()
+
+                await self._fpgaState(remote.evt_fpgaState.get())
+
                 while True:
                     self._create_file(datetime.now())
                     await self._sample_file()
@@ -348,6 +355,26 @@ class Collector:
 
         except Exception:
             logger.exception(f"Cannot collect data for {devices[self.index]}")
+
+    async def _fpgaState(self, data):
+        freq = 1000 if data is None else int(np.ceil(1000.0 / data.period))
+        logger.debug(f"New frequency {freq}, period {data.period}")
+        if "5" in self.file_type:
+            if self.configured_size is None:
+                if self.rotate is None:
+                    self.size = 86400 * freq
+                else:
+                    # TIME_RESERVE second more than needed
+                    self.size = (self.rotate + TIME_RESERVE) * freq
+            self.chunk_size = min(self.configured_chunk_size, self.size - 10)
+        else:
+            if self.configured_size is None:
+                self.size = 86400 * freq
+            self.chunk_size = self.size - 10
+
+        self.cache_size = self.chunk_size + 50000
+
+        self.cache.resize(self.cache_size)
 
 
 async def main(args, pipe=None):
@@ -404,12 +431,6 @@ async def main(args, pipe=None):
             )
             sys.exit(1)
         file_type += "5"
-        if args.size is None:
-            if args.rotate is None:
-                args.size = 86400 * FREQ
-            else:
-                # 50 second more than needed
-                args.size = FREQ * (args.rotate + 50)
     else:
         if args.size is None:
             args.size = 50000
