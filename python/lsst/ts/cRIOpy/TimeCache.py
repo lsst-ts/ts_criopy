@@ -27,7 +27,8 @@ import numpy as np
 class TimeCache:
     """Cache for large float data. Holds rolling time window of records. Act as
     dictionary, where keys are specified in items constructor. [] and len
-    operators are supported.
+    operators are supported. Assumes a column with name "timestamp" exists and
+    contains row timestamps.
 
     Attributes
     ----------
@@ -140,7 +141,7 @@ class TimeCache:
         """
         return (self.startTime(), self.endTime())
 
-    def _mapIndex(self, index : int) -> int:
+    def _mapIndex(self, index: int) -> int:
         """Returns array index of item with index (from array start) index.
 
         Parameters

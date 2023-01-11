@@ -20,7 +20,6 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import os
-import os.path
 import signal
 import sys
 import numpy as np
@@ -29,6 +28,7 @@ import argparse
 import asyncio
 import click
 from datetime import datetime
+import time
 import logging
 
 from lsst.ts.salobj import Domain, Remote
@@ -180,6 +180,10 @@ class Collector:
         self.next_rotate = None
         self.h5file = None
 
+        self._bar_index = 0
+        self._last_bar = 0
+        self._current_file_date = time.time()
+
         logger.debug(
             f"Creating cache: index={self.index+1}"
             f" device={device_sensors[self.index]} type={self.file_type}"
@@ -189,15 +193,18 @@ class Collector:
 
         self.cache = Cache(self.cache_size, device_sensors[self.index])
 
+    def _calculate_next_rotate(self, timestamp):
+        (q, r) = divmod(timestamp, self.rotate)
+        return (q + 1) * self.rotate + self.rotate_offset
+
     def _need_rotate(self, timestamp):
         if self.rotate is None:
             return False
         elif self.next_rotate is None:
-            (q, r) = divmod(timestamp, self.rotate)
-            self.next_rotate = (q + 1) * self.rotate + self.rotate_offset
+            self.next_rotate = self._calculate_next_rotate(timestamp)
             logger.debug(
                 f"Will rotate at {self.next_rotate} - current timestamp is "
-                f"{timestamp}, in {self.next_rotate - timestamp} seconds"
+                f"{timestamp:.04f}, in {self.next_rotate - timestamp:.04f} seconds"
             )
             return False
         elif self.next_rotate <= timestamp:
@@ -223,34 +230,50 @@ class Collector:
         return filename
 
     def _create_file(self, date):
-        filename = self._get_filename(date)
-        logger.info(f"Creating {filename}")
+        self.filename = self._get_filename(date)
+        logger.debug(f"Creating {self.filename}")
 
         try:
-            dirs = os.path.dirname(filename)
+            dirs = os.path.dirname(self.filename)
             if dirs != "":
                 os.makedirs(dirs)
         except FileExistsError:
             pass
 
         if "5" in self.file_type:
-            self.h5file = h5py.File(filename, "a")
+            self.h5file = h5py.File(self.filename, "a")
             group_args = {"chunks": (self.chunk_size)}
             if "z" in self.file_type:
                 group_args["compression"] = "gzip"
             self.cache.create_hdf5_datasets(self.size, self.h5file, group_args)
-        else:
-            self.filename = filename
 
     def _save_hdf5(self):
-        if self.h5file is None or len(self.cache) < self.chunk_size:
+        if self.h5file is None:
             return False
-        logger.debug(
-            f"Saving device {devices[self.index]} data to"
-            f" {self.h5file.file.filename} from {self.cache.hdf5_index}"
-        )
-        self.cache.savehdf5(self.chunk_size)
-        self.h5file.flush()
+        count = self.chunk_size
+        if self.rotate is None:
+            if len(self.cache) < self.chunk_size:
+                return False
+        else:
+            if self.next_rotate is None:
+                if len(self.cache) == 0:
+                    return False
+                self._need_rotate(self.cache.startTime())
+
+            next_index = self.cache.timestampIndex(self.next_rotate)
+            if len(self.cache) < self.chunk_size and (
+                next_index is None or next_index + 1 == len(self.cache)
+            ):
+                return False
+            count = min(count, next_index)
+        if count > 0:
+            logger.debug(
+                f"Saving device {devices[self.index]} data to"
+                f" {self.h5file.file.filename} from {self.cache.hdf5_index},"
+                f" {count} rows"
+            )
+            self.cache.savehdf5(count)
+            self.h5file.flush()
         return True
 
     def close(self):
@@ -284,22 +307,32 @@ class Collector:
 
     async def _sample_cli(self):
         async def collect_it(bar):
-            last_l = 0
-
             while True:
+                cur_index = self._bar_index
+                bar.update(cur_index - self._last_bar)
+                self._last_bar = cur_index
                 cache_len = len(self.cache)
                 if cache_len >= self.size:
                     break
-                bar.update(cache_len - last_l)
-                last_l = cache_len
                 await asyncio.sleep(0.1)
                 if self._save_hdf5():
-                    bar.update(self.chunk_size - last_l)
                     break
 
+        if self.rotate is None:
+            bar_size = self.size
+        else:
+            if self.next_rotate is None:
+                bar_size = (
+                    self._calculate_next_rotate(self._current_file_date)
+                    - self._current_file_date
+                )
+            else:
+                bar_size = self.rotate
+            bar_size = int(np.ceil(bar_size / self.cache.sampleTime))
+
         with click.progressbar(
-            length=self.size,
-            label=f"Getting data {devices[self.index]}",
+            length=bar_size,
+            label=f"{devices[self.index]} - {os.path.basename(self.filename)}",
             show_eta=True,
             show_percent=True,
             width=0,
@@ -340,7 +373,7 @@ class Collector:
         try:
             async with Domain() as domain:
                 remote = Remote(domain, "MTVMS", index=self.index + 1, start=False)
-                remote.tel_data.callback = lambda data: self.cache.newChunk(data)
+                remote.tel_data.callback = self._data
                 remote.evt_fpgaState.callback = self._fpgaState
 
                 await remote.start()
@@ -348,7 +381,10 @@ class Collector:
                 await self._fpgaState(remote.evt_fpgaState.get())
 
                 while True:
-                    self._create_file(datetime.now())
+                    if self.next_rotate is not None:
+                        self._current_file_date = self.next_rotate - self.rotate
+                    ts = time.localtime(self._current_file_date)
+                    self._create_file(datetime(*ts[:6]))
                     await self._sample_file()
                     if single_shot:
                         break
@@ -356,9 +392,15 @@ class Collector:
         except Exception:
             logger.exception(f"Cannot collect data for {devices[self.index]}")
 
+    async def _data(self, data):
+        self.cache.newChunk(data)
+        if data.sensor == 1:
+            self._bar_index += len(data.accelerationX)
+
     async def _fpgaState(self, data):
         freq = 1000 if data is None else int(np.ceil(1000.0 / data.period))
-        logger.debug(f"New frequency {freq}, period {data.period}")
+        logger.info(f"New frequency {freq}, period {data.period}")
+        self.cache.setSampleTime(data.period / 1000.0)
         if "5" in self.file_type:
             if self.configured_size is None:
                 if self.rotate is None:
@@ -372,7 +414,7 @@ class Collector:
                 self.size = 86400 * freq
             self.chunk_size = self.size - 10
 
-        self.cache_size = self.chunk_size + 50000
+        self.cache_size = self.chunk_size + TIME_RESERVE * freq
 
         self.cache.resize(self.cache_size)
 
