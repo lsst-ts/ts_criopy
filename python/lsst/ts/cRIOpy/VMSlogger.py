@@ -398,9 +398,10 @@ class Collector:
             self._bar_index += len(data.accelerationX)
 
     async def _fpgaState(self, data):
-        freq = 1000 if data is None else int(np.ceil(1000.0 / data.period))
-        logger.info(f"New frequency {freq}, period {data.period}")
-        self.cache.setSampleTime(data.period / 1000.0)
+        period = 1 if data is None else data.period
+        freq = 1000 if data is None else int(np.ceil(1000.0 / period))
+        logger.info(f"{devices[self.index]} frequency {freq}, period {period}")
+        self.cache.setSampleTime(period / 1000.0)
         if "5" in self.file_type:
             if self.configured_size is None:
                 if self.rotate is None:
