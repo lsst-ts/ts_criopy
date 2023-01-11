@@ -200,7 +200,7 @@ class TimeCache:
         return left
 
     def rows_reverse(self):
-        """Yelds reversed row iterator."""
+        """Yields reversed row iterator."""
         for r in range(self.current_index - 1, -1, -1):
             yield self.data[r]
         if self.filled:
