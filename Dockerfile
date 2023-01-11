@@ -1,4 +1,4 @@
-FROM lsstts/develop-env:c0026.010
+FROM lsstts/develop-env:c0028.002
 
 ARG cRIO_PY=develop
 
