@@ -174,6 +174,7 @@ class Collector:
         self.file_type = file_type
         self.header = header
         self.configured_chunk_size = chunk_size
+        self.chunk_size = chunk_size
         self.daemonized = daemonized
         self.rotate = rotate
         self.rotate_offset = rotate_offset
@@ -261,8 +262,8 @@ class Collector:
                 self._need_rotate(self.cache.startTime())
 
             next_index = self.cache.timestampIndex(self.next_rotate)
-            if len(self.cache) < self.chunk_size and (
-                next_index is None or next_index + 1 == len(self.cache)
+            if next_index is None or (
+                len(self.cache) < self.chunk_size and next_index + 1 == len(self.cache)
             ):
                 return False
             count = min(count, next_index)
