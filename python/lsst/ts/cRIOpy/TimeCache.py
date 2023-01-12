@@ -27,7 +27,19 @@ import numpy as np
 class TimeCache:
     """Cache for large float data. Holds rolling time window of records. Act as
     dictionary, where keys are specified in items constructor. [] and len
-    operators are supported.
+    operators are supported. Assumes a column with name "timestamp" exists and
+    contains row timestamps.
+
+    Attributes
+    ----------
+    current_index : `int`
+        Index of last member. If filled is true, current_index + 1 is valid
+        value, containing first row in the array.
+    filled : `bool`
+        True if the array rolled over. Last element in the array contain valid
+        value, and values continue from 0 till current_index.
+    data : `numpy.array`
+        Array containing data.
 
     Parameters
     ----------
@@ -91,7 +103,7 @@ class TimeCache:
 
         Returns
         -------
-        endTime : `float`
+        startTime : `float`
             None if cache is empty. Otherwise timestamp of the first data
             point."""
         if self.filled is False:
@@ -118,10 +130,77 @@ class TimeCache:
         return self.data[self.current_index - 1]["timestamp"]
 
     def timeRange(self):
+        """Returns timestamp range.
+
+        Returns
+        -------
+        startTime : `float`
+            Equals startTime() call.
+        endTime : `float`a
+            Equals endTime() call.
+        """
         return (self.startTime(), self.endTime())
 
+    def _mapIndex(self, index: int) -> int:
+        """Returns array index of item with index (from array start) index.
+
+        Parameters
+        ----------
+        index : `int`
+            Requested index in an array.
+
+        Returns
+        -------
+        mapped : `int`
+            Index in sub-array.
+        """
+        if self.filled:
+            if index < len(self) - self.current_index:
+                return index + self.current_index
+            return index - len(self) + self.current_index
+        return index
+
+    def timestampIndex(self, timestamp: float) -> int:
+        """Search for row's index with timestamp value bigger than timestamp.
+
+        Parameters
+        ----------
+        timestamp : `float`
+            Value to search.
+
+        Returns
+        -------
+        index : `int`
+            Index of the first element >= timestamp parameter. None if such
+            index doesn't exists.
+        """
+        left, right = 0, len(self) - 1
+
+        left_v = self.data[self._mapIndex(left)]["timestamp"]
+        right_v = self.data[self._mapIndex(right)]["timestamp"]
+
+        if timestamp < left_v:
+            return left
+
+        if timestamp > right_v:
+            if np.isclose(right_v, timestamp):
+                return right
+            return None
+
+        while left < right:
+            middle = (left + right) // 2
+            midval = self.data[self._mapIndex(middle)]["timestamp"]
+            if np.isclose(midval, timestamp):
+                return middle
+            if midval < timestamp:
+                left = middle + 1
+            else:
+                right = middle - 1
+
+        return left
+
     def rows_reverse(self):
-        """Yelds reversed row iterator."""
+        """Yields reversed row iterator."""
         for r in range(self.current_index - 1, -1, -1):
             yield self.data[r]
         if self.filled:
@@ -191,7 +270,7 @@ class TimeCache:
         """Returns True if HDF5 file is filled."""
         return self.hdf5_index >= self._hdf5_size
 
-    def savehdf5(self, size):
+    def savehdf5(self, size) -> None:
         """Save data to H5D group. Saved data are forgotten.
 
         Parameters

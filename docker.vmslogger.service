@@ -17,6 +17,7 @@ Restart=always
 ExecStartPre=-/usr/bin/docker stop %n
 ExecStartPre=-/usr/bin/docker rm %n
 ExecStart=/usr/bin/docker run --rm --name %n -v /vms-data/:/vms-data/:rw --network host vmslogger VMSlogger -5 --workdir /vms-data --template '%%Y/%%m/$${name}-%%Y-%%m-%%dT%%H:%%M.$${ext}' --rotate 1D M1M3 M2 Rotator
+ExecStop=/usr/bin/docker stop %n
 
 [Install]
 WantedBy=multi-user.target
