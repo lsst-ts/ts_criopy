@@ -20,6 +20,7 @@ from .CustomLabels import (
     Seconds,
     KiloWatt,
     DataDegC,
+    Hz,
     ArcsecWarning,
     MmWarning,
     OnOffLabel,
