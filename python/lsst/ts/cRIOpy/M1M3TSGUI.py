@@ -10,7 +10,7 @@ from .GUI.SAL import Application, SALStatusBar, SALLog
 from .M1M3TS import (
     ThermalValuePageWidget,
     MixingValveWidget,
-    PumpWidget,
+    CoolantPumpWidget,
     GlycolLoopTemperatureWidget,
     FlowMeterWidget,
 )
@@ -27,7 +27,7 @@ class EUI(QMainWindow):
 
         thermalValues = ThermalValuePageWidget(self.m1m3ts)
         mixingValve = MixingValveWidget(self.m1m3ts)
-        pump = PumpWidget(self.m1m3ts)
+        coolantPump = CoolantPumpWidget(self.m1m3ts)
         glycolLoopTemperature = GlycolLoopTemperatureWidget(self.m1m3ts)
         flowMeter = FlowMeterWidget(self.m1m3ts)
         stateDock = ThermalStatesDock(self.m1m3ts)
@@ -38,7 +38,7 @@ class EUI(QMainWindow):
         viewMenu = menuBar.addMenu("&Views")
         viewMenu.addAction(thermalValues.toggleViewAction())
         viewMenu.addAction(mixingValve.toggleViewAction())
-        viewMenu.addAction(pump.toggleViewAction())
+        viewMenu.addAction(coolantPump.toggleViewAction())
         viewMenu.addAction(glycolLoopTemperature.toggleViewAction())
         viewMenu.addAction(flowMeter.toggleViewAction())
         viewMenu.addSeparator()
@@ -54,7 +54,7 @@ class EUI(QMainWindow):
 
         self.addDockWidget(Qt.RightDockWidgetArea, thermalValues)
         self.addDockWidget(Qt.RightDockWidgetArea, mixingValve)
-        self.addDockWidget(Qt.RightDockWidgetArea, pump)
+        self.addDockWidget(Qt.RightDockWidgetArea, coolantPump)
         self.addDockWidget(Qt.RightDockWidgetArea, glycolLoopTemperature)
         self.addDockWidget(Qt.RightDockWidgetArea, flowMeter)
         self.addDockWidget(Qt.LeftDockWidgetArea, stateDock)
