@@ -1,6 +1,7 @@
 from .AbstractChart import AbstractChart
 from .CustomLabels import (
     VLine,
+    ColoredButton,
     DataLabel,
     UnitLabel,
     DataUnitLabel,

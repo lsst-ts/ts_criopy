@@ -20,10 +20,9 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Slot, Signal
-from PySide2.QtGui import QPalette
-from PySide2.QtWidgets import QFormLayout, QWidget, QPushButton
+from PySide2.QtWidgets import QFormLayout, QWidget
 
-from . import TimeChart, DataLabel, Colors
+from . import TimeChart, DataLabel, Colors, ColoredButton
 
 __all__ = ["DataFormWidget", "DataFormButton"]
 
@@ -85,7 +84,7 @@ class DataFormWidget(QWidget):
                 self._timeChart.topicSelected.emit(child)
 
 
-class DataFormButton(QPushButton):
+class DataFormButton(ColoredButton):
     """
     Creates button displaying overall status. On click, creates widget showing
     data value. Update fields on signal with new values.
@@ -120,13 +119,12 @@ class DataFormButton(QPushButton):
 
     @Slot(map)
     def _dataChanged(self, data):
-        pal = self.palette()
-        pal.setColor(QPalette.Button, Colors.OK)
+        color = Colors.OK
         for f in self._fields:
             if getattr(data, f[1].objectName()) is True:
-                pal.setColor(QPalette.Button, Colors.ERROR)
+                color = Colors.ERROR
                 break
-        self.setPalette(pal)
+        self.setColor(color)
 
     @Slot()
     def _displayDetails(self):
