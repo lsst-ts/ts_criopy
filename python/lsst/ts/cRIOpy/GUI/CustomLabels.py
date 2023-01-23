@@ -103,9 +103,11 @@ class ColoredButton(QPushButton):
         Parameters
         ----------
         color : `QColor`
-            New button background color.
+            New button background color. If None, color isn't changed.
         """
         pal = self.palette()
+        if color is None:
+            color = pal.color(QPalette.Base)
         pal.setColor(QPalette.Button, color)
         self.setPalette(pal)
 

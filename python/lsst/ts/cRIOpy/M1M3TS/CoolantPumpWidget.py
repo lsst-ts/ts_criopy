@@ -28,6 +28,9 @@ from ..GUI import (
     Volt,
     DockWindow,
     DataFormWidget,
+    FieldButton,
+    TopicStatusLabel,
+    Colors,
 )
 
 from ..GUI.SAL import SALCommand
@@ -59,10 +62,25 @@ class CoolantPumpWidget(DockWindow):
 
         cmdlayout.addWidget(stopButton)
 
+        resetButton = QPushButton("Reset")
+        resetButton.clicked.connect(self._reset)
+
+        cmdlayout.addWidget(resetButton)
+
         self.frequency = QSpinBox()
         self.frequency.setRange(0, 300)
-        self.frequency.setSuffix(str(u.Hz))
-        cmdlayout.addWidget(self.frequency)
+        self.frequency.setSuffix(' ' + str(u.Hz))
+
+        setButton = QPushButton("Set")
+        setButton.clicked.connect(self._setCoolantPumpFrequency)
+
+        freqlayout = QHBoxLayout()
+
+        freqlayout.addWidget(self.frequency)
+        freqlayout.addWidget(setButton)
+
+        cmdlayout.addLayout(freqlayout)
+
         cmdlayout.addStretch()
 
         tellayout = QVBoxLayout()
@@ -78,6 +96,62 @@ class CoolantPumpWidget(DockWindow):
                 ],
             )
         )
+        tellayout.addWidget(
+            TopicStatusLabel(
+                self.m1m3ts.glycolPumpStatus,
+                [
+                    FieldButton(
+                        "faulted", ("OK", Colors.OK), ("Faulted", Colors.ERROR)
+                    ),
+                    FieldButton(
+                        "running",
+                        ("Not running", Colors.WARNING),
+                        ("Running", Colors.OK),
+                    ),
+                    FieldButton(
+                        "accelerating",
+                        ("Not accelerating", None),
+                        ("Accelerating", Colors.WARNING),
+                    ),
+                    FieldButton(
+                        "decelerating",
+                        ("Not decelerating", None),
+                        ("Decelerating", Colors.WARNING),
+                    ),
+                    FieldButton(
+                        "forwardCommanded",
+                        ("Not Forward Commanded", None),
+                        ("Forward Commanded", None),
+                    ),
+                    FieldButton(
+                        "forwardRotating",
+                        ("Not rotating forward", None),
+                        ("Rotating forward", Colors.OK),
+                    ),
+                    FieldButton(
+                        "ready",
+                        ("Not ready", Colors.ERROR),
+                        ("Ready", Colors.OK),
+                    ),
+                    FieldButton(
+                        "mainFrequencyControlled",
+                        ("Main frequency not controlled", None),
+                        ("Main frequency controlled", None),
+                    ),
+                    FieldButton(
+                        "operationCommandControlled",
+                        ("Operation command not controlled", None),
+                        ("Operating command controlled", None),
+                    ),
+                    FieldButton(
+                        "parametersLocked",
+                        ("Parameters not locked", Colors.OK),
+                        ("Parameters locked", Colors.WARNING),
+                    ),
+                ],
+            )
+        )
+        tellayout.addStretch()
 
         layout.addLayout(cmdlayout)
         layout.addLayout(tellayout)
@@ -127,3 +201,19 @@ class CoolantPumpWidget(DockWindow):
     @asyncSlot()
     async def _stop(self):
         await self._cmd_stop()
+
+    @SALCommand
+    def _cmd_reset(self, **kvargs):
+        return self.m1m3ts.remote.cmd_coolantPumpReset
+
+    @asyncSlot()
+    async def _reset(self):
+        await self._cmd_reset()
+
+    @SALCommand
+    def _cmd_coolantPumpFrequency(self, **kvargs):
+        return self.m1m3ts.remote.cmd_coolantPumpFrequency
+
+    @asyncSlot()
+    async def _setCoolantPumpFrequency(self):
+        await self._cmd_coolantPumpFrequency(targetFrequency=self.frequency.value())
