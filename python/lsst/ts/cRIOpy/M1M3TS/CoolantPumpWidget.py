@@ -19,7 +19,13 @@
 
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QPushButton, QHBoxLayout, QSpinBox, QVBoxLayout, QWidget
+from PySide2.QtWidgets import (
+    QPushButton,
+    QHBoxLayout,
+    QDoubleSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 import astropy.units as u
 
 from ..GUI import (
@@ -67,9 +73,11 @@ class CoolantPumpWidget(DockWindow):
 
         cmdlayout.addWidget(resetButton)
 
-        self.frequency = QSpinBox()
+        self.frequency = QDoubleSpinBox()
         self.frequency.setRange(0, 300)
-        self.frequency.setSuffix(' ' + str(u.Hz))
+        self.frequency.setDecimals(2)
+        self.frequency.setSingleStep(0.10)
+        self.frequency.setSuffix(" " + str(u.Hz))
 
         setButton = QPushButton("Set")
         setButton.clicked.connect(self._setCoolantPumpFrequency)
@@ -91,8 +99,8 @@ class CoolantPumpWidget(DockWindow):
                     ("Commanded Frequency", Hz(field="commandedFrequency")),
                     ("Output Frequency", Hz(field="outputFrequency")),
                     ("Output Current", Ampere(field="outputCurrent")),
-                    ("Bus Voltage", Volt(field="busVoltage")),
-                    ("Output Voltage", Volt(field="outputVoltage")),
+                    ("Bus Voltage", Volt(field="busVoltage", fmt="0.0f")),
+                    ("Output Voltage", Volt(field="outputVoltage", fmt="0.01f")),
                 ],
             )
         )
