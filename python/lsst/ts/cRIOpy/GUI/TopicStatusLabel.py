@@ -31,8 +31,13 @@ class FieldButton(ColoredButton):
     Parameters
     ----------
     field : `str`
+        Field name. Used to retrieve value from new signal data.
     inactive : `(str, QColor)`
+        Button text and color when value is false. If color is None, use
+        default color.
     active : `(str, QColor)`
+        Button text and color when value is true. If color is None, use default
+        color.
     """
 
     def __init__(self, field: str, inactive: (str, str), active: (str, str)):
@@ -45,23 +50,43 @@ class FieldButton(ColoredButton):
 
 
 class TopicStatusLabel(ColoredButton):
-    def __init__(self, signal: Signal, fields: [FieldButton]):
+    """
+    Button tied to data containing some boolean fields. Passed an array of
+    FieldButton. The entries are used to construct a window appearing after
+    button is clicked.
+
+    Button text and color is set to match text and color of the first true
+    field among fields. If all fields values are false, button text is set to
+    "---" and color is set to match default color.
+
+    Parameters
+    ----------
+    signal : `Signal`
+        Signal triggered when new data arrives.
+    title : `str`
+        Sub-window title.
+    fields : `[FieldButton]`
+        Fields in signal to display in sub-window.
+    """
+
+    def __init__(self, signal: Signal, title: str, fields: [FieldButton]):
         super().__init__("---")
+        self._title = title
+        self._window = None
         self.fields = fields
-        self.window = None
 
         self.clicked.connect(self._clicked)
         signal.connect(self.data)
 
     def _clicked(self):
-        if self.window is None:
-            self.window = QWidget()
-            # self.setWindowTitle(
+        if self._window is None:
+            self._window = QWidget()
+            self._window.setWindowTitle(self._title)
             layout = QVBoxLayout()
             for f in self.fields:
                 layout.addWidget(f)
-            self.window.setLayout(layout)
-        self.window.show()
+            self._window.setLayout(layout)
+        self._window.show()
 
     def data(self, data):
         updated = False

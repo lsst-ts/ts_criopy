@@ -43,7 +43,8 @@ from ..GUI.SAL import SALCommand
 
 
 class CoolantPumpWidget(DockWindow):
-    """Display Glycol coolant re-circulation pump telemetry, allows motor commanding."""
+    """Display Glycol coolant re-circulation pump telemetry, allows motor
+    commanding."""
 
     def __init__(self, m1m3ts):
         super().__init__("Glycol coolant re-circulation pump")
@@ -107,6 +108,7 @@ class CoolantPumpWidget(DockWindow):
         tellayout.addWidget(
             TopicStatusLabel(
                 self.m1m3ts.glycolPumpStatus,
+                "Glycol Pump Status",
                 [
                     FieldButton(
                         "faulted", ("OK", Colors.OK), ("Faulted", Colors.ERROR)
