@@ -40,7 +40,6 @@ from ..GUI import (
     PressureInmBar,
     KiloWatt,
     Hours,
-    Seconds,
     Volt,
     RPM,
     OnOffLabel,
@@ -230,10 +229,6 @@ class CompressorsPageWidget(QWidget):
                     ("Motor speed RPM", RPM(field="motorSpeedRPM")),
                     ("Motor input", KiloWatt(field="motorInput")),
                     (
-                        "Power consumption",
-                        KiloWatt(field="compressorPowerConsumption"),
-                    ),
-                    (
                         "Volume percentage",
                         Percent(field="compressorVolumePercentage", fmt=".0f"),
                     ),
@@ -268,7 +263,6 @@ class CompressorsPageWidget(QWidget):
                     ),
                     ("Lowest service counter", Hours("lowestServiceCounter")),
                     ("Run-On timer", Hours("runOnTimer")),
-                    ("Loaded hours 50 percent", Seconds("loadedHours50Percent")),
                 ],
             )
         )
