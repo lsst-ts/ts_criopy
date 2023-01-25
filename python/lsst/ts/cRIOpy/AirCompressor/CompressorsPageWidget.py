@@ -442,15 +442,16 @@ class CompressorsPageWidget(QWidget):
 
     @Slot(map)
     def status(self, data):
-        self._setPowerButtons(
-            self.compressor.remote.evt_summaryState.get().summaryState, data
-        )
+        summaryState = self.compressor.remote.evt_summaryState.get()
+        if summaryState is not None:
+            self._setPowerButtons(summaryState.summaryState, data)
 
     def _setPowerButtons(self, summaryState, status):
-        if summaryState == salobj.State.ENABLED and status.readyToStart:
-            on = status.operating
-            self.powerOn.setEnabled(not on)
-            self.powerOff.setEnabled(on)
+        if summaryState == salobj.State.ENABLED and status is not None:
+            self.powerOn.setEnabled(status.startByRemote)
+            self.powerOff.setEnabled(
+                status.startByRemote is False and status.operating is True
+            )
         else:
             self.powerOn.setEnabled(False)
             self.powerOff.setEnabled(False)
@@ -497,7 +498,7 @@ class CompressorsPageWidget(QWidget):
 
     @SALCommand
     def __powerOff(self):
-        return self.compressor.remote.cmd_powerOn
+        return self.compressor.remote.cmd_powerOff
 
     @asyncSlot()
     async def _powerOff(self):
