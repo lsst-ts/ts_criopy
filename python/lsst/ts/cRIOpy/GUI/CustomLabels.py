@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of the cRIO GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -30,7 +30,7 @@ from PySide2.QtWidgets import (
     QDockWidget,
     QPushButton,
 )
-from PySide2.QtGui import QPalette
+from PySide2.QtGui import QPalette, QColor
 import astropy.units as u
 from datetime import datetime
 
@@ -39,6 +39,7 @@ from . import Colors
 
 __all__ = [
     "VLine",
+    "ColoredButton",
     "DataLabel",
     "UnitLabel",
     "DataUnitLabel",
@@ -58,6 +59,7 @@ __all__ = [
     "Seconds",
     "KiloWatt",
     "DataDegC",
+    "Hz",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -87,6 +89,39 @@ class VLine(QFrame):
         super().__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
+
+
+class ColoredButton(QPushButton):
+    """Button with setColor method to change color."""
+
+    def __init__(self, text):
+        super().__init__(text)
+
+    def setColor(self, color: QColor) -> None:
+        """Sets button color.
+
+        Parameters
+        ----------
+        color : `QColor`
+            New button background color. If None, color isn't changed.
+        """
+        pal = self.palette()
+        if color is None:
+            color = pal.color(QPalette.Base)
+        pal.setColor(QPalette.Button, color)
+        self.setPalette(pal)
+
+    def setTextColor(self, text: str, color: QColor) -> None:
+        """Sets button text and color.
+        Parameters
+        ----------
+        text : `str`
+            New button text.
+        color : `QColor`
+            New button background color.
+        """
+        self.setText(text)
+        self.setColor(color)
 
 
 class DataLabel(QLabel):
@@ -514,6 +549,11 @@ class DataDegC(DataUnitLabel):
         super().__init__(signal, field, fmt, u.deg_C)
 
 
+class Hz(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.Hz)
+
+
 class ArcsecWarning(Arcsec):
     """Display degrees as arcseconds. Shows values above threshold as error /
     fault.
@@ -623,7 +663,7 @@ class ConnectedLabel(DataLabel):
         super().__init__(signal, field)
 
     def __copy__(self):
-        return ErrorLabel()
+        return ConnectedLabel()
 
     def setValue(self, is_connected: bool) -> None:
         """Sets formatted value. Color codes ERROR (red)/OK (green).
@@ -711,7 +751,7 @@ class WarningLabel(DataLabel):
             self.setText("<font color='green'>OK</font>")
 
 
-class WarningButton(QPushButton):
+class WarningButton(ColoredButton):
     """Displays WARNING/OK button. When clicked, displays window with values in
     the signal. Button is color-coded (red for problems, green for OK values).
 
@@ -752,14 +792,10 @@ class WarningButton(QPushButton):
         value : `bool`
             Current (=to be displayed) variable value. True means warning.
         """
-        pal = self.palette()
         if value:
-            self.setText("WARNING")
-            pal.setColor(QPalette.Button, Colors.ERROR)
+            self.setTextColor("WARNING", Colors.ERROR)
         else:
-            self.setText("OK")
-            pal.setColor(QPalette.Button, Colors.OK)
-        self.setPalette(pal)
+            self.setTextColor("OK", Colors.OK)
 
 
 class InterlockOffLabel(QLabel):
