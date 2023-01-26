@@ -38,7 +38,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.enableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Enable Hardpoint Corrections",
             m1m3,
-            [DetailedState.ACTIVE],
+            [DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
         )
         self.enableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandEnableHardpointCorrections
@@ -47,7 +47,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.disableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Disable Hardpoint Corrections",
             m1m3,
-            [DetailedState.ACTIVE],
+            [DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
         )
         self.disableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandDisableHardpointCorrections
