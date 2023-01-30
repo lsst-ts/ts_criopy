@@ -27,26 +27,33 @@ rows are hardpoint numbers.
 Usage
 -----
 .. code-block:: python
-   from lsst.ts.cRIOpy.GUI import ArraySignal, ArrayGrid, ArrayItem, Mm
+   from lsst.ts.cRIOpy.GUI import ArraySignal, ArrayGrid, ArrayItem, ArrayFields, Mm
 
-   # sal holds SALComm remote with signal "sig1" and "sig2"
+   # sal holds SALComm remote with signal "sig1", "sig2" and "sig3"
 
    grid = ArrayGrid(
-       ArrayItem("myField", "Label 1", Mm, sal.sig1),
-       ArraySignal(
-           sal.sig2,
-           [
-               ArrayItem("fieldA", "A"),
-               ArrayItem("fieldB", "B"),
-               ArrayItem("fieldC", "C")
-           ]
-       )
+       "<b>Some data</b>",
+       [f"<b>{x}</b>" for b in range(1, 7)],
+       [
+           ArrayItem("myField", "Label 1", Mm, sal.sig1),
+           ArraySignal(
+               sal.sig2,
+               [
+                   ArrayItem("fieldA", "A"),
+                   ArrayItem("fieldB", "B"),
+                   ArrayItem("fieldC", "C"),
+                   ArrayFields(["fX", None, "fZ"], "My forces")
+               ]
+           ),
+           ArrayFields([None, None, "fZ", None, None, "mZ"], "Forces", sal.sig3),
+       ],
    )
 
-   self.addWidget(grid)
+   layout = <someLayout>()
+   layout.addWidget(grid)
 """
 
-__all__ = ["ArrayItem", "ArraySignal", "ArrayButton", "ArrayGrid"]
+__all__ = ["ArrayItem", "ArrayFields", "ArraySignal", "ArrayButton", "ArrayGrid"]
 
 from PySide2.QtCore import QObject, Slot, Signal, Qt
 from PySide2.QtWidgets import QWidget, QGridLayout, QLabel, QButtonGroup, QPushButton
@@ -189,8 +196,42 @@ class ArrayItem(AbstractColumn):
         return row + 1
 
 
+class ArrayFields(AbstractColumn):
+    def __init__(
+        self,
+        fields: [str],
+        label: str,
+        widget: UnitLabel = UnitLabel,
+        signal: Signal = None,
+    ):
+        super().__init__("", label, widget, signal)
+        self.fields = fields
+
+    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+        self.items = [None if f is None else self._widget() for f in self.fields]
+
+        parent.add_widget(QLabel(self._label), row, 0)
+
+        for c, i in enumerate(self.items):
+            if i is None:
+                continue
+            parent.add_widget(i, row, c + 1)
+            i.setObjectName(self.fields[c])
+            i.setCursor(Qt.PointingHandCursor)
+        return row + 1
+
+    @Slot(map)
+    def data(self, data):
+        for i in self.items:
+            if i is None:
+                continue
+
+            d = getattr(data, i.objectName())
+            i.setValue(d)
+
+
 class ArraySignal(AbstractColumn):
-    def __init__(self, signal: Signal, items: list[ArrayItem]):
+    def __init__(self, signal: Signal, items: list[AbstractColumn]):
         """Construct member holding multiple array items. Shall be used to
         group together ArrayItems receiving data from a single signal/SAL
         topic.
@@ -206,14 +247,14 @@ class ArraySignal(AbstractColumn):
         self.array_items = items
 
     def attach_into(self, parent: ArrayGrid, row: int) -> int:
-        for c in self.array_items:
-            c.attach_into(parent, row)
+        for i in self.array_items:
+            i.attach_into(parent, row)
             row += 1
         return row
 
     def get_label(self, name: str, index: int) -> QWidget:
-        for a in self.array_items:
-            label = a.get_label(name, index)
+        for i in self.array_items:
+            label = i.get_label(name, index)
             if label:
                 return label
         return None
