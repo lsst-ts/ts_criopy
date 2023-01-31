@@ -235,6 +235,29 @@ class HardpointsWidget(QWidget):
                             "Limit switch 2",
                             OnOffLabel,
                         ),
+                        ArrayItem(
+                            "lowProximityWarning",
+                            "Low proximity warning",
+                            OnOffLabel,
+                        ),
+                        ArrayItem(
+                            "highProximityWarning",
+                            "High proximity warning",
+                            OnOffLabel,
+                        ),
+                    ],
+                ),
+                ArraySignal(
+                    self.m1m3.hardpointActuatorSettings,
+                    [
+                        ArrayItem(
+                            "lowProximityEncoder",
+                            "Low Proximity",
+                        ),
+                        ArrayItem(
+                            "highProximityEncoder",
+                            "High Proximity",
+                        ),
                     ],
                 ),
             ],
