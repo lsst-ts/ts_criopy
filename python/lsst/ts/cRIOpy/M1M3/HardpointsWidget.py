@@ -460,10 +460,14 @@ class HardpointsWidget(QWidget):
                 ):
                     color = Colors.ERROR
 
-                label = self.grid.get_label("measuredForce", idx)
-                pal = label.palette()
-                pal.setColor(pal.WindowText, color)
-                label.setPalette(pal)
+                self.grid.get_label("measuredForce", idx).setTextColor(color)
+
+            for idx, e in enumerate(data.encoder):
+                color = self.palette().color(self.palette().WindowText)
+                if e < hs.lowProximityEncoder[idx] or e > hs.highProximityEncoder[idx]:
+                    color = Colors.WARNING
+
+                self.grid.get_label("encoder", idx).setTextColor(color)
 
         for k, v in self.forces.items():
             getattr(self, k).setValue(getattr(data, k))

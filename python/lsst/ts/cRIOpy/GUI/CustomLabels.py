@@ -246,6 +246,18 @@ class UnitLabel(QLabel):
         else:
             self.setText(text)
 
+    def setTextColor(self, color: QColor):
+        """Change text color.
+
+        Parameters
+        ----------
+        color : `QColor`a
+            New text color.
+        """
+        pal = self.palette()
+        pal.setColor(pal.WindowText, color)
+        self.setPalette(pal)
+
 
 # TODO: tried to combine UnitLabel and DataLabel directly, but failed.  the
 # closest I was able to get was probably using **kwargs for DataLabel and
