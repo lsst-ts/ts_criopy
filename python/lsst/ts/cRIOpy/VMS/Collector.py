@@ -44,20 +44,41 @@ class Collector:
     Parameters
     ----------
 
-
+    index : `int`
+        Device index. In current LSST mapping, 1 - M1M3, 2 - M2, 3 -
+        CameraRotator VMS subsystem.
+    fn_template : `str`
+        Template for filename. Can contain % for datetime.strftime expansion,
+        and ${...} for variable expansion (e.g. ${ext} get expanded to filename
+        extension).
+    size : `int`, optional
+        File size in bytes.
+    file_type : `str`, optional
+        File type. Defaults to zip compressed hdf5 - "z5".
+    header : `bool`, optional
+        Print header to text file. Defaults to True.
+    chunk_size : `int`, optional
+        Number of record in Cache. Defaults to 5000.
+    daemonized : `bool`, optional
+        True if running on background. Will change logging.  Defaults to False.
+    rotate : `float`, optional
+        Defaults to None. If specified, rotate output file every rotate seconds.
+    rotate_offset : `float`, optional
+        Rotate offset. Defaults to None. If provided, start new file every n *
+        rotate + rotate_offset ctime (from 1-1-1970) seconds.
     """
 
     def __init__(
         self,
         index: int,
         fn_template: str,
-        size: int,
-        file_type: str,
-        header: bool,
-        chunk_size: int,
-        daemonized: bool,
-        rotate: float,
-        rotate_offset: float,
+        size: int = None,
+        file_type: str = "z5",
+        header: bool = True,
+        chunk_size: int = 5000,
+        daemonized: bool = False,
+        rotate: float = None,
+        rotate_offset: float = 0,
     ):
         self.log = logging.getLogger("VMSlogger")
 
