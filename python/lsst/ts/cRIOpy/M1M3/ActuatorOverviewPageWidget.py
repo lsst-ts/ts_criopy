@@ -12,8 +12,26 @@ class Forces(ArrayFields):
     def __init__(self, label, signal):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
-            label,
+            f"{label}",
             partial(UnitLabel, ".02f"),
+            signal,
+        )
+
+
+class PreclippedLabel(UnitLabel):
+    def __init__(self, fmt: str = ".02f"):
+        super().__init__(".02f")
+
+    def setValue(self, value):
+        self.setText(f"<i>{(value * self.scale):{self.fmt}}{self.unit_name}</i>")
+
+
+class PreclippedForces(ArrayFields):
+    def __init__(self, label, signal):
+        super().__init__(
+            ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
+            f"<i>{label}</i>",
+            PreclippedLabel,
             signal,
         )
 
@@ -38,25 +56,50 @@ class ActuatorOverviewPageWidget(QWidget):
                     "<b>Magnitude</b> (N)",
                 ],
                 [
-                    Forces("<b>Applied</b>", m1m3.appliedForces),
-                    Forces("<b>Measured</b>", m1m3.forceActuatorData),
-                    Forces("<b>Hardpoints</b>", m1m3.hardpointActuatorData),
-                    Forces(
-                        "<b>Applied Acceleration</b>", m1m3.appliedAccelerationForces
+                    PreclippedForces("Pre-clipped", m1m3.preclippedForces),
+                    Forces("Applied", m1m3.appliedForces),
+                    Forces("Measured", m1m3.forceActuatorData),
+                    Forces("Hardpoints", m1m3.hardpointActuatorData),
+                    PreclippedForces(
+                        "Pre-clipped Acceleration", m1m3.preclippedAccelerationForces
+                    ),
+                    Forces("Applied Acceleration", m1m3.appliedAccelerationForces),
+                    ArrayFields(
+                        [None, None, "fz", "mx", "my"],
+                        "<i>Pre-clipped Active Optics</i>",
+                        PreclippedLabel,
+                        m1m3.preclippedActiveOpticForces,
                     ),
                     ArrayFields(
                         [None, None, "fz", "mx", "my"],
-                        "<b>Applied Active Optics</b>",
+                        "Applied Active Optics",
                         partial(UnitLabel, ".02f"),
                         m1m3.appliedActiveOpticForces,
                     ),
-                    Forces("<b>Applied Azimuth</b>", m1m3.appliedAzimuthForces),
-                    Forces("<b>Applied Balance</b>", m1m3.appliedBalanceForces),
-                    Forces("<b>Applied Elevation</b>", m1m3.appliedElevationForces),
-                    Forces("<b>Applied Offset</b>", m1m3.appliedOffsetForces),
-                    Forces("<b>Applied Static</b>", m1m3.appliedStaticForces),
-                    Forces("<b>Applied Thermal</b>", m1m3.appliedThermalForces),
-                    Forces("<b>Applied Velocity</b>", m1m3.appliedVelocityForces),
+                    PreclippedForces(
+                        "Pre-clipped Azimuth", m1m3.preclippedAzimuthForces
+                    ),
+                    Forces("Applied Azimuth", m1m3.appliedAzimuthForces),
+                    PreclippedForces(
+                        "Pre-clipped Balance", m1m3.preclippedBalanceForces
+                    ),
+                    Forces("Applied Balance", m1m3.appliedBalanceForces),
+                    PreclippedForces(
+                        "Pre-clipped Elevation", m1m3.preclippedElevationForces
+                    ),
+                    Forces("Applied Elevation", m1m3.appliedElevationForces),
+                    PreclippedForces("Pre-clipped Offset", m1m3.preclippedOffsetForces),
+                    Forces("Applied Offset", m1m3.appliedOffsetForces),
+                    PreclippedForces("Pre-clipped Static", m1m3.preclippedStaticForces),
+                    Forces("Applied Static", m1m3.appliedStaticForces),
+                    PreclippedForces(
+                        "Pre-clipped Thermal", m1m3.preclippedThermalForces
+                    ),
+                    Forces("Applied Thermal", m1m3.appliedThermalForces),
+                    PreclippedForces(
+                        "Pre-clipped Velocity", m1m3.preclippedVelocityForces
+                    ),
+                    Forces("Applied Velocity", m1m3.appliedVelocityForces),
                 ],
                 Qt.Horizontal,
             )
