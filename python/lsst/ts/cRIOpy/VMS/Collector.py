@@ -179,11 +179,12 @@ class Collector:
                 self._need_rotate(self.cache.startTime())
 
             next_index = self.cache.timestampIndex(self.next_rotate)
-            if next_index is None or (
-                len(self.cache) < self.chunk_size and next_index + 1 == len(self.cache)
-            ):
-                return False
-            count = min(count, next_index)
+            if next_index is None:
+                if len(self.cache) < self.chunk_size:
+                    return False
+                count = min(count, len(self.cache))
+            else:
+                count = min(count, next_index)
         if count > 0:
             self.log.debug(
                 f"Saving device {VMS_DEVICES[self.index]} data to"
@@ -290,7 +291,9 @@ class Collector:
         """
         try:
             async with Domain() as domain:
-                remote = Remote(domain, "MTVMS", index=self.index + 1, start=False)
+                remote = Remote(
+                    domain, "MTVMS", index=self.index + 1, start=False
+                )
                 remote.tel_data.callback = self._data
                 remote.evt_fpgaState.callback = self._fpgaState
 
@@ -300,7 +303,9 @@ class Collector:
 
                 while True:
                     if self.next_rotate is not None:
-                        self._current_file_date = self.next_rotate - self.rotate
+                        self._current_file_date = (
+                            self.next_rotate - self.rotate
+                        )
                     ts = time.localtime(self._current_file_date)
                     self._create_file(datetime(*ts[:6]))
                     await self._sample_file()
@@ -308,7 +313,9 @@ class Collector:
                         break
 
         except Exception:
-            self.log.exception(f"Cannot collect data for {VMS_DEVICES[self.index]}")
+            self.log.exception(
+                f"Cannot collect data for {VMS_DEVICES[self.index]}"
+            )
 
     async def _data(self, data):
         self.cache.newChunk(data)
@@ -318,7 +325,9 @@ class Collector:
     async def _fpgaState(self, data):
         period = 1 if data is None else data.period
         freq = 1000 if data is None else int(np.ceil(1000.0 / period))
-        self.log.info(f"{VMS_DEVICES[self.index]} frequency {freq}, period {period}")
+        self.log.info(
+            f"{VMS_DEVICES[self.index]} frequency {freq}, period {period}"
+        )
         self.cache.setSampleTime(period / 1000.0)
         if "5" in self.file_type:
             if self.configured_size is None:
