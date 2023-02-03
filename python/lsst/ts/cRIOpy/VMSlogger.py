@@ -32,7 +32,7 @@ from . import parseDuration
 from .VMS import Collector, VMS_DEVICES
 
 try:
-    importlib.import_module('h5py')
+    importlib.import_module("h5py")
     has_h5py = True
 except ModuleNotFoundError:
     has_h5py = False
@@ -47,7 +47,11 @@ parser = argparse.ArgumentParser(
     " offline with VMSGUI.",
 )
 parser.add_argument(
-    "devices", type=str, nargs="+", help="name or index of CSC", choices=VMS_DEVICES
+    "devices",
+    type=str,
+    nargs="+",
+    help="name or index of CSC",
+    choices=VMS_DEVICES,
 )
 parser.add_argument(
     "-5",
@@ -68,7 +72,10 @@ parser.add_argument(
     "-d", dest="debug", default=0, action="count", help="increase debug level"
 )
 parser.add_argument(
-    "--header", dest="header", action="store_true", help="adds header with column names"
+    "--header",
+    dest="header",
+    action="store_true",
+    help="adds header with column names",
 )
 parser.add_argument("-p", dest="pidfile", action="store", help="PID file location")
 parser.add_argument(

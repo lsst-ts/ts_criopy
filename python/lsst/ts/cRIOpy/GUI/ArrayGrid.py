@@ -27,7 +27,13 @@ rows are hardpoint numbers.
 Usage
 -----
 .. code-block:: python
-   from lsst.ts.cRIOpy.GUI import ArraySignal, ArrayGrid, ArrayItem, ArrayFields, Mm
+   from lsst.ts.cRIOpy.GUI import (
+       ArraySignal,
+       ArrayGrid,
+       ArrayItem,
+       ArrayFields,
+       Mm,
+   )
 
    # sal holds SALComm remote with signal "sig1", "sig2" and "sig3"
 
@@ -45,7 +51,18 @@ Usage
                    ArrayFields(["fX", None, "fZ"], "My forces")
                ]
            ),
-           ArrayFields([None, None, "fZ", None, None, "mZ"], "Forces", sal.sig3),
+           ArrayFields(
+               [
+                   None,
+                   None,
+                   "fZ",
+                   None,
+                   None,
+                   "mZ"
+               ],
+               "Forces",
+               sal.sig3
+           ),
        ],
    )
 
