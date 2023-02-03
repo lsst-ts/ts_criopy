@@ -313,7 +313,24 @@ class Topics:
                 False,
             ),
             TopicData(
-                "Force Actuator ILC Info",
+                "FA Following Error",
+                [
+                    TopicField(
+                        "Primary Cylinder FE",
+                        "primaryCylinderFollowingError",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Secondary Cylinder FE",
+                        "secondaryCylinderFollowingError",
+                        FATABLE_SINDEX,
+                    ),
+                ],
+                "forceActuatorData",
+                False,
+            ),
+            TopicData(
+                "FA ILC Info",
                 [
                     TopicField("Subnet", "modbusSubnet", FATABLE_ZINDEX),
                     TopicField("Address", "modbusAddress", FATABLE_ZINDEX),
@@ -332,7 +349,7 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator Id Info",
+                "FA Id Info",
                 [
                     TopicField(
                         "X Data Reference Id",
@@ -364,7 +381,7 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator Settings",
+                "FA Settings",
                 [
                     EnabledDisabledField(
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
@@ -373,7 +390,7 @@ class Topics:
                 "forceActuatorSettings",
             ),
             TopicData(
-                "Force Actuator Main Calibration Info",
+                "FA Main Calibration Info",
                 [
                     TopicField(
                         "Primary Coefficient",
@@ -409,7 +426,7 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator Backup Calibration Info",
+                "FA Backup Calibration Info",
                 [
                     TopicField(
                         "Primary Coefficient",
@@ -445,7 +462,7 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator Mezzanine Calibration Info",
+                "FA Mezzanine Calibration Info",
                 [
                     TopicField(
                         "Primary Cylinder Gain",
@@ -461,7 +478,7 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator Position Info",
+                "FA Position Info",
                 [
                     TopicField(
                         "Actuator Type",
@@ -480,12 +497,12 @@ class Topics:
                 "forceActuatorInfo",
             ),
             TopicData(
-                "Force Actuator State",
+                "FA State",
                 [TopicField("ILC State", "ilcState", FATABLE_ZINDEX)],
                 "forceActuatorState",
             ),
             TopicData(
-                "Force Actuator Warning",
+                "FA Warning",
                 [
                     WarningField("Major Fault", "majorFault", FATABLE_ZINDEX),
                     WarningField("Minor Fault", "minorFault", FATABLE_ZINDEX),
@@ -628,7 +645,7 @@ class Topics:
                 "forceActuatorWarning",
             ),
             TopicData(
-                "Force Actuator Force Warning",
+                "FA Force Warning",
                 [
                     WarningField(
                         "Primary Axis Measured Force Warning",
