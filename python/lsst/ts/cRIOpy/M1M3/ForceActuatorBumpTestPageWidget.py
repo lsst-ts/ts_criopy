@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
+
 from PySide2.QtCore import Slot, Qt
 from PySide2.QtWidgets import (
     QWidget,
@@ -192,6 +194,17 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         self.m1m3.detailedState.connect(self.detailedState)
         self.m1m3.forceActuatorBumpTestStatus.connect(self.forceActuatorBumpTestStatus)
 
+    def _recheckBumpTestButton(self, test_enabled=True):
+        detailedState = self.m1m3.remote.evt_detailedState.get()
+        if detailedState is None or detailedState.detailedState not in [
+            MTM1M3.DetailedState.PARKEDENGINEERING
+        ]:
+            self.bumpTestButton.setEnabled(False)
+        else:
+            self.bumpTestButton.setEnabled(
+                test_enabled and not (self._anyCylinderRunning())
+            )
+
     @Slot()
     def itemSelectionChanged(self):
         """Called when an actuator is selected from the list."""
@@ -203,15 +216,12 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         else:
             actuators = f"{items[0].data(Qt.UserRole)}"
 
-        self.bumpTestButton.setEnabled(not (self._anyCylinderRunning()))
+        self._recheckBumpTestButton()
         self.bumpTestButton.setText(f"Run bump test for FA ID {actuators}")
 
     def toggledTest(self, toggled):
         """Called when primary or secondary tests check box are toggled."""
-        self.bumpTestButton.setEnabled(
-            self.actuatorsTable.currentItem() is not None
-            and not (self._anyCylinderRunning())
-        )
+        self._recheckBumpTestButton(self.actuatorsTable.currentItem() is not None)
 
     @asyncSlot()
     async def bumpTestAll(self):
@@ -254,28 +264,33 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         self.yIndex = FATABLE[self.zIndex][FATABLE_YINDEX]
         self.sIndex = FATABLE[self.zIndex][FATABLE_SINDEX]
 
-        items = []
-        if self.xIndex is not None:
-            items.append("X")
-        if self.yIndex is not None:
-            items.append("Y")
-        items.append("Z")
-        items = (
-            ["Applied " + s for s in items] + [None] + ["Measured " + s for s in items]
-        )
+        def add_timeChart():
+            items = []
+            if self.xIndex is not None:
+                items.append("X")
+            if self.yIndex is not None:
+                items.append("Y")
+            items.append("Z")
+            items = (
+                ["Applied " + s for s in items]
+                + [None]
+                + ["Measured " + s for s in items]
+            )
 
-        if self.chart is not None:
-            self.chart.clearData()
+            if self.chart is not None:
+                self.chart.clearData()
 
-        self.chart = TimeChart({"Force (N)": items})
+            self.chart = TimeChart({"Force (N)": items})
 
-        self.chart_view.setChart(self.chart)
+            self.chart_view.setChart(self.chart)
+
+        asyncio.get_event_loop().call_soon(add_timeChart)
 
         self.progressGroup.setTitle(f"Test progress {self.testedId}")
         if self.sIndex is not None:
             self.secondaryLabelPB.setText("Y" if self.xIndex is None else "X")
 
-        await self._cmd_forceActuatorBumpTest(
+        await self.m1m3.remote.cmd_forceActuatorBumpTest.set_start(
             actuatorId=self.testedId,
             testPrimary=not (item.text() == "X" or item.text() == "Y"),
             testSecondary=not (item.text() == "P") and self.sIndex is not None,
@@ -322,7 +337,8 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         if self.zIndex is not None:
             chartData.append(data.zForces[self.zIndex])
 
-        self.chart.append(data.timestamp, chartData, cache_index=0)
+        if self.chart is not None:
+            self.chart.append(data.timestamp, chartData, cache_index=0)
 
     @Slot(map)
     def forceActuatorData(self, data):
@@ -335,7 +351,8 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         if self.zIndex is not None:
             chartData.append(data.zForce[self.zIndex])
 
-        self.chart.append(data.timestamp, chartData, cache_index=1)
+        if self.chart is not None:
+            self.chart.append(data.timestamp, chartData, cache_index=1)
 
     @asyncSlot(map)
     async def forceActuatorBumpTestStatus(self, data):
@@ -398,6 +415,16 @@ class ForceActuatorBumpTestPageWidget(QWidget):
                 self.actuatorsTable.item(row, colOffset).setBackground(pColor)
 
         # no tests running..
+        # first check that we are still in PARKEDENGINEERING
+        detailedState = self.m1m3.remote.evt_detailedState.get()
+        if detailedState is None or detailedState.detailedState not in [
+            MTM1M3.DetailedState.PARKEDENGINEERING
+        ]:
+            self.bumpTestAllButton.setEnabled(False)
+            self.bumpTestButton.setEnabled(False)
+            self.killBumpTestButton.setEnabled(False)
+            return
+
         if data.actuatorId < 0:
             selected = self.actuatorsTable.selectedItems()
             if len(selected) > 0:
