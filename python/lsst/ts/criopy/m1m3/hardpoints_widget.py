@@ -22,18 +22,23 @@ from functools import partial
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
-from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import (
-    QApplication,
-    QDoubleSpinBox,
-    QGridLayout,
-    QLabel,
-    QPushButton,
-    QSpinBox,
-    QVBoxLayout,
     QWidget,
+    QLabel,
+    QVBoxLayout,
+    QGridLayout,
+    QSpinBox,
+    QDoubleSpinBox,
+    QPushButton,
+    QApplication,
 )
-from qasync import asyncSlot
+from PySide2.QtCore import Signal, Slot, Qt
+from asyncqt import asyncSlot
+
+from lsst.ts.idl.enums.MTM1M3 import (
+    DetailedState,
+    HardpointActuatorMotionStates,
+)
 
 from ..gui import (
     Arcsec,
@@ -455,9 +460,25 @@ class HardpointsWidget(QWidget):
         for hp in range(6):
             rowLabels[hp].setValue(hpData[hp])
 
+    @SALCommand
+    def _enableHardpointChase(self):
+        return self.m1m3.remote.cmd_enableHardpointChase
+
     @asyncSlot()
-    async def _enableHPChase(self) -> None:
-        await command(self, self.m1m3.remote.cmd_enableHardpointChase)
+    async def _enableHPChase(self):
+        await self._enableHardpointChase()
+
+    @SALCommand
+    def _disableHardpointChase(self):
+        return self.m1m3.remote.cmd_disableHardpointChase
+
+    @asyncSlot()
+    async def _disableHPChase(self):
+        await self._disableHardpointChase()
+
+    @Slot(map)
+    def hardpointActuatorSettings(self, data):
+        self.offsetType.setScales(data.micrometersPerStep, data.micrometersPerEncoder)
 
     @asyncSlot()
     async def _disableHPChase(self) -> None:
