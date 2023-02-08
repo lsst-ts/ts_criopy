@@ -1,0 +1,75 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:        ts-VMSlogger
+# Required-Start:  $network $remote_fs
+# Required-Stop:   $network $remote_fs
+# Default-Start:   2 3 4 5
+# Default-Stop:    6
+# Short-Description: Start TS VMS (Vibration Monitor System) logger daemon
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/bin:/usr/sbin
+
+DAEMON=/usr/sbin/VMSlogger
+PIDFILE=/var/run/VMSlogger
+
+# Source settings
+set -a
+. /etc/default/VMSlogger
+set +a
+
+# Source function library.
+. /etc/init.d/functions
+
+# exports settings
+export LSST_DDS_PARTITION_PREFIX=summit
+export PYTHONPATH=/home/pkubanek/ts_cRIOpy/python:$PYTHONPATH
+
+startdaemon() {
+  case $1 in
+    M1M3)
+    M2)
+    Rotator)
+      echo -n "Starting VMSlogger $1:"
+      start-stop-daemon --start --oknodo --pidfile ${PIDFILE}_$1.pid --startas /usr/bin/VMSlogger& -- -p ${PIDFILE}_$1.pid $1
+      echo "done"
+      ;;
+    *)
+      echo "Unknown susbystem $1, allowed are M1M3, M2 or Rotator"
+      ;;
+  esac
+}
+
+stopdaemon() {
+  echo -n "Stopping VMSlogger $1:"
+  start-stop-daemon --stop --oknodo --remove-pidfile --retry 5 -p ${PIDFILE}_$1.pid
+  echo "done"
+}
+
+status() {
+
+}
+
+case "$1" in
+  start)
+    startdaemon
+    ;;
+  stop)
+    stopdaemon
+    ;;
+  restart)
+    stopdaemon
+    startdaemon
+    ;;
+  status)
+    status $DAEMON
+    exit $?
+    ;;
+  *)
+    echo "Usage: ts-M1M3support { start | stop | status | restart }" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

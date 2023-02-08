@@ -19,9 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Signal
+from PySide2.QtCore import Signal, QEvent
 from PySide2.QtWidgets import QGraphicsView
-from . import Mirror, ForceActuator
+from . import Mirror, ForceActuator, FASelection
+from ...M1M3FATable import (
+    FATABLE,
+    FATABLE_NEAR_NEIGHBOR_INDEX,
+    FATABLE_FAR_NEIGHBOR_INDEX,
+)
 
 
 class MirrorView(QGraphicsView):
@@ -41,36 +46,67 @@ class MirrorView(QGraphicsView):
         super().__init__(self._mirror)
         self._selectedId = None
 
-    @property
-    def selected(self):
-        """Selected actuator or None if no actuator selected (ForceActuator)."""
+    def getForceActuator(self, id):
+        """Returns ForceActuator object with given ID.
+
+        Parameters
+        ----------
+        id : `int`
+            ID of the force actuator to retrieve.
+
+        Returns
+        -------
+        actuator : `ForceActuator`
+            Force actuator object with give ID, or None if not found.
+        """
         try:
-            return self._mirror.getForceActuator(self._selectedId)
+            return self._mirror.getForceActuator(id)
         except KeyError:
             return None
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.EnabledChange:
+            for i in self._mirror.items():
+                i.setEnabled(self.isEnabled())
+
+    @property
+    def selected(self):
+        """Selected actuator or None if no actuator selected
+        (ForceActuator)."""
+        return self.getForceActuator(self._selectedId)
+
+    def _setNeighbour(self, index, activate):
+        for fids in FATABLE[self.selected.index][FATABLE_FAR_NEIGHBOR_INDEX]:
+            if activate:
+                if fids in FATABLE[self.selected.index][FATABLE_NEAR_NEIGHBOR_INDEX]:
+                    self.getForceActuator(fids).setKind(FASelection.NEAR_NEIGHBOR)
+                else:
+                    self.getForceActuator(fids).setKind(FASelection.FAR_NEIGHBOR)
+            else:
+                self.getForceActuator(fids).setKind(FASelection.NORMAL)
 
     @selected.setter
     def selected(self, s):
         if self.selected is not None:
-            self.selected.setSelected(False)
+            self._setNeighbour(self.selected.index, False)
+            self.selected.setKind(FASelection.NORMAL)
         if s is None:
             self._selectedId = None
             return None
         self._selectedId = s.id
-        s.setSelected(True)
+        s.setKind(FASelection.SELECTED)
+        self._setNeighbour(self.selected.index, True)
         self.selectionChanged.emit(s)
 
-    def setRange(self, min, max):
-        """Sets range used for color scaling.
+    def setColorScale(self, scale):
+        """Sets scale used for color scaling.
 
         Parameters
         ----------
-        min : `float`
-           Minimal value.
-        max : `float`
-           Maximal value.
+        scale : `class`
+            New scale.
         """
-        self._mirror.setRange(min, max)
+        self._mirror.setColorScale(scale)
 
     def clear(self):
         """Removes all actuators from the view."""
@@ -81,13 +117,15 @@ class MirrorView(QGraphicsView):
         s = min(self.width() / 8600, self.height() / 8600)
         return (s, s)
 
-    def addForceActuator(self, id, x, y, orientation, data, dataIndex, state):
+    def addForceActuator(self, id, index, x, y, orientation, data, dataIndex, state):
         """Adds actuator.
 
         Parameters
         ----------
         id : `int`
             Force Actuator ID. Actuators are matched by ID.
+        index : `int`
+            Actuator index (0-155).
         x : `float`
             Force Actuator X position (in mm).
         y :  `float`
@@ -99,11 +137,19 @@ class MirrorView(QGraphicsView):
         dataIndex : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
-            ForceActuator.STATE_WARNING.
+            Force Actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
         """
         self._mirror.addForceActuator(
-            id, x, y, orientation, data, dataIndex, state, id == self._selectedId
+            id,
+            index,
+            x,
+            y,
+            orientation,
+            data,
+            dataIndex,
+            state,
+            FASelection.SELECTED if id == self._selectedId else FASelection.NORMAL,
         )
 
     def updateForceActuator(self, id, data, state):
@@ -116,7 +162,8 @@ class MirrorView(QGraphicsView):
         data : `float`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
 
         Raises
         ------

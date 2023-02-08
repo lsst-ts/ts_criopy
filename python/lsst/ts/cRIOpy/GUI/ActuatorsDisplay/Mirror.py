@@ -35,26 +35,29 @@ class Mirror(QGraphicsScene):
     def __init__(self):
         super().__init__()
 
-    def setRange(self, minValue, maxValue):
-        """Set display range. Display range is used for colors displayed by the actuator.
+    def setColorScale(self, scale):
+        """Set display color scale. Provides getColor method, returning color
+        to be used with value.
 
         Parameters
         ----------
-        minValue : `float`
-                   Minimal data range.
-        maxValue : `float`
-                   Maximal data range.
+        scale : `class`
+            Data scale.
         """
         for a in self.items():
-            a.setRange(minValue, maxValue)
+            a.setColorScale(scale)
 
-    def addForceActuator(self, id, x, y, orientation, data, dataIndex, state, selected):
+    def addForceActuator(
+        self, id, index, x, y, orientation, data, dataIndex, state, kind
+    ):
         """Adds actuator to the list.
 
         Parameters
         ----------
         id : `int`
             Force Actuator ID. Actuators are matched by ID.
+        index : `int`
+            Force Actuator index (0-155).
         x : `float`
             Force Actuator X position (in mm).
         y :  `float`
@@ -66,13 +69,13 @@ class Mirror(QGraphicsScene):
         dataIndex : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID or
-            ForceActuator.STATE_WARNING.
-        selected : `bool`
-            True if the actuator is selected.
+            Force Actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
+        kind : `FASelection`
+            Force actuator kind - normal, selected or selected neighbour.
         """
         self.addItem(
-            ForceActuator(id, x, y, orientation, data, dataIndex, state, selected)
+            ForceActuator(id, index, x, y, orientation, data, dataIndex, state, kind)
         )
 
     def getForceActuator(self, id):
@@ -108,7 +111,8 @@ class Mirror(QGraphicsScene):
         data : `float`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID, ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuator.STATE_INVALID,
+            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
 
         Raises
         ------

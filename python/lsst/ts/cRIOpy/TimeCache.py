@@ -27,7 +27,19 @@ import numpy as np
 class TimeCache:
     """Cache for large float data. Holds rolling time window of records. Act as
     dictionary, where keys are specified in items constructor. [] and len
-    operators are supported.
+    operators are supported. Assumes a column with name "timestamp" exists and
+    contains row timestamps.
+
+    Attributes
+    ----------
+    current_index : `int`
+        Index of last member. If filled is true, current_index + 1 is valid
+        value, containing first row in the array.
+    filled : `bool`
+        True if the array rolled over. Last element in the array contain valid
+        value, and values continue from 0 till current_index.
+    data : `numpy.array`
+        Array containing data.
 
     Parameters
     ----------
@@ -91,8 +103,9 @@ class TimeCache:
 
         Returns
         -------
-        endTime : `float`
-            None if cache is empty. Otherwise timestamp of the first data point."""
+        startTime : `float`
+            None if cache is empty. Otherwise timestamp of the first data
+            point."""
         if self.filled is False:
             if self.current_index > 0:
                 return self.data[0]["timestamp"]
@@ -108,7 +121,8 @@ class TimeCache:
         Returns
         -------
         endTime : `float`
-            None if cache is empty. Otherwise timestamp of the last data point."""
+            None if cache is empty. Otherwise timestamp of the last data
+            point."""
         if self.current_index == 0:
             if self.filled is False:
                 return None
@@ -116,35 +130,118 @@ class TimeCache:
         return self.data[self.current_index - 1]["timestamp"]
 
     def timeRange(self):
+        """Returns timestamp range.
+
+        Returns
+        -------
+        startTime : `float`
+            Equals startTime() call.
+        endTime : `float`a
+            Equals endTime() call.
+        """
         return (self.startTime(), self.endTime())
 
+    def _mapIndex(self, index: int) -> int:
+        """Returns array index of item with index (from array start) index.
+
+        Parameters
+        ----------
+        index : `int`
+            Requested index in an array.
+
+        Returns
+        -------
+        mapped : `int`
+            Index in sub-array.
+        """
+        if self.filled:
+            if index < len(self) - self.current_index:
+                return index + self.current_index
+            return index - len(self) + self.current_index
+        return index
+
+    def timestampIndex(self, timestamp: float) -> int:
+        """Search for row's index with timestamp value bigger than timestamp.
+
+        Parameters
+        ----------
+        timestamp : `float`
+            Value to search.
+
+        Returns
+        -------
+        index : `int`
+            Index of the first element >= timestamp parameter. None if such
+            index doesn't exists.
+        """
+        left, right = 0, len(self) - 1
+
+        left_v = self.data[self._mapIndex(left)]["timestamp"]
+        right_v = self.data[self._mapIndex(right)]["timestamp"]
+
+        if timestamp < left_v:
+            return left
+
+        if timestamp > right_v:
+            if np.isclose(right_v, timestamp):
+                return right
+            return None
+
+        while left < right:
+            middle = (left + right) // 2
+            midval = self.data[self._mapIndex(middle)]["timestamp"]
+            if np.isclose(midval, timestamp):
+                return middle
+            if midval < timestamp:
+                left = middle + 1
+            else:
+                right = middle - 1
+
+        return left
+
     def rows_reverse(self):
-        """Yelds reversed row iterator."""
+        """Yields reversed row iterator."""
         for r in range(self.current_index - 1, -1, -1):
             yield self.data[r]
         if self.filled:
             for r in range(self._size - 1, self.current_index - 1, -1):
                 yield self.data[r]
 
-    def savetxt(self, filename, **kwargs):
-        """Saves data to file.
+    def savetxt(self, filename, size=None, **kwargs):
+        """Saves data to CSV file. Saved data are forgotten.
 
         Parameters
         ----------
         filename : `str`
             Filename to save the data.
+        size : `int`
+            Size of data to store. Defaults to all current data.
         **kwargs : `dict`, optional
             Arguments passed to np.savetxt()
         """
+
+        if size is None:
+            size = len(self)
+
+        new_data = np.array(self.data)
+
+        remaining = len(self) - size
+
+        for n in self.data.dtype.names:
+            new_data[n][:remaining] = self[n][size:]
+
         if self.filled:
-            np.savetxt(
-                filename,
-                list(self.data[self.current_index + 1 :])
-                + list(self.data[: self.current_index]),
-                **kwargs,
+            data = list(self.data[self.current_index + 1 :]) + list(
+                self.data[: self.current_index]
             )
         else:
-            np.savetxt(filename, self.data[: self.current_index], **kwargs)
+            data = list(self.data)
+
+        self.filled = False
+        self.data = new_data
+        self.current_index = remaining
+
+        np.savetxt(filename, data[:size], **kwargs)
 
     def create_hdf5_datasets(self, size, group, group_args={}):
         """Creates HDF5 datasets.
@@ -157,7 +254,8 @@ class TimeCache:
             HDF5 group.
         group_args : `dict`
             Keyword arguments passed to create_group call. It is recommended to
-            pass at least chunks=True. Please See h5py.Group.create_dataset for details.
+            pass at least chunks=True. Please See h5py.Group.create_dataset for
+            details.
         """
         self._hdf5_datasets = {}
 
@@ -169,10 +267,10 @@ class TimeCache:
         self._hdf5_size = size
 
     def h5_filled(self):
-        """Returns True if HDF5 files is filled."""
+        """Returns True if HDF5 file is filled."""
         return self.hdf5_index >= self._hdf5_size
 
-    def savehdf5(self, size):
+    def savehdf5(self, size) -> None:
         """Save data to H5D group. Saved data are forgotten.
 
         Parameters

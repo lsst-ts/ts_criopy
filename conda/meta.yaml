@@ -10,10 +10,22 @@ source:
 build:
   noarch: generic
   script: python -m pip install --no-deps --ignore-installed .
+  entry_points:
+    - M1M3GUI = lsst.ts.cRIO.M1M3GUI:run
+    - M1M3TSGUI = lsst.ts.cRIOpy.M1M3TSGUI:run
+    - VMSGUI = lsst.ts.cRIOpy.VMSGUI:run
+    - VMSlogger = lsst.ts.cRIOpy.VMSlogger:run
 
 test:
   requires:
+    - {{ cdt('mesa-libgl-devel') }}  # [linux]
+    - {{ cdt('mesa-dri-drivers') }}  # [linux]
+    - {{ cdt('libselinux') }}  # [linux]
+    - {{ cdt('libxdamage') }}  # [linux]
+    - {{ cdt('libxxf86vm') }}  # [linux]
+    - {{ cdt('libxext') }}     # [linux]
     - ts-conda-build =0.3
+    - numpy
     - pyside2
     - asyncqt
     - ts-idl {{ idl_version }}
@@ -24,14 +36,23 @@ test:
     - tests
     - setup.cfg
   commands:
-    - pytest -vsx
+    - pytest
 
 requirements:
+  build:
+    - {{ cdt('mesa-libgl-devel') }}  # [linux]
+    - {{ cdt('mesa-dri-drivers') }}  # [linux]
+    - {{ cdt('libselinux') }}  # [linux]
+    - {{ cdt('libxdamage') }}  # [linux]
+    - {{ cdt('libxxf86vm') }}  # [linux]
+    - {{ cdt('libxext') }}     # [linux]
   host:
+    - numpy
     - python
     - pip
     - setuptools_scm
     - setuptools
+    - xorg-libxfixes # [linux]
   run:
     - python
     - numpy
@@ -43,9 +64,3 @@ requirements:
     - asyncqt
     - ts-idl
     - ts-salobj
-
-about:
-    home: https://github.com/lsst-ts/ts_cRIOpy
-    license: GPL3
-    summary: 'Various utilities for NI cRIO CSC'
-    description: |

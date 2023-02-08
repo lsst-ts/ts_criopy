@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of the cRIO GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Slot, QTimer, Qt
 from PySide2.QtWidgets import (
     QFrame,
@@ -26,22 +28,53 @@ from PySide2.QtWidgets import (
     QProgressBar,
     QSizePolicy,
     QDockWidget,
+    QPushButton,
 )
+from PySide2.QtGui import QPalette, QColor
 import astropy.units as u
 from datetime import datetime
 
+from .EventWindow import EventWindow
+from . import Colors
+
 __all__ = [
     "VLine",
+    "ColoredButton",
+    "DataLabel",
     "UnitLabel",
+    "DataUnitLabel",
     "Force",
     "Moment",
     "Mm",
     "Arcsec",
+    "Ampere",
+    "Liter",
+    "LiterMinute",
+    "Percent",
+    "Volt",
+    "RPM",
+    "PressureInBar",
+    "PressureInmBar",
+    "Hours",
+    "Seconds",
+    "KiloWatt",
+    "DataDegC",
+    "Hz",
     "ArcsecWarning",
     "MmWarning",
+    "OnOffLabel",
+    "PowerOnOffLabel",
+    "ConnectedLabel",
+    "ErrorLabel",
     "WarningLabel",
+    "WarningButton",
+    "InterlockOffLabel",
+    "StatusLabel",
+    "EnumLabel",
+    "Clipped",
     "Heartbeat",
     "LogEventWarning",
+    "SimulationStatus",
     "DockWindow",
 ]
 
@@ -58,6 +91,81 @@ class VLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 
+class ColoredButton(QPushButton):
+    """Button with setColor method to change color."""
+
+    def __init__(self, text):
+        super().__init__(text)
+
+    def setColor(self, color: QColor) -> None:
+        """Sets button color.
+
+        Parameters
+        ----------
+        color : `QColor`
+            New button background color. If None, color isn't changed.
+        """
+        pal = self.palette()
+        if color is None:
+            color = pal.color(QPalette.Base)
+        pal.setColor(QPalette.Button, color)
+        self.setPalette(pal)
+
+    def setTextColor(self, text: str, color: QColor) -> None:
+        """Sets button text and color.
+        Parameters
+        ----------
+        text : `str`
+            New button text.
+        color : `QColor`
+            New button background color.
+        """
+        self.setText(text)
+        self.setColor(color)
+
+
+class DataLabel(QLabel):
+    """Displays data from (SAL originated) signal.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+        if field is not None:
+            self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
+
+    def __copy__(self):
+        return DataLabel()
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets value.
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        self.setText(str(value))
+
+
 class UnitLabel(QLabel):
     """Qt Label that can display and convert Astropy units.
 
@@ -66,8 +174,8 @@ class UnitLabel(QLabel):
     fmt : `str`, optional
         Format string. See Python formatting function for details. Defaults to
         'd' for decimal number.
-    unit : `astropy.units`, optional
-        Variable unit. Default is None - no unit
+    unit : `astropy.units or str`, optional
+        Variable unit. Default is None - no unit. Can be specified as string.
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
@@ -85,17 +193,32 @@ class UnitLabel(QLabel):
     ):
         super().__init__("---")
         self.fmt = fmt
+        if type(unit) == str:
+            unit = u.Unit(unit)
         if convert is not None:
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
             self.scale = unit.to(convert)
-            self.unit_name = " " + convert.to_string()
+            self.unit_name = convert.to_string()
         elif unit is not None:
             self.scale = 1
-            self.unit_name = " " + unit.to_string()
+            self.unit_name = unit.to_string()
         else:
             self.scale = 1
             self.unit_name = ""
+
+        # we can display some units better using unicode
+        aliases = {
+            "deg_C": "°C",
+            "1 / min": "RPM",
+        }
+        try:
+            self.unit_name = aliases[self.unit_name]
+        except KeyError:
+            pass
+
+        self.unit_name = " " + self.unit_name
+
         self.unit = unit
         self.convert = convert
         self.is_warn_func = is_warn_func
@@ -107,7 +230,8 @@ class UnitLabel(QLabel):
         )
 
     def setValue(self, value):
-        """Sets value. Transformation and formatting is done according to unit, convert and fmt constructor arguments.
+        """Sets value. Transformation and formatting is done according to unit,
+        convert and fmt constructor arguments.
 
         Parameters
         ----------
@@ -121,6 +245,75 @@ class UnitLabel(QLabel):
             self.setText(f"<font color='{WARNING}'>{text}</font>")
         else:
             self.setText(text)
+
+    def setTextColor(self, color: QColor):
+        """Change text color.
+
+        Parameters
+        ----------
+        color : `QColor`a
+            New text color.
+        """
+        pal = self.palette()
+        pal.setColor(pal.WindowText, color)
+        self.setPalette(pal)
+
+
+# TODO: tried to combine UnitLabel and DataLabel directly, but failed.  the
+# closest I was able to get was probably using **kwargs for DataLabel and
+# UnitLabel, and keep Python super().__init__(... call
+class DataUnitLabel(UnitLabel):
+    """Combines DataLabel and UnitLabel. Parameters specify signal and field
+    name (as in DataLabel) and display options (as in UnitLabel).
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    unit : `astropy.units`, optional
+        Variable unit. Default is None - no unit
+    convert : `astropy.units`, optional
+        Convert values to this unit. Default is None - no unit. If provided,
+        unit must be provided as well.
+    is_warn_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded warning value.
+    is_err_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded error value.
+    """
+
+    def __init__(
+        self,
+        signal=None,
+        field=None,
+        fmt="d",
+        unit=None,
+        convert=None,
+        is_warn_func=None,
+        is_err_func=None,
+    ):
+        super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+        if field is not None:
+            self.setObjectName(field)
+            self.setCursor(Qt.PointingHandCursor)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
 
 
 class Force(UnitLabel):
@@ -204,6 +397,175 @@ class Arcsec(UnitLabel):
         super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
 
 
+class Ampere(DataUnitLabel):
+    """Displays Ampere.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.A)
+
+
+class Liter(DataUnitLabel):
+    """Displays Liters.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.liter)
+
+
+class LiterMinute(DataUnitLabel):
+    """Displays Liters per Minute.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.liter / u.minute)
+
+
+class Percent(DataUnitLabel):
+    """Displays percents.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.percent)
+
+
+class Volt(DataUnitLabel):
+    """Displays Volts.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to 0.02f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.V)
+
+
+class RPM(DataUnitLabel):
+    """Displays RPM.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Float formatting. Defaults to .0f.
+    """
+
+    def __init__(self, signal=None, field=None, fmt=".0f"):
+        super().__init__(signal, field, fmt, u.Unit("min^-1"))
+
+
+class PressureInBar(DataLabel):
+    """Display pressure in bar and psi"""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+        self.unit_name = "bar"
+
+    def setValue(self, value):
+        psi = value * 14.5038
+        self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
+
+
+class PressureInmBar(DataLabel):
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+        self.unit_name = "mbar"  # this is only for display
+
+    def setValue(self, value):
+        mbar = value * u.mbar
+        bar = (mbar).to(u.bar).value
+        psi = mbar.to(u.imperial.psi).value
+        self.setText(f"{bar:.04f} bar ({psi:.02f} psi)")
+
+
+class Hours(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.h)
+
+
+class Seconds(DataUnitLabel):
+    def __init__(self, field=None):
+        super().__init__(None, field, ".0f", u.s)
+
+
+class KiloWatt(DataUnitLabel):
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field, ".01f", u.kW)
+
+
+class DataDegC(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.deg_C)
+
+
+class Hz(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.Hz)
+
+
 class ArcsecWarning(Arcsec):
     """Display degrees as arcseconds. Shows values above threshold as error /
     fault.
@@ -214,7 +576,8 @@ class ArcsecWarning(Arcsec):
         Float formatting. Defaults to 0.02f.
     warning_threshold : `float`, optional
         If abs(value) is above the threshold, display value as warning (bright
-        text). Defaults to 0.73 arcsecond, half of the allowed measurement error.
+        text). Defaults to 0.73 arcsecond, half of the allowed measurement
+        error.
 
     error_threshold : `float`, optional
         If abs(value) is above the threshold, display value as error (red
@@ -234,14 +597,25 @@ class ArcsecWarning(Arcsec):
         )
 
 
-class WarningLabel(QLabel):
-    """Displays on/off warnings"""
+class OnOffLabel(DataLabel):
+    """Displays on/off warnings
 
-    def __init__(self):
-        super().__init__()
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
 
     def __copy__(self):
-        return WarningLabel()
+        return OnOffLabel()
 
     def setValue(self, value):
         """Sets formatted value. Color codes On (red)/Off (green).
@@ -249,12 +623,294 @@ class WarningLabel(QLabel):
         Parameters
         ----------
         value : `bool`
-            Current (=to be displayed) variable value. True means warning/error is raised.
+            Current (=to be displayed) variable value. True means warning/error
+            is raised.
         """
         if value:
             self.setText("<font color='red'>On</font>")
         else:
             self.setText("<font color='green'>Off</font>")
+
+
+class PowerOnOffLabel(DataLabel):
+    """Displays on/off power state"""
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return PowerOnOffLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes On (red)/Off (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means power is On.
+        """
+        if value:
+            self.setText("<font color='green'>On</font>")
+        else:
+            self.setText("<font color='gold'>Off</font>")
+
+
+class ConnectedLabel(DataLabel):
+    """Displays connection status. Constructor can be passed parameters
+    allowing connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return ConnectedLabel()
+
+    def setValue(self, is_connected: bool) -> None:
+        """Sets formatted value. Color codes ERROR (red)/OK (green).
+
+        Parameters
+        ----------
+        is_connected : `bool`
+            Current (=to be displayed) variable value. True means connected.
+        """
+        if is_connected:
+            self.setText("<font color='green'>Connected</font>")
+        else:
+            self.setText("<font color='red'>Disconnected</font>")
+
+
+class ErrorLabel(DataLabel):
+    """Displays ERROR/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to None.
+    """
+
+    def __init__(self, signal=None, field=None):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return ErrorLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes ERROR (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means error.
+        """
+        if value:
+            self.setText("<font color='red'>ERROR</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
+
+
+class WarningLabel(DataLabel):
+    """Displays WARNING/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. This will be store as
+        object name. Defaults to "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
+        super().__init__(signal, field)
+
+    def __copy__(self):
+        return WarningLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        if value:
+            self.setText("<font color='red'>WARNING</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
+
+
+class WarningButton(ColoredButton):
+    """Displays WARNING/OK button. When clicked, displays window with values in
+    the signal. Button is color-coded (red for problems, green for OK values).
+
+    Parameters
+    ----------
+    comm : `SALComm`
+        SALComm object representing the signals
+    topic : `str`
+        Topic name. Should be event/telemetry name without leading evt_ (for
+        events).
+    field : `str`, optional
+        Field from topic used to display button state. Defaults to anyWarning
+    """
+
+    def __init__(self, comm, topic, field="anyWarning"):
+        super().__init__("---")
+        self.comm = comm
+        self._topic = topic
+        self._field = field
+        getattr(comm, topic).connect(self._data)
+        self.window = None
+        self.clicked.connect(self._showWindow)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def _showWindow(self):
+        if self.window is None:
+            self.window = EventWindow(self.comm, self._topic)
+        self.window.show()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means warning.
+        """
+        if value:
+            self.setTextColor("WARNING", Colors.ERROR)
+        else:
+            self.setTextColor("OK", Colors.OK)
+
+
+class InterlockOffLabel(QLabel):
+    """Displays PROBLEM/OK. Constructor can be passed parameters allowing
+    connection to a Signal emitted when warning value changes.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+        Defaults to None.
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to
+        "anyWarning".
+    """
+
+    def __init__(self, signal=None, field="anyWarning"):
+        super().__init__("---")
+        if signal is not None:
+            self._field = field
+            signal.connect(self._data)
+
+    @Slot(map)
+    def _data(self, data):
+        self.setValue(getattr(data, self._field))
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes WARNING (red)/OK (green).
+
+        Parameters
+        ----------
+        interlockOff : `bool`
+            Current interlock off state. True means interlock is locked
+            (=PROBLEM).
+        """
+        if value:
+            self.setText("<font color='red'>PROBLEM</font>")
+        else:
+            self.setText("<font color='green'>OK</font>")
+
+
+class StatusLabel(QLabel):
+    """Displays OK/Error status."""
+
+    def __init__(self):
+        super().__init__("---")
+
+    def __copy__(self):
+        return StatusLabel()
+
+    def setValue(self, value):
+        """Sets formatted value. Color codes Error (red)/OK (green).
+
+        Parameters
+        ----------
+        value : `bool`
+            Current (=to be displayed) variable value. True means OK.
+        """
+        if value:
+            self.setText("<font color='green'>OK</font>")
+        else:
+            self.setText("<font color='red'>Error</font>")
+
+
+class EnumLabel(QLabel):
+    """Display enumeration values.
+
+    Uses map supplied in constructor to find matching status string.
+    """
+
+    def __init__(self, mapping: typing.Dict[int, str]):
+        """Construct EnumLable using provided mapping.
+
+        Parameters
+        ----------
+        mapping : `map(int, str)`
+            Enumeration mapping. Key is variable value, value is string (can
+            include Qt/html) to display.
+        """
+        super().__init__("---")
+        self._mapping = mapping
+
+    def setValue(self, value):
+        try:
+            self.setText(self._mapping[value])
+        except KeyError:
+            self.setText(f"<fonr color='red'>Unknown {value}</font>")
+
+
+class Clipped(QLabel):
+    "Display clipped/not clipped"
+
+    def __init__(self, force):
+        super().__init__()
+        self._force = force
+
+    def setClipped(self, clipped):
+        if clipped:
+            self.setText(f"<font color='red'>{self._force} forces clipped</font>")
+        else:
+            self.setText(f"<font color='green'>{self._force} forces not clipped</font>")
 
 
 class Heartbeat(QWidget):
@@ -276,7 +932,7 @@ class Heartbeat(QWidget):
 
     .. code-block:: python
        import SALComm
-       from CustomLabels import *
+       from CustomLabels import Heartbeat
 
        ...
 
@@ -392,6 +1048,33 @@ class LogEventWarning(QLabel):
             self.setText("<font color='yellow'>Warning</font>")
         else:
             self.setText("<font color='green'>OK</font>")
+
+
+class SimulationStatus(QLabel):
+    """Displays if CSC is running in simulation mode.
+
+    Parameters
+    ----------
+    comm : `lsst.ts.m1m3.salobj.Remote`
+        Remote used for communciation with SAL/DDS CSC.
+
+    """
+
+    def __init__(self, comm):
+        super().__init__("--")
+        try:
+            comm.simulationMode.connect(self.simulationMode)
+        except AttributeError:
+            # simulationMode needs to be subscribed from remote
+            self.setText(f"{comm.remote.salinfo.name} simulationMode missing")
+
+    @Slot(map)
+    def simulationMode(self, data):
+        self.setText(
+            "<font color='green'>HW</font>"
+            if data.mode == 0
+            else "<font color='red'>SIM</font>"
+        )
 
 
 class DockWindow(QDockWidget):

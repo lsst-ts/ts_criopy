@@ -1,0 +1,23 @@
+# Provides systemd integration to start docker image with VMSlogger running.
+# Build/pull docker image, call it vmslogger.
+# Copy that file to /etc/systemd/system
+#
+# Start VMSlogger then with systemctl start docker.vmslogger This logs from all
+# devices, rotates on midnight every day, stores HDF5 files to /vms-data.
+# Adjust parameters as needed.
+
+[Unit]
+Description=VMSlogger - store VMS data to HDF5 files
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run --rm --name %n -v /vms-data/:/vms-data/:rw --network host vmslogger VMSlogger -5 --workdir /vms-data --template '%%Y/%%m/$${name}-%%Y-%%m-%%dT%%H:%%M.$${ext}' --rotate 1D M1M3 M2 Rotator
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=multi-user.target
