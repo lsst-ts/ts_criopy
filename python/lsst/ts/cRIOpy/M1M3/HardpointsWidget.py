@@ -34,7 +34,10 @@ from PySide2.QtWidgets import (
 from PySide2.QtCore import Signal, Slot, Qt
 from asyncqt import asyncSlot
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
+from lsst.ts.idl.enums.MTM1M3 import (
+    DetailedState,
+    HardpointActuatorMotionStates,
+)
 
 from ..GUI import (
     Force,
@@ -331,6 +334,19 @@ class HardpointsWidget(QWidget):
             self.dataLayout.addWidget(self.hpStates[hp], row, hp + 1)
         row += 1
 
+        enableHPChaseButton = DetailedStateEnabledButton(
+            "Enable Hardpoint Chase", m1m3, enabledStates
+        )
+        enableHPChaseButton.clicked.connect(self._enableHPChase)
+        self.dataLayout.addWidget(enableHPChaseButton, row, 1, 1, 3)
+
+        disableHPChaseButton = DetailedStateEnabledButton(
+            "Disable Hardpoint Chase", m1m3, enabledStates
+        )
+        disableHPChaseButton.clicked.connect(self._disableHPChase)
+        self.dataLayout.addWidget(disableHPChaseButton, row, 4, 1, 3)
+        row += 1
+
         self.forces = {
             "forceMagnitude": ("Total force", Force()),
             "fx": ("Force X", Force()),
@@ -438,6 +454,22 @@ class HardpointsWidget(QWidget):
     def _fillRow(self, hpData, rowLabels):
         for hp in range(6):
             rowLabels[hp].setValue(hpData[hp])
+
+    @SALCommand
+    def _enableHardpointChase(self):
+        return self.m1m3.remote.cmd_enableHardpointChase
+
+    @asyncSlot()
+    async def _enableHPChase(self):
+        await self._enableHardpointChase()
+
+    @SALCommand
+    def _disableHardpointChase(self):
+        return self.m1m3.remote.cmd_disableHardpointChase
+
+    @asyncSlot()
+    async def _disableHPChase(self):
+        await self._disableHardpointChase()
 
     @Slot(map)
     def hardpointActuatorSettings(self, data):
