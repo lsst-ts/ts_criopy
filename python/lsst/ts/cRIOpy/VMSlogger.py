@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3
 
 # Save VMS data to a file.
 #
@@ -19,33 +19,24 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import argparse
+import asyncio
+import importlib
+import logging
 import os
 import signal
 import sys
-import numpy as np
-
-import argparse
-import asyncio
-import click
-from datetime import datetime
 import time
-import logging
 
-from lsst.ts.salobj import Domain, Remote
 from . import parseDuration
-from .VMS import Cache
-
-TIME_RESERVE = 50  # time cache for 50 second more
+from .VMS import Collector, VMS_DEVICES
 
 try:
-    import h5py
-
+    importlib.import_module("h5py")
     has_h5py = True
 except ModuleNotFoundError:
     has_h5py = False
 
-
-devices = ["M1M3", "M2", "Rotator"]
 
 parser = argparse.ArgumentParser(
     description="Save VMS data to a file, either HDF5 or CSV.",
@@ -56,7 +47,11 @@ parser = argparse.ArgumentParser(
     " offline with VMSGUI.",
 )
 parser.add_argument(
-    "devices", type=str, nargs="+", help="name or index of CSC", choices=devices
+    "devices",
+    type=str,
+    nargs="+",
+    help="name or index of CSC",
+    choices=VMS_DEVICES,
 )
 parser.add_argument(
     "-5",
@@ -77,7 +72,10 @@ parser.add_argument(
     "-d", dest="debug", default=0, action="count", help="increase debug level"
 )
 parser.add_argument(
-    "--header", dest="header", action="store_true", help="adds header with column names"
+    "--header",
+    dest="header",
+    action="store_true",
+    help="adds header with column names",
 )
 parser.add_argument("-p", dest="pidfile", action="store", help="PID file location")
 parser.add_argument(
@@ -149,279 +147,8 @@ parser.add_argument(
 )
 
 
-device_sensors = [3, 6, 3]
-
-logger = logging.getLogger("VMSlogger")
-
-
-class Collector:
-    def __init__(
-        self,
-        index,
-        fn_template,
-        size,
-        file_type,
-        header,
-        chunk_size,
-        daemonized,
-        rotate,
-        rotate_offset,
-    ):
-        self.index = index
-        self.fn_template = fn_template
-        self.configured_size = size
-        self.size = size
-        self.file_type = file_type
-        self.header = header
-        self.configured_chunk_size = chunk_size
-        self.chunk_size = chunk_size
-        self.daemonized = daemonized
-        self.rotate = rotate
-        self.rotate_offset = rotate_offset
-        self.next_rotate = None
-        self.h5file = None
-
-        self._bar_index = 0
-        self._last_bar = 0
-        self._current_file_date = time.time()
-
-        logger.debug(
-            f"Creating cache: index={self.index+1}"
-            f" device={device_sensors[self.index]} type={self.file_type}"
-        )
-
-        self.cache_size = self.configured_chunk_size + 50000
-
-        self.cache = Cache(self.cache_size, device_sensors[self.index])
-
-    def _calculate_next_rotate(self, timestamp):
-        (q, r) = divmod(timestamp, self.rotate)
-        return (q + 1) * self.rotate + self.rotate_offset
-
-    def _need_rotate(self, timestamp):
-        if self.rotate is None:
-            return False
-        elif self.next_rotate is None:
-            self.next_rotate = self._calculate_next_rotate(timestamp)
-            logger.debug(
-                f"Will rotate at {self.next_rotate} - current timestamp is "
-                f"{timestamp:.04f}, in {self.next_rotate - timestamp:.04f} seconds"
-            )
-            return False
-        elif self.next_rotate <= timestamp:
-            self.next_rotate += self.rotate
-            return True
-        return False
-
-    def _get_filename(self, date):
-        filename = datetime.strftime(date, self.fn_template)
-        repl = [
-            ("name", devices[self.index]),
-            (
-                "ext",
-                "hdf"
-                if "5" in self.file_type
-                else "csv.gz"
-                if "z" in self.file_type
-                else "csv",
-            ),
-        ]
-        for name, value in repl:
-            filename = filename.replace("${" + name + "}", value)
-        return filename
-
-    def _create_file(self, date):
-        self.filename = self._get_filename(date)
-        logger.debug(f"Creating {self.filename}")
-
-        try:
-            dirs = os.path.dirname(self.filename)
-            if dirs != "":
-                os.makedirs(dirs)
-        except FileExistsError:
-            pass
-
-        if "5" in self.file_type:
-            self.h5file = h5py.File(self.filename, "a")
-            group_args = {"chunks": (self.chunk_size)}
-            if "z" in self.file_type:
-                group_args["compression"] = "gzip"
-            self.cache.create_hdf5_datasets(self.size, self.h5file, group_args)
-
-    def _save_hdf5(self):
-        if self.h5file is None:
-            return False
-        count = self.chunk_size
-        if self.rotate is None:
-            if len(self.cache) < self.chunk_size:
-                return False
-        else:
-            if self.next_rotate is None:
-                if len(self.cache) == 0:
-                    return False
-                self._need_rotate(self.cache.startTime())
-
-            next_index = self.cache.timestampIndex(self.next_rotate)
-            if next_index is None or (
-                len(self.cache) < self.chunk_size and next_index + 1 == len(self.cache)
-            ):
-                return False
-            count = min(count, next_index)
-        if count > 0:
-            logger.debug(
-                f"Saving device {devices[self.index]} data to"
-                f" {self.h5file.file.filename} from {self.cache.hdf5_index},"
-                f" {count} rows"
-            )
-            self.cache.savehdf5(count)
-            self.h5file.flush()
-        return True
-
-    def close(self):
-        if self.h5file is not None:
-            logger.info(f"Closing HDF5 {self.h5file.file.filename}")
-            self.h5file.close()
-
-    def _h5_filled(self):
-        et = self.cache.endTime()
-        if et is not None and self._need_rotate(et):
-            return True
-        return self.cache.h5_filled()
-
-    async def _sample_daemon(self):
-        saved_len = 0
-        while True:
-            current_len = saved_len + len(self.cache)
-            logger.debug(
-                f"Waiting {devices[self.index]}.."
-                f" {100 * (current_len)/self.size:.02f}% {current_len} of {self.size}"
-            )
-            if self.h5file is None:
-                if current_len >= self.size:
-                    break
-            else:
-                if self._save_hdf5():
-                    saved_len += self.chunk_size
-                if self._h5_filled():
-                    break
-            await asyncio.sleep(0.5)
-
-    async def _sample_cli(self):
-        async def collect_it(bar):
-            while True:
-                cur_index = self._bar_index
-                bar.update(cur_index - self._last_bar)
-                self._last_bar = cur_index
-                cache_len = len(self.cache)
-                if cache_len >= self.size:
-                    break
-                await asyncio.sleep(0.1)
-                if self._save_hdf5():
-                    break
-
-        if self.rotate is None:
-            bar_size = self.size
-        else:
-            if self.next_rotate is None:
-                bar_size = (
-                    self._calculate_next_rotate(self._current_file_date)
-                    - self._current_file_date
-                )
-            else:
-                bar_size = self.rotate
-            bar_size = int(np.ceil(bar_size / self.cache.sampleTime))
-
-        with click.progressbar(
-            length=bar_size,
-            label=f"{devices[self.index]} - {os.path.basename(self.filename)}",
-            show_eta=True,
-            show_percent=True,
-            width=0,
-        ) as bar:
-            if self.h5file is None:
-                await collect_it(bar)
-            else:
-                while True:
-                    await collect_it(bar)
-                    if self._h5_filled():
-                        break
-
-            bar.update(self.size)
-
-    async def _sample_file(self):
-        if self.daemonized:
-            await self._sample_daemon()
-        else:
-            await self._sample_cli()
-
-        if self.h5file is not None:
-            return
-
-        logger.info(f"Saving CSV to {self.filename}")
-        kwargs = {"delimiter": ","}
-        if self.header:
-            kwargs["header"] = ",".join(self.cache.columns())
-        self.cache.savetxt(self.filename, self.size, **kwargs)
-
-    async def collect_data(self, single_shot):
-        """Create data files, fills them with data.
-
-        Parameters
-        ----------
-        single_shot : `bool`
-            When True, quits after single file is recorded.
-        """
-        try:
-            async with Domain() as domain:
-                remote = Remote(domain, "MTVMS", index=self.index + 1, start=False)
-                remote.tel_data.callback = self._data
-                remote.evt_fpgaState.callback = self._fpgaState
-
-                await remote.start()
-
-                await self._fpgaState(remote.evt_fpgaState.get())
-
-                while True:
-                    if self.next_rotate is not None:
-                        self._current_file_date = self.next_rotate - self.rotate
-                    ts = time.localtime(self._current_file_date)
-                    self._create_file(datetime(*ts[:6]))
-                    await self._sample_file()
-                    if single_shot:
-                        break
-
-        except Exception:
-            logger.exception(f"Cannot collect data for {devices[self.index]}")
-
-    async def _data(self, data):
-        self.cache.newChunk(data)
-        if data.sensor == 1:
-            self._bar_index += len(data.accelerationX)
-
-    async def _fpgaState(self, data):
-        period = 1 if data is None else data.period
-        freq = 1000 if data is None else int(np.ceil(1000.0 / period))
-        logger.info(f"{devices[self.index]} frequency {freq}, period {period}")
-        self.cache.setSampleTime(period / 1000.0)
-        if "5" in self.file_type:
-            if self.configured_size is None:
-                if self.rotate is None:
-                    self.size = 86400 * freq
-                else:
-                    # TIME_RESERVE second more than needed
-                    self.size = (self.rotate + TIME_RESERVE) * freq
-            self.chunk_size = min(self.configured_chunk_size, self.size - 10)
-        else:
-            if self.configured_size is None:
-                self.size = 86400 * freq
-            self.chunk_size = self.size - 10
-
-        self.cache_size = self.chunk_size + TIME_RESERVE * freq
-
-        self.cache.resize(self.cache_size)
-
-
 async def main(args, pipe=None):
+    logger = logging.getLogger("VMSlogger")
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
 
@@ -491,7 +218,7 @@ async def main(args, pipe=None):
     for d in args.devices:
         logger.info(f"Collecting {d} - template {args.template}")
         c = Collector(
-            devices.index(d),
+            VMS_DEVICES.index(d),
             args.template,
             args.size,
             file_type,
@@ -520,8 +247,6 @@ async def main(args, pipe=None):
 def run():
     args = parser.parse_args()
     if args.daemon:
-        import time
-
         r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)
         child = os.fork()
         if child == 0:

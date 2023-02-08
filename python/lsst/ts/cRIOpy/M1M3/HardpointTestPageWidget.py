@@ -20,10 +20,7 @@
 from functools import partial
 
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-)
+from PySide2.QtWidgets import QWidget, QVBoxLayout
 
 from lsst.ts.idl.enums.MTM1M3 import HardpointTest
 

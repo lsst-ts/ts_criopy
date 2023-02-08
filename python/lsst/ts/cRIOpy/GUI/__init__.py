@@ -51,5 +51,5 @@ from .TimeChart import (
     SALChartWidget,
 )
 from .ValueGrid import StatusGrid, InterlockOffGrid, PowerOnOffGrid, WarningGrid
-from .ArrayGrid import ArrayItem, ArraySignal, ArrayButton, ArrayGrid
+from .ArrayGrid import ArrayItem, ArrayFields, ArraySignal, ArrayButton, ArrayGrid
 from .TopicStatusLabel import FieldButton, TopicStatusLabel
