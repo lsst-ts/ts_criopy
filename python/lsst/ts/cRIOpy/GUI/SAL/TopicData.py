@@ -386,6 +386,36 @@ class Topics:
                     EnabledDisabledField(
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
                     ),
+                    TopicField(
+                        "PC FE Warning",
+                        "primaryFollowingErrorWarningThreshold",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "PC FE Counting",
+                        "primaryFollowingErrorCountingFaultThreshold",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "PC FE Immediate",
+                        "primaryFollowingErrorImmediateFaultThreshold",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "SC FE Warning",
+                        "secondaryFollowingErrorWarningThreshold",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
+                        "SC FE Counting",
+                        "secondaryFollowingErrorCountingFaultThreshold",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
+                        "SC FE Immediate",
+                        "secondaryFollowingErrorImmediateFaultThreshold",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorSettings",
             ),
