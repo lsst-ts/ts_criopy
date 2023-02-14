@@ -688,37 +688,63 @@ class Topics:
                         FATABLE_SINDEX,
                     ),
                     WarningField(
-                        "Primary Axis Following Error Warning",
+                        "Primary Axis FE Warning",
                         "primaryAxisFollowingErrorWarning",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
-                        "Secondary Axis Following Error Warning",
+                        "Secondary Axis FE Warning",
                         "secondaryAxisFollowingErrorWarning",
                         FATABLE_SINDEX,
                     ),
                     WarningField(
-                        "Primary Axis Following Error Counting Fault",
+                        "Primary Axis FE Counting Fault",
                         "primaryAxisFollowingErrorCountingFault",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
-                        "Secondary Axis Following Error Counting Fault",
+                        "Secondary Axis FE Counting Fault",
                         "secondaryAxisFollowingErrorCountingFault",
                         FATABLE_SINDEX,
                     ),
                     WarningField(
-                        "Primary Axis Following Error Immediate Fault",
+                        "Primary Axis FE Immediate Fault",
                         "primaryAxisFollowingErrorImmediateFault",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
-                        "Secondary Axis Following Error Immediate Fault",
+                        "Secondary Axis FE Immediate Fault",
                         "secondaryAxisFollowingErrorImmediateFault",
                         FATABLE_SINDEX,
                     ),
                 ],
                 "forceActuatorForceWarning",
+            ),
+            TopicData(
+                "FA FE Counters",
+                [
+                    TopicField(
+                        "Primary axis FE warning counter",
+                        "primaryAxisFollowingErrorWarningCounter",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Secondary axis FE warning counter",
+                        "secondaryAxisFollowingErrorWarningCounter",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
+                        "Primary axis FE counting counter",
+                        "primaryAxisFollowingErrorCountingCounter",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Secondary axis FE counting counter",
+                        "secondaryAxisFollowingErrorCountingCounter",
+                        FATABLE_SINDEX,
+                    ),
+                ],
+                "forceActuatorFollowingErrorCounter",
             ),
             TopicData(
                 "FA Setpoint Warning",
