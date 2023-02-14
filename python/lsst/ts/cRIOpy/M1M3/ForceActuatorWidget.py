@@ -243,7 +243,9 @@ class ForceActuatorWidget(QWidget):
         self.field = self._topic.fields[fieldIndex]
         try:
             self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
-            self.updateValues(self._getData(), True)
+            data = self._getData()
+            self.updateValues(data, True)
+            self.dataChanged(data)
         except RuntimeError as err:
             print("ForceActuatorWidget._changeField", err)
             self._topic = None
@@ -263,4 +265,7 @@ class ForceActuatorWidget(QWidget):
         if data is None:
             self._setUnknown()
         else:
-            self.lastUpdatedLabel.setTime(data.timestamp)
+            try:
+                self.lastUpdatedLabel.setTime(data.timestamp)
+            except AttributeError:
+                self.lastUpdatedLabel.setTime(data.private_sndStamp)
