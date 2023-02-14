@@ -685,7 +685,7 @@ class Topics:
                     WarningField(
                         "Secondary Axis Measured Force Warning",
                         "secondaryAxisMeasuredForceWarning",
-                        FATABLE_ZINDEX,
+                        FATABLE_SINDEX,
                     ),
                     WarningField(
                         "Primary Axis Following Error Warning",
@@ -695,7 +695,27 @@ class Topics:
                     WarningField(
                         "Secondary Axis Following Error Warning",
                         "secondaryAxisFollowingErrorWarning",
+                        FATABLE_SINDEX,
+                    ),
+                    WarningField(
+                        "Primary Axis Following Error Counting Fault",
+                        "primaryAxisFollowingErrorCountingFault",
                         FATABLE_ZINDEX,
+                    ),
+                    WarningField(
+                        "Secondary Axis Following Error Counting Fault",
+                        "secondaryAxisFollowingErrorCountingFault",
+                        FATABLE_SINDEX,
+                    ),
+                    WarningField(
+                        "Primary Axis Following Error Immediate Fault",
+                        "primaryAxisFollowingErrorImmediateFault",
+                        FATABLE_ZINDEX,
+                    ),
+                    WarningField(
+                        "Secondary Axis Following Error Immediate Fault",
+                        "secondaryAxisFollowingErrorImmediateFault",
+                        FATABLE_SINDEX,
                     ),
                 ],
                 "forceActuatorForceWarning",
