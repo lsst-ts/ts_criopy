@@ -11,5 +11,5 @@ from .StateEnabled import (
 from .SummaryStateLabel import SummaryStateLabel
 from .TimeDeltaLabel import TimeDeltaLabel
 from .TopicWindow import TopicWindow
-from .TopicData import Topics, TopicData
+from .TopicData import TopicData
 from .VersionWidget import VersionWidget

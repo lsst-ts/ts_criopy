@@ -31,7 +31,7 @@ from PySide2.QtWidgets import (
     QListWidget,
 )
 from ..GUI import WarningLabel
-from ..GUI.SAL import TimeDeltaLabel, Topics
+from ..GUI.SAL import TimeDeltaLabel
 from ..M1M3FATable import (
     FATABLE,
     FATABLE_NEAR_NEIGHBOR_INDEX,
@@ -39,6 +39,7 @@ from ..M1M3FATable import (
     nearNeighborIndices,
     onlyFarNeighborIndices,
 )
+from .ForceActuatorTopics import ForceActuatorTopics
 
 
 class ForceActuatorWidget(QWidget):
@@ -101,7 +102,7 @@ class ForceActuatorWidget(QWidget):
         self.topicList = QListWidget()
         self.topicList.setFixedWidth(256)
         self.topicList.currentRowChanged.connect(self.currentTopicChanged)
-        self.topics = Topics()
+        self.topics = ForceActuatorTopics()
         for topic in self.topics.topics:
             self.topicList.addItem(topic.name)
         self.fieldList = QListWidget()
@@ -188,7 +189,7 @@ class ForceActuatorWidget(QWidget):
         self.lastUpdatedLabel.setUnknown()
 
     def getCurrentFieldName(self) -> (str, str):
-        return (self._topic.topic, self.field.value)
+        return (self._topic.topic, self.field.fieldName)
 
     def _getData(self):
         return getattr(self.m1m3.remote, self._topic.getTopic()).get()
