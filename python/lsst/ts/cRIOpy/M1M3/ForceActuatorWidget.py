@@ -29,6 +29,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QGridLayout,
     QListWidget,
+    QSplitter,
 )
 from ..GUI import WarningLabel
 from ..GUI.SAL import TimeDeltaLabel
@@ -42,7 +43,7 @@ from ..M1M3FATable import (
 from .ForceActuatorTopics import ForceActuatorTopics
 
 
-class ForceActuatorWidget(QWidget):
+class ForceActuatorWidget(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
     Children classes must implement updateValues(data, changed) method.
@@ -72,17 +73,14 @@ class ForceActuatorWidget(QWidget):
         self.field = None
         self._topic = None
 
-        layout = QHBoxLayout()
         plotLayout = QVBoxLayout()
         selectionLayout = QVBoxLayout()
         detailsLayout = QGridLayout()
         filterLayout = QHBoxLayout()
-        layout.addLayout(plotLayout)
-        layout.addLayout(selectionLayout)
+
         selectionLayout.addLayout(detailsLayout)
         selectionLayout.addWidget(QLabel("Filter Data"))
         selectionLayout.addLayout(filterLayout)
-        self.setLayout(layout)
 
         self.selectedActuatorIdLabel = QLabel()
         self.selectedActuatorValueLabel = QLabel()
@@ -157,6 +155,18 @@ class ForceActuatorWidget(QWidget):
         filterLayout.addWidget(self.fieldList)
 
         self.topicList.setCurrentRow(0)
+
+        w_left = QWidget()
+        w_left.setLayout(plotLayout)
+        w_right = QWidget()
+        w_right.setLayout(selectionLayout)
+        w_right.setMaximumWidth(w_right.size().width())
+        self.addWidget(w_left)
+        self.addWidget(w_right)
+
+        self.setCollapsible(0, False)
+        self.setStretchFactor(0, 10)
+        self.setStretchFactor(1, 0)
 
     @Slot(int)
     def currentTopicChanged(self, topicIndex):
