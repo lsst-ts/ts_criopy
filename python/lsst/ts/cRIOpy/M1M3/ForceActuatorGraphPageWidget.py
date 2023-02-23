@@ -44,7 +44,7 @@ class ForceActuatorGraphPageWidget(ForceActuatorWidget):
 
         if changed:
             self.mirrorWidget.mirrorView.clear()
-            self.mirrorWidget.setScaleType(self.field.scale)
+            self.mirrorWidget.setScaleType(self.field.scaleType)
 
         def getWarning(index):
             return (
