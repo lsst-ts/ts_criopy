@@ -23,8 +23,8 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_ZINDEX,
     FATABLE_SINDEX,
 )
-from ..GUI.ActuatorsDisplay import Scales
-from ..GUI.SAL.TopicData import (
+from ...GUI.ActuatorsDisplay import Scales
+from ...GUI.SAL.TopicData import (
     TopicData,
     TopicField,
     WarningField,
@@ -32,7 +32,7 @@ from ..GUI.SAL.TopicData import (
 )
 
 
-__all__ = ["ForceActuatorTopics"]
+__all__ = ["Topics"]
 
 
 class BumpTestField(TopicField):
@@ -40,7 +40,7 @@ class BumpTestField(TopicField):
         super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
 
 
-class ForceActuatorTopics:
+class Topics:
     """
     Class constructing list of all available topics of the Force Actuators.
 
@@ -68,6 +68,7 @@ class ForceActuatorTopics:
                 "Applied Active Optic Forces",
                 [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
                 "appliedActiveOpticForces",
+                command="ActiveOpticForces",
             ),
             TopicData(
                 "Applied Azimuth Forces",

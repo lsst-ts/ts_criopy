@@ -40,12 +40,12 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_ORIENTATION,
     actuatorIDToIndex,
 )
-from .ActuatorComboBox import ActuatorComboBox
-from ..GUI.ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
-from ..GUI.SAL import SALCommand, StateEnabledWidget
+from .ComboBox import ComboBox
+from ...GUI.ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
+from ...GUI.SAL import SALCommand, StateEnabledWidget
 
 
-class EnabledForceActuators(StateEnabledWidget):
+class Enabled(StateEnabledWidget):
     """Widget displaying map of the Force Actuators (FA). Enables end users to
     select a FA and enable/disable it.
 
@@ -73,7 +73,7 @@ class EnabledForceActuators(StateEnabledWidget):
 
         self.mirrorWidget.mirrorView.selectionChanged.connect(self.selectionChanged)
 
-        self.selectedActuatorId = ActuatorComboBox()
+        self.selectedActuatorId = ComboBox()
         self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
         self.selectedActuatorValueLabel = QLabel()
 

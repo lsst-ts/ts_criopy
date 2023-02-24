@@ -1,8 +1,8 @@
 from PySide2.QtWidgets import QWidget, QGridLayout, QLabel
 
-from ..M1M3FATable import FATABLE
+from ...M1M3FATable import FATABLE, FATABLE_ZFA
 
-from .ForceActuatorWidget import ForceActuatorWidget
+from .Widget import Widget
 
 
 class DataWidget(QWidget):
@@ -10,8 +10,8 @@ class DataWidget(QWidget):
         super().__init__()
 
         self.forceActuatorLabels = []
-        for i in range(156):
-            self.forceActuatorLabels.append(QLabel("UNKNOWN"))
+        for i in range(FATABLE_ZFA):
+            self.forceActuatorLabels.append(QLabel("---"))
 
         self.layout = QGridLayout()
 
@@ -137,7 +137,7 @@ class DataWidget(QWidget):
         self.setLayout(self.layout)
 
 
-class ForceActuatorValuePageWidget(ForceActuatorWidget):
+class ValuePageWidget(Widget):
     def __init__(self, m1m3):
         self.dataWidget = DataWidget()
 

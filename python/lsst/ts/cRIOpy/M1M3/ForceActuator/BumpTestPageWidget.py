@@ -39,20 +39,21 @@ from asyncqt import asyncSlot
 
 from lsst.ts.idl.enums import MTM1M3
 
-from ..M1M3FATable import (
+from ...M1M3FATable import (
     FATABLE,
     FATABLE_ID,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
     FATABLE_SINDEX,
+    FATABLE_ZFA,
     actuatorIDToIndex,
 )
-from ..GUI.TimeChart import TimeChart, TimeChartView
-from ..GUI.SAL import SALLog, SALCommand
-from ..GUI import Colors
+from ...GUI.TimeChart import TimeChart, TimeChartView
+from ...GUI.SAL import SALLog, SALCommand
+from ...GUI import Colors
 
 
-class ForceActuatorBumpTestPageWidget(QWidget):
+class BumpTestPageWidget(QWidget):
     """
     Enable user to select actuator for bump test. Show graphs depicting actual
     demand and measured forces. Shows button to run a bump test and stop any
@@ -382,7 +383,7 @@ class ForceActuatorBumpTestPageWidget(QWidget):
             self.secondaryPB.setEnabled(False)
 
         # list display
-        for index in range(156):
+        for index in range(FATABLE_ZFA):
             actuatorId = FATABLE[index][FATABLE_ID]
             row = (actuatorId % 100) - 1
             colOffset = 3 * (int(actuatorId / 100) - 1)

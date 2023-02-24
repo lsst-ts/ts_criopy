@@ -33,19 +33,23 @@ from PySide2.QtWidgets import (
 )
 from asyncqt import asyncSlot
 
-from ..GUI import WarningLabel
-from ..GUI.SAL import TimeDeltaLabel, SALCommand
-from ..M1M3FATable import (
+from ...GUI import WarningLabel
+from ...GUI.SAL import TimeDeltaLabel, SALCommand
+from ...M1M3FATable import (
     FATABLE,
     FATABLE_NEAR_NEIGHBOR_INDEX,
     FATABLE_FAR_NEIGHBOR_INDEX,
+    FATABLE_XINDEX,
+    FATABLE_YINDEX,
+    FATABLE_ZINDEX,
     nearNeighborIndices,
     onlyFarNeighborIndices,
 )
-from .ForceActuatorTopics import ForceActuatorTopics
+from .Topics import Topics
+from .UpdateWindow import UpdateWindow
 
 
-class ForceActuatorWidget(QSplitter):
+class Widget(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
     Children classes must implement updateValues(data, changed) method.
@@ -99,7 +103,7 @@ class ForceActuatorWidget(QSplitter):
         self.topicList = QListWidget()
         self.topicList.setFixedWidth(256)
         self.topicList.currentRowChanged.connect(self.currentTopicChanged)
-        self.topics = ForceActuatorTopics()
+        self.topics = Topics()
         for topic in self.topics.topics:
             self.topicList.addItem(topic.name)
         self.fieldList = QListWidget()
@@ -143,9 +147,9 @@ class ForceActuatorWidget(QSplitter):
             self.selectedActuatorWarningLabel,
         )
 
-        self.editButton = QPushButton("Modify")
+        self.editButton = QPushButton("&Modify")
         self.editButton.clicked.connect(self.editValues)
-        self.clearButton = QPushButton("Zero")
+        self.clearButton = QPushButton("&Zero")
         self.clearButton.clicked.connect(self.zeroValues)
 
         detailsLayout.addWidget(self.editButton, 4, 0, 1, 2)
@@ -168,7 +172,7 @@ class ForceActuatorWidget(QSplitter):
 
         self.setCollapsible(0, False)
         self.setStretchFactor(0, 10)
-        self.setStretchFactor(1, 0)
+        self.setStretchFactor(1, 1)
 
     @Slot(int)
     def currentTopicChanged(self, topicIndex):
@@ -199,7 +203,24 @@ class ForceActuatorWidget(QSplitter):
 
     @Slot()
     def editValues(self):
-        pass
+        def getAxis(topic) -> set:
+            axis = ""
+            for f in topic.fields:
+                if f.valueIndex == FATABLE_XINDEX:
+                    axis += "x"
+                elif f.valueIndex == FATABLE_YINDEX:
+                    axis += "y"
+                elif f.valueIndex == FATABLE_ZINDEX:
+                    axis += "z"
+            return "".join(sorted(set(axis)))
+
+        suffix = self._topic.command
+        try:
+            self.updateWindows[suffix].show()
+        except KeyError:
+            w = UpdateWindow(self.m1m3, suffix, getAxis(self._topic))
+            w.show()
+            self.updateWindows[suffix] = w
 
     @asyncSlot()
     async def zeroValues(self):
@@ -278,7 +299,7 @@ class ForceActuatorWidget(QSplitter):
             self.updateValues(data, True)
             self.dataChanged(data)
         except RuntimeError as err:
-            print("ForceActuatorWidget.__changeField", err)
+            print("ForceActuator.Widget.__changeField", err)
             self._topic = None
             pass
 

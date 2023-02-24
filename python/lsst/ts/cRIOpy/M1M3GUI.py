@@ -49,11 +49,7 @@ from .M1M3 import (
     ApplicationControlWidget,
     CellLightPageWidget,
     DCAccelerometerPageWidget,
-    EnabledForceActuators,
-    ForceActuatorGraphPageWidget,
-    ForceActuatorHistogramPageWidget,
-    ForceActuatorValuePageWidget,
-    ForceActuatorBumpTestPageWidget,
+    ForceActuator,
     ForceBalanceSystemPageWidget,
     GyroPageWidget,
     HardpointsWidget,
@@ -104,15 +100,15 @@ class EUI(QMainWindow):
         self.addPage("PID", PIDPageWidget(self.m1m3))
         self.addPage("Force Balance System", ForceBalanceSystemPageWidget(self.m1m3))
         self.addPage(
-            "Force Actuator Bump Test", ForceActuatorBumpTestPageWidget(self.m1m3)
+            "Force Actuator Bump Test", ForceActuator.BumpTestPageWidget(self.m1m3)
         )
         self.addPage("Hardpoint Test", HardpointTestPageWidget(self.m1m3))
-        self.addPage("Enabled Force Actuators", EnabledForceActuators(self.m1m3))
-        self.addPage("Force Actuator Graph", ForceActuatorGraphPageWidget(self.m1m3))
+        self.addPage("Enabled Force Actuators", ForceActuator.Enabled(self.m1m3))
+        self.addPage("Force Actuator Graph", ForceActuator.GraphPageWidget(self.m1m3))
         self.addPage(
-            "Force Actuator Histogram", ForceActuatorHistogramPageWidget(self.m1m3)
+            "Force Actuator Histogram", ForceActuator.HistogramPageWidget(self.m1m3)
         )
-        self.addPage("Force Actuator Value", ForceActuatorValuePageWidget(self.m1m3))
+        self.addPage("Force Actuator Value", ForceActuator.ValuePageWidget(self.m1m3))
         self.addPage("Compressor 1", CompressorsPageWidget(self.compressor_1))
         self.addPage("Compressor 2", CompressorsPageWidget(self.compressor_2))
         self.addPage("SAL Log", SALLog.Widget(self.m1m3))
