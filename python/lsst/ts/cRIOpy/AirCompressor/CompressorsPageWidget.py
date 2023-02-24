@@ -488,26 +488,14 @@ class CompressorsPageWidget(QWidget):
         finally:
             self.restoreEnabled()
 
-    @SALCommand
-    def __powerOn(self):
-        return self.compressor.remote.cmd_powerOn
-
     @asyncSlot()
     async def _powerOn(self):
-        await self.__powerOn()
-
-    @SALCommand
-    def __powerOff(self):
-        return self.compressor.remote.cmd_powerOff
+        await SALCommand(self, self.compressor.remote.cmd_powerOn)
 
     @asyncSlot()
     async def _powerOff(self):
-        await self.__powerOff()
-
-    @SALCommand
-    def __reset(self):
-        return self.compressor.remote.cmd_reset
+        await SALCommand(self, self.compressor.remote.cmd_powerOff)
 
     @asyncSlot()
     async def _reset(self):
-        await self.__reset()
+        await SALCommand(self, self.compressor.remote.cmd_reset)

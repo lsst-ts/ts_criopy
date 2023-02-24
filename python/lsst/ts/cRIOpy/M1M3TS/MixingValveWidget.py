@@ -106,10 +106,10 @@ class MixingValveWidget(DockWindow):
             axis_index=1,
         )
 
-    @SALCommand
-    def _callMixingValve(self, **kvargs):
-        return self.m1m3ts.remote.cmd_setMixingValve
-
     @asyncSlot()
     async def _setMixingValve(self):
-        await self._callMixingValve(mixingValveTarget=self.target.value())
+        await SALCommand(
+            self,
+            self.m1m3ts.remote.cmd_setMixingValve,
+            mixingValveTarget=self.target.value(),
+        )

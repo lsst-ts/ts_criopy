@@ -194,19 +194,11 @@ class ForceBalanceSystemPageWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandEnableHardpointCorrections(self):
-        await self._issueCommandEnableHardpointCorrections()
-
-    @SALCommand
-    def _issueCommandEnableHardpointCorrections(self, **kwargs):
-        return self.m1m3.remote.cmd_enableHardpointCorrections
+        await SALCommand(self, self.m1m3.remote.cmd_enableHardpointCorrections)
 
     @asyncSlot()
     async def issueCommandDisableHardpointCorrections(self):
-        await self._issueCommandDisableHardpointCorrections()
-
-    @SALCommand
-    def _issueCommandDisableHardpointCorrections(self, **kwargs):
-        return self.m1m3.remote.cmd_disableHardpointCorrections
+        await SALCommand(self, self.m1m3.remote.cmd_disableHardpointCorrections)
 
     def _fillRowSum(self, variables, d1, d2):
         for k, v in variables.items():

@@ -231,8 +231,7 @@ class OffsetsWidget(QWidget):
         self.m1m3.forceActuatorData.connect(self._forceActuatorCallback)
         self.m1m3.detailedState.connect(self._detailedStateCallback)
 
-    @SALCommand
-    def moveMirror(self, **kwargs):
+    async def moveMirror(self, **kwargs):
         """Move mirror. Calls positionM1M3 command.
 
         Parameters
@@ -241,22 +240,7 @@ class OffsetsWidget(QWidget):
             New target position. Needs to have POSITIONS keys. Passed to
             positionM1M3 command.
         """
-        return self.m1m3.remote.cmd_positionM1M3
-
-    @SALCommand
-    def applyOffsetForcesByMirrorForce(self, **kwargs):
-        """Apply mirror offset forces.
-
-        Parameters
-        ----------
-        **kwargs : `dict`
-            Offsets specified as forces and moments.
-        """
-        return self.m1m3.remote.cmd_applyOffsetForcesByMirrorForce
-
-    @SALCommand
-    def clearOffsetForces(self, **kwargs):
-        return self.m1m3.remote.cmd_clearOffsetForces
+        await SALCommand(self, self.m1m3.remote.cmd_positionM1M3, **kwargs)
 
     def _getScale(self, label):
         return u.mm.to(u.m) if label[1:] == "Position" else u.arcsec.to(u.deg)
@@ -313,11 +297,15 @@ class OffsetsWidget(QWidget):
 
     @asyncSlot()
     async def _applyOffsetForces(self):
-        await self.applyOffsetForcesByMirrorForce(**self.getForceOffsets())
+        await SALCommand(
+            self,
+            self.m1m3.remote.cmd_applyOffsetForcesByMirrorForce,
+            **self.getForceOffsets(),
+        )
 
     @asyncSlot()
     async def _clearOffsetForces(self):
-        await self.clearOffsetForces()
+        await SALCommand(self, self.m1m3.remote.cmd_clearOffsetForces)
         for f in self.FORCES:
             getattr(self, "forceOffsets_" + f).setValue(0)
 

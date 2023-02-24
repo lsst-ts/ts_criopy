@@ -120,15 +120,11 @@ class SlewWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self):
-        await self._issueCommandSlewFlag(slewFlag=True)
+        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=True)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self):
-        await self._issueCommandSlewFlag(slewFlag=False)
-
-    @SALCommand
-    def _issueCommandSlewFlag(self, **kwargs):
-        return self.m1m3.remote.cmd_setAirSlewFlag
+        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=False)
 
     @Slot(map)
     def forceActuatorState(self, data):

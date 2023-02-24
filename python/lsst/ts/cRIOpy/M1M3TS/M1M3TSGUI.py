@@ -128,55 +128,35 @@ class ThermalStatesDock(DockWindow):
         except KeyError as ke:
             print(f"Undefined buttonstate: {state} - {str(ke)}")
 
-    @SALCommand
-    def _start(self, **kwargs):
-        return self.m1m3ts.remote.cmd_start
-
     @asyncSlot()
     async def start(self):
-        await self._start(configurationOverride="Default")
-
-    @SALCommand
-    def _enable(self, **kwargs):
-        return self.m1m3ts.remote.cmd_enable
+        await SALCommand(
+            self, self.m1m3ts.remote.cmd_start, configurationOverride="Default"
+        )
 
     @asyncSlot()
     async def enable(self):
-        await self._enable()
-
-    @SALCommand
-    def _setEngineeringMode(self, **kwargs):
-        return self.m1m3ts.remote.cmd_setEngineeringMode
+        await SALCommand(self, self.m1m3ts.remote.cmd_enable)
 
     @asyncSlot()
     async def setEngineeringMode(self):
-        await self._setEngineeringMode(
-            enableEngineeringMode=self.engineeringButton.text() == "Enter Engineering"
+        await SALCommand(
+            self,
+            self.m1m3ts.remote.cmd_setEngineeringMode,
+            enableEngineeringMode=self.engineeringButton.text() == "Enter Engineering",
         )
-
-    @SALCommand
-    def _disable(self, **kwargs):
-        return self.m1m3ts.remote.cmd_disable
 
     @asyncSlot()
     async def disable(self):
-        await self._disable()
-
-    @SALCommand
-    def _standby(self, **kwargs):
-        return self.m1m3ts.remote.cmd_standby
+        await SALCommand(self, self.m1m3ts.remote.cmd_disable)
 
     @asyncSlot()
     async def standby(self):
-        await self._standby()
-
-    @SALCommand
-    def _exitControl(self, **kwargs):
-        return self.m1m3ts.remote.cmd_exitControl
+        await SALCommand(self, self.m1m3ts.remote.cmd_standby)
 
     @asyncSlot()
     async def exitControl(self):
-        await self._exitControl()
+        await SALCommand(self, self.m1m3ts.remote.cmd_exitControl)
 
     @Slot(map)
     def summaryState(self, data):

@@ -57,13 +57,9 @@ class TurnButton(EngineeringButton):
 
         self.clicked.connect(self.runCommand)
 
-    @SALCommand
-    def __turnPower(self, **kwargs):
-        return getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}")
-
     @asyncSlot()
     async def runCommand(self):
-        await self.__turnPower(**{self.__commandName: True})
+        await SALCommand(self, getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}"))
 
 
 class PowerPageWidget(QWidget):
