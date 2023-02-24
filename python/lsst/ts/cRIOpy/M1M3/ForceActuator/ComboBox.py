@@ -19,13 +19,13 @@
 
 from PySide2.QtWidgets import QComboBox
 
-from ..M1M3FATable import FATABLE, FATABLE_ID
+from ...M1M3FATable import FATABLE, FATABLE_ID
 
 
-__all__ = ["ActuatorComboBox"]
+__all__ = ["ComboBox"]
 
 
-class ActuatorComboBox(QComboBox):
+class ComboBox(QComboBox):
     """Allows user to select force actuator. Either its ID can be typed, or it
     can be selected from a listbox. See QComboBox for signals etc."""
 
