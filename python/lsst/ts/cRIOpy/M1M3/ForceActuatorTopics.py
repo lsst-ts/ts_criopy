@@ -134,6 +134,7 @@ class ForceActuatorTopics:
                     TopicField("X Forces", "xForces", FATABLE_XINDEX),
                 ],
                 "appliedOffsetForces",
+                command="OffsetForces",
             ),
             TopicData(
                 "Applied Static Forces",

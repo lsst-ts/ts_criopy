@@ -69,16 +69,8 @@ class AirPageWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandTurnAirOn(self):
-        await self._issueCommandTurnAirOn()
-
-    @SALCommand
-    def _issueCommandTurnAirOn(self, **kwargs):
-        return self.m1m3.remote.cmd_turnAirOn
+        await SALCommand(self, self.m1m3.remote.cmd_turnAirOn)
 
     @asyncSlot()
     async def issueCommandTurnAirOff(self):
-        await self._issueCommandTurnAirOff()
-
-    @SALCommand
-    def _issueCommandTurnAirOff(self, **kwargs):
-        return self.m1m3.remote.cmd_turnAirOff
+        await SALCommand(self, self.m1m3.remote.cmd_turnAirOff)

@@ -199,13 +199,9 @@ class Object(QObject):
     def setMessageSize(self, i):
         self.messages.setMaximumBlockCount(i)
 
-    @SALListCommand("setLogLevel")
-    def _changeIt(self, **kwargs):
-        return self.comms
-
     @asyncSlot()
     async def changeLevel(self, index):
-        await self._changeIt(level=index * 10)
+        await SALListCommand(self, self.comms, "setLogLevel", level=index * 10)
 
 
 class Widget(QWidget, Object):

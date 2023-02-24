@@ -250,10 +250,6 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         """Call M1M3 bump test command."""
         await self._testItem(self.actuatorsTable.selectedItems()[0])
 
-    @SALCommand
-    def _cmd_forceActuatorBumpTest(self, **kvargs):
-        return self.m1m3.remote.cmd_forceActuatorBumpTest
-
     async def _testItem(self, item):
         self.actuatorsTable.scrollToItem(item)
         self.testedId = item.data(Qt.UserRole)
@@ -290,16 +286,14 @@ class ForceActuatorBumpTestPageWidget(QWidget):
         if self.sIndex is not None:
             self.secondaryLabelPB.setText("Y" if self.xIndex is None else "X")
 
-        await self.m1m3.remote.cmd_forceActuatorBumpTest.set_start(
+        await SALCommand(
+            self,
+            self.m1m3.remote.cmd_forceActuatorBumpTest,
             actuatorId=self.testedId,
             testPrimary=not (item.text() == "X" or item.text() == "Y"),
             testSecondary=not (item.text() == "P") and self.sIndex is not None,
         )
         self.killBumpTestButton.setText(f"Stop bump test FA ID {self.testedId}")
-
-    @SALCommand
-    def _cmd_killForceActuatorBumpTest(self):
-        return self.m1m3.remote.cmd_killForceActuatorBumpTest
 
     @asyncSlot()
     async def issueCommandKillBumpTest(self):
@@ -308,7 +302,7 @@ class ForceActuatorBumpTestPageWidget(QWidget):
             QTableWidgetSelectionRange(0, 0, self.actuatorsTable.rowCount() - 1, 11),
             False,
         )
-        await self._cmd_killForceActuatorBumpTest()
+        await SALCommand(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
 
     @Slot(map)
     def detailedState(self, data):

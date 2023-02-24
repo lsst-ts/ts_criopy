@@ -183,47 +183,31 @@ class CoolantPumpWidget(DockWindow):
         else:
             self.setEnabled(False)
 
-    @SALCommand
-    def _cmd_power(self, **kvargs):
-        return self.m1m3ts.remote.cmd_coolantPumpPower
-
     @asyncSlot()
     async def _power(self):
         if self.powerButton.text() == "Power on":
-            await self._cmd_power(power=True)
+            await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=True)
             self.powerButton.setText("Power off")
         else:
-            await self._cmd_power(power=False)
+            await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=False)
             self.powerButton.setText("Power on")
-
-    @SALCommand
-    def _cmd_start(self, **kvargs):
-        return self.m1m3ts.remote.cmd_coolantPumpStart
 
     @asyncSlot()
     async def _start(self):
-        await self._cmd_start()
-
-    @SALCommand
-    def _cmd_stop(self, **kvargs):
-        return self.m1m3ts.remote.cmd_coolantPumpStop
+        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpStart)
 
     @asyncSlot()
     async def _stop(self):
-        await self._cmd_stop()
-
-    @SALCommand
-    def _cmd_reset(self, **kvargs):
-        return self.m1m3ts.remote.cmd_coolantPumpReset
+        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpStop)
 
     @asyncSlot()
     async def _reset(self):
-        await self._cmd_reset()
-
-    @SALCommand
-    def _cmd_coolantPumpFrequency(self, **kvargs):
-        return self.m1m3ts.remote.cmd_coolantPumpFrequency
+        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpReset)
 
     @asyncSlot()
     async def _setCoolantPumpFrequency(self):
-        await self._cmd_coolantPumpFrequency(targetFrequency=self.frequency.value())
+        await SALCommand(
+            self,
+            self.m1m3ts.remote.cmd_coolantPumpFrequency,
+            targetFrequency=self.frequency.value(),
+        )

@@ -158,31 +158,23 @@ class EnabledForceActuators(StateEnabledWidget):
 
     @asyncSlot()
     async def _enableAllForceActuators(self):
-        await self._issueCommandEnableAllForceActuators()
-
-    @SALCommand
-    def _issueCommandEnableAllForceActuators(self, **kwargs):
-        return self.m1m3.remote.cmd_enableAllForceActuators
+        await SALCommand(self, self.m1m3.remote.cmd_enableAllForceActuators)
 
     @asyncSlot()
     async def _enableFA(self):
         id = self.getSelectedID()
         if id is not None:
-            await self._issueCommandEnable(actuatorId=id)
-
-    @SALCommand
-    def _issueCommandEnable(self, **kwargs):
-        return self.m1m3.remote.cmd_enableForceActuator
+            await SALCommand(
+                self, self.m1m3.remote.cmd_enableForceActuator, actuatorId=id
+            )
 
     @asyncSlot()
     async def _disableFA(self):
         id = self.getSelectedID()
         if id is not None:
-            await self._issueCommandDisable(actuatorId=id)
-
-    @SALCommand
-    def _issueCommandDisable(self, **kwargs):
-        return self.m1m3.remote.cmd_disableForceActuator
+            await SALCommand(
+                self, self.m1m3.remote.cmd_disableForceActuator, actuatorId=id
+            )
 
     @Slot(map)
     def enabledForceActuators(self, data):

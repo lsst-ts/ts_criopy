@@ -197,9 +197,8 @@ class CommandWidget(QWidget):
         self.setHeatersButton.cancel()
         self.cancelButton.setDisabled(True)
 
-    @SALCommand
-    def _heaterFanDemand(self, **kwargs):
-        return self.m1m3ts.remote.cmd_heaterFanDemand
+    async def _heaterFanDemand(self, **kwargs):
+        await SALCommand(self, self.m1m3ts.remote.cmd_heaterFanDemand, **kwargs)
 
     def startEdit(self, kind):
         if kind == BUTTON_HEATERS:

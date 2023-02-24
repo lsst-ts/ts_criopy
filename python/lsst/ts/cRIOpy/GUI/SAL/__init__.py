@@ -1,6 +1,6 @@
 from .Application import Application
 from .ApplicationStatusWidget import ApplicationStatusWidget
-from .SALComm import *
+from .SALComm import create, SALCommand, SALListCommand
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import (

@@ -35,17 +35,21 @@ class TopicData:
     topic : `str`
         Name of the topics. Equals to SAL/DDS topic name for telemetry, needs
         evt_ prefix for events.
-    isEvent : `bool`
+    isEvent : `bool`, optional
         True if topic is an event. Data are extracted from remote with evt_
-        prefix.
+        prefix. Defaults to True
+    command : `str`, optional
+        If not None (the default value), suffix of commands to clear and apply
+        (update) values.
     """
 
-    def __init__(self, name, fields, topic, isEvent=True):
+    def __init__(self, name, fields, topic, isEvent=True, command=None):
         self.name = name
         self.fields = fields
         self.selectedField = 0
         self.topic = topic
         self.isEvent = isEvent
+        self.command = command
 
     def getTopic(self):
         if self.isEvent:
