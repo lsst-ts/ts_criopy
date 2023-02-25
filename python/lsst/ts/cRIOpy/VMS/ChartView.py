@@ -28,7 +28,6 @@ from PySide2.QtCharts import QtCharts
 
 
 class ChartView(TimeChartView):
-
     axisChanged = Signal(bool, bool)
     unitChanged = Signal(str)
 

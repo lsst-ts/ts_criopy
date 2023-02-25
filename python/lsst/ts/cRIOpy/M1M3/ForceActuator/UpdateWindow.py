@@ -54,26 +54,45 @@ FORCES_KEYS = ["xForces", "yForces", "zForces"]
 
 
 class EditWidget(QWidget):
+    """Widget embedded into UpdateWindow. Provides spin box to change offset
+    values.
+
+    Parameters
+    ----------
+    enabledAxis : `str`
+        Axis enabled for editting.
+    controlBoxes : `[QWidget]'
+        Widgets (usually QPushButton) added after spin boxes.
+
+    Signals
+    -------
+    axisChanged : `str`
+        Called when new axis is selected.
+    valueChanged : ``
+        Called after spin box value is changed.
+    """
 
     axisChanged = Signal(str)
     valueChanged = Signal()
 
-    def __init__(self, enabledAxis, controlBoxes):
+    def __init__(self, enabledAxis: str, controlBoxes: [QWidget]):
         super().__init__()
 
-        self.editBox = {}
-        self.enabledAxis = enabledAxis
+        self.__editBox = {}
+        self.__enabledAxis = enabledAxis
 
-        self.axisGroup = QButtonGroup()
+        self.__axisGroup = QButtonGroup()
         gridLayout = QGridLayout()
 
-        self.selected = QLabel()
-        gridLayout.addWidget(self.selected, 0, 0, 1, 2)
+        layout = QVBoxLayout()
 
-        for (row, axis) in enumerate(ALL_AXIS):
+        self.__selected = QLabel()
+        layout.addWidget(self.__selected)
+
+        for row, axis in enumerate(ALL_AXIS):
             button = QRadioButton(axis.upper())
             if axis in enabledAxis:
-                self.axisGroup.addButton(button)
+                self.__axisGroup.addButton(button)
                 button.setEnabled(True)
                 button.setChecked(True)
                 spin = QDoubleSpinBox()
@@ -82,12 +101,11 @@ class EditWidget(QWidget):
                 spin.setEnabled(False)
                 spin.valueChanged.connect(lambda v: self.valueChanged.emit())
                 gridLayout.addWidget(spin, row + 1, 1)
-                self.editBox[axis] = spin
+                self.__editBox[axis] = spin
             else:
                 button.setEnabled(False)
             gridLayout.addWidget(button, row + 1, 0)
 
-        layout = QVBoxLayout()
         layout.addLayout(gridLayout)
 
         for cb in controlBoxes:
@@ -96,16 +114,17 @@ class EditWidget(QWidget):
         layout.addStretch(1)
         self.setLayout(layout)
 
-        self.axisGroup.buttonClicked.connect(
+        self.__axisGroup.buttonClicked.connect(
             lambda b: self.axisChanged.emit(b.text().lower())
         )
 
     def setSelected(self, selectedId, forces):
-        self.selected.setText(f"Selected {selectedId}")
+        """Set new values to spin boxes."""
+        self.__selected.setText(f"Selected {selectedId}")
 
-        for (key, value) in forces.items():
+        for key, value in forces.items():
             try:
-                spin = self.editBox[key[0]]
+                spin = self.__editBox[key[0]]
                 if value is None:
                     spin.setEnabled(False)
                     spin.setValue(0)
@@ -116,16 +135,17 @@ class EditWidget(QWidget):
                 pass
         # set focus so new value can be entered; TabFocusReason as it allows to
         # type new value directly
-        self.editBox[self.getSelectedAxis()].setFocus(Qt.TabFocusReason)
+        self.__editBox[self.getSelectedAxis()].setFocus(Qt.TabFocusReason)
 
-    def getXYZ(self):
+    def getXYZ(self) -> map:
+        """Returns map with forces values."""
         ret = {}
-        for (index, axis) in enumerate(self.enabledAxis):
-            ret[axis + "Forces"] = self.editBox[axis].value()
+        for index, axis in enumerate(self.__enabledAxis):
+            ret[axis + "Forces"] = self.__editBox[axis].value()
         return ret
 
     def selectedAxisButton(self):
-        return self.axisGroup.button(self.axisGroup.checkedId())
+        return self.__axisGroup.button(self.__axisGroup.checkedId())
 
     def getSelectedAxis(self):
         return self.selectedAxisButton().text().lower()
@@ -136,7 +156,26 @@ class EditWidget(QWidget):
 
 
 class UpdateWindow(QSplitter):
-    def __init__(self, m1m3, command, enabledAxis):
+    """Window allowing updates to various offsets. Provides button to
+    manipulate value.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        SAL/DDS remote for M1M3.
+    command : `str`
+        Command suffix - string after cmd_apply.
+    enabledAxis : `str`
+        Axis (xyz strin) which command accepts.
+
+    Attributes
+    ----------
+    offsets : `map`
+        All possible offsets with values. Equals to arguments passed to
+        cmd_applyXXX SAL/DDC command.
+    """
+
+    def __init__(self, m1m3, command: str, enabledAxis: str):
         self.mirrorWidget = MirrorWidget()
         super().__init__()
 
@@ -192,9 +231,16 @@ class UpdateWindow(QSplitter):
         super().closeEvent(event)
 
     def selectionChanged(self, sel):
+        """Called when selected Force Actuator is changed.
+
+        Parameters
+        ----------
+        sel : `ForceActuator`
+            Newly selected ForceActuator object.
+        """
         forces = {"xForces": None, "yForces": None, "zForces": None}
 
-        for (key, value) in self.offsets.items():
+        for key, value in self.offsets.items():
             index = ALL_AXIS.index(key[0])
             row = FATABLE[sel.index]
             actIndex = row[FATABLE_XINDEX + index]
@@ -206,10 +252,11 @@ class UpdateWindow(QSplitter):
         self.editWidget.setSelected(sel.id, forces)
 
     def redraw(self):
+        """Refresh value and gauge scale to match self.offsets"""
         self.setAxis(self.editWidget.getSelectedAxis())
 
     @asyncSlot()
-    async def applyChanges(self):
+    async def applyChanges(self) -> None:
         if self.__lastSelected is not None:
             self.selectionChanged(self.__lastSelected)
         await SALCommand(
@@ -217,7 +264,14 @@ class UpdateWindow(QSplitter):
         )
 
     @Slot(str)
-    def setAxis(self, axis):
+    def setAxis(self, axis: str) -> None:
+        """Sets axis to properly draw disabled/enabled force actuators.
+
+        Parameters
+        ----------
+        axis : `str`
+            Newly selected axis.
+        """
         self.mirrorWidget.mirrorView.clear()
         minV = None
         maxV = None
@@ -265,7 +319,7 @@ class UpdateWindow(QSplitter):
         lastRow = FATABLE[self.__lastSelected.index]
         values = self.editWidget.getXYZ()
 
-        for (key, value) in self.offsets.items():
+        for key, value in self.offsets.items():
             index = ALL_AXIS.index(key[0])
             lastIndex = lastRow[FATABLE_XINDEX + index]
             if lastIndex is not None:
@@ -274,6 +328,6 @@ class UpdateWindow(QSplitter):
 
     @Slot()
     def clearOffsets(self):
-        for (key, offset) in self.offsets.items():
+        for key, offset in self.offsets.items():
             self.offsets[key] = [0] * len(offset)
         self.redraw()

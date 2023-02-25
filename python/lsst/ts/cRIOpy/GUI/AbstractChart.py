@@ -54,7 +54,7 @@ class AbstractChart(QtCharts.QChart):
                 return a
         return None
 
-    def findSerie(self, name) -> (QtCharts.QAbstractSeries | None):
+    def findSerie(self, name) -> QtCharts.QAbstractSeries | None:
         """
         Returns series with given name.
 

@@ -62,7 +62,7 @@ class DataFormWidget(QWidget):
         self._timeChart = timeChart
 
         layout = QFormLayout()
-        for (text, label) in fields:
+        for text, label in fields:
             if text is None:
                 layout.addRow(label)
             else:

@@ -213,7 +213,7 @@ class UserSelectedTimeChart(TimeChart):
         except ValueError:
             index = None
 
-        for (t, s) in self._topics.items():
+        for t, s in self._topics.items():
             for n in vars(t.DataType()):
                 if n != name:
                     continue
