@@ -66,19 +66,19 @@ class ValueGrid(QGroupBox):
         lw = len(items) + len(extraLabels)
         rows = lw / cols
         i = 0
-        for l, w in extraLabels:
+        for label, w in extraLabels:
             c = int(i / rows)
             i += 1
-            columns[c].addRow(l, w)
+            columns[c].addRow(label, w)
 
-        for n, l in items.items():
+        for n, label in items.items():
             c = int(i / rows)
             i += 1
 
             dataLabel = valueLabel()
             dataLabel.setObjectName(n)
 
-            columns[c].addRow(l, dataLabel)
+            columns[c].addRow(label, dataLabel)
 
         self.setLayout(layout)
 
