@@ -18,36 +18,35 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Qt, Signal, Slot, QSettings
+from asyncqt import asyncSlot
+from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtWidgets import (
-    QSplitter,
-    QWidget,
     QButtonGroup,
-    QRadioButton,
-    QGridLayout,
-    QVBoxLayout,
     QDoubleSpinBox,
+    QGridLayout,
     QLabel,
     QPushButton,
+    QRadioButton,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
 
-from asyncqt import asyncSlot
-
+from ...GUI.ActuatorsDisplay import ForceActuator, MirrorWidget
+from ...GUI.SAL import EngineeringButton, SALCommand
 from ...M1M3FATable import (
     FATABLE,
     FATABLE_ID,
     FATABLE_INDEX,
-    FATABLE_XINDEX,
-    FATABLE_YINDEX,
-    FATABLE_XPOSITION,
-    FATABLE_YPOSITION,
     FATABLE_ORIENTATION,
     FATABLE_XFA,
+    FATABLE_XINDEX,
+    FATABLE_XPOSITION,
     FATABLE_YFA,
+    FATABLE_YINDEX,
+    FATABLE_YPOSITION,
     FATABLE_ZFA,
 )
-from ...GUI.ActuatorsDisplay import MirrorWidget, ForceActuator
-from ...GUI.SAL import SALCommand, EngineeringButton
 
 ALL_AXIS = "xyz"
 FORCES_KEYS = ["xForces", "yForces", "zForces"]

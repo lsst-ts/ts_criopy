@@ -17,21 +17,20 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import astropy.units as u
+from PySide2.QtCore import Signal
 from PySide2.QtWidgets import (
-    QWidget,
-    QGridLayout,
-    QPushButton,
-    QStyle,
     QApplication,
+    QDoubleSpinBox,
+    QFormLayout,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
-    QFormLayout,
-    QDoubleSpinBox,
+    QPushButton,
     QSizePolicy,
+    QStyle,
+    QWidget,
 )
-from PySide2.QtCore import Signal
-
-import astropy.units as u
 
 __all__ = ["DirectionPadWidget"]
 

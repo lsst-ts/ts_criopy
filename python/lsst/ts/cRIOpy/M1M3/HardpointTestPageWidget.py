@@ -19,14 +19,13 @@
 
 from functools import partial
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QWidget, QVBoxLayout
-
 from lsst.ts.idl.enums.MTM1M3 import HardpointTest
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import ArrayItem, ArraySignal, ArrayButton, ArrayGrid, Force, Mm, EnumLabel
-from ..GUI.TimeChart import UserSelectedTimeChart, TimeChartView
+from ..GUI import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
 from ..GUI.SAL import SALComm
+from ..GUI.TimeChart import TimeChartView, UserSelectedTimeChart
 
 
 class HardpointTestPageWidget(QWidget):

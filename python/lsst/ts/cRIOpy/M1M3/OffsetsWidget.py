@@ -18,21 +18,19 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import astropy.units as u
-
-from PySide2.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QGridLayout,
-    QDoubleSpinBox,
-    QPushButton,
-)
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import (
+    QDoubleSpinBox,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
-from ..GUI import Force, Moment, Mm, MmWarning, Arcsec, ArcsecWarning
+from ..GUI import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
 from ..GUI.SAL import SALCommand
 from .DirectionPadWidget import DirectionPadWidget
 

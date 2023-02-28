@@ -17,22 +17,22 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from asyncqt import asyncSlot
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QWidget,
-    QTableWidget,
+    QAbstractItemView,
+    QGridLayout,
+    QHBoxLayout,
     QPushButton,
+    QSpinBox,
+    QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QSpinBox,
-    QAbstractItemView,
+    QWidget,
 )
-from PySide2.QtCore import Slot
+
 from ..GUI.SAL import SALCommand, TopicWindow
 from .ThermalData import Thermals
-
-from asyncqt import asyncSlot
 
 BUTTON_FANS = 1
 BUTTON_HEATERS = 2

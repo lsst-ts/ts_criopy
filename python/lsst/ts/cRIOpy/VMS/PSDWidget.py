@@ -22,8 +22,8 @@ __all__ = ["PSDWidget"]
 import time
 
 import numpy as np
-from PySide2.QtCore import Qt, Slot, QPointF
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QPointF, Qt, Slot
 
 from .CacheWidget import CacheWidget
 

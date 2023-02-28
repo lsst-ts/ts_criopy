@@ -18,12 +18,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.ts.idl.enums.MTM1M3 import BumpTest
 from PySide2.QtCore import Qt
 
-from lsst.ts.idl.enums.MTM1M3 import BumpTest
-
-from .EnumScale import EnumScale
 from ...GUI import Colors
+from .EnumScale import EnumScale
 
 
 class BumpTestScale(EnumScale):

@@ -20,25 +20,24 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import numpy
-
+from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
     QGridLayout,
+    QLabel,
     QListWidget,
-    QSplitter,
     QPushButton,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
-from asyncqt import asyncSlot
 
 from ...GUI import WarningLabel
-from ...GUI.SAL import TimeDeltaLabel, SALCommand
+from ...GUI.SAL import SALCommand, TimeDeltaLabel
 from ...M1M3FATable import (
     FATABLE,
-    FATABLE_NEAR_NEIGHBOR_INDEX,
     FATABLE_FAR_NEIGHBOR_INDEX,
+    FATABLE_NEAR_NEIGHBOR_INDEX,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
     FATABLE_ZINDEX,

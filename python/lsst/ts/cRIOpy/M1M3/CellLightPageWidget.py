@@ -1,9 +1,9 @@
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QFormLayout
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from ..GUI.CustomLabels import OnOffLabel, WarningLabel
-from ..GUI.SAL import SALCommand, EngineeringButton
+from ..GUI.SAL import EngineeringButton, SALCommand
 
 
 class CellLightPageWidget(QWidget):

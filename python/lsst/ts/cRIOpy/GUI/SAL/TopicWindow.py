@@ -21,14 +21,15 @@
 
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QLabel,
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
     QFormLayout,
+    QHBoxLayout,
+    QLabel,
     QListWidget,
     QSplitter,
+    QVBoxLayout,
+    QWidget,
 )
+
 from ..CustomLabels import DockWindow, WarningLabel
 from .TimeDeltaLabel import TimeDeltaLabel
 

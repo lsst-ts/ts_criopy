@@ -3,23 +3,22 @@
 from functools import partial
 
 import astropy.units as u
-from PySide2.QtCore import Slot, Signal, QSettings, Qt
+from asyncqt import asyncClose
+from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtWidgets import QMainWindow
 
-from asyncqt import asyncClose
-
-from .GUI.SAL import SALLog, Application
+from .GUI.SAL import Application, SALLog
 from .VMS import (
     BoxChartWidget,
     Cache,
     CSCPSDWidget,
     DisplacementWidget,
     MiscellaneousWidget,
-    ToolBar,
-    StatusBar,
     PSDWidget,
-    VelocityWidget,
     RawAccelerationWidget,
+    StatusBar,
+    ToolBar,
+    VelocityWidget,
 )
 
 

@@ -3,5 +3,5 @@ try:
 except ImportError:
     __version__ = "?"
 
-from .TimeCache import TimeCache
 from .DurationParser import parseDuration
+from .TimeCache import TimeCache

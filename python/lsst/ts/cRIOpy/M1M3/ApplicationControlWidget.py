@@ -17,23 +17,21 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from asyncqt import asyncSlot
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.salobj import base
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
-from asyncqt import asyncSlot
-
-from lsst.ts.salobj import base
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 from PySide2.QtWidgets import (
-    QWidget,
-    QPushButton,
-    QVBoxLayout,
-    QHBoxLayout,
-    QProgressBar,
-    QLCDNumber,
-    QFormLayout,
-    QSizePolicy,
     QButtonGroup,
+    QFormLayout,
+    QHBoxLayout,
+    QLCDNumber,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
 )
 
 from ..GUI import Colors

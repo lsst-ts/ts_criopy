@@ -1,5 +1,5 @@
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from ..GUI import TimeChart, TimeChartView, WarningGrid
 

@@ -21,7 +21,6 @@ from PySide2.QtWidgets import QComboBox
 
 from ...M1M3FATable import FATABLE, FATABLE_ID
 
-
 __all__ = ["ComboBox"]
 
 

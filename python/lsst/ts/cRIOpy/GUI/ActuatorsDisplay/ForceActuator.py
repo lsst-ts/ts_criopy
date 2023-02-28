@@ -20,8 +20,8 @@
 
 import enum
 
-from PySide2.QtCore import QRect, Qt, QPointF
-from PySide2.QtGui import QPen, QPainter, QBrush, QTransform, QGuiApplication
+from PySide2.QtCore import QPointF, QRect, Qt
+from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
 from PySide2.QtWidgets import QGraphicsItem
 
 from ...GUI import Colors

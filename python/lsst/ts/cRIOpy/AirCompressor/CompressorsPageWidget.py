@@ -17,42 +17,42 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from asyncqt import asyncSlot
+from lsst.ts import salobj
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
+    QButtonGroup,
     QHBoxLayout,
     QPushButton,
-    QButtonGroup,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide2.QtCore import Slot
-from asyncqt import asyncSlot
-
-from lsst.ts import salobj
 
 from ..GUI import (
-    DataLabel,
+    RPM,
+    Ampere,
+    ConnectedLabel,
+    DataDegC,
     DataFormButton,
     DataFormWidget,
+    DataLabel,
     DataUnitLabel,
-    Ampere,
-    DataDegC,
-    Percent,
-    PressureInmBar,
-    KiloWatt,
-    Hours,
-    Volt,
-    RPM,
-    OnOffLabel,
-    PowerOnOffLabel,
-    ConnectedLabel,
     ErrorLabel,
-    WarningLabel,
     Heartbeat,
+    Hours,
+    KiloWatt,
+    OnOffLabel,
+    Percent,
+    PowerOnOffLabel,
+    PressureInmBar,
+    TimeChartView,
+    UserSelectedTimeChart,
+    Volt,
+    WarningLabel,
 )
-from ..GUI import UserSelectedTimeChart, TimeChartView
-from ..GUI.SAL import SummaryStateLabel, SALCommand, VersionWidget
-from ..GUI.SAL.SALLog import Widget as SALLogWidget
+from ..GUI.SAL import SALCommand, SummaryStateLabel, VersionWidget
 from ..GUI.SAL.SALComm import warning
+from ..GUI.SAL.SALLog import Widget as SALLogWidget
 
 
 class CompressorsPageWidget(QWidget):

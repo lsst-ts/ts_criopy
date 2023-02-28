@@ -19,38 +19,37 @@
 
 import asyncio
 
-from PySide2.QtCore import Slot, Qt
+from asyncqt import asyncSlot
+from lsst.ts.idl.enums import MTM1M3
+from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import (
-    QWidget,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
     QLabel,
+    QProgressBar,
     QPushButton,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QTableWidgetSelectionRange,
-    QHeaderView,
-    QSizePolicy,
     QVBoxLayout,
-    QHBoxLayout,
-    QGridLayout,
-    QGroupBox,
-    QProgressBar,
+    QWidget,
 )
-from asyncqt import asyncSlot
 
-from lsst.ts.idl.enums import MTM1M3
-
+from ...GUI import Colors
+from ...GUI.SAL import SALCommand, SALLog
+from ...GUI.TimeChart import TimeChart, TimeChartView
 from ...M1M3FATable import (
     FATABLE,
     FATABLE_ID,
+    FATABLE_SINDEX,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
-    FATABLE_SINDEX,
     FATABLE_ZFA,
     actuatorIDToIndex,
 )
-from ...GUI.TimeChart import TimeChart, TimeChartView
-from ...GUI.SAL import SALLog, SALCommand
-from ...GUI import Colors
 
 
 class BumpTestPageWidget(QWidget):

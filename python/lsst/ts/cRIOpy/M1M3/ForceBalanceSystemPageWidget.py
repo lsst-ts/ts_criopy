@@ -1,15 +1,9 @@
-from PySide2.QtWidgets import (
-    QLabel,
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
-    QGridLayout,
-)
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
-
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
-from ..GUI import Force, Clipped, Moment, TimeChart, TimeChartView
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+
+from ..GUI import Clipped, Force, Moment, TimeChart, TimeChartView
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 
 

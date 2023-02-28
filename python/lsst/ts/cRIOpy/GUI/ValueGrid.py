@@ -17,16 +17,16 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QWidget
+
 from .CustomLabels import (
-    StatusLabel,
-    WarningLabel,
+    InterlockOffLabel,
     OnOffLabel,
     PowerOnOffLabel,
-    InterlockOffLabel,
+    StatusLabel,
+    WarningLabel,
 )
-
-from PySide2.QtWidgets import QGroupBox, QHBoxLayout, QFormLayout, QWidget
-from PySide2.QtCore import Slot
 
 
 class ValueGrid(QGroupBox):

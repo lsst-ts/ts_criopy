@@ -19,9 +19,9 @@
 
 __all__ = ["VelocityWidget"]
 
-from .CacheTimeWidget import CacheTimeWidget
-
 import numpy as np
+
+from .CacheTimeWidget import CacheTimeWidget
 
 
 class VelocityWidget(CacheTimeWidget):

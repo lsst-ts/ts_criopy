@@ -1,6 +1,6 @@
 from .Application import Application
 from .ApplicationStatusWidget import ApplicationStatusWidget
-from .SALComm import create, SALCommand, SALListCommand
+from .SALComm import SALCommand, SALListCommand, create
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import (
@@ -10,6 +10,6 @@ from .StateEnabled import (
 )
 from .SummaryStateLabel import SummaryStateLabel
 from .TimeDeltaLabel import TimeDeltaLabel
-from .TopicWindow import TopicWindow
 from .TopicData import TopicData
+from .TopicWindow import TopicWindow
 from .VersionWidget import VersionWidget
