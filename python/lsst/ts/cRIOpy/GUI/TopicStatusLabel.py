@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QWidget, QVBoxLayout
+from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from . import ColoredButton
 

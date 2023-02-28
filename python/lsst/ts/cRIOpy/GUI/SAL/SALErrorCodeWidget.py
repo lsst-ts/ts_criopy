@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot
-from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QPlainTextEdit, QWidget, QVBoxLayout
-
 from datetime import datetime
 from html import escape
+
+from PySide2.QtCore import Slot
+from PySide2.QtGui import QFont
+from PySide2.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
 __all__ = ["SALErrorCodeWidget"]
 

@@ -19,18 +19,17 @@
 
 __all__ = ["CacheWidget"]
 
-from lsst.ts.utils import make_done_future
-
-from ..GUI.TimeChart import AbstractChart
-from .ChartView import ChartView
-from .Unit import units, coefficients
-from ..GUI.CustomLabels import DockWindow
-
 import concurrent.futures
 import time
 
-from PySide2.QtCore import Slot
+from lsst.ts.utils import make_done_future
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Slot
+
+from ..GUI.CustomLabels import DockWindow
+from ..GUI.TimeChart import AbstractChart
+from .ChartView import ChartView
+from .Unit import coefficients, units
 
 
 class CacheWidget(DockWindow):

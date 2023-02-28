@@ -1,5 +1,5 @@
-from PySide2.QtWidgets import QWidget, QVBoxLayout
 from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import InterlockOffGrid, PowerOnOffGrid, TimeChart, TimeChartView
 

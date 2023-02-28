@@ -1,7 +1,6 @@
-from PySide2.QtWidgets import QWidget, QGridLayout, QLabel
+from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
 from ...M1M3FATable import FATABLE, FATABLE_ZFA
-
 from .Widget import Widget
 
 

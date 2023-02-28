@@ -22,11 +22,10 @@
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
 import asyncio
 
-from PySide2.QtCore import QObject, Signal
-from PySide2.QtWidgets import QWidget, QMessageBox
 from lsst.ts.salobj import Domain, Remote, base
-from lsst.ts.salobj.topics import RemoteTelemetry, RemoteEvent
-
+from lsst.ts.salobj.topics import RemoteEvent, RemoteTelemetry
+from PySide2.QtCore import QObject, Signal
+from PySide2.QtWidgets import QMessageBox, QWidget
 
 __all__ = ["create", "SALCommand", "SALListCommand"]
 

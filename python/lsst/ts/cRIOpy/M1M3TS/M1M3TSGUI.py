@@ -19,12 +19,10 @@
 
 __all__ = ["summaryStateString", "ThermalStatesDock"]
 
-from lsst.ts.salobj import State
-
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QLabel, QPushButton, QWidget, QVBoxLayout, QFormLayout
-
 from asyncqt import asyncSlot
+from lsst.ts.salobj import State
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFormLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..GUI import DockWindow
 from ..GUI.SAL import SALCommand

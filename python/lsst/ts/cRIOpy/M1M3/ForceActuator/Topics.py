@@ -18,19 +18,19 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE_SINDEX,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
     FATABLE_ZINDEX,
-    FATABLE_SINDEX,
 )
+
 from ...GUI.ActuatorsDisplay import Scales
 from ...GUI.SAL.TopicData import (
+    EnabledDisabledField,
     TopicData,
     TopicField,
     WarningField,
-    EnabledDisabledField,
 )
-
 
 __all__ = ["Topics"]
 

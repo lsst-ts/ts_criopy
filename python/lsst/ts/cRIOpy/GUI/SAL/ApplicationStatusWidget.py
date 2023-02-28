@@ -1,6 +1,6 @@
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
-from PySide2.QtCore import Slot, Qt
 from lsst.ts.idl.enums import MTM1M3
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from .SALComm import warning
 from .SummaryStateLabel import SummaryStateLabel

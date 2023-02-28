@@ -20,29 +20,23 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from PySide2.QtCore import QSettings, Slot
-from PySide2.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QMainWindow,
-    QHBoxLayout,
-    QListWidget,
-    QTabWidget,
-    QGroupBox,
-)
-
-from asyncqt import asyncClose
 import asyncio
 
+from asyncqt import asyncClose
 from lsst.ts.idl.enums import MTM1M3
-
-from .GUI.SAL import (
-    Application,
-    SALLog,
-    SALErrorCodeWidget,
-    SALStatusBar,
+from PySide2.QtCore import QSettings, Slot
+from PySide2.QtWidgets import (
+    QGroupBox,
+    QHBoxLayout,
+    QListWidget,
+    QMainWindow,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
+from .AirCompressor import CompressorsPageWidget
+from .GUI.SAL import Application, SALErrorCodeWidget, SALLog, SALStatusBar
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
@@ -62,7 +56,6 @@ from .M1M3 import (
     PIDPageWidget,
     PowerPageWidget,
 )
-from .AirCompressor import CompressorsPageWidget
 
 
 class EUI(QMainWindow):

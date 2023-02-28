@@ -17,17 +17,17 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from ..SplashScreen import SplashScreen
-from .SALComm import create
-
-from PySide2.QtCore import QCommandLineParser, QCommandLineOption
-from PySide2.QtWidgets import QApplication
-from asyncqt import QEventLoop
 import asyncio
 import signal
 import sys
 
+from asyncqt import QEventLoop
+from PySide2.QtCore import QCommandLineOption, QCommandLineParser
+from PySide2.QtWidgets import QApplication
+
 from ... import __version__
+from ..SplashScreen import SplashScreen
+from .SALComm import create
 
 
 class Application:

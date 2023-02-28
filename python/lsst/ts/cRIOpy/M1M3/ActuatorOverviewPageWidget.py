@@ -1,10 +1,9 @@
 from functools import partial
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, UnitLabel
-
 from ..GUI.TimeChart import SALAxis, SALChartWidget
 
 

@@ -17,13 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import QSettings
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QSettings
 from PySide2.QtGui import QPainter
-from PySide2.QtWidgets import QMenu, QInputDialog
+from PySide2.QtWidgets import QInputDialog, QMenu
 
-from .Widget import Widget
 from ...GUI import Histogram
+from .Widget import Widget
 
 
 class HistogramView(QtCharts.QChartView):

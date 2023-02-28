@@ -21,8 +21,8 @@
 
 import asyncio
 
-from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
 
 from .. import TimeCache

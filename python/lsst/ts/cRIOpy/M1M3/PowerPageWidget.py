@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QSpacerItem
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 
-from ..GUI import PowerOnOffLabel, TimeChart, TimeChartView, StatusGrid, WarningLabel
+from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
 from ..GUI.SAL import EngineeringButton, SALCommand
 
 

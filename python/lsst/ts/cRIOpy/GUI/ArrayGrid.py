@@ -72,14 +72,12 @@ Usage
 
 __all__ = ["ArrayItem", "ArrayFields", "ArraySignal", "ArrayButton", "ArrayGrid"]
 
-from PySide2.QtCore import QObject, Slot, Signal, Qt
-from PySide2.QtWidgets import QWidget, QGridLayout, QLabel, QButtonGroup, QPushButton
-
 from asyncqt import asyncSlot
-
 from lsst.ts.salobj import base
+from PySide2.QtCore import QObject, Qt, Signal, Slot
+from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
-from . import UnitLabel, TimeChart
+from . import TimeChart, UnitLabel
 from .SAL.SALComm import warning
 
 

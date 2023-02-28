@@ -1,9 +1,8 @@
 import astropy.units as u
-
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from ..GUI import Mm, Arcsec, TimeChart, TimeChartView, WarningGrid
+from ..GUI import Arcsec, Mm, TimeChart, TimeChartView, WarningGrid
 
 
 class IMSPageWidget(QWidget):

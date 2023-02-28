@@ -18,31 +18,24 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
-    QLabel,
-    QPushButton,
-    QHBoxLayout,
-    QVBoxLayout,
-    QFormLayout,
-)
 from asyncqt import asyncSlot
-
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
     FATABLE_ID,
     FATABLE_INDEX,
-    FATABLE_ZINDEX,
+    FATABLE_ORIENTATION,
     FATABLE_XPOSITION,
     FATABLE_YPOSITION,
-    FATABLE_ORIENTATION,
+    FATABLE_ZINDEX,
     actuatorIDToIndex,
 )
-from .ComboBox import ComboBox
-from ...GUI.ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+
+from ...GUI.ActuatorsDisplay import ForceActuator, MirrorWidget, Scales
 from ...GUI.SAL import SALCommand, StateEnabledWidget
+from .ComboBox import ComboBox
 
 
 class Enabled(StateEnabledWidget):

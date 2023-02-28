@@ -17,19 +17,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout
-from PySide2.QtCore import Slot
 import astropy.units as u
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from ..GUI import (
-    Force,
-    Moment,
-    Arcsec,
-    DataLabel,
-    Mm,
-    Heartbeat,
-    WarningButton,
-)
+from ..GUI import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
 
 
 class OverviewPageWidget(QWidget):

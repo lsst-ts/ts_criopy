@@ -17,28 +17,27 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import astropy.units as u
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QPushButton,
-    QHBoxLayout,
     QDoubleSpinBox,
+    QHBoxLayout,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
-import astropy.units as u
 
 from ..GUI import (
     Ampere,
-    Hz,
-    Volt,
-    DockWindow,
-    DataFormWidget,
-    FieldButton,
-    TopicStatusLabel,
     Colors,
+    DataFormWidget,
+    DockWindow,
+    FieldButton,
+    Hz,
+    TopicStatusLabel,
+    Volt,
 )
-
 from ..GUI.SAL import SALCommand
 
 

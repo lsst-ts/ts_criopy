@@ -17,15 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from ...GUI.ActuatorsDisplay import ForceActuator, MirrorWidget
 from ...M1M3FATable import (
     FATABLE,
     FATABLE_ID,
     FATABLE_INDEX,
+    FATABLE_ORIENTATION,
     FATABLE_XPOSITION,
     FATABLE_YPOSITION,
-    FATABLE_ORIENTATION,
 )
-from ...GUI.ActuatorsDisplay import MirrorWidget, ForceActuator
 from .Widget import Widget
 
 

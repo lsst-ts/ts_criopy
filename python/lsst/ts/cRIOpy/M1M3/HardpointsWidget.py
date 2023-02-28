@@ -21,34 +21,30 @@ import copy
 from functools import partial
 
 import astropy.units as u
-from PySide2.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QGridLayout,
-    QSpinBox,
-    QDoubleSpinBox,
-    QPushButton,
-    QApplication,
-)
-from PySide2.QtCore import Signal, Slot, Qt
 from asyncqt import asyncSlot
-
-from lsst.ts.idl.enums.MTM1M3 import (
-    DetailedState,
-    HardpointActuatorMotionStates,
+from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
+from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtWidgets import (
+    QApplication,
+    QDoubleSpinBox,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
 from ..GUI import (
-    Force,
-    Moment,
-    Mm,
-    UnitLabel,
-    OnOffLabel,
+    ArrayGrid,
     ArrayItem,
     ArraySignal,
-    ArrayGrid,
     Colors,
+    Force,
+    Mm,
+    Moment,
+    OnOffLabel,
+    UnitLabel,
 )
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 

@@ -1,13 +1,13 @@
-from PySide2.QtWidgets import QWidget, QHBoxLayout
+from PySide2.QtWidgets import QHBoxLayout, QWidget
 
 from . import (
-    MirrorView,
     BumpTestScale,
-    GaugeScale,
-    OnOffScale,
     EnabledDisabledScale,
-    WarningScale,
+    GaugeScale,
+    MirrorView,
+    OnOffScale,
     Scales,
+    WarningScale,
 )
 
 

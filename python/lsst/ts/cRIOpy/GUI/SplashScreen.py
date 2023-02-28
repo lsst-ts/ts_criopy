@@ -19,14 +19,14 @@
 
 __all__ = ["SplashScreen"]
 
-from PySide2.QtWidgets import QSplashScreen, QApplication
+import asyncio
+import binascii
+import time
+import traceback
+
 from PySide2.QtCore import QTimer, Slot
 from PySide2.QtGui import QPixmap
-import asyncio
-
-import binascii
-import traceback
-import time
+from PySide2.QtWidgets import QApplication, QSplashScreen
 
 
 class SplashScreen(QSplashScreen):

@@ -18,15 +18,14 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-from datetime import datetime
-import h5py
 import logging
-import time
 import os
+import time
+from datetime import datetime
 
 import click
+import h5py
 import numpy as np
-
 from lsst.ts.salobj import Domain, Remote
 
 from . import Cache

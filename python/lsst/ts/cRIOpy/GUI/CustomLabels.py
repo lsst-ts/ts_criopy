@@ -18,24 +18,24 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import typing
-
-from PySide2.QtCore import Slot, QTimer, Qt
-from PySide2.QtWidgets import (
-    QFrame,
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QProgressBar,
-    QSizePolicy,
-    QDockWidget,
-    QPushButton,
-)
-from PySide2.QtGui import QPalette, QColor
-import astropy.units as u
 from datetime import datetime
 
-from .EventWindow import EventWindow
+import astropy.units as u
+from PySide2.QtCore import Qt, QTimer, Slot
+from PySide2.QtGui import QColor, QPalette
+from PySide2.QtWidgets import (
+    QDockWidget,
+    QFrame,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
 from . import Colors
+from .EventWindow import EventWindow
 
 __all__ = [
     "VLine",

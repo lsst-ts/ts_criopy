@@ -20,9 +20,8 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 import numpy as np
-
-from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt
 
 
 class Histogram(QtCharts.QChart):

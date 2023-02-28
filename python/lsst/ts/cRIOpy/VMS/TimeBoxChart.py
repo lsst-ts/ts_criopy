@@ -21,13 +21,14 @@
 
 __all__ = ["TimeBoxChart"]
 
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtCharts import QtCharts
 import time
+
 import numpy as np
+from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt, Slot
 
 from ..GUI import AbstractChart
-from .Unit import units, deltas, coefficients
+from .Unit import coefficients, deltas, units
 
 
 class TimeBoxChart(AbstractChart):

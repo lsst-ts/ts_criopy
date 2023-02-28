@@ -19,14 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Signal, QEvent
+from PySide2.QtCore import QEvent, Signal
 from PySide2.QtWidgets import QGraphicsView
-from . import Mirror, ForceActuator, FASelection
+
 from ...M1M3FATable import (
     FATABLE,
-    FATABLE_NEAR_NEIGHBOR_INDEX,
     FATABLE_FAR_NEIGHBOR_INDEX,
+    FATABLE_NEAR_NEIGHBOR_INDEX,
 )
+from . import FASelection, ForceActuator, Mirror
 
 
 class MirrorView(QGraphicsView):

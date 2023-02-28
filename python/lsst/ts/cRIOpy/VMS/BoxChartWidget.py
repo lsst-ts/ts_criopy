@@ -19,12 +19,12 @@
 
 __all__ = ["BoxChartWidget"]
 
+from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt, Slot
+
+from ..GUI.CustomLabels import DockWindow
 from .ChartView import ChartView
 from .TimeBoxChart import TimeBoxChart
-from ..GUI.CustomLabels import DockWindow
-
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtCharts import QtCharts
 
 
 class BoxChartWidget(DockWindow):

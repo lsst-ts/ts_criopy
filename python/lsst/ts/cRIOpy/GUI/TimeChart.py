@@ -20,12 +20,12 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 import concurrent.futures
-from functools import partial
 import time
+from functools import partial
 
-from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
-from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
+from PySide2.QtGui import QPainter
 from PySide2.QtWidgets import QMenu
 
 from . import AbstractChart

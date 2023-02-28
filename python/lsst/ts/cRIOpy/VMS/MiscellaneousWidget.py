@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QWidget, QFormLayout
+from PySide2.QtWidgets import QFormLayout, QWidget
 
 from ..GUI.CustomLabels import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
 
