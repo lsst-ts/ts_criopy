@@ -19,7 +19,7 @@ def type_h5file(filename: str) -> h5py.File:
 
 
 def type_axis(axis: str) -> str:
-    if re.match("[\d%] [XYZ%]", axis) is None:
+    if re.match("[\\d%] [XYZ%]", axis) is None:
         raise argparse.ArgumentTypeError(f"Invalid axis name {axis}!")
     return axis
 

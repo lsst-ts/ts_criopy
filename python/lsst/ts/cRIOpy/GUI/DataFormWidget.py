@@ -22,7 +22,8 @@
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QFormLayout, QWidget
 
-from . import ColoredButton, Colors, DataLabel, TimeChart
+from .CustomLabels import ColoredButton, Colors, DataLabel
+from .TimeChart import TimeChart
 
 __all__ = ["DataFormWidget", "DataFormButton"]
 

@@ -77,8 +77,9 @@ from lsst.ts.salobj import base
 from PySide2.QtCore import QObject, Qt, Signal, Slot
 from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
-from . import TimeChart, UnitLabel
+from .CustomLabels import UnitLabel
 from .SAL.SALComm import warning
+from .TimeChart import TimeChart
 
 
 # forward declaration for MyPy
