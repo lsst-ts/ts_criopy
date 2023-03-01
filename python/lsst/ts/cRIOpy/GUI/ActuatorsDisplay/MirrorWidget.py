@@ -1,14 +1,12 @@
 from PySide2.QtWidgets import QHBoxLayout, QWidget
 
-from . import (
-    BumpTestScale,
-    EnabledDisabledScale,
-    GaugeScale,
-    MirrorView,
-    OnOffScale,
-    Scales,
-    WarningScale,
-)
+from .BumpTestScale import BumpTestScale
+from .EnabledDisabledScale import EnabledDisabledScale
+from .GaugeScale import GaugeScale
+from .MirrorView import MirrorView
+from .OnOffScale import OnOffScale
+from .Scales import Scales
+from .WarningScale import WarningScale
 
 
 class MirrorWidget(QWidget):
@@ -68,13 +66,13 @@ class MirrorWidget(QWidget):
         scale : `Scales`
             One of the Scales enum number.
         """
-        if scale == Scales.Scales.BUMP_TEST:
+        if scale == Scales.BUMP_TEST:
             self._replace(self._bumpTest)
-        elif scale == Scales.Scales.ONOFF:
+        elif scale == Scales.ONOFF:
             self._replace(self._onoff)
-        elif scale == Scales.Scales.WARNING:
+        elif scale == Scales.WARNING:
             self._replace(self._warning)
-        elif scale == Scales.Scales.ENABLED_DISABLED:
+        elif scale == Scales.ENABLED_DISABLED:
             self._replace(self._enabled_disabled)
         else:
             self._replace(self._gauge)
