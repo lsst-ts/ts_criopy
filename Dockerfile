@@ -1,4 +1,4 @@
-FROM lsstts/develop-env:c0028.002
+FROM ts-dockerhub.lsst.org/develop-env:c0029.000
 
 ARG cRIO_PY=develop
 
@@ -10,9 +10,11 @@ RUN cd repos && git clone --branch $cRIO_PY https://github.com/lsst-ts/ts_cRIOpy
 RUN echo > .criopy_setup.sh -e \
 echo "Configuring environment for cRIOpy" \\n\
 source /home/saluser/.setup_salobj.sh \\n\
+export OSPL_URI="file:///home/saluser/repos/ts_ddsconfig/python/lsst/ts/ddsconfig/data/config/ospl-shmem.xml" \\n\
 export PYTHONPATH="/home/saluser/repos/ts_cRIOpy/python:\$PYTHONPATH" \\n\
-export LSST_DDS_PARTITION_PREFIX="summit" \\n \
-setup ts_salobj -t current
+export LSST_DDS_PARTITION_PREFIX="summit" \\n\
+setup ts_salobj -t current \\n\
+ospl start
 
 RUN source ~/.criopy_setup.sh && python3.10 -m pip install PyOpenSSL --upgrade
 
