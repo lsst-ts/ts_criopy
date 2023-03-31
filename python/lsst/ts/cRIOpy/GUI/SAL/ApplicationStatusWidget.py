@@ -35,7 +35,7 @@ class ApplicationStatusWidget(QWidget):
         self.m1m3.detailedState.connect(self.processEventDetailedState)
 
     @Slot(map)
-    def forceActuatorState(self, data):
+    def raisingLoweringInfo(self, data):
         detailedData = self.m1m3.remote.evt_detailedState.get()
         if detailedData is None:
             return
@@ -43,37 +43,37 @@ class ApplicationStatusWidget(QWidget):
             detailedData.detailedState == MTM1M3.DetailedState.RAISING
             or detailedData.detailedState == MTM1M3.DetailedState.RAISINGENGINEERING
         ):
-            if data.supportPercentage >= 100:
+            if data.weightSupportedPercent >= 100:
                 self.mirrorStateLabel.setText("Raising - positioning hardpoints")
             else:
                 self.mirrorStateLabel.setText(
-                    f"Raising ({data.supportPercentage:.02f}%)"
+                    f"Raising ({data.weightSupportedPercent:.02f}%)"
                 )
         elif (
             detailedData.detailedState == MTM1M3.DetailedState.LOWERING
             or detailedData.detailedState == MTM1M3.DetailedState.LOWERINGENGINEERING
         ):
-            if data.supportPercentage <= 0:
+            if data.weightSupportedPercent <= 0:
                 self.mirrorStateLabel.setText("Lowering - positioning hardpoints")
             else:
                 self.mirrorStateLabel.setText(
-                    f"Lowering ({data.supportPercentage:.02f}%)"
+                    f"Lowering ({data.weightSupportedPercent:.02f}%)"
                 )
         elif detailedData.detailedState == MTM1M3.DetailedState.LOWERINGFAULT:
             self.mirrorStateLabel.setText(
-                f"Lowering (fault, {data.supportPercentage:.02f}%)"
+                f"Lowering (fault, {data.weightSupportedPercent:.02f}%)"
             )
         else:
             self._disconnectRaiseLowering()
 
     def _connectRaiseLowering(self):
-        self.m1m3.forceActuatorState.connect(
-            self.forceActuatorState, Qt.UniqueConnection
+        self.m1m3.raisingLoweringInfo.connect(
+            self.raisingLoweringInfo, Qt.UniqueConnection
         )
 
     def _disconnectRaiseLowering(self):
         try:
-            self.m1m3.forceActuatorState.disconnect(self.forceActuatorState)
+            self.m1m3.raisingLoweringInfo.disconnect(self.raisingLoweringInfo)
         except RuntimeError:
             # raised when disconnecting not connected slot - ignore it, as the
             # code might try to disconnect not connected slot
@@ -101,7 +101,7 @@ class ApplicationStatusWidget(QWidget):
             self._disconnectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.RAISING:
             modeStateText = "Automatic"
-            percent = self.m1m3.remote.evt_forceActuatorState.get().supportPercentage
+            percent = self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
             mirrorStateText = f"Raising ({percent:.03f}%)"
             self._connectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.ACTIVE:
