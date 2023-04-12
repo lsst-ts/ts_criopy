@@ -29,6 +29,7 @@ from ...GUI.SAL.TopicData import (
     EnabledDisabledField,
     TopicData,
     TopicField,
+    WaitingField,
     WarningField,
 )
 
@@ -316,6 +317,21 @@ class Topics:
                 ],
                 "forceActuatorData",
                 False,
+            ),
+            TopicData(
+                "FA Raising State",
+                [
+                    WaitingField(
+                        "Waiting for Z FA", "waitZForceActuator", FATABLE_ZINDEX
+                    ),
+                    WaitingField(
+                        "Waiting for Y FA", "waitYForceActuator", FATABLE_YINDEX
+                    ),
+                    WaitingField(
+                        "Waiting for X FA", "waitXForceActuator", FATABLE_XINDEX
+                    ),
+                ],
+                "raisingLoweringInfo",
             ),
             TopicData(
                 "FA ILC Info",

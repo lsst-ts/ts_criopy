@@ -6,6 +6,7 @@ from .GaugeScale import GaugeScale
 from .MirrorView import MirrorView
 from .OnOffScale import OnOffScale
 from .Scales import Scales
+from .WaitingScale import WaitingScale
 from .WarningScale import WarningScale
 
 
@@ -29,6 +30,7 @@ class MirrorWidget(QWidget):
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
         self._onoff = OnOffScale()
+        self._waiting = WaitingScale()
         self._warning = WarningScale()
 
         layout = QHBoxLayout()
@@ -37,12 +39,14 @@ class MirrorWidget(QWidget):
         layout.addWidget(self._bumpTest)
         layout.addWidget(self._enabled_disabled)
         layout.addWidget(self._onoff)
+        layout.addWidget(self._waiting)
         layout.addWidget(self._warning)
 
         self._curentWidget = self._gauge
         self._bumpTest.hide()
         self._enabled_disabled.hide()
         self._onoff.hide()
+        self._waiting.hide()
         self._warning.hide()
 
         self.setLayout(layout)
@@ -74,6 +78,8 @@ class MirrorWidget(QWidget):
             self._replace(self._warning)
         elif scale == Scales.ENABLED_DISABLED:
             self._replace(self._enabled_disabled)
+        elif scale == Scales.WAITING:
+            self._replace(self._waiting)
         else:
             self._replace(self._gauge)
 

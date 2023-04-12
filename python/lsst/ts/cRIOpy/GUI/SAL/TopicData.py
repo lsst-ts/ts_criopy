@@ -93,6 +93,11 @@ class WarningField(TopicField):
         super().__init__(name, fieldName, valueIndex, Scales.WARNING)
 
 
+class WaitingField(TopicField):
+    def __init__(self, name, fieldName, valueIndex):
+        super().__init__(name, fieldName, valueIndex, Scales.WAITING)
+
+
 class EnabledDisabledField(TopicField):
     def __init__(self, name, fieldName, valueIndex):
         super().__init__(name, fieldName, valueIndex, Scales.ENABLED_DISABLED)

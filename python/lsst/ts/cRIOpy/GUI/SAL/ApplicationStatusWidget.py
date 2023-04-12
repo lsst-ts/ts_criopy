@@ -101,7 +101,9 @@ class ApplicationStatusWidget(QWidget):
             self._disconnectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.RAISING:
             modeStateText = "Automatic"
-            percent = self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
+            percent = (
+                self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
+            )
             mirrorStateText = f"Raising ({percent:.03f}%)"
             self._connectRaiseLowering()
         elif data.detailedState == MTM1M3.DetailedState.ACTIVE:
