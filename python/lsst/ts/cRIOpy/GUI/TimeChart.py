@@ -325,12 +325,19 @@ class SALChartWidget(TimeChartView):
                 partial(self._append, axis_index=axis_index, fields=v.fields)
             )
             axis_index += 1
+        self._has_timestamp = None
 
         super().__init__(self.chart)
 
     def _append(self, data, axis_index, fields):
+        if self._has_timestamp is None:
+            try:
+                getattr(data, "timestamp")
+                self._has_timestamp = True
+            except AttributeError:
+                self._has_timestamp = False
         self.chart.append(
-            data.timestamp,
+            data.timestamp if self._has_timestamp else data.private_sndStamp,
             [getattr(data, f) for f in fields.values()],
             axis_index=axis_index,
         )

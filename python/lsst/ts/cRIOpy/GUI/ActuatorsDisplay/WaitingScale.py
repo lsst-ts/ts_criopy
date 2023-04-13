@@ -18,16 +18,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-import enum
+from ...GUI import Colors
+from .EnumScale import EnumScale
 
 
-class Scales(enum.IntEnum):
-    """Scale kinds for discrete value display (EnumScale). Used to construct
-    proper scale."""
+class WaitingScale(EnumScale):
+    """Draws gauge with color scale for boolean (Running/Waiting) values."""
 
-    GAUGE = 1
-    ONOFF = 2
-    WARNING = 3
-    BUMP_TEST = 4
-    ENABLED_DISABLED = 5
-    WAITING = 6
+    def __init__(self):
+        super().__init__(
+            {False: ("Running", Colors.OK), True: ("Waiting", Colors.ERROR)}
+        )

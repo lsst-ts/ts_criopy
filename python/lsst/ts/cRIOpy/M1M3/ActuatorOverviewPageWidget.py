@@ -116,8 +116,8 @@ class ActuatorOverviewPageWidget(QWidget):
             maxItems=50 * 5,
         )
         chartPercentage = SALChartWidget(
-            SALAxis("Percentage", self.m1m3.forceActuatorState).addValue(
-                "Support Percentage", "supportPercentage"
+            SALAxis("Percentage", self.m1m3.raisingLoweringInfo).addValue(
+                "Weight Support Percentage", "weightSupportedPercent"
             ),
             maxItems=50 * 5,
         )
