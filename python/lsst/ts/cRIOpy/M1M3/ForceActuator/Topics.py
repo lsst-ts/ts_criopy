@@ -334,10 +334,23 @@ class Topics:
                 "raisingLoweringInfo",
             ),
             TopicData(
-                "FA ILC Info",
+                "FA Info",
                 [
+                    TopicField(
+                        "Actuator Type",
+                        "actuatorType",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Actuator Orientation",
+                        "actuatorOrientation",
+                        FATABLE_ZINDEX,
+                    ),
                     TopicField("Subnet", "modbusSubnet", FATABLE_ZINDEX),
                     TopicField("Address", "modbusAddress", FATABLE_ZINDEX),
+                    TopicField("X Position", "xPosition", FATABLE_ZINDEX),
+                    TopicField("Y Position", "yPosition", FATABLE_ZINDEX),
+                    TopicField("Z Position", "zPosition", FATABLE_ZINDEX),
                     TopicField(
                         "Major Revision",
                         "majorRevision",
@@ -349,12 +362,7 @@ class Topics:
                         FATABLE_ZINDEX,
                     ),
                     TopicField("ADC Scan Rate", "adcScanRate", FATABLE_ZINDEX),
-                ],
-                "forceActuatorInfo",
-            ),
-            TopicData(
-                "FA Id Info",
-                [
+                    TopicField("Reference ID", "referenceId", FATABLE_ZINDEX),
                     TopicField(
                         "X Data Reference Id",
                         "xDataReferenceId",
@@ -373,7 +381,32 @@ class Topics:
                     TopicField("ILC Unique Id", "ilcUniqueId", FATABLE_ZINDEX),
                     TopicField(
                         "ILC application type",
-                        "enceId",
+                        "ilcApplicationType",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField("Network Node Type", "networkNodeType", FATABLE_ZINDEX),
+                    TopicField(
+                        "ILC Selected Options", "ilcSelectedOptions", FATABLE_ZINDEX
+                    ),
+                    TopicField(
+                        "Network Node Options", "networkNodeOptions", FATABLE_ZINDEX
+                    ),
+                    TopicField(
+                        "Mezzanine Unique ID", "mezzanineUniqueId", FATABLE_ZINDEX
+                    ),
+                    TopicField(
+                        "Mezzanine Firmware Type",
+                        "mezzanineFirmwareType",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Mezzanine Major Revision",
+                        "mezzanineMajorRevision",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Mezzanine Minor Revision",
+                        "mezzanineMinorRevision",
                         FATABLE_ZINDEX,
                     ),
                 ],
@@ -451,6 +484,16 @@ class Topics:
                         "mainSecondaryLoadCellSensitivity",
                         FATABLE_SINDEX,
                     ),
+                    TopicField(
+                        "Primary Cylinder Gain",
+                        "mezzaninePrimaryCylinderGain",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Secondary Cylinder Gain",
+                        "mezzanineSecondaryCylinderGain",
+                        FATABLE_SINDEX,
+                    ),
                 ],
                 "forceActuatorInfo",
             ),
@@ -487,41 +530,6 @@ class Topics:
                         "backupSecondaryLoadCellSensitivity",
                         FATABLE_SINDEX,
                     ),
-                ],
-                "forceActuatorInfo",
-            ),
-            TopicData(
-                "FA Mezzanine Calibration Info",
-                [
-                    TopicField(
-                        "Primary Cylinder Gain",
-                        "mezzaninePrimaryCylinderGain",
-                        FATABLE_ZINDEX,
-                    ),
-                    TopicField(
-                        "Secondary Cylinder Gain",
-                        "mezzanineSecondaryCylinderGain",
-                        FATABLE_SINDEX,
-                    ),
-                ],
-                "forceActuatorInfo",
-            ),
-            TopicData(
-                "FA Position Info",
-                [
-                    TopicField(
-                        "Actuator Type",
-                        "actuatorType",
-                        FATABLE_ZINDEX,
-                    ),
-                    TopicField(
-                        "Actuator Orientation",
-                        "actuatorOrientation",
-                        FATABLE_ZINDEX,
-                    ),
-                    TopicField("X Position", "xPosition", FATABLE_ZINDEX),
-                    TopicField("Y Position", "yPosition", FATABLE_ZINDEX),
-                    TopicField("Z Position", "zPosition", FATABLE_ZINDEX),
                 ],
                 "forceActuatorInfo",
             ),
