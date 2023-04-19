@@ -114,18 +114,18 @@ class SlewWidget(QWidget):
 
         self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
         self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
-        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
+        self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self):
-        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=True)
+        await SALCommand(self, self.m1m3.remote.cmd_boosterValveOpen)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self):
-        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=False)
+        await SALCommand(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot(map)
-    def forceActuatorState(self, data):
+    def boosterValveStatus(self, data):
         palOn = self.slewFlagOn.palette()
         palOff = self.slewFlagOff.palette()
         if data.slewFlag:
