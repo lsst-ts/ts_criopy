@@ -18,34 +18,27 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
-    QLabel,
-    QPushButton,
-    QHBoxLayout,
-    QVBoxLayout,
-    QFormLayout,
-)
 from asyncqt import asyncSlot
-
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
     FATABLE_ID,
     FATABLE_INDEX,
-    FATABLE_ZINDEX,
+    FATABLE_ORIENTATION,
     FATABLE_XPOSITION,
     FATABLE_YPOSITION,
-    FATABLE_ORIENTATION,
+    FATABLE_ZINDEX,
     actuatorIDToIndex,
 )
-from .ActuatorComboBox import ActuatorComboBox
-from ..GUI.ActuatorsDisplay import MirrorWidget, ForceActuator, Scales
-from ..GUI.SAL import SALCommand, StateEnabledWidget
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+
+from ...GUI.ActuatorsDisplay import ForceActuator, MirrorWidget, Scales
+from ...GUI.SAL import SALCommand, StateEnabledWidget
+from .ComboBox import ComboBox
 
 
-class EnabledForceActuators(StateEnabledWidget):
+class Enabled(StateEnabledWidget):
     """Widget displaying map of the Force Actuators (FA). Enables end users to
     select a FA and enable/disable it.
 
@@ -73,7 +66,7 @@ class EnabledForceActuators(StateEnabledWidget):
 
         self.mirrorWidget.mirrorView.selectionChanged.connect(self.selectionChanged)
 
-        self.selectedActuatorId = ActuatorComboBox()
+        self.selectedActuatorId = ComboBox()
         self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
         self.selectedActuatorValueLabel = QLabel()
 
@@ -158,31 +151,23 @@ class EnabledForceActuators(StateEnabledWidget):
 
     @asyncSlot()
     async def _enableAllForceActuators(self):
-        await self._issueCommandEnableAllForceActuators()
-
-    @SALCommand
-    def _issueCommandEnableAllForceActuators(self, **kwargs):
-        return self.m1m3.remote.cmd_enableAllForceActuators
+        await SALCommand(self, self.m1m3.remote.cmd_enableAllForceActuators)
 
     @asyncSlot()
     async def _enableFA(self):
         id = self.getSelectedID()
         if id is not None:
-            await self._issueCommandEnable(actuatorId=id)
-
-    @SALCommand
-    def _issueCommandEnable(self, **kwargs):
-        return self.m1m3.remote.cmd_enableForceActuator
+            await SALCommand(
+                self, self.m1m3.remote.cmd_enableForceActuator, actuatorId=id
+            )
 
     @asyncSlot()
     async def _disableFA(self):
         id = self.getSelectedID()
         if id is not None:
-            await self._issueCommandDisable(actuatorId=id)
-
-    @SALCommand
-    def _issueCommandDisable(self, **kwargs):
-        return self.m1m3.remote.cmd_disableForceActuator
+            await SALCommand(
+                self, self.m1m3.remote.cmd_disableForceActuator, actuatorId=id
+            )
 
     @Slot(map)
     def enabledForceActuators(self, data):

@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout
+from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import DockWindow, DataFormWidget, DataLabel, Liter, LiterMinute
+from ..GUI import DataFormWidget, DataLabel, DockWindow, Liter, LiterMinute
 
 
 class FlowMeterWidget(DockWindow):

@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 
+from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QMainWindow
 
-from asyncqt import asyncClose
-
-from .GUI.SAL import Application, SALStatusBar, SALLog
-
+from .GUI.SAL import Application, SALLog, SALStatusBar
 from .M1M3TS import (
-    ThermalValuePageWidget,
-    MixingValveWidget,
     CoolantPumpWidget,
-    GlycolLoopTemperatureWidget,
     FlowMeterWidget,
+    GlycolLoopTemperatureWidget,
+    MixingValveWidget,
+    ThermalValuePageWidget,
 )
 from .M1M3TS.M1M3TSGUI import ThermalStatesDock
 

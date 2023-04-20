@@ -1,14 +1,13 @@
-from PySide2.QtWidgets import QWidget, QHBoxLayout
+from PySide2.QtWidgets import QHBoxLayout, QWidget
 
-from . import (
-    MirrorView,
-    BumpTestScale,
-    GaugeScale,
-    OnOffScale,
-    EnabledDisabledScale,
-    WarningScale,
-    Scales,
-)
+from .BumpTestScale import BumpTestScale
+from .EnabledDisabledScale import EnabledDisabledScale
+from .GaugeScale import GaugeScale
+from .MirrorView import MirrorView
+from .OnOffScale import OnOffScale
+from .Scales import Scales
+from .WaitingScale import WaitingScale
+from .WarningScale import WarningScale
 
 
 class MirrorWidget(QWidget):
@@ -31,6 +30,7 @@ class MirrorWidget(QWidget):
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
         self._onoff = OnOffScale()
+        self._waiting = WaitingScale()
         self._warning = WarningScale()
 
         layout = QHBoxLayout()
@@ -39,12 +39,14 @@ class MirrorWidget(QWidget):
         layout.addWidget(self._bumpTest)
         layout.addWidget(self._enabled_disabled)
         layout.addWidget(self._onoff)
+        layout.addWidget(self._waiting)
         layout.addWidget(self._warning)
 
         self._curentWidget = self._gauge
         self._bumpTest.hide()
         self._enabled_disabled.hide()
         self._onoff.hide()
+        self._waiting.hide()
         self._warning.hide()
 
         self.setLayout(layout)
@@ -68,14 +70,16 @@ class MirrorWidget(QWidget):
         scale : `Scales`
             One of the Scales enum number.
         """
-        if scale == Scales.Scales.BUMP_TEST:
+        if scale == Scales.BUMP_TEST:
             self._replace(self._bumpTest)
-        elif scale == Scales.Scales.ONOFF:
+        elif scale == Scales.ONOFF:
             self._replace(self._onoff)
-        elif scale == Scales.Scales.WARNING:
+        elif scale == Scales.WARNING:
             self._replace(self._warning)
-        elif scale == Scales.Scales.ENABLED_DISABLED:
+        elif scale == Scales.ENABLED_DISABLED:
             self._replace(self._enabled_disabled)
+        elif scale == Scales.WAITING:
+            self._replace(self._waiting)
         else:
             self._replace(self._gauge)
 

@@ -20,12 +20,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
-from PySide2.QtCore import QObject, Signal
-from PySide2.QtWidgets import QMessageBox
-from lsst.ts.salobj import Domain, Remote, base
-from lsst.ts.salobj.topics import RemoteTelemetry, RemoteEvent
-
 import asyncio
+
+from lsst.ts.salobj import Domain, Remote, base
+from lsst.ts.salobj.topics import RemoteEvent, RemoteTelemetry
+from PySide2.QtCore import QObject, Signal
+from PySide2.QtWidgets import QMessageBox, QWidget
 
 __all__ = ["create", "SALCommand", "SALListCommand"]
 
@@ -185,7 +185,7 @@ def create(name, manual=None, **kwargs):
     return SALComm()
 
 
-def warning(parent, title, description):
+def warning(parent: QWidget, title: str, description: str):
     """Creates future with QMessageBox. Enables use of QMessageBox with
     asyncqt/asyncio. Mimics QMessageBox.warning behaviour - but QMessageBox
     cannot be used, as it blocks Qt loops from executing (as all modal dialogs
@@ -211,134 +211,70 @@ def warning(parent, title, description):
     return future
 
 
-def SALCommand(cmd):
-    """Decorator to run a command and display error dialog when in troubles. To
-    be used in QtWidget child method. Decorates a function call, pass supplied
-    arguments to SAL/DDS command call.
+async def SALCommand(parent: QWidget, cmd, **kwargs):
+    """
 
     Parameters
     ----------
+    parent : `QWidget`
+        Parent widget, needed to display error messages.
     cmd : `RemoteCommand`
         SAL command
     **kwargs : `dict`
         Arguments passed to SAL command.
-
-    Usage
-    -----
-
-    Calling await runTheMachine will start command and wait for its completion.
-    QMessageBox with details will be shown on errors.
-
-    .. code-block:: python
-        class MyCommandClass(QWidget):
-           def __init__(self, csc):
-               super().__init__()
-               self.csc = csc
-
-               button = QPushButton("Run!")
-               button.clicked.connect(self.runIt)
-
-           ...
-
-           @asyncSlot()
-           async def runIt(self):
-               await self.runTheMachine(speed=1, angle=120)
-
-           @SALCommand
-           def runTheMachine(self, **kwargs):
-               return self.csc.remote.runTheMachine
     """
 
-    async def wrapper(self, **kwargs):
-        called = cmd(self)
-        try:
-            await called.set_start(**kwargs)
-        except base.AckError as ackE:
-            warning(
-                self,
-                f"Error executing {called.name}",
-                f"Executing SAL/DDS command <i>{called.name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
-            )
-        except RuntimeError as rte:
-            warning(
-                self,
-                f"Error executing {called.name}",
-                f"Executing SAL/DDS command <b>{called.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
-            )
-
-    return wrapper
+    try:
+        await cmd.set_start(**kwargs)
+    except base.AckError as ackE:
+        warning(
+            parent,
+            f"Error executing {cmd.name}",
+            f"Executing SAL/DDS command <i>{cmd.name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
+        )
+    except RuntimeError as rte:
+        warning(
+            parent,
+            f"Error executing {cmd.name}",
+            f"Executing SAL/DDS command <b>{cmd.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
+        )
 
 
-def SALListCommand(cmd):
-    """Decorator to run commands and display error dialog when in troubles. To
-    be used in QtWidget child method. Decorates a function call, pass supplied
-    arguments to SAL/DDS command call.
+async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs):
+    """
 
     Parameters
     ----------
+    parent : `QWidget`
+        Parent widget, needed to display error messages.
     comms : `[SALComm]`
         List of SALComm objects. The command will be executed for each member
         of the list.
-    cmd : `str`
+    cmdName : `str`
         SAL command name
     **kwargs : `dict`
         Arguments passed to SAL command.
-
-    Usage
-    -----
-
-    Calling await runTheMachine will start command and wait for its completion.
-    QMessageBox with details will be shown on errors.
-
-    .. code-block:: python
-        class MyCommandClass(QWidget):
-           def __init__(self):
-               super().__init__()
-               self.cscs = [SALComm(
-                   'MTVMS',
-                   index=1),
-                   SALComm('MTVMS', index=2
-               )]
-
-               button = QPushButton("Run!")
-               button.clicked.connect(self.runIt)
-
-           ...
-
-           @asyncSlot()
-           async def runIt(self):
-               await self.runTheMachine(speed=1, angle=120)
-
-           @SALListCommand("runTheMachine")
-           def runTheMachine(self, **kwargs):
-               return self.cscs
     """
 
-    def wrapper(comms):
-        async def wrapper_f(self, **kwargs):
-            for comm in comms(self):
-                try:
-                    called = getattr(comm.remote, "cmd_" + cmd)
-                    await called.set_start(**kwargs)
-                except base.AckError as ackE:
-                    warning(
-                        self,
-                        f"Error executing"
-                        f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                        f" {called.name}",
-                        f"Executing SAL/DDS command"
-                        f" <i>{called.name}"
-                        f"({kwargs}</i>):<br/>{ackE.ackcmd.result}",
-                    )
-                except RuntimeError as rte:
-                    warning(
-                        self,
-                        f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                        f" {called.name}",
-                        f"Executing SAL/DDS command <b>{called.name}"
-                        f"</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
-                    )
-
-        return wrapper_f
-
-    return wrapper
+    for comm in comms:
+        try:
+            cmd = getattr(comm.remote, "cmd_" + cmdName)
+            await cmd.set_start(**kwargs)
+        except base.AckError as ackE:
+            warning(
+                parent,
+                f"Error executing"
+                f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
+                f" {cmd.name}",
+                f"Executing SAL/DDS command"
+                f" <i>{cmd.name}"
+                f"({kwargs}</i>):<br/>{ackE.ackcmd.result}",
+            )
+        except RuntimeError as rte:
+            warning(
+                parent,
+                f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
+                f" {cmd.name}",
+                f"Executing SAL/DDS command <b>{cmd.name}"
+                f"</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
+            )

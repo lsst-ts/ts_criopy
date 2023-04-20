@@ -19,10 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot, Signal
+from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QFormLayout, QWidget
 
-from . import TimeChart, DataLabel, Colors, ColoredButton
+from .CustomLabels import ColoredButton, Colors, DataLabel
+from .TimeChart import TimeChart
 
 __all__ = ["DataFormWidget", "DataFormButton"]
 
@@ -62,7 +63,7 @@ class DataFormWidget(QWidget):
         self._timeChart = timeChart
 
         layout = QFormLayout()
-        for (text, label) in fields:
+        for text, label in fields:
             if text is None:
                 layout.addRow(label)
             else:

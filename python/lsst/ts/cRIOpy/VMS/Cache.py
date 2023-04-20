@@ -21,9 +21,9 @@
 
 __all__ = ["Cache"]
 
-from .. import TimeCache
-
 import numpy as np
+
+from .. import TimeCache
 
 
 class Cache(TimeCache):

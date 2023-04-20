@@ -19,26 +19,27 @@
 
 __all__ = ["LEVELS", "ToolBar", "Dock", "Messages"]
 
-from html import escape
 from datetime import datetime
-from PySide2.QtCore import Signal, Slot, QObject
+from html import escape
+
+from asyncqt import asyncSlot
+from PySide2.QtCore import QObject, Signal, Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
+    QComboBox,
+    QDockWidget,
     QHBoxLayout,
     QLabel,
-    QComboBox,
-    QSpinBox,
-    QPushButton,
     QPlainTextEdit,
-    QDockWidget,
+    QPushButton,
+    QSpinBox,
     QStyle,
+    QVBoxLayout,
+    QWidget,
 )
-from asyncqt import asyncSlot
 
-from .SALComm import SALListCommand
 from ..CustomLabels import DockWindow
+from .SALComm import SALListCommand
 
 LEVELS = ["Trace", "Debug", "Info", "Warning", "Error", "Critical"]
 
@@ -199,13 +200,9 @@ class Object(QObject):
     def setMessageSize(self, i):
         self.messages.setMaximumBlockCount(i)
 
-    @SALListCommand("setLogLevel")
-    def _changeIt(self, **kwargs):
-        return self.comms
-
     @asyncSlot()
     async def changeLevel(self, index):
-        await self._changeIt(level=index * 10)
+        await SALListCommand(self, self.comms, "setLogLevel", level=index * 10)
 
 
 class Widget(QWidget, Object):

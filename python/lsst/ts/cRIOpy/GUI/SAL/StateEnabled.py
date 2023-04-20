@@ -18,9 +18,8 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget, QPushButton
+from PySide2.QtWidgets import QPushButton, QWidget
 
 __all__ = [
     "SignalButton",

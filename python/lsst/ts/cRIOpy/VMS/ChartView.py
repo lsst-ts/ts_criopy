@@ -19,16 +19,15 @@
 
 __all__ = ["ChartView"]
 
+from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtWidgets import QMenu
+
 from ..GUI.TimeChart import TimeChartView
 from .Unit import menuUnits, units
 
-from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QMenu
-from PySide2.QtCharts import QtCharts
-
 
 class ChartView(TimeChartView):
-
     axisChanged = Signal(bool, bool)
     unitChanged = Signal(str)
 

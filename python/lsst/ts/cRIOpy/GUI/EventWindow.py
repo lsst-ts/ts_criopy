@@ -20,8 +20,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QTreeView
-from PySide2.QtGui import QStandardItemModel, QStandardItem
+from PySide2.QtGui import QStandardItem, QStandardItemModel
+from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
 
 class EventWindow(QWidget):

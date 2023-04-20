@@ -1,10 +1,9 @@
 from functools import partial
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout
 from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, UnitLabel
-
 from ..GUI.TimeChart import SALAxis, SALChartWidget
 
 
@@ -117,8 +116,8 @@ class ActuatorOverviewPageWidget(QWidget):
             maxItems=50 * 5,
         )
         chartPercentage = SALChartWidget(
-            SALAxis("Percentage", self.m1m3.forceActuatorState).addValue(
-                "Support Percentage", "supportPercentage"
+            SALAxis("Percentage", self.m1m3.raisingLoweringInfo).addValue(
+                "Weight Support Percentage", "weightSupportedPercent"
             ),
             maxItems=50 * 5,
         )

@@ -22,8 +22,10 @@ from ...GUI import Colors
 from .EnumScale import EnumScale
 
 
-class OnOffScale(EnumScale):
-    """Draws gauge with color scale for boolean (on/off) values."""
+class WaitingScale(EnumScale):
+    """Draws gauge with color scale for boolean (Running/Waiting) values."""
 
     def __init__(self):
-        super().__init__({True: ("On", Colors.OK), False: ("Off", Colors.ERROR)})
+        super().__init__(
+            {False: ("Running", Colors.OK), True: ("Waiting", Colors.ERROR)}
+        )

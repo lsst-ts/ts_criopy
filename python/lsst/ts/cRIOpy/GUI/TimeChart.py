@@ -20,12 +20,12 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 import concurrent.futures
-from functools import partial
 import time
+from functools import partial
 
-from PySide2.QtCore import Qt, QDateTime, QPointF, Signal, Slot
-from PySide2.QtGui import QPainter
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
+from PySide2.QtGui import QPainter
 from PySide2.QtWidgets import QMenu
 
 from . import AbstractChart
@@ -213,7 +213,7 @@ class UserSelectedTimeChart(TimeChart):
         except ValueError:
             index = None
 
-        for (t, s) in self._topics.items():
+        for t, s in self._topics.items():
             for n in vars(t.DataType()):
                 if n != name:
                     continue
@@ -325,12 +325,19 @@ class SALChartWidget(TimeChartView):
                 partial(self._append, axis_index=axis_index, fields=v.fields)
             )
             axis_index += 1
+        self._has_timestamp = None
 
         super().__init__(self.chart)
 
     def _append(self, data, axis_index, fields):
+        if self._has_timestamp is None:
+            try:
+                getattr(data, "timestamp")
+                self._has_timestamp = True
+            except AttributeError:
+                self._has_timestamp = False
         self.chart.append(
-            data.timestamp,
+            data.timestamp if self._has_timestamp else data.private_sndStamp,
             [getattr(data, f) for f in fields.values()],
             axis_index=axis_index,
         )

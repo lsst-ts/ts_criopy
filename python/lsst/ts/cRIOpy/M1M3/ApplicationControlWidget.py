@@ -17,23 +17,21 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from asyncqt import asyncSlot
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.salobj import base
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
-from asyncqt import asyncSlot
-
-from lsst.ts.salobj import base
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
-
 from PySide2.QtWidgets import (
-    QWidget,
-    QPushButton,
-    QVBoxLayout,
-    QHBoxLayout,
-    QProgressBar,
-    QLCDNumber,
-    QFormLayout,
-    QSizePolicy,
     QButtonGroup,
+    QFormLayout,
+    QHBoxLayout,
+    QLCDNumber,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
 )
 
 from ..GUI import Colors
@@ -120,15 +118,11 @@ class SlewWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self):
-        await self._issueCommandSlewFlag(slewFlag=True)
+        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=True)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self):
-        await self._issueCommandSlewFlag(slewFlag=False)
-
-    @SALCommand
-    def _issueCommandSlewFlag(self, **kwargs):
-        return self.m1m3.remote.cmd_setAirSlewFlag
+        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=False)
 
     @Slot(map)
     def forceActuatorState(self, data):
@@ -215,21 +209,21 @@ class ApplicationControlWidget(QWidget):
 
         commandLayout.addStretch()
 
-        self.supportPercentage = QProgressBar()
-        self.supportPercentage.setOrientation(Qt.Vertical)
-        self.supportPercentage.setRange(0, 100)
-        self.supportPercentage.setTextVisible(True)
-        self.supportPercentage.setFormat("%p%")
+        self.weightSupportedPercent = QProgressBar()
+        self.weightSupportedPercent.setOrientation(Qt.Vertical)
+        self.weightSupportedPercent.setRange(0, 100)
+        self.weightSupportedPercent.setTextVisible(True)
+        self.weightSupportedPercent.setFormat("%p%")
 
         layout = QHBoxLayout()
         layout.addLayout(commandLayout)
-        layout.addWidget(self.supportPercentage)
+        layout.addWidget(self.weightSupportedPercent)
 
         self.setLayout(layout)
 
         # connect SAL signals
         self.m1m3.detailedState.connect(self.detailedState)
-        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
+        self.m1m3.raisingLoweringInfo.connect(self.raisingLoweringInfo)
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
@@ -408,19 +402,19 @@ class ApplicationControlWidget(QWidget):
             self._setHpWarnings(state)
 
     @Slot(map)
-    def forceActuatorState(self, data):
-        self.supportPercentage.setValue(data.supportPercentage)
+    def raisingLoweringInfo(self, data):
+        self.weightSupportedPercent.setValue(data.weightSupportedPercent)
         pal = self.supportedNumber.palette()
-        if data.supportPercentage == 0:
+        if data.weightSupportedPercent == 0:
             col = QColor(255, 0, 0)
-        elif data.supportPercentage < 90:
+        elif data.weightSupportedPercent < 90:
             col = QColor(0, 0, 255)
-        elif data.supportPercentage < 100:
+        elif data.weightSupportedPercent < 100:
             col = QColor(255, 255, 0)
         else:
             col = QColor(0, 255, 0)
         pal.setColor(pal.Background, col)
-        self.supportedNumber.display(f"{data.supportPercentage:.02f}")
+        self.supportedNumber.display(f"{data.weightSupportedPercent:.02f}")
         self.supportedNumber.setPalette(pal)
 
     @Slot(map)

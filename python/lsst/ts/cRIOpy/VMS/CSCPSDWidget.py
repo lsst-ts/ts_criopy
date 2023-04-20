@@ -22,13 +22,13 @@ __all__ = ["CSCPSDWidget"]
 import math
 
 import numpy as np
-from PySide2.QtCore import Qt, Slot, QPointF
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QPointF, Qt, Slot
 
 from ..GUI import AbstractChart
-from .ChartView import ChartView
 from ..GUI.CustomLabels import DockWindow
-from .Unit import units, coefficients
+from .ChartView import ChartView
+from .Unit import coefficients, units
 
 
 class CSCPSDWidget(DockWindow):

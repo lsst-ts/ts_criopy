@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from .EnumScale import EnumScale
 from ...GUI import Colors
+from .EnumScale import EnumScale
 
 
 class WarningScale(EnumScale):

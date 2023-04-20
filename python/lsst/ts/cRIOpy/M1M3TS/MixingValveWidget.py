@@ -17,25 +17,18 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QFormLayout,
-    QVBoxLayout,
-    QHBoxLayout,
-    QWidget,
     QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
     QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
-from ..GUI import (
-    Volt,
-    Percent,
-    DockWindow,
-    TimeChart,
-    TimeChartView,
-    DataFormWidget,
-)
+from ..GUI import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
 from ..GUI.SAL import SALCommand
 
 
@@ -106,10 +99,10 @@ class MixingValveWidget(DockWindow):
             axis_index=1,
         )
 
-    @SALCommand
-    def _callMixingValve(self, **kvargs):
-        return self.m1m3ts.remote.cmd_setMixingValve
-
     @asyncSlot()
     async def _setMixingValve(self):
-        await self._callMixingValve(mixingValveTarget=self.target.value())
+        await SALCommand(
+            self,
+            self.m1m3ts.remote.cmd_setMixingValve,
+            mixingValveTarget=self.target.value(),
+        )

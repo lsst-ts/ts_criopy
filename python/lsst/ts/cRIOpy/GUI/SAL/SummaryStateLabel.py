@@ -17,12 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.ts.salobj import State
 from PySide2.QtCore import Qt
 
-from lsst.ts.salobj import State
-
 from ..CustomLabels import DataLabel
-
 
 __all__ = ["SummaryStateLabel"]
 

@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QGridLayout, QSpacerItem
-from PySide2.QtCore import Slot
 from asyncqt import asyncSlot
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 
-from ..GUI import PowerOnOffLabel, TimeChart, TimeChartView, StatusGrid, WarningLabel
+from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
 from ..GUI.SAL import EngineeringButton, SALCommand
 
 
@@ -57,13 +57,13 @@ class TurnButton(EngineeringButton):
 
         self.clicked.connect(self.runCommand)
 
-    @SALCommand
-    def __turnPower(self, **kwargs):
-        return getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}")
-
     @asyncSlot()
     async def runCommand(self):
-        await self.__turnPower(**{self.__commandName: True})
+        await SALCommand(
+            self,
+            getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}"),
+            **{self.__commandName: True},
+        )
 
 
 class PowerPageWidget(QWidget):

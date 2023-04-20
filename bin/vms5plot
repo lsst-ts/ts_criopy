@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-import h5py
-import matplotlib.pyplot as plt
 import argparse
 import re
+
+import h5py
+import matplotlib.pyplot as plt
 
 
 def type_h5file(filename: str) -> h5py.File:
@@ -18,7 +19,7 @@ def type_h5file(filename: str) -> h5py.File:
 
 
 def type_axis(axis: str) -> str:
-    if re.match("[\d%] [XYZ%]", axis) is None:
+    if re.match("[\\d%] [XYZ%]", axis) is None:
         raise argparse.ArgumentTypeError(f"Invalid axis name {axis}!")
     return axis
 
@@ -73,7 +74,7 @@ else:
 
 fig, ax = plt.subplots(len(args.h5py), 1 + len(axes))
 
-for (i, f) in enumerate(args.h5py):
+for i, f in enumerate(args.h5py):
     if len(args.h5py) > 1:
         c_a = ax[i]
     else:
@@ -81,7 +82,7 @@ for (i, f) in enumerate(args.h5py):
     print(f"Sub-plot {i} ({f.filename}).")
     c_a[0].set_title(f"Raw {f.filename}")
     c_a[0].plot(f["timestamp"][: args.raw], f["1 X"][: args.raw])
-    for (j, a) in enumerate(axes):
+    for j, a in enumerate(axes):
         print(f"Sub-plot {i}, {j+1} ({a}).")
         c_a[j + 1].set_title(f"PSD {a}")
         c_a[j + 1].psd(f[a], NFFT=args.NFFT, Fs=args.frequency)

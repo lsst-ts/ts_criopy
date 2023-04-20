@@ -30,3 +30,4 @@ class Scales(enum.IntEnum):
     WARNING = 3
     BUMP_TEST = 4
     ENABLED_DISABLED = 5
+    WAITING = 6

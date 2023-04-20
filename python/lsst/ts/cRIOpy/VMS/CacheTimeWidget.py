@@ -21,8 +21,8 @@ __all__ = ["CacheTimeWidget"]
 
 import time
 
-from PySide2.QtCore import Qt, Slot, QPointF, QDateTime
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import QDateTime, QPointF, Qt, Slot
 
 from .CacheWidget import CacheWidget
 

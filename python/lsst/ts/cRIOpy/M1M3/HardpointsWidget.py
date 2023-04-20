@@ -21,34 +21,30 @@ import copy
 from functools import partial
 
 import astropy.units as u
-from PySide2.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QGridLayout,
-    QSpinBox,
-    QDoubleSpinBox,
-    QPushButton,
-    QApplication,
-)
-from PySide2.QtCore import Signal, Slot, Qt
 from asyncqt import asyncSlot
-
-from lsst.ts.idl.enums.MTM1M3 import (
-    DetailedState,
-    HardpointActuatorMotionStates,
+from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
+from PySide2.QtCore import Qt, Signal, Slot
+from PySide2.QtWidgets import (
+    QApplication,
+    QDoubleSpinBox,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
 from ..GUI import (
-    Force,
-    Moment,
-    Mm,
-    UnitLabel,
-    OnOffLabel,
+    ArrayGrid,
     ArrayItem,
     ArraySignal,
-    ArrayGrid,
     Colors,
+    Force,
+    Mm,
+    Moment,
+    OnOffLabel,
+    UnitLabel,
 )
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
 
@@ -429,22 +425,14 @@ class HardpointsWidget(QWidget):
                 offset.setValue(v)
             self.lastEditedSteps = [self.offsetType.getScale() * v] * 6
 
-    @SALCommand
-    def _moveIt(self, **kvargs):
-        return self.m1m3.remote.cmd_moveHardpointActuators
-
     @asyncSlot()
     async def _moveHP(self):
         steps = [self.offsetType.getSteps(x.value()) for x in self.hpOffsets]
-        await self._moveIt(steps=steps)
-
-    @SALCommand
-    def _stopIt(self, **kvargs):
-        return self.m1m3.remote.cmd_stopHardpointMotion
+        await SALCommand(self, self.m1m3.remote.cmd_moveHardpointActuators, steps=steps)
 
     @asyncSlot()
     async def _stopHP(self):
-        await self._stopIt()
+        await SALCommand(self, self.m1m3.remote.cmd_stopHardpointMotion)
 
     @Slot()
     def _reset(self):
@@ -455,21 +443,13 @@ class HardpointsWidget(QWidget):
         for hp in range(6):
             rowLabels[hp].setValue(hpData[hp])
 
-    @SALCommand
-    def _enableHardpointChase(self):
-        return self.m1m3.remote.cmd_enableHardpointChase
-
     @asyncSlot()
     async def _enableHPChase(self):
-        await self._enableHardpointChase()
-
-    @SALCommand
-    def _disableHardpointChase(self):
-        return self.m1m3.remote.cmd_disableHardpointChase
+        await SALCommand(self, self.m1m3.remote.cmd_enableHardpointChase)
 
     @asyncSlot()
     async def _disableHPChase(self):
-        await self._disableHardpointChase()
+        await SALCommand(self, self.m1m3.remote.cmd_disableHardpointChase)
 
     @Slot(map)
     def hardpointActuatorSettings(self, data):

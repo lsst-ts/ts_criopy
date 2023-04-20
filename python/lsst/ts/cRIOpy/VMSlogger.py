@@ -29,7 +29,7 @@ import sys
 import time
 
 from . import parseDuration
-from .VMS import Collector, VMS_DEVICES
+from .VMS import VMS_DEVICES, Collector
 
 try:
     importlib.import_module("h5py")

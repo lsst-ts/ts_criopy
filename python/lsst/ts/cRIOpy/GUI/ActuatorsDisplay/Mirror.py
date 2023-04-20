@@ -19,9 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .ForceActuator import ForceActuator
-
 from PySide2.QtWidgets import QGraphicsScene
+
+from .ForceActuator import ForceActuator
 
 
 class Mirror(QGraphicsScene):

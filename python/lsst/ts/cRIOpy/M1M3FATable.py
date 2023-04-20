@@ -26,6 +26,10 @@ __all__ = [
     "onlyFarNeighborIndices",
 ]
 
+FATABLE_XFA = 12
+FATABLE_YFA = 100
+FATABLE_ZFA = 156
+
 FATABLE_INDEX = 0
 FATABLE_ID = 1
 FATABLE_XPOSITION = 2

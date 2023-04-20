@@ -21,8 +21,8 @@
 
 import asyncio
 
-from PySide2.QtCore import Qt
 from PySide2.QtCharts import QtCharts
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
 
 from .. import TimeCache
@@ -54,7 +54,7 @@ class AbstractChart(QtCharts.QChart):
                 return a
         return None
 
-    def findSerie(self, name) -> (QtCharts.QAbstractSeries | None):
+    def findSerie(self, name) -> QtCharts.QAbstractSeries | None:
         """
         Returns series with given name.
 
