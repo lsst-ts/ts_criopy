@@ -11,6 +11,7 @@ from .CustomLabels import (
     DataDegC,
     DataLabel,
     DataUnitLabel,
+    DegS2,
     DockWindow,
     EnumLabel,
     ErrorLabel,
@@ -43,6 +44,7 @@ from .CustomLabels import (
 from .DataFormWidget import DataFormButton, DataFormWidget
 from .Histogram import Histogram
 from .SplashScreen import SplashScreen
+from .StatusBox import StatusBox, StatusWidget
 from .TimeChart import (
     SALAxis,
     SALChartWidget,

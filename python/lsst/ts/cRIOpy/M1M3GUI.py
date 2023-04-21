@@ -41,6 +41,7 @@ from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
     ApplicationControlWidget,
+    BoosterValveWidget,
     CellLightPageWidget,
     DCAccelerometerPageWidget,
     ForceActuator,
@@ -92,6 +93,7 @@ class EUI(QMainWindow):
         self.addPage("Power", PowerPageWidget(self.m1m3))
         self.addPage("PID", PIDPageWidget(self.m1m3))
         self.addPage("Force Balance System", ForceBalanceSystemPageWidget(self.m1m3))
+        self.addPage("Booster Valve", BoosterValveWidget(self.m1m3))
         self.addPage(
             "Force Actuator Bump Test", ForceActuator.BumpTestPageWidget(self.m1m3)
         )
