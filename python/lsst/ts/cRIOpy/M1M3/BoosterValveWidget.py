@@ -19,11 +19,13 @@
 
 import numpy as np
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFormLayout, QGridLayout, QLabel, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
 from ..GUI import DegS2, OnOffLabel, TimeChart, TimeChartView
+from ..GUI.TimeChart import SALAxis, SALChartWidget
 
 __all__ = ["BoosterValveWidget"]
+
 
 class FollowingErrorTrigger(QWidget):
     def __init__(self, m1m3):
@@ -32,11 +34,23 @@ class FollowingErrorTrigger(QWidget):
 
         operationalLayout = QFormLayout()
 
-        operationalLayout.addRow("Following Error Enabled", OnOffLabel(m1m3.boosterValveSettings, "followingErrorTriggerEnabled"))
-        operationalLayout.addRow("Open", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerOpen"))
-        operationalLayout.addRow("Close", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerClose"))
-        operationalLayout.addRow("Slew Flag", OnOffLabel(m1m3.boosterValveStatus, "slewFlag"))
-        operationalLayout.addRow("Following Error Triggered", OnOffLabel(m1m3.boosterValveStatus, "followingErrorTriggered"))
+        operationalLayout.addRow(
+            "Following Error Trigger Enabled",
+            OnOffLabel(m1m3.boosterValveSettings, "followingErrorTriggerEnabled"),
+        )
+        operationalLayout.addRow(
+            "Open", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerOpen")
+        )
+        operationalLayout.addRow(
+            "Close", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerClose")
+        )
+        operationalLayout.addRow(
+            "Slew Flag", OnOffLabel(m1m3.boosterValveStatus, "slewFlag")
+        )
+        operationalLayout.addRow(
+            "Following Error Triggered",
+            OnOffLabel(m1m3.boosterValveStatus, "followingErrorTriggered"),
+        )
 
         layout.addLayout(operationalLayout, 0, 0)
 
@@ -89,6 +103,53 @@ class FollowingErrorTrigger(QWidget):
         self._smin.setValue(secondaryFEMin)
 
 
+class Accelerometer(QWidget):
+    def __init__(self, m1m3):
+        super().__init__()
+        layout = QGridLayout()
+
+        operationalLayout = QFormLayout()
+
+        operationalLayout.addRow(
+            "Accelerometer Trigger Enabled",
+            OnOffLabel(m1m3.boosterValveSettings, "accelerometerTriggerEnabled"),
+        )
+        for axis in ["X", "Y", "Z"]:
+            operationalLayout.addRow(
+                f"Open {axis}",
+                DegS2(m1m3.boosterValveSettings, f"accelerometer{axis}TriggerOpen"),
+            )
+            operationalLayout.addRow(
+                f"Close {axis}",
+                DegS2(m1m3.boosterValveSettings, f"accelerometer{axis}TriggerClose"),
+            )
+        operationalLayout.addRow(
+            "Accelerometer Triggered",
+            OnOffLabel(m1m3.boosterValveStatus, "accelerometerTriggered"),
+        )
+
+        layout.addLayout(operationalLayout, 0, 0)
+
+        plotAxis = SALAxis(
+            "Angular Acceleration (deg/s<sup>2</sup>)", m1m3.accelerometerData
+        )
+
+        dataLayout = QFormLayout()
+
+        for axis in ["X", "Y", "Z"]:
+            dataLayout.addRow(
+                f"Angular {axis}",
+                DegS2(m1m3.accelerometerData, f"angularAcceleration{axis}"),
+            )
+            plotAxis.addValue(f"{axis}", f"angularAcceleration{axis}")
+
+        layout.addLayout(dataLayout, 0, 1)
+
+        layout.addWidget(SALChartWidget(plotAxis), 1, 0, 1, 2)
+
+        self.setLayout(layout)
+
+
 class BoosterValveWidget(QWidget):
     """
     Widget showing values important for booster valve control.
@@ -96,8 +157,9 @@ class BoosterValveWidget(QWidget):
 
     def __init__(self, m1m3):
         super().__init__()
-        layout = QVBoxLayout()
+        layout = QGridLayout()
 
-        layout.addWidget(FollowingErrorTrigger(m1m3))
+        layout.addWidget(FollowingErrorTrigger(m1m3), 0, 0)
+        layout.addWidget(Accelerometer(m1m3), 1, 0)
 
         self.setLayout(layout)

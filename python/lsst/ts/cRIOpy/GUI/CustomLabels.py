@@ -573,7 +573,7 @@ class Hz(DataUnitLabel):
 
 class DegS2(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
-        super().__init__(signal, field, fmt, u.deg / u.s ** 2)
+        super().__init__(signal, field, fmt, u.deg / u.s**2)
 
 
 class ArcsecWarning(Arcsec):
