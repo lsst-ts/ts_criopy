@@ -419,6 +419,26 @@ class Topics:
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
                     ),
                     TopicField(
+                        "PC Measured Force Low Limit",
+                        "primaryCylinderMeasuredForceLowLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "PC Measured Force High Limit",
+                        "primaryCylinderMeasuredForceHighLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "SC Measured Force Low Limit",
+                        "secondaryCylinderMeasuredForceLowLimit",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
+                        "SC Measured Force High Limit",
+                        "secondaryCylinderMeasuredForceHighLimit",
+                        FATABLE_SINDEX,
+                    ),
+                    TopicField(
                         "PC FE Warning",
                         "primaryFollowingErrorWarningThreshold",
                         FATABLE_ZINDEX,
