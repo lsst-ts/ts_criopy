@@ -321,7 +321,7 @@ class DataUnitLabel(UnitLabel):
         self.setValue(getattr(data, self._field))
 
 
-class Force(UnitLabel):
+class Force(DataUnitLabel):
     """Displays force in N (Newtons).
 
     Parameters
@@ -330,8 +330,8 @@ class Force(UnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, fmt=".02f"):
-        super().__init__(fmt, u.N)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.N)
 
 
 class Moment(UnitLabel):

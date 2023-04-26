@@ -21,7 +21,7 @@ import numpy as np
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
-from ..GUI import DegS2, OnOffLabel, TimeChart, TimeChartView
+from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
 from ..GUI.TimeChart import SALAxis, SALChartWidget
 
 __all__ = ["BoosterValveWidget"]
@@ -39,10 +39,10 @@ class FollowingErrorTrigger(QWidget):
             OnOffLabel(m1m3.boosterValveSettings, "followingErrorTriggerEnabled"),
         )
         operationalLayout.addRow(
-            "Open", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerOpen")
+            "Open", Force(m1m3.boosterValveSettings, "followingErrorTriggerOpen")
         )
         operationalLayout.addRow(
-            "Close", DegS2(m1m3.boosterValveSettings, "followingErrorTriggerClose")
+            "Close", Force(m1m3.boosterValveSettings, "followingErrorTriggerClose")
         )
         operationalLayout.addRow(
             "Slew Flag", OnOffLabel(m1m3.boosterValveStatus, "slewFlag")
@@ -56,10 +56,10 @@ class FollowingErrorTrigger(QWidget):
 
         dataLayout = QFormLayout()
 
-        self._pmax = DegS2()
-        self._pmin = DegS2()
-        self._smax = DegS2()
-        self._smin = DegS2()
+        self._pmax = Force()
+        self._pmin = Force()
+        self._smax = Force()
+        self._smin = Force()
 
         dataLayout.addRow("Primary Max", self._pmax)
         dataLayout.addRow("Primary Min", self._pmin)

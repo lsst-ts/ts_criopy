@@ -157,7 +157,7 @@ class HardpointsWidget(QWidget):
                         ArrayItem(
                             "measuredForce",
                             "Measured force",
-                            partial(Force, ".03f"),
+                            partial(Force, fmt=".03f"),
                         ),
                         ArrayItem(
                             "displacement",
