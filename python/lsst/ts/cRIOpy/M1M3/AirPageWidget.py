@@ -21,8 +21,8 @@ from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import OnOffGrid, SALAxis, SALChartWidget, WarningGrid
-from ..GUI.SAL import EngineeringButton, SALCommand
+from ..GUI import OnOffGrid, WarningGrid
+from ..GUI.SAL import Axis, ChartWidget, EngineeringButton, SALCommand
 
 
 class AirPageWidget(QWidget):
@@ -69,12 +69,12 @@ class AirPageWidget(QWidget):
             )
         )
 
-        axis = SALAxis("Pressure", m1m3.hardpointMonitorData)
+        axis = Axis("Pressure", m1m3.hardpointMonitorData)
 
         for s in range(6):
             axis.addArrayValue(str(s), "breakawayPressure", s)
 
-        layout.addWidget(SALChartWidget(axis))
+        layout.addWidget(ChartWidget(axis))
 
         self.setLayout(layout)
 

@@ -217,9 +217,9 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.accelationZLabel, row, col + 3)
         row += 1
         dataLayout.addWidget(QLabel("Angular Velocity"), row, col)
-        dataLayout.addWidget(QLabel("X (?)"), row, col + 1)
-        dataLayout.addWidget(QLabel("Y (?)"), row, col + 2)
-        dataLayout.addWidget(QLabel("Z (?)"), row, col + 3)
+        dataLayout.addWidget(QLabel("<b>X</b>"), row, col + 1)
+        dataLayout.addWidget(QLabel("<b>Y</b>"), row, col + 2)
+        dataLayout.addWidget(QLabel("<b>Z</b>"), row, col + 3)
         row += 1
         dataLayout.addWidget(self.velocityXLabel, row, col + 1)
         dataLayout.addWidget(self.velocityYLabel, row, col + 2)
@@ -244,7 +244,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(QLabel("<b>OSPL</b>"), row, col + 7)
         row += 1
         dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
-        dataLayout.addWidget(QLabel("-"), row, col + 1)
+        dataLayout.addWidget(QLabel("---"), row, col + 1)
         dataLayout.addWidget(self.tmaAzimuthLabel, row, col + 2)
         dataLayout.addWidget(QLabel("<b>M1M3</b>"), row, col + 3)
         dataLayout.addWidget(m1m3_cscVersion, row, col + 4)

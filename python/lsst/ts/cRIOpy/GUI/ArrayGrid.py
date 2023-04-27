@@ -35,7 +35,7 @@ Usage
        Mm,
    )
 
-   # sal holds SALComm remote with signal "sig1", "sig2" and "sig3"
+   # sal holds SALComm remote with signal "sig1", "sig2", "sig3" and "sig4"
 
    grid = ArrayGrid(
        "<b>Some data</b>",
@@ -61,7 +61,20 @@ Usage
                    "mZ"
                ],
                "Forces",
-               sal.sig3
+               sal.sig3,
+           ),
+           ArrayLabels("Data", "", "", "", "", ""),
+           ArrayFields(
+               [
+                   "data",
+                   None,
+                   None,
+                   None,
+                   None,
+                   None,
+               ],
+               "Var Data",
+               sal.sig4,
            ),
        ],
    )
@@ -70,7 +83,14 @@ Usage
    layout.addWidget(grid)
 """
 
-__all__ = ["ArrayItem", "ArrayFields", "ArraySignal", "ArrayButton", "ArrayGrid"]
+__all__ = [
+    "ArrayItem",
+    "ArrayFields",
+    "ArrayLabels",
+    "ArraySignal",
+    "ArrayButton",
+    "ArrayGrid",
+]
 
 from asyncqt import asyncSlot
 from lsst.ts.salobj import base
@@ -92,9 +112,9 @@ class AbstractColumn(QObject):
 
     Attributes
     ----------
-    items : `[UnitLabel]`
-        QWidgets/UnitLabes used to display array members.
-
+    items : `[(index, UnitLabel)]`
+        QWidgets/UnitLabes used to display array members together with index in
+        data field, holding the value.
     """
 
     def __init__(
@@ -103,6 +123,7 @@ class AbstractColumn(QObject):
         label: str,
         widget: UnitLabel = UnitLabel,
         signal: Signal = None,
+        indices: list[int] = None,
     ):
         """
         Creates member of grid representing an array.
@@ -124,6 +145,7 @@ class AbstractColumn(QObject):
         self.setObjectName(field)
         self._label = label
         self._widget = widget
+        self._indices = indices
 
         self.items = None
 
@@ -161,7 +183,7 @@ class AbstractColumn(QObject):
         name : `str`
             Row name - string with name of the variable.
         index : `int`
-            Value index.
+            Value index, 0 based, in the grid.
 
         Returns
         -------
@@ -171,6 +193,11 @@ class AbstractColumn(QObject):
         if self.objectName() == name:
             return self.items[index]
         return None
+
+    def get_data_index(self, idx):
+        if self._indices is not None:
+            return self._indices[idx]
+        return idx
 
     @Slot(map)
     def data(self, data: map):
@@ -184,7 +211,7 @@ class AbstractColumn(QObject):
         """
         fd = getattr(data, self.objectName())
         for idx, item in enumerate(self.items):
-            item.setValue(fd[idx])
+            item.setValue(fd[self.get_data_index(idx)])
 
 
 class ArrayItem(AbstractColumn):
@@ -196,9 +223,10 @@ class ArrayItem(AbstractColumn):
         label: str,
         widget: UnitLabel = UnitLabel,
         signal: Signal = None,
+        indices: list[int] = None,
     ):
         """Construct QObject holding widgets for array."""
-        super().__init__(field, label, widget, signal)
+        super().__init__(field, label, widget, signal, indices)
 
     def attach_into(self, parent: ArrayGrid, row: int) -> int:
         self.items = [self._widget() for i in range(parent.get_data_rows())]
@@ -246,6 +274,24 @@ class ArrayFields(AbstractColumn):
             i.setValue(d)
 
 
+class ArrayLabels(AbstractColumn):
+    def __init__(self, *labels):
+        super().__init__("", "")
+        self._labels = labels
+
+    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+        parent.rows = self._labels
+
+        for c, l in enumerate(self._labels):
+            parent.add_widget(QLabel(l), row, c + 1)
+
+        return row + 1
+
+    @Slot(map)
+    def data(self, data):
+        pass
+
+
 class ArraySignal(AbstractColumn):
     def __init__(self, signal: Signal, items: list[AbstractColumn]):
         """Construct member holding multiple array items. Shall be used to
@@ -278,9 +324,13 @@ class ArraySignal(AbstractColumn):
     @Slot(map)
     def data(self, data):
         for i in self.array_items:
-            d = getattr(data, i.objectName())
-            for fi, c in enumerate(i.items):
-                c.setValue(d[fi])
+            field = i.objectName()
+            if field == "":
+                i.data(data)
+            else:
+                d = getattr(data, i.objectName())
+                for fi, c in enumerate(i.items):
+                    c.setValue(d[fi])
 
 
 class ArrayButton(AbstractColumn):

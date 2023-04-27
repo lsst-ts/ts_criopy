@@ -22,7 +22,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
 from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
-from ..GUI.TimeChart import SALAxis, SALChartWidget
+from ..GUI.SAL import Axis, ChartWidget
 
 __all__ = ["BoosterValveWidget"]
 
@@ -149,7 +149,7 @@ class Accelerometer(QWidget):
 
         layout.addLayout(operationalLayout, 0, 0)
 
-        plotAxis = SALAxis(
+        plotAxis = Axis(
             "Angular Acceleration (deg/s<sup>2</sup>)", m1m3.accelerometerData
         )
 
@@ -164,7 +164,7 @@ class Accelerometer(QWidget):
 
         layout.addLayout(dataLayout, 0, 1)
 
-        layout.addWidget(SALChartWidget(plotAxis), 1, 0, 1, 2)
+        layout.addWidget(ChartWidget(plotAxis), 1, 0, 1, 2)
 
         self.setLayout(layout)
 

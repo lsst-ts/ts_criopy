@@ -1,7 +1,37 @@
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
+# This file is part of M1M3 SS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
 
-from ..GUI import TimeChart, TimeChartView, WarningGrid
+from functools import partial
+
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QVBoxLayout, QWidget
+
+from ..GUI import (
+    ArrayFields,
+    ArrayGrid,
+    ArrayLabels,
+    ArraySignal,
+    DataDegC,
+    UnitLabel,
+    WarningGrid,
+)
+from ..GUI.SAL import Axis, ChartWidget
 
 
 class GyroPageWidget(QWidget):
@@ -9,44 +39,44 @@ class GyroPageWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        dataLayout = QGridLayout()
-        plotLayout = QVBoxLayout()
+        layout = QVBoxLayout()
+        layout.addWidget(
+            ArrayGrid(
+                "",
+                [f"<b>{label}</b>" for label in "XYZ"],
+                [
+                    ArraySignal(
+                        m1m3.gyroData,
+                        [
+                            ArrayFields(
+                                [
+                                    "angularVelocityX",
+                                    "angularVelocityY",
+                                    "angularVelocityZ",
+                                ],
+                                "<b>Angular Velocity (Deg/sec)</b>",
+                                partial(UnitLabel, fmt=".03f"),
+                            ),
+                            ArrayLabels(""),
+                            ArrayFields(
+                                ["sequenceNumber", None, None], "<b>Sequence Number</b>"
+                            ),
+                            ArrayFields(
+                                ["temperature", None, None],
+                                "<b>Temperature</b>",
+                                DataDegC,
+                            ),
+                        ],
+                    ),
+                ],
+                Qt.Horizontal,
+            )
+        )
 
         self.maxPlotSize = 50 * 30  # 50Hz * 30s
 
-        self.velocityXLabel = QLabel("UNKNOWN")
-        self.velocityYLabel = QLabel("UNKNOWN")
-        self.velocityZLabel = QLabel("UNKNOWN")
-        self.sequenceNumberLabel = QLabel("UNKNOWN")
-        self.temperatureLabel = QLabel("UNKNOWN")
-
-        self.chart = TimeChart({"Angular Velocity (rad/s)": ["X", "y", "Z"]})
-        self.chart_view = TimeChartView(self.chart)
-
-        row = 0
-        col = 0
-        dataLayout.addWidget(QLabel("X"), row, col + 1)
-        dataLayout.addWidget(QLabel("Y"), row, col + 2)
-        dataLayout.addWidget(QLabel("Z"), row, col + 3)
-        row += 1
-        dataLayout.addWidget(QLabel("Angular Velocity (rad/s)"), row, col)
-        dataLayout.addWidget(self.velocityXLabel, row, col + 1)
-        dataLayout.addWidget(self.velocityYLabel, row, col + 2)
-        dataLayout.addWidget(self.velocityZLabel, row, col + 3)
-        row += 1
-        dataLayout.addWidget(QLabel(" "), row, col)
-        row += 1
-        dataLayout.addWidget(QLabel("Sequence Number"), row, col)
-        dataLayout.addWidget(self.sequenceNumberLabel, row, col + 1)
-        row += 1
-        dataLayout.addWidget(QLabel("Temperature (C)"), row, col)
-        dataLayout.addWidget(self.temperatureLabel, row, col + 1)
-
-        plotLayout.addWidget(self.chart_view)
-
-        layout = QVBoxLayout()
-        layout.addLayout(dataLayout)
         layout.addSpacing(20)
+
         layout.addWidget(
             WarningGrid(
                 {
@@ -93,20 +123,10 @@ class GyroPageWidget(QWidget):
                 3,
             )
         )
-        layout.addLayout(plotLayout)
+
+        axis = Axis("Angular Velocity (rad/s)", m1m3.gyroData)
+        for a in "XYZ":
+            axis.addValue(f"{a}", f"angularVelocity{a}")
+        layout.addWidget(ChartWidget(axis))
+
         self.setLayout(layout)
-
-        self.m1m3.gyroData.connect(self.gyroData)
-
-    @Slot(map)
-    def gyroData(self, data):
-        self.velocityXLabel.setText("%0.3f" % (data.angularVelocityX))
-        self.velocityYLabel.setText("%0.3f" % (data.angularVelocityY))
-        self.velocityZLabel.setText("%0.3f" % (data.angularVelocityZ))
-        self.sequenceNumberLabel.setText("%0.3f" % (data.sequenceNumber))
-        self.temperatureLabel.setText("%0.3f" % (data.temperature))
-
-        self.chart.append(
-            data.timestamp,
-            [data.angularVelocityX, data.angularVelocityY, data.angularVelocityZ],
-        )

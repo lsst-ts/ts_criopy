@@ -28,12 +28,11 @@ from ..GUI import (
     ArraySignal,
     DegS2,
     MSec2,
-    SALAxis,
-    SALChartWidget,
     ValueGrid,
     Volt,
     WarningGrid,
 )
+from ..GUI.SAL import Axis, ChartWidget
 
 
 class DCAccelerometerPageWidget(QWidget):
@@ -92,9 +91,7 @@ class DCAccelerometerPageWidget(QWidget):
             )
         )
 
-        axis = SALAxis(
-            "Angular Acceleration (rad/s<sup>2</sup>)", m1m3.accelerometerData
-        )
+        axis = Axis("Angular Acceleration (rad/s<sup>2</sup>)", m1m3.accelerometerData)
         axis.addValues(
             {
                 "X": "angularAccelerationX",
@@ -103,6 +100,6 @@ class DCAccelerometerPageWidget(QWidget):
             }
         )
 
-        layout.addWidget(SALChartWidget(axis))
+        layout.addWidget(ChartWidget(axis))
 
         self.setLayout(layout)

@@ -145,7 +145,7 @@ class ValuePageWidget(Widget):
     def updateValues(self, data, changed):
         if data is None:
             for label in self.dataWidget.forceActuatorLabels:
-                label.setText("UNKNOWN")
+                label.setText("---")
             return
 
         i = -1
@@ -154,7 +154,7 @@ class ValuePageWidget(Widget):
             i += 1
             index = row[self.field.valueIndex]
             if index is None:
-                self.dataWidget.forceActuatorLabels[i].setText("UNKNOWN")
+                self.dataWidget.forceActuatorLabels[i].setText("---")
             elif data is not None:
                 self.dataWidget.forceActuatorLabels[i].setText(f"{values[index]:.1f}")
             else:
