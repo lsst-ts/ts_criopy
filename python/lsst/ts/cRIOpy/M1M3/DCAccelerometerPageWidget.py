@@ -1,124 +1,110 @@
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFormLayout, QGridLayout, QLabel, QVBoxLayout, QWidget
+# This file is part of M1M3 SS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
 
-from ..GUI import TimeChart, TimeChartView, WarningLabel
+from functools import partial
+
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QVBoxLayout, QWidget
+
+from ..GUI import (
+    ArrayGrid,
+    ArrayItem,
+    ArraySignal,
+    DegS2,
+    MSec2,
+    TimeChart,
+    TimeChartView,
+    ValueGrid,
+    Volt,
+    WarningGrid,
+)
 
 
 class DCAccelerometerPageWidget(QWidget):
     def __init__(self, m1m3):
         super().__init__()
-        self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
-        self.dataLayout = QGridLayout()
-        self.warningLayout = QFormLayout()
-        self.plotLayout = QVBoxLayout()
-        self.layout.addLayout(self.dataLayout)
-        self.layout.addWidget(QLabel(" "))
-        self.layout.addLayout(self.warningLayout)
-        self.layout.addLayout(self.plotLayout)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
 
-        self.rawAccelerometer1XLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer1YLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer2XLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer2YLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer3XLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer3YLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer4XLabel = QLabel("UNKNOWN")
-        self.rawAccelerometer4YLabel = QLabel("UNKNOWN")
-        self.accelerometer1XLabel = QLabel("UNKNOWN")
-        self.accelerometer1YLabel = QLabel("UNKNOWN")
-        self.accelerometer2XLabel = QLabel("UNKNOWN")
-        self.accelerometer2YLabel = QLabel("UNKNOWN")
-        self.accelerometer3XLabel = QLabel("UNKNOWN")
-        self.accelerometer3YLabel = QLabel("UNKNOWN")
-        self.accelerometer4XLabel = QLabel("UNKNOWN")
-        self.accelerometer4YLabel = QLabel("UNKNOWN")
-        self.angularAccelerationXLabel = QLabel("UNKNOWN")
-        self.angularAccelerationYLabel = QLabel("UNKNOWN")
-        self.angularAccelerationZLabel = QLabel("UNKNOWN")
+        layout.addWidget(
+            ValueGrid(
+                partial(DegS2, fmt=".04f"),
+                {
+                    "angularAccelerationX": "<b>X</b>",
+                    "angularAccelerationY": "<b>Y</b>",
+                    "angularAccelerationZ": "<b>Z</b>",
+                },
+                m1m3.accelerometerData,
+                3,
+            )
+        )
 
-        self.chart = TimeChart(
+        layout.addWidget(
+            ArrayGrid(
+                "<b>Accelerometer</b>",
+                [
+                    "<b>1X</b>",
+                    "<b>1Y</b>",
+                    "<b>2X</b>",
+                    "<b>2Y</b>",
+                    "<b>3X</b>",
+                    "<b>3Y</b>",
+                    "<b>4X</b>",
+                    "<b>4Y</b>",
+                ],
+                [
+                    ArraySignal(
+                        m1m3.accelerometerData,
+                        [
+                            ArrayItem("rawAccelerometer", "<b>Raw</b>", Volt),
+                            ArrayItem("accelerometer", "<b>Acceleration</b>", MSec2),
+                        ],
+                    )
+                ],
+                Qt.Horizontal,
+            )
+        )
+
+        layout.addWidget(
+            WarningGrid(
+                {
+                    "anyWarning": "Any Warnings",
+                    "responseTimeout": "Response Timeout",
+                },
+                m1m3.accelerometerWarning,
+                2,
+            )
+        )
+
+        self._chart = TimeChart(
             {"Angular Acceleration (rad/s<sup>2</sup>)": ["X", "Y", "Z"]}
         )
-        self.chart_view = TimeChartView(self.chart)
 
-        row = 0
-        col = 0
-        self.dataLayout.addWidget(QLabel("X"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("Y"), row, col + 2)
-        self.dataLayout.addWidget(QLabel("Z"), row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(
-            QLabel("Angular Acceleration (rad/s<sup>2</sup>)"), row, col
-        )
-        self.dataLayout.addWidget(self.angularAccelerationXLabel, row, col + 1)
-        self.dataLayout.addWidget(self.angularAccelerationYLabel, row, col + 2)
-        self.dataLayout.addWidget(self.angularAccelerationZLabel, row, col + 3)
-        row += 1
-        self.dataLayout.addWidget(QLabel(" "), row, col)
-        row += 1
-        self.dataLayout.addWidget(QLabel("1X"), row, col + 1)
-        self.dataLayout.addWidget(QLabel("1Y"), row, col + 2)
-        self.dataLayout.addWidget(QLabel("2X"), row, col + 3)
-        self.dataLayout.addWidget(QLabel("2Y"), row, col + 4)
-        self.dataLayout.addWidget(QLabel("3X"), row, col + 5)
-        self.dataLayout.addWidget(QLabel("3Y"), row, col + 6)
-        self.dataLayout.addWidget(QLabel("4X"), row, col + 7)
-        self.dataLayout.addWidget(QLabel("4Y"), row, col + 8)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Raw (V)"), row, col)
-        self.dataLayout.addWidget(self.rawAccelerometer1XLabel, row, col + 1)
-        self.dataLayout.addWidget(self.rawAccelerometer1YLabel, row, col + 2)
-        self.dataLayout.addWidget(self.rawAccelerometer2XLabel, row, col + 3)
-        self.dataLayout.addWidget(self.rawAccelerometer2YLabel, row, col + 4)
-        self.dataLayout.addWidget(self.rawAccelerometer3XLabel, row, col + 5)
-        self.dataLayout.addWidget(self.rawAccelerometer3YLabel, row, col + 6)
-        self.dataLayout.addWidget(self.rawAccelerometer4XLabel, row, col + 7)
-        self.dataLayout.addWidget(self.rawAccelerometer4YLabel, row, col + 8)
-        row += 1
-        self.dataLayout.addWidget(QLabel("Acceleration (m/s<sup>2</sup>)"), row, col)
-        self.dataLayout.addWidget(self.accelerometer1XLabel, row, col + 1)
-        self.dataLayout.addWidget(self.accelerometer1YLabel, row, col + 2)
-        self.dataLayout.addWidget(self.accelerometer2XLabel, row, col + 3)
-        self.dataLayout.addWidget(self.accelerometer2YLabel, row, col + 4)
-        self.dataLayout.addWidget(self.accelerometer3XLabel, row, col + 5)
-        self.dataLayout.addWidget(self.accelerometer3YLabel, row, col + 6)
-        self.dataLayout.addWidget(self.accelerometer4XLabel, row, col + 7)
-        self.dataLayout.addWidget(self.accelerometer4YLabel, row, col + 8)
+        layout.addWidget(TimeChartView(self._chart))
 
-        self.warningLayout.addRow(
-            "Any Warnings", WarningLabel(m1m3.accelerometerWarning)
-        )
+        self.setLayout(layout)
 
-        self.plotLayout.addWidget(self.chart_view)
-
-        self.m1m3.accelerometerData.connect(self.accelerometerData)
+        m1m3.accelerometerData.connect(self.accelerometerData)
 
     @Slot(map)
     def accelerometerData(self, data):
-        self.rawAccelerometer1XLabel.setText("%0.3f" % (data.rawAccelerometer[0]))
-        self.rawAccelerometer1YLabel.setText("%0.3f" % (data.rawAccelerometer[1]))
-        self.rawAccelerometer2XLabel.setText("%0.3f" % (data.rawAccelerometer[2]))
-        self.rawAccelerometer2YLabel.setText("%0.3f" % (data.rawAccelerometer[3]))
-        self.rawAccelerometer3XLabel.setText("%0.3f" % (data.rawAccelerometer[4]))
-        self.rawAccelerometer3YLabel.setText("%0.3f" % (data.rawAccelerometer[5]))
-        self.rawAccelerometer4XLabel.setText("%0.3f" % (data.rawAccelerometer[6]))
-        self.rawAccelerometer4YLabel.setText("%0.3f" % (data.rawAccelerometer[7]))
-        self.accelerometer1XLabel.setText("%0.3f" % (data.accelerometer[0]))
-        self.accelerometer1YLabel.setText("%0.3f" % (data.accelerometer[1]))
-        self.accelerometer2XLabel.setText("%0.3f" % (data.accelerometer[2]))
-        self.accelerometer2YLabel.setText("%0.3f" % (data.accelerometer[3]))
-        self.accelerometer3XLabel.setText("%0.3f" % (data.accelerometer[4]))
-        self.accelerometer3YLabel.setText("%0.3f" % (data.accelerometer[5]))
-        self.accelerometer4XLabel.setText("%0.3f" % (data.accelerometer[6]))
-        self.accelerometer4YLabel.setText("%0.3f" % (data.accelerometer[7]))
-        self.angularAccelerationXLabel.setText("%0.3f" % (data.angularAccelerationX))
-        self.angularAccelerationYLabel.setText("%0.3f" % (data.angularAccelerationY))
-        self.angularAccelerationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
-
-        self.chart.append(
+        self._chart.append(
             data.timestamp,
             [
                 data.angularAccelerationX,

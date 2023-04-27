@@ -61,6 +61,7 @@ __all__ = [
     "DataDegC",
     "Hz",
     "DegS2",
+    "MSec2",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -574,6 +575,11 @@ class Hz(DataUnitLabel):
 class DegS2(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.deg / u.s**2)
+
+
+class MSec2(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.m / u.s**2)
 
 
 class ArcsecWarning(Arcsec):
