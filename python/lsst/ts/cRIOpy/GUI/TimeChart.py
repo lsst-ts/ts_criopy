@@ -277,13 +277,29 @@ class TimeChartView(QtCharts.QChartView):
 
 
 class SALAxis:
-    def __init__(self, title, signal):
+    """
+    Represents axis in SALChartWidget. Series should be added by various
+    addValue* methods.
+
+    Parameters
+    ----------
+    title : `str`
+        Axis title. Will be shown next to the axis.
+    signal : `Signal`
+        Signal the axis gets it data from.
+    """
+
+    def __init__(self, title: str, signal: Signal):
         self.title = title
         self.signal = signal
         self.fields = {}
 
-    def addValue(self, name, field):
+    def addValue(self, name: str, field: str):
         self.fields[name] = field
+        return self
+
+    def addArrayValue(self, name: str, field: str, index: int):
+        self.fields[name] = (field, index)
         return self
 
     def addValues(self, fields):
@@ -336,8 +352,16 @@ class SALChartWidget(TimeChartView):
                 self._has_timestamp = True
             except AttributeError:
                 self._has_timestamp = False
+
+        displayData = []
+        for f in fields.values():
+            if type(f) is tuple:
+                displayData.append(getattr(data, f[0])[f[1]])
+            else:
+                displayData.append(getattr(data, f))
+
         self.chart.append(
             data.timestamp if self._has_timestamp else data.private_sndStamp,
-            [getattr(data, f) for f in fields.values()],
+            displayData,
             axis_index=axis_index,
         )

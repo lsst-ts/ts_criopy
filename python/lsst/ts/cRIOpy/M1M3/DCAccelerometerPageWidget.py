@@ -19,7 +19,7 @@
 
 from functools import partial
 
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import (
@@ -28,8 +28,8 @@ from ..GUI import (
     ArraySignal,
     DegS2,
     MSec2,
-    TimeChart,
-    TimeChartView,
+    SALAxis,
+    SALChartWidget,
     ValueGrid,
     Volt,
     WarningGrid,
@@ -92,23 +92,17 @@ class DCAccelerometerPageWidget(QWidget):
             )
         )
 
-        self._chart = TimeChart(
-            {"Angular Acceleration (rad/s<sup>2</sup>)": ["X", "Y", "Z"]}
+        axis = SALAxis(
+            "Angular Acceleration (rad/s<sup>2</sup>)", m1m3.accelerometerData
+        )
+        axis.addValues(
+            {
+                "X": "angularAccelerationX",
+                "Y": "angularAccelerationY",
+                "Z": "angularAccelerationZ",
+            }
         )
 
-        layout.addWidget(TimeChartView(self._chart))
+        layout.addWidget(SALChartWidget(axis))
 
         self.setLayout(layout)
-
-        m1m3.accelerometerData.connect(self.accelerometerData)
-
-    @Slot(map)
-    def accelerometerData(self, data):
-        self._chart.append(
-            data.timestamp,
-            [
-                data.angularAccelerationX,
-                data.angularAccelerationY,
-                data.angularAccelerationZ,
-            ],
-        )
