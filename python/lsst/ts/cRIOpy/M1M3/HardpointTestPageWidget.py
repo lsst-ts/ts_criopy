@@ -81,7 +81,7 @@ class HardpointTestPageWidget(QWidget):
                             ArrayItem(
                                 "measuredForce",
                                 "Measuerd force",
-                                partial(Force, ".03f"),
+                                partial(Force, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "displacement",

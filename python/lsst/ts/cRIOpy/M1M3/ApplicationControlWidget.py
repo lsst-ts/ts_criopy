@@ -34,8 +34,8 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..GUI import Colors
-from ..GUI.SAL import SALCommand
+from ..GUI import Colors, StatusBox, StatusWidget
+from ..GUI.SAL import EngineeringButton, SALCommand
 from ..GUI.SAL.SALComm import warning
 
 
@@ -103,29 +103,57 @@ class SlewWidget(QWidget):
     def __init__(self, m1m3):
         super().__init__()
         self.m1m3 = m1m3
-        slewLayout = QHBoxLayout()
-        self.slewFlagOn = QPushButton("Slew ON")
-        self.slewFlagOff = QPushButton("Slew OFF")
+        slewLayout = QVBoxLayout()
+        slewLayout.addWidget(
+            StatusBox(
+                [
+                    StatusWidget(
+                        "S", "slewFlag", "SlewFlag - if booster valves are opened"
+                    ),
+                    StatusWidget(
+                        "U", "userTriggered", "User would like to open booster valves"
+                    ),
+                    StatusWidget(
+                        "FE",
+                        "followingErrorTriggered",
+                        "Force Actuator Following error values suggests booster valves shall be opened",
+                    ),
+                    StatusWidget(
+                        "A",
+                        "accelerometerTriggered",
+                        "Accelerometer values suggest booster valve shall be opened",
+                    ),
+                ],
+                self.m1m3.boosterValveStatus,
+            )
+        )
+        self.slewFlagOn = EngineeringButton("Slew ON", m1m3)
+        self.slewFlagOff = EngineeringButton("Slew OFF", m1m3)
         pal = self.slewFlagOn.palette()
         self._defaultColor = pal.color(pal.Button)
-        slewLayout.addWidget(self.slewFlagOn)
-        slewLayout.addWidget(self.slewFlagOff)
+
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.slewFlagOn)
+        buttonLayout.addWidget(self.slewFlagOff)
+
+        slewLayout.addLayout(buttonLayout)
+
         self.setLayout(slewLayout)
 
         self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
         self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
-        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
+        self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self):
-        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=True)
+        await SALCommand(self, self.m1m3.remote.cmd_boosterValveOpen)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self):
-        await SALCommand(self, self.m1m3.remote.cmd_setAirSlewFlag, slewFlag=False)
+        await SALCommand(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot(map)
-    def forceActuatorState(self, data):
+    def boosterValveStatus(self, data):
         palOn = self.slewFlagOn.palette()
         palOff = self.slewFlagOff.palette()
         if data.slewFlag:

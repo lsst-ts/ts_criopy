@@ -267,6 +267,7 @@ class OverviewPageWidget(QWidget):
         m1m3.heartbeat.connect(self.heartbeatLabel.heartbeat)
 
         m1m3.accelerometerData.connect(self.accelerometerData)
+        m1m3.boosterValveStatus.connect(self.boosterValveStatus)
         m1m3.forceActuatorData.connect(self.forceActuatorData)
         m1m3.gyroData.connect(self.gyroData)
         m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
@@ -322,6 +323,10 @@ class OverviewPageWidget(QWidget):
         self.accelationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
 
     @Slot(map)
+    def boosterValveStatus(self, data):
+        self.slewFlag.setText("On" if data.slewFlag else "Off")
+
+    @Slot(map)
     def forceActuatorData(self, data):
         self._setValues(self.faMeasured, data)
 
@@ -361,7 +366,6 @@ class OverviewPageWidget(QWidget):
     @Slot(map)
     def outerLoopData(self, data):
         self.broadcastCounter.setText(str(data.broadcastCounter))
-        self.slewFlag.setText("True" if data.slewFlag else "False")
         self.executionTime.setText(f"{(data.executionTime * u.s.to(u.ms)):.2f}")
 
     @Slot(map)

@@ -60,6 +60,7 @@ __all__ = [
     "KiloWatt",
     "DataDegC",
     "Hz",
+    "DegS2",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -217,6 +218,10 @@ class UnitLabel(QLabel):
         except KeyError:
             pass
 
+        # s2, s3 using sup
+        self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
+        self.unit_name = self.unit_name.replace("s3", "s<sup>3</sup>")
+
         self.unit_name = " " + self.unit_name
 
         self.unit = unit
@@ -316,7 +321,7 @@ class DataUnitLabel(UnitLabel):
         self.setValue(getattr(data, self._field))
 
 
-class Force(UnitLabel):
+class Force(DataUnitLabel):
     """Displays force in N (Newtons).
 
     Parameters
@@ -325,8 +330,8 @@ class Force(UnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, fmt=".02f"):
-        super().__init__(fmt, u.N)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.N)
 
 
 class Moment(UnitLabel):
@@ -564,6 +569,11 @@ class DataDegC(DataUnitLabel):
 class Hz(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.Hz)
+
+
+class DegS2(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.deg / u.s**2)
 
 
 class ArcsecWarning(Arcsec):
