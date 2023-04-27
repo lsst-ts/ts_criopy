@@ -28,6 +28,16 @@ __all__ = ["BoosterValveWidget"]
 
 
 class FollowingErrorTrigger(QWidget):
+    """
+    Display FAs following errors parameters relevant for booster valve
+    triggering.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        M1M3 SAL remote.
+    """
+
     def __init__(self, m1m3):
         super().__init__()
         layout = QGridLayout()
@@ -104,6 +114,15 @@ class FollowingErrorTrigger(QWidget):
 
 
 class Accelerometer(QWidget):
+    """
+    Display DC accelerometer values relevant for booster valve triggering.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        M1M3 SAL remote.
+    """
+
     def __init__(self, m1m3):
         super().__init__()
         layout = QGridLayout()
@@ -153,6 +172,11 @@ class Accelerometer(QWidget):
 class BoosterValveWidget(QWidget):
     """
     Widget showing values important for booster valve control.
+
+    Parameters
+    ----------
+    m1m3 : `SALComm`
+        M1M3 SAL remote.
     """
 
     def __init__(self, m1m3):
