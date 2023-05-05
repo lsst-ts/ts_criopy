@@ -16,8 +16,8 @@ class ApplicationStatusWidget(QWidget):
         self.layout.addLayout(self.statusLayout)
         self.setLayout(self.layout)
 
-        self.modeStateLabel = QLabel("UNKNOWN")
-        self.mirrorStateLabel = QLabel("UNKNOWN")
+        self.modeStateLabel = QLabel("---")
+        self.mirrorStateLabel = QLabel("---")
 
         row = 0
         col = 0

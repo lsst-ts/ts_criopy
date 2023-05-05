@@ -21,7 +21,6 @@
 
 import concurrent.futures
 import time
-from functools import partial
 
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
@@ -30,13 +29,7 @@ from PySide2.QtWidgets import QMenu
 
 from . import AbstractChart
 
-__all__ = [
-    "TimeChart",
-    "UserSelectedTimeChart",
-    "TimeChartView",
-    "SALAxis",
-    "SALChartWidget",
-]
+__all__ = ["TimeChart", "UserSelectedTimeChart", "TimeChartView"]
 
 
 class TimeChart(AbstractChart):
@@ -274,70 +267,3 @@ class TimeChartView(QtCharts.QChartView):
             if action.text() == s.name():
                 s.setVisible(action.isChecked())
                 return
-
-
-class SALAxis:
-    def __init__(self, title, signal):
-        self.title = title
-        self.signal = signal
-        self.fields = {}
-
-    def addValue(self, name, field):
-        self.fields[name] = field
-        return self
-
-    def addValues(self, fields):
-        self.fields = {**self.fields, **fields}
-        return self
-
-
-class SALChartWidget(TimeChartView):
-    """
-    Widget plotting SAL data. Connects to SAL signal triggered when new data
-    arrives and redraw graph.
-
-    Parameters
-    ----------
-    fields : `[SALAxis]` or `SALAxis`
-        Array of axis to plot.
-
-    Example
-    -------
-        a1 = SALAxis("Measured Forces (N)", m1m3.measuredForces)
-        a1.addValue("X", "xForce")
-        a1.addValue("Y", "yForce")
-        a1.addValue("Z", "zForce")
-
-        a2 = SALAxis("Applied Forces (N)", m1m3.appliedForces)
-        a2.addValues({"X" : "xForce", "Y" : "yForce", "Z" : "zForce"})
-
-        chart = SALChartWidget(a1, a2, SALAxis(
-            "Pre-clipped Forces (N)",
-            m1m3.preclippedForces,
-        ).addValue("X", "xForce"))
-    """
-
-    def __init__(self, *values, **kwargs):
-        self.chart = TimeChart({v.title: v.fields.keys() for v in values}, **kwargs)
-        axis_index = 0
-        for v in values:
-            v.signal.connect(
-                partial(self._append, axis_index=axis_index, fields=v.fields)
-            )
-            axis_index += 1
-        self._has_timestamp = None
-
-        super().__init__(self.chart)
-
-    def _append(self, data, axis_index, fields):
-        if self._has_timestamp is None:
-            try:
-                getattr(data, "timestamp")
-                self._has_timestamp = True
-            except AttributeError:
-                self._has_timestamp = False
-        self.chart.append(
-            data.timestamp if self._has_timestamp else data.private_sndStamp,
-            [getattr(data, f) for f in fields.values()],
-            axis_index=axis_index,
-        )

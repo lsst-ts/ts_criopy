@@ -21,6 +21,7 @@ import typing
 from datetime import datetime
 
 import astropy.units as u
+from astropy.coordinates import Angle
 from PySide2.QtCore import Qt, QTimer, Slot
 from PySide2.QtGui import QColor, QPalette
 from PySide2.QtWidgets import (
@@ -58,9 +59,11 @@ __all__ = [
     "Hours",
     "Seconds",
     "KiloWatt",
+    "DMS",
     "DataDegC",
     "Hz",
     "DegS2",
+    "MSec2",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -212,6 +215,7 @@ class UnitLabel(QLabel):
         aliases = {
             "deg_C": "°C",
             "1 / min": "RPM",
+            "m N": "N m",
         }
         try:
             self.unit_name = aliases[self.unit_name]
@@ -561,6 +565,17 @@ class KiloWatt(DataUnitLabel):
         super().__init__(signal, field, ".01f", u.kW)
 
 
+class DMS(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt)
+
+    def setValue(self, value):
+        dms = Angle(value * u.deg).dms
+        self.setText(
+            f"{dms.d:.0f}<b>°</b> {dms.m:02.0f}<b>'</b> {dms.s:05.02f}<b>\"</b>"
+        )
+
+
 class DataDegC(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.deg_C)
@@ -574,6 +589,11 @@ class Hz(DataUnitLabel):
 class DegS2(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.deg / u.s**2)
+
+
+class MSec2(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.m / u.s**2)
 
 
 class ArcsecWarning(Arcsec):

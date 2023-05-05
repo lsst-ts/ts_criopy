@@ -36,6 +36,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import (
+    Arcsec,
     ArrayGrid,
     ArrayItem,
     ArraySignal,
@@ -371,9 +372,9 @@ class HardpointsWidget(QWidget):
             "xPosition": ("Position X", Mm()),
             "yPosition": ("Position Y", Mm()),
             "zPosition": ("Position Z", Mm()),
-            "xRotation": ("Rotation X", Mm()),
-            "yRotation": ("Rotation Y", Mm()),
-            "zRotation": ("Rotation Z", Mm()),
+            "xRotation": ("Rotation X", Arcsec()),
+            "yRotation": ("Rotation Y", Arcsec()),
+            "zRotation": ("Rotation Z", Arcsec()),
         }
         addDataRow(self.positions, row, 1)
 
