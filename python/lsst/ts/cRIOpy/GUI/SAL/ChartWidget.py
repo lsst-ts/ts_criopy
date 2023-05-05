@@ -38,7 +38,7 @@ class Axis:
     title : `str`
         Axis title. Will be shown next to the axis.
     signal : `Signal`
-        Signal the axis gets it data from.
+        Signal the axis gets it's data from.
     """
 
     def __init__(self, title: str, signal: Signal):
@@ -66,8 +66,8 @@ class ChartWidget(TimeChartView):
 
     Parameters
     ----------
-    fields : `[Axis]` or `Axis`
-        Array of axis to plot.
+    *values : `Axis`
+        Axis or axes to plot.
 
     Example
     -------
