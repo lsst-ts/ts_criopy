@@ -474,24 +474,34 @@ class Topics:
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
                     ),
                     TopicField(
-                        "PC Measured Force Low Limit",
-                        "primaryCylinderMeasuredForceLowLimit",
+                        "Z Measured Force Low Limit",
+                        "measuredZForceLowLimit",
                         FATABLE_ZINDEX,
                     ),
                     TopicField(
-                        "PC Measured Force High Limit",
-                        "primaryCylinderMeasuredForceHighLimit",
+                        "Z Measured Force High Limit",
+                        "measuredZForceHighLimit",
                         FATABLE_ZINDEX,
                     ),
                     TopicField(
-                        "SC Measured Force Low Limit",
-                        "secondaryCylinderMeasuredForceLowLimit",
-                        FATABLE_SINDEX,
+                        "Y Measured Force Low Limit",
+                        "measuredYForceLowLimit",
+                        FATABLE_YINDEX,
                     ),
                     TopicField(
-                        "SC Measured Force High Limit",
-                        "secondaryCylinderMeasuredForceHighLimit",
-                        FATABLE_SINDEX,
+                        "Y Measured Force High Limit",
+                        "measuredYForceHighLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "X Measured Force Low Limit",
+                        "measuredXForceLowLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
+                        "X Measured Force High Limit",
+                        "measuredXForceHighLimit",
+                        FATABLE_XINDEX,
                     ),
                     TopicField(
                         "PC FE Warning",
@@ -760,14 +770,19 @@ class Topics:
                 "FA Force Warning",
                 [
                     WarningField(
-                        "Primary Axis Measured Force Warning",
-                        "primaryAxisMeasuredForceWarning",
+                        "Z Measured Force Warning",
+                        "measuredZForceWarning",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
-                        "Secondary Axis Measured Force Warning",
-                        "secondaryAxisMeasuredForceWarning",
-                        FATABLE_SINDEX,
+                        "Y Measured Force Warning",
+                        "measuredYForceWarning",
+                        FATABLE_YINDEX,
+                    ),
+                    WarningField(
+                        "X Measured Force Warning",
+                        "measuredXForceWarning",
+                        FATABLE_XINDEX,
                     ),
                     WarningField(
                         "Primary Axis FE Warning",
