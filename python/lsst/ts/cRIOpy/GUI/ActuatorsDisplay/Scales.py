@@ -31,3 +31,4 @@ class Scales(enum.IntEnum):
     BUMP_TEST = 4
     ENABLED_DISABLED = 5
     WAITING = 6
+    INTEGER = 7

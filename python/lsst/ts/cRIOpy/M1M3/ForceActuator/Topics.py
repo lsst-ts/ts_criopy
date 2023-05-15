@@ -17,7 +17,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from PySide2.QtCore import Slot
+
 from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE,
+    FATABLE_INDEX,
     FATABLE_SINDEX,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
@@ -25,6 +29,7 @@ from lsst.ts.cRIOpy.M1M3FATable import (
 )
 
 from ...GUI.ActuatorsDisplay import Scales
+from ...GUI.SAL import SALComm
 from ...GUI.SAL.TopicData import (
     EnabledDisabledField,
     TopicData,
@@ -39,6 +44,55 @@ __all__ = ["Topics"]
 class BumpTestField(TopicField):
     def __init__(self, name, fieldName, valueIndex):
         super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
+
+
+class FAIndicesData(TopicData):
+    """Class for constant FA indices. Construct required fields, provides data.
+
+    Parameters
+    ----------
+    name : `str`
+        Topic name.
+    """
+
+    def __init__(self, name: str):
+        super().__init__(
+            name,
+            [
+                TopicField("Z Indices", "zIndices", FATABLE_ZINDEX, Scales.INTEGER),
+                TopicField("Y Indices", "yIndices", FATABLE_YINDEX, Scales.INTEGER),
+                TopicField("X Indices", "xIndices", FATABLE_XINDEX, Scales.INTEGER),
+                TopicField(
+                    "Primary Cylinder Indices",
+                    "pIndices",
+                    FATABLE_INDEX,
+                    Scales.INTEGER,
+                ),
+                TopicField(
+                    "Secondary Cylinder Indices",
+                    "sIndices",
+                    FATABLE_SINDEX,
+                    Scales.INTEGER,
+                ),
+            ],
+            None,
+        )
+
+        self.xIndices = [
+            row[FATABLE_XINDEX] for row in FATABLE if row[FATABLE_XINDEX] is not None
+        ]
+        self.yIndices = [
+            row[FATABLE_YINDEX] for row in FATABLE if row[FATABLE_YINDEX] is not None
+        ]
+        self.zIndices = [row[FATABLE_ZINDEX] for row in FATABLE]
+        self.pIndices = [row[FATABLE_INDEX] for row in FATABLE]
+        self.sIndices = [
+            row[FATABLE_SINDEX] for row in FATABLE if row[FATABLE_SINDEX] is not None
+        ]
+        self.timestamp = None
+
+    def getTopic(self):
+        return self
 
 
 class Topics:
@@ -412,6 +466,7 @@ class Topics:
                 ],
                 "forceActuatorInfo",
             ),
+            FAIndicesData("FA Indices"),
             TopicData(
                 "FA Settings",
                 [
@@ -879,13 +934,28 @@ class Topics:
             ),
         ]
 
-    def changeTopic(self, index, slot, comm):
-        """ """
+    def changeTopic(self, index: int, slot: Slot, comm: SALComm):
+        """Called when new topic is selected.
+
+        Parameters
+        ----------
+        index: `int`
+            New field index.
+        slot: `Slot`
+            Slot for data reception.
+        comm: `SALComm`
+            SALComm with data.
+        """
+        # disconnect/connect only for real M1M3 topics -  if topic is None, don't connect/disconnect
         if self.__lastIndex is not None:
-            getattr(comm, self.topics[self.__lastIndex].topic).disconnect(slot)
+            topic = self.topics[self.__lastIndex].topic
+            if topic is not None:
+                getattr(comm, topic).disconnect(slot)
 
         self.__lastIndex = index
         if index is None:
             return
 
-        getattr(comm, self.topics[index].topic).connect(slot)
+        topic = self.topics[index].topic
+        if topic is not None:
+            getattr(comm, topic).connect(slot)

@@ -236,7 +236,10 @@ class Widget(QSplitter):
         return (self._topic.topic, self.field.fieldName)
 
     def _getData(self):
-        return getattr(self.m1m3.remote, self._topic.getTopic()).get()
+        topic = self._topic.getTopic()
+        if type(topic) == str:
+            return getattr(self.m1m3.remote, topic).get()
+        return topic
 
     def _getFieldData(self):
         return self.field.getValue(self._getData())

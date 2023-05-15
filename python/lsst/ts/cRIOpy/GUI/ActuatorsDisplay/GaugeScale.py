@@ -25,12 +25,20 @@ from PySide2.QtWidgets import QWidget
 
 
 class GaugeScale(QWidget):
-    """Draws gauge with color scale."""
+    """Draws gauge with color scale.
 
-    def __init__(self):
+    Parameters
+    ----------
+    fmt: `str`
+
+
+    """
+
+    def __init__(self, fmt: str = ".02f"):
         super().__init__()
         self._min = None
         self._max = None
+        self._fmt = fmt
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
@@ -54,7 +62,7 @@ class GaugeScale(QWidget):
         return QSize(100, 100)
 
     def formatValue(self, value):
-        return f"{value:.2f}"
+        return f"{value:{self._fmt}}"
 
     def getColor(self, value):
         """Returns color for given value.
@@ -108,7 +116,7 @@ class GaugeScale(QWidget):
                     self.width() - swidth,
                     sheight,
                     Qt.AlignCenter,
-                    "{0:.2f}".format(self._min),
+                    self.formatValue(self._min),
                 )
             return
 
@@ -119,6 +127,14 @@ class GaugeScale(QWidget):
         painter.setPen(Qt.black)
         painter.drawText(
             0, 0, self.width() - swidth, 30, Qt.AlignCenter, self.formatValue(self._max)
+        )
+        painter.drawText(
+            0,
+            sheight / 2.0 - 30,
+            self.width() - swidth,
+            30,
+            Qt.AlignCenter,
+            self.formatValue((self._max + self._min) / 2.0),
         )
         painter.drawText(
             0,
