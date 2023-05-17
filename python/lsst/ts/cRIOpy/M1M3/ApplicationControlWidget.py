@@ -17,12 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from lsst.ts.salobj import base
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
+    QAbstractButton,
     QButtonGroup,
     QFormLayout,
     QHBoxLayout,
@@ -36,17 +39,17 @@ from PySide2.QtWidgets import (
 
 from ..GUI import Colors, StatusBox, StatusWidget
 from ..GUI.SAL import EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import warning
+from ..GUI.SAL.SALComm import MetaSAL, warning
 
 
 class HPWarnings:
-    def __init__(self):
+    def __init__(self) -> None:
         self.faultHigh = self.faultLow = None
         self.warningHigh = self.warningLow = None
 
         self._faultLow = self._faultLowRaising = None
 
-    def setState(self, state):
+    def setState(self, state: int) -> None:
         """Change low limits according to sensed state.
 
         Note
@@ -72,7 +75,7 @@ class HPWarnings:
         self.warningLow = self.faultLow + errorRange * rangeRatio
         self.warningHigh = self.faultHigh - errorRange * rangeRatio
 
-    def getColor(self, v):
+    def get_color(self, v: float) -> QColor:
         if self.faultLow is None:
             return QColor(128, 128, 128)
         elif v < self.faultLow or v > self.faultHigh:
@@ -81,17 +84,17 @@ class HPWarnings:
             return QColor(255, 255, 0)
         return QColor(0, 255, 0)
 
-    def minText(self):
+    def min_text(self) -> str:
         if self.faultLow is None:
             return "Event hardpointActuatorSettings wasn't received"
         return f"Fault: {self.faultLow:.2f} Warning: {self.warningLow:.2f}"
 
-    def maxText(self):
+    def max_text(self) -> str:
         if self.faultHigh is None:
             return "Event hardpointActuatorSettings wasn't received"
         return f"Warning: {self.warningHigh:.2f} Fault: {self.faultHigh:.2f}"
 
-    def hardpointActuatorSettings(self, data):
+    def hardpointActuatorSettings(self, data: typing.Any) -> None:
         self.faultHigh = data.airPressureFaultHigh
         self._faultLow = data.airPressureFaultLow
         self._faultLowRaising = data.airPressureFaultLowRaising
@@ -100,7 +103,7 @@ class HPWarnings:
 class SlewWidget(QWidget):
     """Class to display and interact with slew flag status."""
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
         slewLayout = QVBoxLayout()
@@ -145,15 +148,15 @@ class SlewWidget(QWidget):
         self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
 
     @asyncSlot()
-    async def issueCommandSlewFlagOn(self):
+    async def issueCommandSlewFlagOn(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_boosterValveOpen)
 
     @asyncSlot()
-    async def issueCommandSlewFlagOff(self):
+    async def issueCommandSlewFlagOff(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_boosterValveClose)
 
-    @Slot(map)
-    def boosterValveStatus(self, data):
+    @Slot()
+    def boosterValveStatus(self, data: typing.Any) -> None:
         palOn = self.slewFlagOn.palette()
         palOff = self.slewFlagOff.palette()
         if data.slewFlag:
@@ -184,11 +187,11 @@ class ApplicationControlWidget(QWidget):
     TEXT_EXIT_CONTROL = "&Exit Control"
     TEXT_PANIC = "&Panic!"
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         self.m1m3 = m1m3
-        self._lastEnabled = None
+        self._lastEnabled: list[bool] | None = None
         self._hpWarnings = HPWarnings()
 
         self.commandButtons = QButtonGroup(self)
@@ -196,7 +199,7 @@ class ApplicationControlWidget(QWidget):
 
         commandLayout = QVBoxLayout()
 
-        def _addButton(text):
+        def _addButton(text: str) -> QPushButton:
             button = QPushButton(text)
             button.setEnabled(False)
             self.commandButtons.addButton(button)
@@ -255,14 +258,14 @@ class ApplicationControlWidget(QWidget):
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
-    def disableAllButtons(self):
+    def disableAllButtons(self) -> None:
         if self._lastEnabled is None:
             self._lastEnabled = []
             for b in self.commandButtons.buttons():
                 self._lastEnabled.append(b.isEnabled())
                 b.setEnabled(False)
 
-    def restoreEnabled(self):
+    def restoreEnabled(self) -> None:
         if self._lastEnabled is None:
             return
         bi = 0
@@ -273,7 +276,7 @@ class ApplicationControlWidget(QWidget):
         self._lastEnabled = None
 
     @asyncSlot()
-    async def _buttonClicked(self, bnt):
+    async def _buttonClicked(self, bnt: QAbstractButton) -> None:
         text = bnt.text()
         self.disableAllButtons()
         try:
@@ -320,11 +323,11 @@ class ApplicationControlWidget(QWidget):
         finally:
             self.restoreEnabled()
 
-    @Slot(map)
-    def detailedState(self, data):
+    @Slot()
+    def detailedState(self, data: typing.Any) -> None:
         # text mean button is enabled and given text shall be displayed. None
         # for disabled buttons.
-        stateMap = {
+        stateMap: dict[int, typing.Any] = {
             DetailedState.STANDBY: [
                 self.TEXT_START,
                 None,
@@ -420,17 +423,17 @@ class ApplicationControlWidget(QWidget):
         except KeyError:
             print(f"Unhandled detailed state {data.detailedState}")
 
-        self._setHpWarnings(data.detailedState)
+        self._set_hardpoint_warnings(data.detailedState)
 
-    @Slot(map)
-    def hardpointActuatorSettings(self, data):
+    @Slot()
+    def hardpointActuatorSettings(self, data: typing.Any) -> None:
         self._hpWarnings.hardpointActuatorSettings(data)
         state = self.m1m3.remote.evt_detailedState.get()
         if state is not None:
-            self._setHpWarnings(state)
+            self._set_hardpoint_warnings(state)
 
-    @Slot(map)
-    def raisingLoweringInfo(self, data):
+    @Slot()
+    def raisingLoweringInfo(self, data: typing.Any) -> None:
         self.weightSupportedPercent.setValue(data.weightSupportedPercent)
         pal = self.supportedNumber.palette()
         if data.weightSupportedPercent == 0:
@@ -445,22 +448,22 @@ class ApplicationControlWidget(QWidget):
         self.supportedNumber.display(f"{data.weightSupportedPercent:.02f}")
         self.supportedNumber.setPalette(pal)
 
-    @Slot(map)
-    def hardpointMonitorData(self, data):
+    @Slot()
+    def hardpointMonitorData(self, data: typing.Any) -> None:
         min_d = min(data.breakawayPressure)
         max_d = max(data.breakawayPressure)
 
         min_pal = self.minPressure.palette()
-        min_pal.setColor(min_pal.Background, self._hpWarnings.getColor(min_d))
+        min_pal.setColor(min_pal.Background, self._hpWarnings.get_color(min_d))
         self.minPressure.display(f"{min_d:.02f}")
         self.minPressure.setPalette(min_pal)
 
         max_pal = self.minPressure.palette()
-        max_pal.setColor(max_pal.Background, self._hpWarnings.getColor(max_d))
+        max_pal.setColor(max_pal.Background, self._hpWarnings.get_color(max_d))
         self.maxPressure.display(f"{max_d:.02f}")
         self.maxPressure.setPalette(max_pal)
 
-    def _setHpWarnings(self, state):
+    def _set_hardpoint_warnings(self, state: int) -> None:
         self._hpWarnings.setState(state)
-        self.minPressure.setToolTip(self._hpWarnings.minText())
-        self.maxPressure.setToolTip(self._hpWarnings.maxText())
+        self.minPressure.setToolTip(self._hpWarnings.min_text())
+        self.maxPressure.setToolTip(self._hpWarnings.max_text())

@@ -17,16 +17,19 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import OnOffGrid, WarningGrid
 from ..GUI.SAL import Axis, ChartWidget, EngineeringButton, SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class AirPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -80,15 +83,15 @@ class AirPageWidget(QWidget):
 
         self.m1m3.airSupplyStatus.connect(self.airSupplyStatus)
 
-    @Slot(map)
-    def airSupplyStatus(self, data):
+    @Slot()
+    def airSupplyStatus(self, data: typing.Any) -> None:
         self.turnAirOnButton.setDisabled(data.airCommandedOn)
         self.turnAirOffButton.setEnabled(data.airCommandedOn)
 
     @asyncSlot()
-    async def issueCommandTurnAirOn(self):
+    async def issueCommandTurnAirOn(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_turnAirOn)
 
     @asyncSlot()
-    async def issueCommandTurnAirOff(self):
+    async def issueCommandTurnAirOff(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_turnAirOff)

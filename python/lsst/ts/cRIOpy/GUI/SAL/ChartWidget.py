@@ -44,7 +44,7 @@ class Axis:
     def __init__(self, title: str, signal: Signal):
         self.title = title
         self.signal = signal
-        self.fields = {}
+        self.fields: dict[str, str | tuple[str, int]] = {}
 
     def addValue(self, name: str, field: str):
         self.fields[name] = field

@@ -54,8 +54,8 @@ class TimeBoxChart(AbstractChart):
         self.coefficient = 1
         self.unit = units[0]
 
-    @Slot(str)
-    def unitChanged(self, unit):
+    @Slot()
+    def unitChanged(self, unit: str) -> None:
         delta = deltas(self.unit, unit)
         for s in self.series():
             for b in s.boxSets():

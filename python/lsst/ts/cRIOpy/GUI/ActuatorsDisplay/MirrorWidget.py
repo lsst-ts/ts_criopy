@@ -26,7 +26,7 @@ class MirrorWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.mirrorView = MirrorView()
+        self.mirrorView: MirrorView = MirrorView()
         self._bumpTest = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
@@ -57,7 +57,7 @@ class MirrorWidget(QWidget):
         self.mirrorView.resetTransform()
         self.mirrorView.scale(*self.mirrorView.scaleHints())
 
-    def _replace(self, newWidget):
+    def _replace(self, newWidget: QWidget):
         if self._curentWidget == newWidget:
             return
         self._curentWidget.hide()
@@ -113,3 +113,6 @@ class MirrorWidget(QWidget):
             Selected actuator ID.
         """
         self.mirrorView.selected = self.mirrorView.getForceActuator(id)
+
+    def clear(self) -> None:
+        self.mirrorView.clear()

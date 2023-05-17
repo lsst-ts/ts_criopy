@@ -43,15 +43,15 @@ class Histogram(QtCharts.QChart):
         self.addSeries(self.serie)
 
         self.yAxis = QtCharts.QValueAxis()
-        self.addAxis(self.yAxis, Qt.AlignLeft)
+        self.addAxis(self.yAxis, Qt.AlignLeft)  # type: ignore
 
         self.xAxis = QtCharts.QBarCategoryAxis()
-        self.addAxis(self.xAxis, Qt.AlignBottom)
+        self.addAxis(self.xAxis, Qt.AlignBottom)  # type: ignore
 
         self.legend().setVisible(True)
-        self.legend().setAlignment(Qt.AlignBottom)
+        self.legend().setAlignment(Qt.AlignBottom)  # type: ignore
 
-    def update(self, values: [int]):
+    def plot(self, values: list[int]):
         """Update histogram values.
 
         Parameters

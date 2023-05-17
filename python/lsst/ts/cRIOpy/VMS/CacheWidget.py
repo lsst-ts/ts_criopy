@@ -48,7 +48,9 @@ class CacheWidget(DockWindow):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
+    def __init__(
+        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+    ):
         super().__init__(title)
         self.setObjectName(title)
         self.toolBar = toolBar
@@ -67,7 +69,7 @@ class CacheWidget(DockWindow):
         self.chartView.unitChanged.connect(self.unitChanged)
         if channels is not None:
             for channel in channels:
-                self.chartView.addSerie(str(channel[0]) + " " + channel[1])
+                self.chartView.addSerie(f"{channel[0]} {channel[1]}")
 
         self.coefficient = 1
         self.unit = units[0]
@@ -76,37 +78,39 @@ class CacheWidget(DockWindow):
 
         self.setWidget(self.chartView)
 
-    @Slot(bool, bool)
-    def axisChanged(self, logX, logY):
+    @Slot()
+    def axisChanged(self, log_x: bool, log_y: bool) -> None:
         self.callSetupAxes = True
 
-    @Slot(str)
-    def unitChanged(self, unit):
+    @Slot()
+    def unitChanged(self, unit: str) -> None:
         self.coefficient = coefficients(unit)
         self.unit = unit
         self.callSetupAxes = True
 
-    def setupAxes(self):
+    def setupAxes(self) -> None:
         raise RuntimeError(
             "Abstract CacheWidget.setupAxes called - please make sure the"
             " method is implemented in all child classes"
         )
 
-    def _plotAll(self):
+    def _plotAll(self) -> None:
         try:
             self.plotAll()
         except Exception as ex:
             print(str(ex))
 
-    def plotAll(self):
+    def plotAll(self) -> None:
         """Plot all signals. Run as task in a thread. Should be overriden."""
         raise RuntimeError(
             "Abstract CacheWidget.plotAll called - please make sure the method"
             " is implemented in all child classes"
         )
 
-    @Slot(int, int, float, float)
-    def cacheUpdated(self, index, length, startTime, endTime):
+    @Slot()
+    def cacheUpdated(
+        self, index: int, length: int, startTime: float, endTime: float
+    ) -> None:
         """Process and plot data. Signaled when new data become available.
 
         Parameters
@@ -128,10 +132,10 @@ class CacheWidget(DockWindow):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 self.updateTask = pool.submit(self._plotAll)
 
-    @Slot(float, float)
-    def frequencyChanged(self, lowFrequency, highFrequency):
+    @Slot()
+    def frequencyChanged(self, lowFrequency: float, highFrequency: float) -> None:
         pass
 
-    @Slot(int)
-    def integralBinningChanged(self, newBinning):
+    @Slot()
+    def integralBinningChanged(self, newBinning: int) -> None:
         pass

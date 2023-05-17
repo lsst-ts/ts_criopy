@@ -23,6 +23,7 @@ from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
 from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
 from ..GUI.SAL import Axis, ChartWidget
+from ..GUI.SAL.SALComm import MetaSAL
 
 __all__ = ["BoosterValveWidget"]
 
@@ -38,7 +39,7 @@ class FollowingErrorTrigger(QWidget):
         M1M3 SAL remote.
     """
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         layout = QGridLayout()
 
@@ -123,7 +124,7 @@ class Accelerometer(QWidget):
         M1M3 SAL remote.
     """
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         layout = QGridLayout()
 
@@ -179,7 +180,7 @@ class BoosterValveWidget(QWidget):
         M1M3 SAL remote.
     """
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         layout = QGridLayout()
 

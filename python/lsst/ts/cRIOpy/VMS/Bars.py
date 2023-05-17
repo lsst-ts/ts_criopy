@@ -58,7 +58,7 @@ class ToolBar(QToolBar):
         self.minFreq.setRange(0, 10000)
         self.minFreq.setSingleStep(5)
         self.minFreq.setSuffix(" Hz")
-        self.minFreq.setValue(float(settings.value("minFreq", 0)))
+        self.minFreq.setValue(float(str(settings.value("minFreq", 0))))
         self.minFreq.editingFinished.connect(self.minMaxChanged)
         self.addWidget(self.minFreq)
 
@@ -69,7 +69,7 @@ class ToolBar(QToolBar):
         self.maxFreq.setRange(0.1, 10000)
         self.maxFreq.setSingleStep(5)
         self.maxFreq.setSuffix(" Hz")
-        self.maxFreq.setValue(float(settings.value("maxFreq", 200)))
+        self.maxFreq.setValue(float(str(settings.value("maxFreq", 200))))
         self.maxFreq.editingFinished.connect(self.minMaxChanged)
         self.addWidget(self.maxFreq)
 
@@ -80,7 +80,7 @@ class ToolBar(QToolBar):
         self.interval.setRange(0.01, 3600)
         self.interval.setSingleStep(0.1)
         self.interval.setSuffix(" s")
-        self.interval.setValue(float(settings.value("interval", 50.0)))
+        self.interval.setValue(float(str(settings.value("interval", 50.0))))
         self.interval.editingFinished.connect(self.newInterval)
         self.addWidget(self.interval)
 
@@ -89,13 +89,13 @@ class ToolBar(QToolBar):
         self.integralBinning = QSpinBox()
         self.integralBinning.setRange(2, 10000)
         self.integralBinning.setSingleStep(10)
-        self.integralBinning.setValue(float(settings.value("integralBinning", 10)))
+        self.integralBinning.setValue(int(str(settings.value("integralBinning", 10))))
         self.integralBinning.editingFinished.connect(self.newIntegralBinning)
         self.addWidget(self.integralBinning)
 
         self.frequencyChanged.emit(self.minFreq.value(), self.maxFreq.value())
 
-    def storeSettings(self):
+    def storeSettings(self) -> None:
         """Store settings through QSettings."""
         settings = QSettings("LSST.TS", "VMSGUI")
         settings.setValue("minFreq", self.minFreq.value())
@@ -104,21 +104,21 @@ class ToolBar(QToolBar):
         settings.setValue("integralBinning", self.integralBinning.value())
 
     @Slot()
-    def minMaxChanged(self):
+    def minMaxChanged(self) -> None:
         self.frequencyChanged.emit(*self.getFrequencyRange())
 
     @Slot()
-    def newInterval(self):
+    def newInterval(self) -> None:
         self.intervalChanged.emit(self.interval.value())
 
     @Slot()
-    def newIntegralBinning(self):
+    def newIntegralBinning(self) -> None:
         self.integralBinningChanged.emit(self.integralBinning.value())
 
-    def getFrequencyRange(self):
+    def getFrequencyRange(self) -> tuple[float, float]:
         return (self.minFreq.value(), self.maxFreq.value())
 
-    def getIntegralBinning(self):
+    def getIntegralBinning(self) -> int:
         return self.integralBinning.value()
 
 

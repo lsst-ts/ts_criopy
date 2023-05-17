@@ -17,10 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
+    QAbstractButton,
     QButtonGroup,
     QHBoxLayout,
     QPushButton,
@@ -51,7 +54,7 @@ from ..GUI import (
     WarningLabel,
 )
 from ..GUI.SAL import SALCommand, SummaryStateLabel, VersionWidget
-from ..GUI.SAL.SALComm import warning
+from ..GUI.SAL.SALComm import MetaSAL, warning
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
 
 
@@ -68,11 +71,11 @@ class CompressorsPageWidget(QWidget):
     TEXT_POWER_OFF = "Power O&ff"
     TEXT_RESET = "&Reset"
 
-    def __init__(self, compressor):
+    def __init__(self, compressor: MetaSAL):
         super().__init__()
         self.compressor = compressor
 
-        self._lastEnabled = None
+        self._last_enabled: list[bool] | None = None
 
         masterLayout = QVBoxLayout()
         topLayout = QHBoxLayout()
@@ -186,18 +189,18 @@ class CompressorsPageWidget(QWidget):
         )
 
         self.commandButtons = QButtonGroup(self)
-        self.commandButtons.buttonClicked.connect(self._buttonClicked)
+        self.commandButtons.buttonClicked.connect(self._button_clicked)
 
-        def _addButton(text):
+        def _add_button(text: str) -> QPushButton:
             button = QPushButton(text)
             button.setEnabled(False)
             self.commandButtons.addButton(button)
             commandLayout.addWidget(button)
             return button
 
-        _addButton(self.TEXT_START)
-        _addButton(self.TEXT_ENABLE)
-        _addButton(self.TEXT_EXIT_CONTROL)
+        _add_button(self.TEXT_START)
+        _add_button(self.TEXT_ENABLE)
+        _add_button(self.TEXT_EXIT_CONTROL)
 
         dataLayout = QVBoxLayout()
         dataLayout.addWidget(
@@ -338,16 +341,16 @@ class CompressorsPageWidget(QWidget):
         self.compressor.heartbeat.connect(hb.heartbeat)
         commandLayout.addWidget(hb)
 
-        def _addCommandButton(text, clicked):
+        def _add_command_button(text: str, clicked: typing.Any) -> QPushButton:
             but = QPushButton(text)
             but.setEnabled(False)
             but.clicked.connect(clicked)
             commandLayout.addWidget(but)
             return but
 
-        self.powerOn = _addCommandButton(self.TEXT_POWER_ON, self._powerOn)
-        self.powerOff = _addCommandButton(self.TEXT_POWER_OFF, self._powerOff)
-        self.reset = _addCommandButton(self.TEXT_RESET, self._reset)
+        self.powerOn = _add_command_button(self.TEXT_POWER_ON, self._powerOn)
+        self.powerOff = _add_command_button(self.TEXT_POWER_OFF, self._powerOff)
+        self.reset = _add_command_button(self.TEXT_RESET, self._reset)
 
         commandLayout.addWidget(self.powerOn)
         commandLayout.addWidget(self.powerOff)
@@ -371,28 +374,28 @@ class CompressorsPageWidget(QWidget):
         self.compressor.summaryState.connect(self.summaryState)
         self.compressor.status.connect(self.status)
 
-    def disableAllButtons(self):
-        if self._lastEnabled is None:
-            self._lastEnabled = []
+    def disable_all_buttons(self) -> None:
+        if self._last_enabled is None:
+            self._last_enabled = []
             for b in self.commandButtons.buttons():
-                self._lastEnabled.append(b.isEnabled())
+                self._last_enabled.append(b.isEnabled())
                 b.setEnabled(False)
 
-    def restoreEnabled(self):
-        if self._lastEnabled is None:
+    def restore_enabled(self) -> None:
+        if self._last_enabled is None:
             return
         bi = 0
         for b in self.commandButtons.buttons():
-            b.setEnabled(self._lastEnabled[bi])
+            b.setEnabled(self._last_enabled[bi])
             bi += 1
 
-        self._lastEnabled = None
+        self._last_enabled = None
 
-    @Slot(map)
-    def summaryState(self, data):
+    @Slot()
+    def summaryState(self, data: typing.Any) -> None:
         # text mean button is enabled and given text shall be displayed. None
         # for disabled buttons.
-        stateMap = {
+        state_map: dict[int, list[str | None]] = {
             salobj.State.STANDBY: [
                 self.TEXT_START,
                 None,
@@ -412,23 +415,23 @@ class CompressorsPageWidget(QWidget):
             salobj.State.OFFLINE: [None, None, None],
         }
 
-        self._lastEnabled = None
+        self._last_enabled = None
 
         try:
-            dbSet = True
-            stateData = stateMap[data.summaryState]
+            db_set = True
+            state_data = state_map[data.summaryState]
             for bi, b in enumerate(self.commandButtons.buttons()):
-                text = stateData[bi]
+                text = state_data[bi]
                 if text is None:
                     b.setEnabled(False)
                     b.setDefault(False)
                 else:
                     b.setText(text)
                     b.setEnabled(True)
-                    b.setDefault(dbSet)
-                    dbSet = False
+                    b.setDefault(db_set)
+                    db_set = False
             if data.summaryState == salobj.State.ENABLED:
-                self._setPowerButtons(
+                self._set_power_buttons(
                     data.summaryState, self.compressor.remote.evt_status.get()
                 )
                 self.reset.setEnabled(True)
@@ -440,13 +443,15 @@ class CompressorsPageWidget(QWidget):
         except KeyError:
             print(f"Unhandled summary state {data.summaryState}")
 
-    @Slot(map)
-    def status(self, data):
+    @Slot()
+    def status(self, data: typing.Any) -> None:
         summaryState = self.compressor.remote.evt_summaryState.get()
         if summaryState is not None:
-            self._setPowerButtons(summaryState.summaryState, data)
+            self._set_power_buttons(summaryState.summaryState, data)
 
-    def _setPowerButtons(self, summaryState, status):
+    def _set_power_buttons(
+        self, summaryState: salobj.State, status: typing.Any | None
+    ) -> None:
         if summaryState == salobj.State.ENABLED and status is not None:
             self.powerOn.setEnabled(status.startByRemote)
             self.powerOff.setEnabled(
@@ -457,9 +462,9 @@ class CompressorsPageWidget(QWidget):
             self.powerOff.setEnabled(False)
 
     @asyncSlot()
-    async def _buttonClicked(self, bnt):
+    async def _button_clicked(self, bnt: QAbstractButton) -> None:
         text = bnt.text()
-        self.disableAllButtons()
+        self.disable_all_buttons()
         try:
             if text == self.TEXT_START:
                 await self.compressor.remote.cmd_start.start()
@@ -486,16 +491,16 @@ class CompressorsPageWidget(QWidget):
                 f"Executing button <i>{text()}</i>:<br/>{str(rte)}",
             )
         finally:
-            self.restoreEnabled()
+            self.restore_enabled()
 
     @asyncSlot()
-    async def _powerOn(self):
+    async def _powerOn(self) -> None:
         await SALCommand(self, self.compressor.remote.cmd_powerOn)
 
     @asyncSlot()
-    async def _powerOff(self):
+    async def _powerOff(self) -> None:
         await SALCommand(self, self.compressor.remote.cmd_powerOff)
 
     @asyncSlot()
-    async def _reset(self):
+    async def _reset(self) -> None:
         await SALCommand(self, self.compressor.remote.cmd_reset)

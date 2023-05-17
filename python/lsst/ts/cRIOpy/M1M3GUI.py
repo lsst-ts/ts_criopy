@@ -26,6 +26,7 @@ from functools import partial
 from asyncqt import asyncClose
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import QSettings, Slot
+from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
@@ -39,6 +40,7 @@ from PySide2.QtWidgets import (
 
 from .AirCompressor import CompressorsPageWidget
 from .GUI.SAL import Application, SALErrorCodeWidget, SALLog, SALStatusBar
+from .GUI.SAL.SALComm import MetaSAL
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
@@ -62,7 +64,13 @@ from .M1M3 import (
 
 
 class EUI(QMainWindow):
-    def __init__(self, m1m3, mtmount, compressor_1, compressor_2):
+    def __init__(
+        self,
+        m1m3: MetaSAL,
+        mtmount: MetaSAL,
+        compressor_1: MetaSAL,
+        compressor_2: MetaSAL,
+    ):
         super().__init__()
         self.m1m3 = m1m3
         self.mtmount = mtmount
@@ -116,7 +124,7 @@ class EUI(QMainWindow):
             "SAL Errors": partial(SALErrorCodeWidget, self.m1m3),
         }
 
-        self.windows = {}
+        self.windows: dict[str, QWidget] = {}
 
         for title, tab in self.TABS.items():
             self.addPage(title, tab())
@@ -148,26 +156,25 @@ class EUI(QMainWindow):
         except AttributeError:
             self.resize(1000, 700)
 
-    def addPage(self, name, widget):
+    def addPage(self, name: str, widget: QWidget) -> None:
         self.applicationPagination.addItem(name)
         self.tabWidget.addTab(widget, name)
 
-    @Slot(bool)
-    def make_window(self, checked):
+    @Slot()
+    def make_window(self, checked: bool) -> None:
         name = self.applicationPagination.currentItem().text()
         widget = self.TABS[name]()
         widget.setWindowTitle(f"{name}:{len(self.windows[name])+1}")
         widget.show()
         self.windows[name].append(widget)
 
-    @Slot(int)
-    def changePage(self, row):
+    def changePage(self, row: int) -> None:
         if row < 0:
             return
         self.tabWidget.setCurrentIndex(row)
 
     @asyncClose
-    async def closeEvent(self, event):
+    async def closeEvent(self, event: QCloseEvent) -> None:
         for windows in self.windows.values():
             for window in windows:
                 window.close()
@@ -183,7 +190,7 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-def detailedStateString(detailedState):
+def detailedStateString(detailedState: int) -> str:
     """Returns string description of mirror state.
 
     Parameters
@@ -218,7 +225,7 @@ def detailedStateString(detailedState):
         return f"<font color='red'>Unknow : {detailedState}</font>"
 
 
-def run():
+def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
     app.addComm("MTM1M3")

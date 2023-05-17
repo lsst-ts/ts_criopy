@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtCore import Slot
+import typing
 
 from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE,
@@ -27,9 +27,10 @@ from lsst.ts.cRIOpy.M1M3FATable import (
     FATABLE_YINDEX,
     FATABLE_ZINDEX,
 )
+from PySide2.QtCore import Slot
 
 from ...GUI.ActuatorsDisplay import Scales
-from ...GUI.SAL import SALComm
+from ...GUI.SAL.SALComm import MetaSAL
 from ...GUI.SAL.TopicData import (
     EnabledDisabledField,
     TopicData,
@@ -91,7 +92,7 @@ class FAIndicesData(TopicData):
         ]
         self.timestamp = None
 
-    def getTopic(self):
+    def getTopic(self) -> typing.Any:
         return self
 
 
@@ -105,7 +106,7 @@ class Topics:
         Force Actuator topics. Holds topics and fields available for plotting.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__lastIndex = None
 
         self.topics = [
@@ -979,7 +980,7 @@ class Topics:
             ),
         ]
 
-    def changeTopic(self, index: int, slot: Slot, comm: SALComm):
+    def changeTopic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
         """Called when new topic is selected.
 
         Parameters
@@ -988,8 +989,8 @@ class Topics:
             New field index.
         slot: `Slot`
             Slot for data reception.
-        comm: `SALComm`
-            SALComm with data.
+        comm: `MetaSAL`
+            MetaSAL with data.
         """
         # disconnect/connect only for real M1M3 topics -  if topic is None,
         # don't connect/disconnect

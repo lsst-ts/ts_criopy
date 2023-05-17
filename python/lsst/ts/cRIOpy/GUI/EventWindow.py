@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
@@ -36,7 +38,7 @@ class EventWindow(QWidget):
         Topic (without evt_ prefix) for which data will be displayed.
     """
 
-    def __init__(self, comm, topic):
+    def __init__(self, comm, topic: str):
         super().__init__()
         self.setWindowTitle(f"{comm.remote.salinfo.name}/{topic}")
 
@@ -58,8 +60,8 @@ class EventWindow(QWidget):
         if data:
             self.newData(data)
 
-    @Slot(map)
-    def newData(self, data):
+    @Slot()
+    def newData(self, data: typing.Any) -> None:
         usedMembers = filter(
             lambda member: not (member.startswith("_") and member == "priority"),
             data.__dict__,

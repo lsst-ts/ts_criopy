@@ -72,12 +72,12 @@ class OverviewPageWidget(QWidget):
                 "zRotation": Arcsec(),
             }
 
-        def addLabelRow(labels, row, col):
+        def add_label_row(labels: list[str], row: int, col: int) -> None:
             for label in labels:
                 dataLayout.addWidget(QLabel(f"<b>{label}</b>"), row, col)
                 col += 1
 
-        def addDataRow(variables, row, col):
+        def add_data_row(variables, row: int, col: int) -> None:
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
@@ -176,31 +176,31 @@ class OverviewPageWidget(QWidget):
         row = 0
         col = 2
         dataLayout.addWidget(QLabel("<b>Forces</b>"), row, col)
-        addLabelRow(["X", "Y", "Z", "Mx", "My", "Mz", "Magnitude"], row, col + 1)
+        add_label_row(["X", "Y", "Z", "Mx", "My", "Mz", "Magnitude"], row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Commanded</b>"), row, col)
-        addDataRow(self.faCommanded, row, col + 1)
+        add_data_row(self.faCommanded, row, col + 1)
         row += 1
 
         dataLayout.addWidget(QLabel("<b>Measured</b>"), row, col)
-        addDataRow(self.faMeasured, row, col + 1)
+        add_data_row(self.faMeasured, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Hardpoints</b>"), row, col)
-        addDataRow(self.hpMeasured, row, col + 1)
+        add_data_row(self.hpMeasured, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Mirror Position</b>"), row, col)
-        addLabelRow(["X", "Y", "Z", "Rx", "Ry", "Rz"], row, col + 1)
+        add_label_row(["X", "Y", "Z", "Rx", "Ry", "Rz"], row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Hardpoints</b>"), row, col)
-        addDataRow(self.hpPosition, row, col + 1)
+        add_data_row(self.hpPosition, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>IMS</b>"), row, col)
-        addDataRow(self.imsPosition, row, col + 1)
+        add_data_row(self.imsPosition, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("Angular Acceleration"), row, col)

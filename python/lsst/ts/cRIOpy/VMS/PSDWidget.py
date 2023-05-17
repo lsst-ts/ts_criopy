@@ -43,7 +43,9 @@ class PSDWidget(CacheWidget):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
+    def __init__(
+        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+    ):
         super().__init__(title, cache, toolBar, channels)
 
     def setupAxes(self):
@@ -178,10 +180,10 @@ class PSDWidget(CacheWidget):
                 self.chart.axes(Qt.Vertical)[0].setRange(min(min_psd), max(max_psd))
         self.update_after = time.monotonic() + 0.5
 
-    @Slot(float, float)
-    def frequencyChanged(self, lowFrequency, highFrequency):
+    @Slot()
+    def frequencyChanged(self, lowFrequency: float, highFrequency: float) -> None:
         if len(self.chart.series()) == 0:
             self.callSetupAxes = True
             return
 
-        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)
+        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)  # type: ignore

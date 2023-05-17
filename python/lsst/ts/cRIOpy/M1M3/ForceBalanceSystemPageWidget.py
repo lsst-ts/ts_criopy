@@ -206,18 +206,18 @@ class ForceBalanceSystemPageWidget(QWidget):
         self._setTotalForces()
 
     @asyncSlot()
-    async def issueCommandEnableHardpointCorrections(self):
+    async def issueCommandEnableHardpointCorrections(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_enableHardpointCorrections)
 
     @asyncSlot()
     async def issueCommandDisableHardpointCorrections(self):
         await SALCommand(self, self.m1m3.remote.cmd_disableHardpointCorrections)
 
-    def _fillRowSum(self, variables, d1, d2):
+    def _fillRowSum(self, variables, d1, d2) -> None:
         for k, v in variables.items():
             v.setValue(getattr(d1, k) + getattr(d2, k))
 
-    def _setTotalForces(self):
+    def _setTotalForces(self) -> None:
         if self._balanceData is None or self._hardpointData is None:
             return
 

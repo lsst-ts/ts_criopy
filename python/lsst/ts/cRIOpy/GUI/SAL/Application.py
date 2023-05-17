@@ -103,7 +103,7 @@ class Application:
         """
         self._comms.append(create(name, manual=manual, **kwargs))
 
-    def run(self):
+    def run(self) -> None:
         """Runs the application. Creates splash screen, display it if
         requested. Creates and display main window after SAL/DDS is
         initialized."""

@@ -27,7 +27,8 @@ from ...M1M3FATable import (
     FATABLE_FAR_NEIGHBOR_INDEX,
     FATABLE_NEAR_NEIGHBOR_INDEX,
 )
-from . import FASelection, ForceActuator, Mirror
+from .ForceActuator import FASelection, ForceActuator
+from .Mirror import Mirror
 
 
 class MirrorView(QGraphicsView):
@@ -71,7 +72,7 @@ class MirrorView(QGraphicsView):
                 i.setEnabled(self.isEnabled())
 
     @property
-    def selected(self):
+    def selected(self) -> ForceActuator | None:
         """Selected actuator or None if no actuator selected
         (ForceActuator)."""
         return self.getForceActuator(self._selectedId)
@@ -86,8 +87,8 @@ class MirrorView(QGraphicsView):
             else:
                 self.getForceActuator(fids).setKind(FASelection.NORMAL)
 
-    @selected.setter
-    def selected(self, s):
+    @selected.setter  # type: ignore
+    def selected(self, s) -> None:
         if self.selected is not None:
             self._setNeighbour(self.selected.index, False)
             self.selected.setKind(FASelection.NORMAL)
@@ -96,7 +97,7 @@ class MirrorView(QGraphicsView):
             return None
         self._selectedId = s.id
         s.setKind(FASelection.SELECTED)
-        self._setNeighbour(self.selected.index, True)
+        self._setNeighbour(self.selected.index, True)  # type: ignore
         self.selectionChanged.emit(s)
 
     def setColorScale(self, scale):

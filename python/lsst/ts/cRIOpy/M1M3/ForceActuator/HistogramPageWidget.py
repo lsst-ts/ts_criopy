@@ -17,28 +17,31 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QSettings
-from PySide2.QtGui import QPainter
+from PySide2.QtGui import QContextMenuEvent, QPainter
 from PySide2.QtWidgets import QInputDialog, QMenu
 
 from ...GUI import Histogram
+from ...GUI.SAL.SALComm import MetaSAL
 from .Widget import Widget
 
 
 class HistogramView(QtCharts.QChartView):
-    def __init__(self):
+    def __init__(self) -> None:
         self.histogram = Histogram()
         super().__init__(self.histogram)
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
 
-        self.config = None
+        self.config: str | None = None
 
-    def update(self, values):
-        self.histogram.update(values)
+    def update(self, values: list[int]) -> None:
+        self.histogram.plot(values)
 
-    def setName(self, names: (str, str)):
+    def setName(self, names: tuple[str, str]) -> None:
         self.config = "/".join(names)
         settings = QSettings("LSST.TS", "M1M3GUI")
         self.setNumberOfBins(int(settings.value(self.config + "/nbins", 50)))
@@ -49,7 +52,7 @@ class HistogramView(QtCharts.QChartView):
             settings = QSettings("LSST.TS", "M1M3GUI")
             settings.setValue(self.config + "/nbins", nbins)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu()
 
         contextMenu.addAction(f"Number of bins: {self.histogram.nbins}")
@@ -76,11 +79,11 @@ class HistogramPageWidget(Widget):
     Plot histogram of force actuators values.
     """
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         self.histogramView = HistogramView()
         super().__init__(m1m3, self.histogramView)
 
-    def updateValues(self, data, changed):
+    def updateValues(self, data: typing.Any, changed: bool) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -97,4 +100,4 @@ class HistogramPageWidget(Widget):
         if data is None:
             return
 
-        self.histogramView.update(self.field.getValue(data))
+        self.histogramView.update(self.field.getValue(data))  # type: ignore

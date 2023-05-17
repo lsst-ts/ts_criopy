@@ -21,8 +21,8 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QColor
 
 """Colors constants for OK/WARNING/ERROR value state."""
-OK = Qt.green
+OK = QColor(Qt.green)
 WARNING = QColor("#daa520")
-ERROR = Qt.red
+ERROR = QColor(Qt.red)
 
-DISABLED = Qt.gray
+DISABLED = QColor(Qt.gray)
