@@ -946,7 +946,8 @@ class Topics:
         comm: `SALComm`
             SALComm with data.
         """
-        # disconnect/connect only for real M1M3 topics -  if topic is None, don't connect/disconnect
+        # disconnect/connect only for real M1M3 topics -  if topic is None,
+        # don't connect/disconnect
         if self.__lastIndex is not None:
             topic = self.topics[self.__lastIndex].topic
             if topic is not None:
