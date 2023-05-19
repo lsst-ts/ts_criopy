@@ -88,7 +88,7 @@ class ForceActuator(QGraphicsItem):
         self.id = id
         self.index = index
         # actuator position
-        self._center = QPointF(x, y)
+        self._center = QPointF(x, -y)
         self._orientation = orientation
         # actuator data
         self._data = data
