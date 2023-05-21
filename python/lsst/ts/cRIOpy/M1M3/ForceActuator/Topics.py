@@ -474,6 +474,36 @@ class Topics:
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
                     ),
                     TopicField(
+                        "Z Applied Force Low Limit",
+                        "appliedZForceLowLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Z Applied Force High Limit",
+                        "appliedZForceHighLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Y Applied Force Low Limit",
+                        "appliedYForceLowLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "Y Applied Force High Limit",
+                        "appliedYForceHighLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "X Applied Force Low Limit",
+                        "appliedXForceLowLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
+                        "X Applied Force High Limit",
+                        "appliedXForceHighLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
                         "Z Measured Force Low Limit",
                         "measuredZForceLowLimit",
                         FATABLE_ZINDEX,
