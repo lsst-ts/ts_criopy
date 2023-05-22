@@ -199,4 +199,7 @@ class TopicWindow(DockWindow):
         if data is None:
             self._setUnknown()
         else:
-            self.lastUpdatedLabel.setTime(data.timestamp)
+            try:
+                self.lastUpdatedLabel.setTime(data.timestamp)
+            except AttributeError:
+                self.lastUpdatedLabel.setTime(data.private_sndStamp)
