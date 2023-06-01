@@ -30,6 +30,7 @@ from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QListWidget,
     QMainWindow,
     QPushButton,
@@ -145,9 +146,13 @@ class EUI(QMainWindow):
         m1m3Widget.setLayout(layout)
 
         self.setCentralWidget(m1m3Widget)
-        self.setStatusBar(SALStatusBar([self.m1m3, self.mtmount], detailedStateString))
+
+        self.statusLabel = QLabel("Unknown")
+        self.setStatusBar(SALStatusBar([self.m1m3, self.mtmount], [self.statusLabel]))
 
         self.setMinimumSize(700, 400)
+
+        self.m1m3.detailedState.connect(self.detailed_state)
 
         settings = QSettings("LSST.TS", "M1M3GUI")
         try:
@@ -155,6 +160,9 @@ class EUI(QMainWindow):
             self.restoreState(settings.value("windowState"))
         except AttributeError:
             self.resize(1000, 700)
+
+    def detailed_state(self, data):
+        self.statusLabel.setText(detailedStateString(data.detailedState))
 
     def addPage(self, name: str, widget: QWidget) -> None:
         self.applicationPagination.addItem(name)
