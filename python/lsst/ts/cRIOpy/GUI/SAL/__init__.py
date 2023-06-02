@@ -1,6 +1,8 @@
 from .Application import Application
 from .ApplicationStatusWidget import ApplicationStatusWidget
 from .ChartWidget import Axis, ChartWidget
+from .CSCControlWidget import CSCControlWidget
+from .EUIWindow import EUIWindow
 from .SALComm import SALCommand, SALListCommand, create
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar

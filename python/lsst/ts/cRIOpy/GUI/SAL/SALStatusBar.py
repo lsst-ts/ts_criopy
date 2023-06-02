@@ -43,7 +43,7 @@ class SALStatusBar(QStatusBar):
         added to beginning of the StatusBar.
     """
 
-    def __init__(self, comms, stateLabels : list[QLabel] = []):
+    def __init__(self, comms, stateLabels: list[QLabel] = []):
         super().__init__()
 
         for stateLabel in stateLabels:

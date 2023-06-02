@@ -57,6 +57,35 @@ from ..GUI.SAL import SALCommand, SummaryStateLabel, VersionWidget
 from ..GUI.SAL.SALComm import MetaSAL, warning
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
 
+__all__ = ["CompressorsPageWidget"]
+
+
+TEXT_POWER_ON = "Power &On"
+TEXT_POWER_OFF = "Power O&ff"
+TEXT_RESET = "&Reset"
+
+
+class CompressorCSC(CSCControlWidget):
+    """Air compressor's contrl widget."""
+
+    def __init__(self, comm):
+        super().__init__(comm)
+
+    def get_state_buttons_map(self, state):
+        default_buttons = super().get_state_buttons_map(state)
+        status = self.comm.remote.evt_status.get()
+
+        if status is None or state.summaryState != salobj.state.ENABLED:
+            return default_buttons + ([None] * 3)
+
+        return default_buttons + [
+            TEXT_POWER_ON if status.startByRemote is True else None,
+            TEXT_POWER_OFF
+            if status.startByRemote is False and status.operating is True
+            else None,
+            TEXT_RESET,
+        ]
+
 
 class CompressorsPageWidget(QWidget):
     # Constants for button titles. Titles are used to select command send to

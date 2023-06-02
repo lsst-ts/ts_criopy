@@ -42,11 +42,8 @@ class OverviewPageWidget(QWidget):
         laser_tracker.offsetsPublish.connect(self.offsets_publish)
 
     @Slot()
-    def offsets_publish(self, data : typing.Any) -> None:
+    def offsets_publish(self, data: typing.Any) -> None:
         r = self.measurements.rowCount() + 1
         self.measurements.setRowCount(r)
         for f, c in enumerate(self.PUBLISH_FIELDS):
             self.measurements.setItem(r, c, QTableWidgetItem(getattr(data, f)))
-
-
-
