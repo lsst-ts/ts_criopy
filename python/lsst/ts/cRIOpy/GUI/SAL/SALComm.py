@@ -222,10 +222,16 @@ async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
         SAL command
     **kwargs : `dict`
         Arguments passed to SAL command.
+
+    Returns
+    -------
+    executed : `bool`
+        True if command was sucessfully executed.
     """
 
     try:
         await cmd.set_start(**kwargs)
+        return True
     except base.AckError as ackE:
         warning(
             parent,
@@ -238,6 +244,7 @@ async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
             f"Error executing {cmd.name}",
             f"Executing SAL/DDS command <b>{cmd.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
         )
+    return False
 
 
 async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs) -> None:

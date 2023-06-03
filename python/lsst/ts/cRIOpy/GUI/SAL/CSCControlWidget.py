@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from asyncqt import asyncSlot
+import typing
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QButtonGroup,
@@ -89,7 +90,7 @@ class CSCControlWidget(QWidget):
         self.buttons_group = QButtonGroup(self)
         self.buttons_group.buttonClicked.connect(self.csc_button_clicked)
 
-        commandLayout = QVBoxLayout()
+        self.setLayout(QVBoxLayout())
 
         for text in buttons:
             self.add_csc_button(text)
@@ -142,12 +143,13 @@ class CSCControlWidget(QWidget):
         self.__last_enabled = None
 
     @asyncSlot()
-    async def _buttonClicked(self, bnt):
+    async def csc_button_clicked(self, bnt):
         text = bnt.text()
         cmd = self.get_buttons_command(text)
         self.disable_all_buttons()
-        await SALCommand(self, getattr(self.comm.remote, "cmd_" + cmd))
-        self.restore_enabled()
+        executed = await SALCommand(self, getattr(self.comm.remote, "cmd_" + cmd))
+        if not(executed):
+            self.restore_enabled()
 
     def get_buttons_command(self, text):
         return self.buttons_commands[text]
@@ -188,8 +190,8 @@ class CSCControlWidget(QWidget):
         }
         return states_map[state]
 
-    @Slot(map)
-    def summary_state(self, data):
+    @Slot()
+    def csc_state(self, data: typing.Any) -> None:
         # text mean button is enabled and given text shall be displayed. None
         # for disabled buttons.
         self.__last_enabled = None
