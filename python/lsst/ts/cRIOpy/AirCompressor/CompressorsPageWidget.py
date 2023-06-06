@@ -19,18 +19,9 @@
 
 import typing
 
-<<<<<<< HEAD
-from asyncqt import asyncSlot
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
-    QAbstractButton,
-    QButtonGroup,
-=======
-from lsst.ts import salobj
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
->>>>>>> 8796ab2 (CompressorCSC redesigned)
     QHBoxLayout,
     QVBoxLayout,
     QWidget,

@@ -39,7 +39,7 @@ class LTEUI(EUIWindow):
         self.add_page("SAL Log", SALLog.Widget, laser_tracker)
         self.add_page("SAL Errors", SALErrorCodeWidget, laser_tracker)
 
-        self.status_label = QLabel("Unknow")
+        self.status_label = QLabel("Unknown")
         self.t2sa_label = QLabel("---")
         self.laser_status_label = QLabel("---")
         self.setStatusBar(

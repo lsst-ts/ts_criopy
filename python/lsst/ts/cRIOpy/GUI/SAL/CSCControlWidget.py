@@ -148,7 +148,7 @@ class CSCControlWidget(QWidget):
         cmd = self.get_buttons_command(text)
         self.disable_all_buttons()
         executed = await SALCommand(self, getattr(self.comm.remote, "cmd_" + cmd))
-        if not(executed):
+        if not (executed):
             self.restore_enabled()
 
     def get_buttons_command(self, text):
