@@ -65,6 +65,13 @@ class MetaSAL(type(QObject)):  # type: ignore
                 dictionary["remote"].start()
             )
 
+        if dictionary["remote"].salinfo.indexed:
+            if "index" not in dictionary["_args"].keys():
+                raise RuntimeError(
+                    f"CSC Remote {dictionary['_args']['name']} is indexed, but "
+                    "index argument wasn't provided."
+                )
+
         for m in filter(
             lambda m: m.startswith("tel_") or m.startswith("evt_"),
             dir(dictionary["remote"]),

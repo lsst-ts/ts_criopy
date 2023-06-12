@@ -43,9 +43,9 @@ from .SALComm import MetaSAL
 class EUIWindow(QMainWindow):
     """Construct primary EUI window.
 
-    The window provides CSC state control and displays pages showing various CSC
-    views and controls. The EUIWindow class saves and restore various settings,
-    including window geometry and the last viewed page.
+    The window provides CSC state control and displays pages showing various
+    CSC views and controls. The EUIWindow class saves and restore various
+    settings, including window geometry and the last viewed page.
 
     A button is provided to show any page a separate window.
 
@@ -61,7 +61,8 @@ class EUIWindow(QMainWindow):
         in EUI configuration, and restored when the window is initialized.
     csc_control_widget : `QWidget`, optional
         CSC control widget. Defaults to CSCControlWidget class. It's
-        recommended (but not enforced) this parameter is subclass of CSCControlWidget.
+        recommended (but not enforced) this parameter is subclass of
+        CSCControlWidget.
     """
 
     def __init__(
@@ -180,7 +181,9 @@ class EUIWindow(QMainWindow):
 
     @Slot()
     def change_page(self, row: int) -> None:
-        """Called when currently selected item in the pagination list changes."""
+        """Called when currently selected item in the pagination list
+        changes.
+        """
         if row < 0:
             return
         self.tab_widget.setCurrentIndex(row)
