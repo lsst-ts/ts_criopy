@@ -20,17 +20,19 @@
 from PySide2.QtWidgets import QFormLayout, QWidget
 
 from ..GUI.CustomLabels import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
+from ..SALComm import MetaSAL
 
 
 class MiscellaneousWidget(DockWindow):
     """Display miscellaneous data."""
 
-    def __init__(self, title, vms):
+    def __init__(self, title: str, vms: MetaSAL):
         super().__init__(title)
         widget = QWidget()
         layout = QFormLayout()
         layout.addRow(
-            "Chassis temperature", DataDegC(vms.miscellaneous, "chassisTemperature")
+            "Chassis temperature",
+            DataDegC(vms.miscellaneous, "chassisTemperature"),
         )
         layout.addRow("Ticks", DataLabel(vms.miscellaneous, "ticks"))
         layout.addRow("Ready", OnOffLabel(vms.fpgaState, "ready"))

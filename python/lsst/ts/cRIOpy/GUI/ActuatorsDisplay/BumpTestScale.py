@@ -28,7 +28,7 @@ from .EnumScale import EnumScale
 class BumpTestScale(EnumScale):
     """Draws gauge with color scale for bump test progress."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             {
                 BumpTest.NOTTESTED: ("Not Tested", Qt.gray),

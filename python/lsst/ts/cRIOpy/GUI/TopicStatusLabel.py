@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Signal
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QVBoxLayout, QWidget
@@ -42,7 +44,10 @@ class FieldButton(ColoredButton):
     """
 
     def __init__(
-        self, field: str, inactive: tuple[str, QColor], active: tuple[str, QColor]
+        self,
+        field: str,
+        inactive: tuple[str, QColor],
+        active: tuple[str, QColor],
     ):
         super().__init__("---")
         self.field = field
@@ -75,13 +80,13 @@ class TopicStatusLabel(ColoredButton):
     def __init__(self, signal: Signal, title: str, fields: list[FieldButton]):
         super().__init__("---")
         self._title = title
-        self._window = None
+        self._window: QWidget | None = None
         self.fields = fields
 
         self.clicked.connect(self._clicked)
         signal.connect(self.data)  # type: ignore
 
-    def _clicked(self):
+    def _clicked(self) -> None:
         if self._window is None:
             self._window = QWidget()
             self._window.setWindowTitle(self._title)
@@ -91,7 +96,7 @@ class TopicStatusLabel(ColoredButton):
             self._window.setLayout(layout)
         self._window.show()
 
-    def data(self, data):
+    def data(self, data: typing.Any) -> None:
         updated = False
         for f in self.fields:
             v = getattr(data, f.field)

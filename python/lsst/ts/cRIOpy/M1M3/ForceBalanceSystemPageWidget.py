@@ -17,17 +17,20 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from ..GUI import Clipped, Force, Moment, TimeChart, TimeChartView
-from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
+from ..GUI.SAL import DetailedStateEnabledButton
+from ..SALComm import MetaSAL, command
 
 
 class ForceBalanceSystemPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -71,7 +74,12 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         self.balanceChart = TimeChart(
             {
-                "Balance Force (N)": ["Force X", "Force Y", "Force Z", "Magnitude"],
+                "Balance Force (N)": [
+                    "Force X",
+                    "Force Y",
+                    "Force Z",
+                    "Magnitude",
+                ],
                 "Moment (N/m)": ["Moment X", "Moment Y", "Moment Z"],
             }
         )
@@ -97,7 +105,7 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         row += 1
 
-        def createXYZ():
+        def createXYZ() -> dict[str, QLabel]:
             return {
                 "fx": Force(),
                 "fy": Force(),
@@ -108,7 +116,7 @@ class ForceBalanceSystemPageWidget(QWidget):
                 "forceMagnitude": Force(),
             }
 
-        def addDataRow(variables, row, col=1):
+        def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
@@ -155,12 +163,12 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.m1m3.forceActuatorState.connect(self.forceActuatorState)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
-    def _fillRow(self, variables, data):
+    def _fillRow(self, variables: dict[str, QLabel], data: typing.Any) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
-    @Slot(map)
-    def appliedBalanceForces(self, data):
+    @Slot()
+    def appliedBalanceForces(self, data: typing.Any) -> None:
         self._fillRow(self.corrected, data)
 
         self.balanceChart.append(
@@ -177,8 +185,8 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         self.preclippedBalanceForces(data)
 
-    @Slot(map)
-    def preclippedBalanceForces(self, data):
+    @Slot()
+    def preclippedBalanceForces(self, data: typing.Any) -> None:
         try:
             self.balanceForcesClipped.setClipped(
                 (
@@ -189,13 +197,13 @@ class ForceBalanceSystemPageWidget(QWidget):
         except AttributeError:
             self.balanceForcesClipped.setClipped(False)
 
-    @Slot(map)
-    def forceActuatorState(self, data):
+    @Slot()
+    def forceActuatorState(self, data: typing.Any) -> None:
         self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
         self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
 
-    @Slot(map)
-    def hardpointActuatorData(self, data):
+    @Slot()
+    def hardpointActuatorData(self, data: typing.Any) -> None:
         for hp in range(6):
             self.hardpoints[hp].setValue(data.measuredForce[hp])
         self.hardpoints[6].setValue(sum(data.measuredForce))
@@ -207,13 +215,15 @@ class ForceBalanceSystemPageWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandEnableHardpointCorrections(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_enableHardpointCorrections)
+        await command(self, self.m1m3.remote.cmd_enableHardpointCorrections)
 
     @asyncSlot()
-    async def issueCommandDisableHardpointCorrections(self):
-        await SALCommand(self, self.m1m3.remote.cmd_disableHardpointCorrections)
+    async def issueCommandDisableHardpointCorrections(self) -> None:
+        await command(self, self.m1m3.remote.cmd_disableHardpointCorrections)
 
-    def _fillRowSum(self, variables, d1, d2) -> None:
+    def _fillRowSum(
+        self, variables: dict[str, QLabel], d1: typing.Any, d2: typing.Any
+    ) -> None:
         for k, v in variables.items():
             v.setValue(getattr(d1, k) + getattr(d2, k))
 

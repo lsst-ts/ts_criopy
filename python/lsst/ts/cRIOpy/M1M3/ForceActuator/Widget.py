@@ -35,18 +35,10 @@ from PySide2.QtWidgets import (
 )
 
 from ...GUI import WarningLabel
-from ...GUI.SAL import SALCommand, TimeDeltaLabel, TopicData
-from ...GUI.SAL.SALComm import MetaSAL
-from ...M1M3FATable import (
-    FATABLE,
-    FATABLE_FAR_NEIGHBOR_INDEX,
-    FATABLE_NEAR_NEIGHBOR_INDEX,
-    FATABLE_XINDEX,
-    FATABLE_YINDEX,
-    FATABLE_ZINDEX,
-    nearNeighborIndices,
-    onlyFarNeighborIndices,
-)
+from ...GUI.ActuatorsDisplay import ForceActuatorItem
+from ...GUI.SAL import TimeDeltaLabel, TopicData
+from ...M1M3FATable import FATABLE, FAIndex
+from ...SALComm import MetaSAL, command
 from .Topics import Topics
 from .UpdateWindow import UpdateWindow
 
@@ -54,7 +46,8 @@ from .UpdateWindow import UpdateWindow
 class Widget(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement updateValues(data, changed) method.
+    Children classes must implement changeValues and updateValues(data)
+    methods.
 
     Parameters
     ----------
@@ -64,14 +57,6 @@ class Widget(QSplitter):
     userWidget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
         be update in updateValues(data) method.
-
-    Methods
-    -------
-
-    updateValues(data, changed)
-        Must be defined in every child. This is called when selection is
-        changed or when new data become available. If data parameter is None,
-        then no data has been received for selected read topic.
     """
 
     def __init__(self, m1m3: MetaSAL, userWidget: QWidget):
@@ -178,6 +163,24 @@ class Widget(QSplitter):
         self.setStretchFactor(0, 10)
         self.setStretchFactor(1, 1)
 
+    def changeValues(self) -> None:
+        """Called when new values were selected by the user."""
+        raise NotImplementedError(
+            "changeValues method must be implemented in all Widget childrens"
+        )
+
+    def updateValues(self, data: typing.Any) -> None:
+        """Called when new data are available through SAL callback.
+
+        Parameters
+        ----------
+        data : `object`
+            New data structure, passed from SAL handler.
+        """
+        raise NotImplementedError(
+            "updateValues method must be implemented in all Widget childrens"
+        )
+
     @Slot()
     def currentTopicChanged(self, topicIndex: int) -> None:
         if topicIndex < 0:
@@ -210,13 +213,16 @@ class Widget(QSplitter):
         def get_axis(topic: TopicData) -> str:
             axis = ""
             for f in topic.fields:
-                if f.valueIndex == FATABLE_XINDEX:
+                if f.valueIndex == FAIndex.X:
                     axis += "x"
-                elif f.valueIndex == FATABLE_YINDEX:
+                elif f.valueIndex == FAIndex.Y:
                     axis += "y"
-                elif f.valueIndex == FATABLE_ZINDEX:
+                elif f.valueIndex == FAIndex.Z:
                     axis += "z"
             return "".join(sorted(set(axis)))
+
+        if self._topic is None or self._topic.command is None:
+            return
 
         suffix = self._topic.command
         try:
@@ -228,9 +234,9 @@ class Widget(QSplitter):
 
     @asyncSlot()
     async def zeroValues(self) -> None:
-        if self.field is None:
+        if self.field is None or self._topic is None or self._topic.command is None:
             return
-        await SALCommand(
+        await command(
             self, getattr(self.m1m3.remote, "cmd_clear" + self._topic.command)
         )
 
@@ -238,62 +244,87 @@ class Widget(QSplitter):
         self.lastUpdatedLabel.setUnknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
+        if self._topic is None or self._topic.topic is None or self.field is None:
+            raise RuntimeError(
+                "Topic or field is None in Widget.getCurrentFieldName:"
+                f" {self._topic}, {self.field}"
+            )
         return (self._topic.topic, self.field.fieldName)
 
     def _get_data(self) -> typing.Any:
+        if self._topic is None:
+            raise RuntimeError("Topic is None in Widget._get_data")
         topic = self._topic.getTopic()
         if type(topic) == str:
             return getattr(self.m1m3.remote, topic).get()
         return topic
 
-    def _get_field_data(self) -> typing.Any:
-        return self.field.getValue(self._get_data())
-
-    def updateSelectedActuator(self, s: typing.Any) -> None:
+    def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
         """
         Called from childrens to update currently selected actuator display.
 
         Parameters
         ----------
 
-        s : `ForceActuator`
-            Contains id (selected actuator ID), data (selected actuator current
-            value) and warning (boolean, true if value is in warning).
+        selected_actuator : `ForceActuatorItem`
+            Contains actuator ID (selected actuator ID), data (selected
+            actuator current value) and warning (boolean, true if value is in
+            warning).
         """
-        if s is None:
+        if selected_actuator is None:
             self.selectedActuatorIdLabel.setText("not selected")
             self.selectedActuatorValueLabel.setText("")
             self.selectedActuatorWarningLabel.setText("")
             return
 
-        self.selectedActuatorIdLabel.setText(str(s.id))
-        self.selectedActuatorValueLabel.setText(s.getValue())
-        self.selectedActuatorWarningLabel.setValue(s.warning)
+        if self.field is None:
+            raise RuntimeError("field not selected in Widget.updateSelectedActuator")
+
+        self.selectedActuatorIdLabel.setText(
+            str(selected_actuator.actuator.actuator_id)
+        )
+        self.selectedActuatorValueLabel.setText(selected_actuator.getValue())
+        self.selectedActuatorWarningLabel.setValue(selected_actuator.warning)
+
+        data = self.field.getValue(self._get_data())
 
         # near neighbour
-        nearIDs = FATABLE[s.index][FATABLE_NEAR_NEIGHBOR_INDEX]
-        nearIndices = nearNeighborIndices(s.index, self.field.valueIndex)
-        field = self._get_field_data()
-        self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
-        self.nearSelectedValueLabel.setText(
-            f"{s.formatValue(numpy.average([field[i] for i in nearIndices]))}"
+        nearIDs = FATABLE[selected_actuator.actuator.index].near_neighbors
+        nearIndices = list(
+            selected_actuator.actuator.near_neighbors_indices(self.field.valueIndex)
         )
+
+        if len(nearIndices) == 0:
+            self.nearSelectedIdsLabel.setText("---")
+            self.nearSelectedValueLabel.setText("---")
+        else:
+            self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
+            self.nearSelectedValueLabel.setText(
+                f"{selected_actuator.formatValue(numpy.average([data[i] for i in nearIndices]))}"
+            )
 
         farIDs = filter(
-            lambda f: f not in nearIDs, FATABLE[s.index][FATABLE_FAR_NEIGHBOR_INDEX]
+            lambda f: f not in nearIDs,
+            FATABLE[selected_actuator.actuator.index].far_neighbors,
         )
-        farIndices = onlyFarNeighborIndices(s.index, self.field.valueIndex)
-        self.farSelectedIdsLabel.setText(",".join(map(str, farIDs)))
-        self.farSelectedValueLabel.setText(
-            f"{s.formatValue(numpy.average([field[i] for i in farIndices]))}"
+        farIndices = list(
+            selected_actuator.actuator.only_far_neighbors_indices(self.field.valueIndex)
         )
+        if len(farIndices) == 0:
+            self.farSelectedIdsLabel.setText("---")
+            self.farSelectedValueLabel.setText("---")
+        else:
+            self.farSelectedIdsLabel.setText(",".join(map(str, farIDs)))
+            self.farSelectedValueLabel.setText(
+                f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
+            )
 
-    def __setModifyCommand(self, command: bool):
+    def __setModifyCommand(self, command: str | None) -> None:
         enabled = command is not None
         self.editButton.setEnabled(enabled)
         self.clearButton.setEnabled(enabled)
 
-    def __change_field(self, topicIndex: int, fieldIndex) -> None:
+    def __change_field(self, topicIndex: int, fieldIndex: int) -> None:
         """
         Redraw actuators with new values.
         """
@@ -301,9 +332,10 @@ class Widget(QSplitter):
         self.__setModifyCommand(self._topic.command)
         self.field = self._topic.fields[fieldIndex]
         try:
-            self.topics.changeTopic(topicIndex, self.dataChanged, self.m1m3)
+            self.topics.change_topic(topicIndex, self.dataChanged, self.m1m3)
             data = self._get_data()
-            self.updateValues(data, True)
+            self.changeValues()
+            self.updateValues(data)
             self.dataChanged(data)
         except RuntimeError as err:
             print("ForceActuator.Widget.__change_field", err)
@@ -320,11 +352,12 @@ class Widget(QSplitter):
         data : `class`
             Class holding data. See SALComm for details.
         """
-        self.updateValues(data, False)
+        self.updateValues(data)
         if data is None:
             self._set_unknown()
-        else:
-            try:
-                self.lastUpdatedLabel.setTime(data.timestamp)
-            except AttributeError:
-                self.lastUpdatedLabel.setTime(data.private_sndStamp)
+            return
+
+        try:
+            self.lastUpdatedLabel.setTime(data.timestamp)
+        except AttributeError:
+            self.lastUpdatedLabel.setTime(data.private_sndStamp)

@@ -20,17 +20,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
-import asyncio
 
-from lsst.ts.salobj import Domain, Remote, base
+import asyncio
+import typing
+
+from lsst.ts.salobj import Domain, Remote
 from lsst.ts.salobj.topics import RemoteEvent, RemoteTelemetry
 from PySide2.QtCore import QObject, Signal
-from PySide2.QtWidgets import QMessageBox, QWidget
 
-__all__ = ["create", "SALCommand", "SALListCommand"]
+__all__ = ["MetaSAL", "create"]
 
 
-def _filterEvtTel(m):
+def _filterEvtTel(m: str) -> bool:
     return m.startswith("tel_") or m.startswith("evt_")
 
 
@@ -39,7 +40,7 @@ class MetaSAL(type(QObject)):  # type: ignore
     read topics. Remote arguments are read from class variable _args. SALObj
     remote is accessible through 'remote' class variable."""
 
-    def __new__(cls, classname, bases, dictionary):
+    def __new__(cls, classname, bases, dictionary):  # type: ignore
         dictionary["domain"] = Domain()
 
         if dictionary["_manual"] is None:
@@ -72,26 +73,25 @@ class MetaSAL(type(QObject)):  # type: ignore
                     "index argument wasn't provided."
                 )
 
-        for m in filter(
-            lambda m: m.startswith("tel_") or m.startswith("evt_"),
-            dir(dictionary["remote"]),
-        ):
+        for m in [
+            evttel for evttel in dir(dictionary["remote"]) if _filterEvtTel(evttel)
+        ]:
             dictionary[m[4:]] = Signal(map)
 
-        def connect_callbacks(self):
-            for m in filter(_filterEvtTel, dir(self.remote)):
+        def connect_callbacks(self) -> None:  # type: ignore
+            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
                 getattr(self.remote, m).callback = getattr(self, m[4:]).emit
 
-        def reemit_remote(self):
+        def reemit_remote(self) -> None:  # type: ignore
             """Re-emits all telemetry and event data from a single remote as Qt
             messages.
             """
-            for m in filter(_filterEvtTel, dir(self.remote)):
+            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
                 data = getattr(self.remote, m).get()
                 if data is not None:
                     getattr(self, m[4:]).emit(data)
 
-        async def close(self):
+        async def close(self) -> None:  # type: ignore
             await self.remote.close()
             await self.domain.close()
 
@@ -105,11 +105,15 @@ class MetaSAL(type(QObject)):  # type: ignore
         return newclass
 
 
-def create(name, manual=None, **kwargs):
-    """Creates SALComm instance for given remote(s). The returned object
-    contains PySide2.QtCore.Signal class variables. Those signals are emitted
-    when SAL callback occurs, effectively linking SAL/DDS and Qt world. Signals
-    can be connected to multiple Qt slots to process the incoming data.
+def create(
+    name: str, manual: None | dict[str, typing.Any] = None, **kwargs: typing.Any
+) -> MetaSAL:
+    """Creates SALComm instance for given remote(s).
+
+    The returned object contains PySide2.QtCore.Signal class variables. Those
+    signals are emitted when SAL callback occurs, effectively linking SAL/DDS
+    and Qt world. Signals can be connected to multiple Qt slots to process the
+    incoming data.
 
     Class variable named "remote" is instance of lsst.ts.salobj.Remote. This
     can be used to start commands (available with `cmd_` prefix).
@@ -150,11 +154,11 @@ def create(name, manual=None, **kwargs):
 
        @Slot(map)
        def update_labels_azimuth(data):
-           ...
+            ...
 
        @Slot(map)
        def update_data(data):
-           ...
+            ...
 
        my_mount.azimuth.connect(update_labels_azimuth)
        my_vms.data.connect(update_data)
@@ -175,7 +179,7 @@ def create(name, manual=None, **kwargs):
            loop.run_forever()
     """
 
-    class SALComm(QObject, metaclass=MetaSAL):
+    class Comm(QObject, metaclass=MetaSAL):
         """
         SAL proxy. Set callback to emit Qt signals.
         """
@@ -184,111 +188,9 @@ def create(name, manual=None, **kwargs):
         _args["name"] = name
         _manual = manual
 
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__()
 
             self.connect_callbacks()
 
-    return SALComm()
-
-
-def warning(parent: QWidget, title: str, description: str):
-    """Creates future with QMessageBox. Enables use of QMessageBox with
-    asyncqt/asyncio. Mimics QMessageBox.warning behaviour - but QMessageBox
-    cannot be used, as it blocks Qt loops from executing (as all modal dialogs
-    does).
-
-    Parameters
-    ----------
-    parent : `QtWidget`
-        Parent widget.
-    title : `str`
-        Message window title.
-    description : `str`
-        Descrption of warning occured.
-    """
-
-    future: asyncio.Future = asyncio.Future()
-    dialog = QMessageBox(parent)
-    dialog.setWindowTitle(title)
-    dialog.setText(description)
-    dialog.setIcon(QMessageBox.Warning)
-    dialog.finished.connect(lambda r: future.set_result(r))
-    dialog.open()
-    return future
-
-
-async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
-    """
-
-    Parameters
-    ----------
-    parent : `QWidget`
-        Parent widget, needed to display error messages.
-    cmd : `RemoteCommand`
-        SAL command
-    **kwargs : `dict`
-        Arguments passed to SAL command.
-
-    Returns
-    -------
-    executed : `bool`
-        True if command was sucessfully executed.
-    """
-
-    try:
-        await cmd.set_start(**kwargs)
-        return True
-    except base.AckError as ackE:
-        warning(
-            parent,
-            f"Error executing {cmd.name}",
-            f"Executing SAL/DDS command <i>{cmd.name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
-        )
-    except RuntimeError as rte:
-        warning(
-            parent,
-            f"Error executing {cmd.name}",
-            f"Executing SAL/DDS command <b>{cmd.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
-        )
-    return False
-
-
-async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs) -> None:
-    """
-
-    Parameters
-    ----------
-    parent : `QWidget`
-        Parent widget, needed to display error messages.
-    comms : `[SALComm]`
-        List of SALComm objects. The command will be executed for each member
-        of the list.
-    cmdName : `str`
-        SAL command name
-    **kwargs : `dict`
-        Arguments passed to SAL command.
-    """
-
-    for comm in comms:
-        try:
-            cmd = getattr(comm.remote, "cmd_" + cmdName)
-            await cmd.set_start(**kwargs)
-        except base.AckError as ackE:
-            warning(
-                parent,
-                f"Error executing"
-                f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                f" {cmd.name}",
-                f"Executing SAL/DDS command"
-                f" <i>{cmd.name}"
-                f"({kwargs}</i>):<br/>{ackE.ackcmd.result}",
-            )
-        except RuntimeError as rte:
-            warning(
-                parent,
-                f"Error executing {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                f" {cmd.name}",
-                f"Executing SAL/DDS command <b>{cmd.name}"
-                f"</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
-            )
+    return Comm()

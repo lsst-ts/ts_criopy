@@ -22,10 +22,16 @@
 import numpy as np
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QGraphicsItem
 
 
 class Histogram(QtCharts.QChart):
-    def __init__(self, parent=None, wFlags=Qt.WindowFlags(), nbins: int = 50):
+    def __init__(
+        self,
+        parent: QGraphicsItem = None,
+        wFlags: Qt.WindowFlags = Qt.WindowFlags(),
+        nbins: int = 50,
+    ):
         """
         Parameters
         ----------
@@ -51,7 +57,7 @@ class Histogram(QtCharts.QChart):
         self.legend().setVisible(True)
         self.legend().setAlignment(Qt.AlignBottom)  # type: ignore
 
-    def plot(self, values: list[int]):
+    def plot(self, values: list[int]) -> None:
         """Update histogram values.
 
         Parameters

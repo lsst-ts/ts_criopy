@@ -25,6 +25,8 @@ from PySide2.QtCore import Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
+from ..SALComm import MetaSAL
+
 
 class EventWindow(QWidget):
     """
@@ -32,13 +34,13 @@ class EventWindow(QWidget):
 
     Parameters
     ----------
-    comm : `SALComm`
+    comm : `MetaSAL`
         SAL/DDS communication object.
     topic : `str`
         Topic (without evt_ prefix) for which data will be displayed.
     """
 
-    def __init__(self, comm, topic: str):
+    def __init__(self, comm: MetaSAL, topic: str):
         super().__init__()
         self.setWindowTitle(f"{comm.remote.salinfo.name}/{topic}")
 

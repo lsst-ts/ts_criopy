@@ -24,7 +24,7 @@ __all__ = ["parseDuration"]
 import argparse
 
 
-def parseDuration(duration):
+def parseDuration(duration: str) -> int:
     """Accept string depicting duration.
 
     Numbers can be suffixed with character, denomination their lengths.

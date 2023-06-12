@@ -28,6 +28,8 @@ from PySide2.QtCore import Slot
 
 from ..GUI.CustomLabels import DockWindow
 from ..GUI.TimeChart import AbstractChart
+from .Bars import ToolBar
+from .Cache import Cache
 from .ChartView import ChartView
 from .Unit import coefficients, units
 
@@ -49,7 +51,11 @@ class CacheWidget(DockWindow):
     """
 
     def __init__(
-        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+        self,
+        title: str,
+        cache: Cache,
+        toolBar: ToolBar,
+        channels: list[tuple[int, int]] | None = None,
     ):
         super().__init__(title)
         self.setObjectName(title)
@@ -59,7 +65,7 @@ class CacheWidget(DockWindow):
 
         self.updateTask = make_done_future()
 
-        self.update_after = 0
+        self.update_after: float = 0.0
 
         self.cache = cache
 
@@ -71,7 +77,7 @@ class CacheWidget(DockWindow):
             for channel in channels:
                 self.chartView.addSerie(f"{channel[0]} {channel[1]}")
 
-        self.coefficient = 1
+        self.coefficient = 1.0
         self.unit = units[0]
         self.callSetupAxes = True
         self.setupAxes()
@@ -89,7 +95,7 @@ class CacheWidget(DockWindow):
         self.callSetupAxes = True
 
     def setupAxes(self) -> None:
-        raise RuntimeError(
+        raise NotImplementedError(
             "Abstract CacheWidget.setupAxes called - please make sure the"
             " method is implemented in all child classes"
         )
@@ -102,7 +108,7 @@ class CacheWidget(DockWindow):
 
     def plotAll(self) -> None:
         """Plot all signals. Run as task in a thread. Should be overriden."""
-        raise RuntimeError(
+        raise NotImplementedError(
             "Abstract CacheWidget.plotAll called - please make sure the method"
             " is implemented in all child classes"
         )

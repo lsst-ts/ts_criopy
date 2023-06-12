@@ -42,7 +42,7 @@ class ToolBar(QToolBar):
     intervalChanged = Signal(float)
     integralBinningChanged = Signal(int)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         settings = QSettings("LSST.TS", "VMSGUI")
@@ -125,7 +125,7 @@ class ToolBar(QToolBar):
 class StatusBar(QStatusBar):
     """Displays cache status on status bar."""
 
-    def __init__(self, systems):
+    def __init__(self, systems: list[str]) -> None:
         super().__init__()
         self.sampleTimes = [None] * len(systems)
         self.cacheStatus = []
@@ -135,8 +135,8 @@ class StatusBar(QStatusBar):
             self.cacheStatus.append(label)
             self.addWidget(label)
 
-    @Slot(int, float, float)
-    def cacheUpdated(self, index, length, start, end):
+    @Slot()
+    def cacheUpdated(self, index: int, length: int, start: float, end: float) -> None:
         """Emitted when cache is updated.
 
         Parameters

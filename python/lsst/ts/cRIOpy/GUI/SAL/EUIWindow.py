@@ -36,8 +36,8 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
+from ...SALComm import MetaSAL
 from .CSCControlWidget import CSCControlWidget
-from .SALComm import MetaSAL
 
 
 class EUIWindow(QMainWindow):
@@ -86,8 +86,8 @@ class EUIWindow(QMainWindow):
         make_window = QPushButton("Open in &Window")
         make_window.clicked.connect(self.make_window)
 
-        self.pages = {}
-        self.windows = {}
+        self.pages: dict[str, typing.Callable[..., QWidget]] = {}
+        self.windows: dict[str, list[QWidget]] = {}
 
         self.application_pagination = QListWidget()
         self.application_pagination.currentRowChanged.connect(self.change_page)
@@ -118,9 +118,7 @@ class EUIWindow(QMainWindow):
         except AttributeError:
             self.resize(*default_size)
 
-    def add_page(
-        self, name: str, widget_class: QWidget, *params: list[typing.Any]
-    ) -> None:
+    def add_page(self, name: str, widget_class: QWidget, *params: typing.Any) -> None:
         """Add page to available pages.
 
         Parameters

@@ -25,6 +25,8 @@ import numpy as np
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QPointF, Qt, Slot
 
+from .Bars import ToolBar
+from .Cache import Cache
 from .CacheWidget import CacheWidget
 
 
@@ -44,11 +46,15 @@ class PSDWidget(CacheWidget):
     """
 
     def __init__(
-        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+        self,
+        title: str,
+        cache: Cache,
+        toolBar: ToolBar,
+        channels: list[tuple[int, int]] | None = None,
     ):
         super().__init__(title, cache, toolBar, channels)
 
-    def setupAxes(self):
+    def setupAxes(self) -> None:
         for a in self.chart.axes():
             self.chart.removeAxis(a)
 
@@ -84,10 +90,10 @@ class PSDWidget(CacheWidget):
 
         self.callSetupAxes = False
 
-    def plotAll(self):
+    def plotAll(self) -> None:
         """Plot all signals. Run as task in a thread."""
 
-        def downsample(psd, N):
+        def downsample(psd: list[float], N: int) -> tuple[list[float], list[float]]:
             """Downsample PSD so no too many points are plot. Replace PSD with
             max of subarray and frequency with mean frequency.
             Parameters
@@ -135,7 +141,9 @@ class PSDWidget(CacheWidget):
                 ]
             return (psd, frequencies)
 
-        def plot(serie, signal):
+        def plot(
+            serie: QtCharts.QLineSeries, signal: list[float]
+        ) -> tuple[float, float]:
             """Calculates and plot PSD - Power Spectral Density. Downsamples
             the calculated PSD so reasonable number of points is displayed.
 

@@ -24,5 +24,5 @@ from .GaugeScale import GaugeScale
 class IntegerScale(GaugeScale):
     """Draws gauge with integer range scale."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(".0f")

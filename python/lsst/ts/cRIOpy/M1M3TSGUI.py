@@ -28,7 +28,6 @@ from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
 from .GUI.SAL import Application, SALLog, SALStatusBar
-from .GUI.SAL.SALComm import MetaSAL
 from .M1M3TS import (
     CoolantPumpWidget,
     FlowMeterWidget,
@@ -37,6 +36,7 @@ from .M1M3TS import (
     ThermalValuePageWidget,
 )
 from .M1M3TS.M1M3TSGUI import ThermalStatesDock
+from .SALComm import MetaSAL
 
 
 class EUI(QMainWindow):

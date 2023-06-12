@@ -1,6 +1,6 @@
 from .BumpTestScale import BumpTestScale
 from .EnabledDisabledScale import EnabledDisabledScale
-from .ForceActuator import FASelection, ForceActuator
+from .ForceActuatorItem import FASelection, ForceActuatorItem
 from .GaugeScale import GaugeScale
 from .Mirror import Mirror
 from .MirrorView import MirrorView

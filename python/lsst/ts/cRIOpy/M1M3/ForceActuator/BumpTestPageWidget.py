@@ -41,19 +41,10 @@ from PySide2.QtWidgets import (
 )
 
 from ...GUI import Colors
-from ...GUI.ActuatorsDisplay import ForceActuator
-from ...GUI.SAL import SALCommand, SALLog
-from ...GUI.SAL.SALComm import MetaSAL
+from ...GUI.SAL import SALLog
 from ...GUI.TimeChart import TimeChart, TimeChartView
-from ...M1M3FATable import (
-    FATABLE,
-    FATABLE_ID,
-    FATABLE_SINDEX,
-    FATABLE_XINDEX,
-    FATABLE_YINDEX,
-    FATABLE_ZFA,
-    actuatorIDToIndex,
-)
+from ...M1M3FATable import FATABLE, FATABLE_ZFA, actuator_id_to_index
+from ...SALComm import MetaSAL, command
 
 
 class BumpTestPageWidget(QWidget):
@@ -73,12 +64,16 @@ class BumpTestPageWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.xIndex = self.yIndex = self.zIndex = self.sIndex = self.testedId = None
+        self.x_index: int | None = None
+        self.y_index: int | None = None
+        self.z_index: int | None = None
+        self.s_index: int | None = None
+        self.testedId: int | None = None
         self._testRunning = False
 
         actuatorBox = QGroupBox("Actuator")
         self.actuatorsTable = QTableWidget(
-            int(max([row[FATABLE_ID] for row in FATABLE])) % 100, 12  # type: ignore
+            int(max([row.actuator_id for row in FATABLE])) % 100, 12
         )
         self.actuatorsTable.setShowGrid(False)
 
@@ -88,12 +83,12 @@ class BumpTestPageWidget(QWidget):
             self.actuatorsTable.setItem(r, c, item)
 
         for i in range(4):
-            mr = int(  # type: ignore
+            mr = int(
                 min(
                     [
-                        row[FATABLE_ID]  # type: ignore
+                        row.actuator_id
                         for row in FATABLE
-                        if row[FATABLE_ID] > (100 + 100 * i)  # type: ignore
+                        if row.actuator_id > (100 + 100 * i)
                     ]
                 )
             )
@@ -102,7 +97,7 @@ class BumpTestPageWidget(QWidget):
                     set_none(r, c)
 
         for tr in range(len(FATABLE)):
-            actuatorId = FATABLE[tr][FATABLE_ID]  # type: ignore
+            actuatorId = FATABLE[tr].actuator_id
             row = (actuatorId % 100) - 1
             colOffset = 3 * (int(actuatorId / 100) - 1)
 
@@ -113,13 +108,13 @@ class BumpTestPageWidget(QWidget):
 
             self.actuatorsTable.setItem(row, 0 + colOffset, get_item(str(actuatorId)))
             self.actuatorsTable.setItem(row, 1 + colOffset, get_item("P"))
-            if FATABLE[tr][FATABLE_SINDEX] is None:
+            if FATABLE[tr].s_index is None:
                 set_none(row, 2 + colOffset)
             else:
                 self.actuatorsTable.setItem(
                     row,
                     2 + colOffset,
-                    get_item("Y" if (FATABLE[tr][FATABLE_XINDEX] is None) else "X"),
+                    get_item("Y" if (FATABLE[tr].x_index is None) else "X"),
                 )
 
         self.actuatorsTable.horizontalHeader().hide()
@@ -166,11 +161,11 @@ class BumpTestPageWidget(QWidget):
         self.progressGroup.setLayout(progressLayout)
         self.progressGroup.setMaximumWidth(410)
 
-        self.chart = None
+        self.chart: TimeChart | None = None
         self.chart_view = TimeChartView()
         self.chart_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        def make_button(text: str, clicked) -> QPushButton:
+        def make_button(text: str, clicked: typing.Callable[[], None]) -> QPushButton:
             button = QPushButton(text)
             button.setEnabled(False)
             button.clicked.connect(clicked)
@@ -256,27 +251,33 @@ class BumpTestPageWidget(QWidget):
         """Call M1M3 bump test command."""
         await self._testItem(self.actuatorsTable.selectedItems()[0])
 
-    async def _testItem(self, item: ForceActuator) -> None:
+    async def _testItem(self, item: QTableWidgetItem) -> None:
         self.actuatorsTable.scrollToItem(item)
         self.testedId = item.data(Qt.UserRole)
+        if self.testedId is None:
+            return
         item.setSelected(False)
-        self.zIndex = actuatorIDToIndex(self.testedId)
+        index = actuator_id_to_index(self.testedId)
+        if index is None:
+            return
 
-        self.xIndex = FATABLE[self.zIndex][FATABLE_XINDEX]
-        self.yIndex = FATABLE[self.zIndex][FATABLE_YINDEX]
-        self.sIndex = FATABLE[self.zIndex][FATABLE_SINDEX]
+        fa = FATABLE[index]
+        self.z_index = fa.z_index
+        self.x_index = fa.x_index
+        self.y_index = fa.y_index
+        self.s_index = fa.s_index
 
         def add_timeChart() -> None:
-            items = []
-            if self.xIndex is not None:
-                items.append("X")
-            if self.yIndex is not None:
-                items.append("Y")
-            items.append("Z")
+            axis: list[str] = []
+            if self.x_index is not None:
+                axis.append("X")
+            if self.y_index is not None:
+                axis.append("Y")
+            axis.append("Z")
             items = (
-                ["Applied " + s for s in items]
+                ["Applied " + a for a in axis]
                 + [None]
-                + ["Measured " + s for s in items]
+                + ["Measured " + a for a in axis]
             )
 
             if self.chart is not None:
@@ -289,15 +290,15 @@ class BumpTestPageWidget(QWidget):
         asyncio.get_event_loop().call_soon(add_timeChart)
 
         self.progressGroup.setTitle(f"Test progress {self.testedId}")
-        if self.sIndex is not None:
-            self.secondaryLabelPB.setText("Y" if self.xIndex is None else "X")
+        if self.s_index is not None:
+            self.secondaryLabelPB.setText("Y" if self.x_index is None else "X")
 
-        await SALCommand(
+        await command(
             self,
             self.m1m3.remote.cmd_forceActuatorBumpTest,
             actuatorId=self.testedId,
             testPrimary=not (item.text() == "X" or item.text() == "Y"),
-            testSecondary=not (item.text() == "P") and self.sIndex is not None,
+            testSecondary=not (item.text() == "P") and self.s_index is not None,
         )
         self.killBumpTestButton.setText(f"Stop bump test FA ID {self.testedId}")
 
@@ -308,7 +309,7 @@ class BumpTestPageWidget(QWidget):
             QTableWidgetSelectionRange(0, 0, self.actuatorsTable.rowCount() - 1, 11),
             False,
         )
-        await SALCommand(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
+        await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
 
     @Slot()
     def detailedState(self, data: typing.Any) -> None:
@@ -320,7 +321,7 @@ class BumpTestPageWidget(QWidget):
                 self.actuatorsTable.currentItem() is not None
             )
             self.killBumpTestButton.setEnabled(False)
-            self.xIndex = self.yIndex = self.zIndex = None
+            self.x_index = self.y_index = self.z_index = None
         else:
             self.bumpTestAllButton.setEnabled(False)
             self.bumpTestButton.setEnabled(False)
@@ -329,13 +330,13 @@ class BumpTestPageWidget(QWidget):
     @Slot()
     def appliedForces(self, data: typing.Any) -> None:
         """Adds applied forces to graph."""
-        chartData = []
-        if self.xIndex is not None:
-            chartData.append(data.xForces[self.xIndex])
-        if self.yIndex is not None:
-            chartData.append(data.yForces[self.yIndex])
-        if self.zIndex is not None:
-            chartData.append(data.zForces[self.zIndex])
+        chartData: list[float] = []
+        if self.x_index is not None:
+            chartData.append(data.xForces[self.x_index])
+        if self.y_index is not None:
+            chartData.append(data.yForces[self.y_index])
+        if self.z_index is not None:
+            chartData.append(data.zForces[self.z_index])
 
         if self.chart is not None:
             self.chart.append(data.timestamp, chartData, cache_index=0)
@@ -343,13 +344,13 @@ class BumpTestPageWidget(QWidget):
     @Slot()
     def forceActuatorData(self, data: typing.Any) -> None:
         """Adds measured forces to graph."""
-        chartData = []
-        if self.xIndex is not None:
-            chartData.append(data.xForce[self.xIndex])
-        if self.yIndex is not None:
-            chartData.append(data.yForce[self.yIndex])
-        if self.zIndex is not None:
-            chartData.append(data.zForce[self.zIndex])
+        chartData: list[float] = []
+        if self.x_index is not None:
+            chartData.append(data.xForce[self.x_index])
+        if self.y_index is not None:
+            chartData.append(data.yForce[self.y_index])
+        if self.z_index is not None:
+            chartData.append(data.zForce[self.z_index])
 
         if self.chart is not None:
             self.chart.append(data.timestamp, chartData, cache_index=1)
@@ -371,17 +372,17 @@ class BumpTestPageWidget(QWidget):
         ]
 
         # test progress
-        if self.zIndex is not None:
+        if self.z_index is not None:
             self.primaryPB.setEnabled(True)
-            val = data.primaryTest[self.zIndex]
+            val = data.primaryTest[self.z_index]
             self.primaryPB.setFormat(f"ID {self.testedId} - {testProgress[val]} - %v")
             self.primaryPB.setValue(min(6, val))
         else:
             self.primaryPB.setEnabled(False)
 
-        if self.sIndex is not None:
+        if self.s_index is not None:
             self.secondaryPB.setEnabled(True)
-            val = data.secondaryTest[self.sIndex]
+            val = data.secondaryTest[self.s_index]
             self.secondaryPB.setFormat(f"ID {self.testedId} - {testProgress[val]} - %v")
             self.secondaryPB.setValue(min(6, val))
         else:
@@ -389,7 +390,7 @@ class BumpTestPageWidget(QWidget):
 
         # list display
         for index in range(FATABLE_ZFA):
-            actuatorId: int = FATABLE[index][FATABLE_ID]
+            actuatorId = FATABLE[index].actuator_id
             row = (actuatorId % 100) - 1
             colOffset = 3 * (int(actuatorId / 100) - 1)
 
@@ -405,9 +406,9 @@ class BumpTestPageWidget(QWidget):
             pColor = getColor(data.primaryTest[index])
 
             self.actuatorsTable.item(row, colOffset + 1).setBackground(pColor)
-            sIndex = FATABLE[index][FATABLE_SINDEX]
-            if sIndex is not None:
-                sColor = getColor(data.secondaryTest[sIndex])
+            s_index = FATABLE[index].s_index
+            if s_index is not None:
+                sColor = getColor(data.secondaryTest[s_index])
                 self.actuatorsTable.item(row, colOffset + 2).setBackground(sColor)
                 if pColor == sColor:
                     self.actuatorsTable.item(row, colOffset).setBackground(pColor)
@@ -436,7 +437,7 @@ class BumpTestPageWidget(QWidget):
                     and self._anyCylinder()
                 )
                 self.killBumpTestButton.setEnabled(False)
-                self.xIndex = self.yIndex = self.zIndex = None
+                self.x_index = self.y_index = self.z_index = None
                 self.m1m3.appliedForces.disconnect(self.appliedForces)
                 self.m1m3.forceActuatorData.disconnect(self.forceActuatorData)
                 self._testRunning = False

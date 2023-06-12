@@ -21,17 +21,19 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import DMS, DataFormWidget, WarningGrid
 from ..GUI.SAL import Axis, ChartWidget
+from ..SALComm import MetaSAL
 
 
 class InclinometerPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
 
         layout.addWidget(
             DataFormWidget(
-                m1m3.inclinometerData, [("Angle", DMS(field="inclinometerAngle"))]
+                m1m3.inclinometerData,
+                [("Angle", DMS(field="inclinometerAngle"))],
             )
         )
 
@@ -41,8 +43,8 @@ class InclinometerPageWidget(QWidget):
             WarningGrid(
                 {
                     "anyWarning": "Any Warnings",
-                    "sensorReportsIllegalFunctionLabel": "Sensor Illegal Function",
-                    "sensorReportsIllegalAddressLabel": "Sensor Illegal Address",
+                    "sensorReportsIllegalFunctionLabel": ("Sensor Illegal Function"),
+                    "sensorReportsIllegalAddressLabel": ("Sensor Illegal Address"),
                     "responseTimeout": "Reponse Timeout",
                     "invalidCRC": "Invalid CRC",
                     "invalidLength": "Invalid Length",

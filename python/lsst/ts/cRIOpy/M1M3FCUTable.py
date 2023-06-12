@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 __all__ = ["FCUTABLE", "actuatorAddressToIndex"]
 
 FCUTABLE_INDEX = 0
@@ -126,5 +128,7 @@ FCUTABLE = [
 ]
 
 
-def actuatorAddressToIndex(actuatorId, valueIndex=FCUTABLE_INDEX):
+def actuatorAddressToIndex(
+    actuatorId: int, valueIndex: int = FCUTABLE_INDEX
+) -> typing.Any:
     return next(f for f in FCUTABLE if f[FCUTABLE_ADDRESS] == actuatorId)[valueIndex]

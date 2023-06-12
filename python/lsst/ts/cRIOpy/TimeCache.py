@@ -21,6 +21,9 @@
 
 __all__ = ["TimeCache"]
 
+import typing
+
+import h5py
 import numpy as np
 
 
@@ -49,17 +52,17 @@ class TimeCache:
         Items stored in the cache.
     """
 
-    def __init__(self, size, items):
+    def __init__(self, size: int, items: list[tuple[str, str]]):
         self._size = size
         self.data = np.zeros((self._size), items, order="F")
         self.clear()
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear cache."""
         self.current_index = 0
         self.filled = False
 
-    def resize(self, size):
+    def resize(self, size: int) -> None:
         """Change cache size. Data are preserved - either all rows are used
         when expanding, or the most recent ones are stored when shrinking.
 
@@ -84,13 +87,13 @@ class TimeCache:
         self.data = newdata
         self._size = size
 
-    def append(self, data):
+    def append(self, data: tuple[float, ...]) -> None:
         """Append new row to end of data.
 
         Parameters
         ----------
-        data : `tupple`
-            New row data.
+        data : `(float, ...)`
+            New row data. First tuple member is timestamp.
         """
         if self.current_index >= self._size:
             self.current_index = 0
@@ -98,45 +101,58 @@ class TimeCache:
         self.data[self.current_index] = data
         self.current_index += 1
 
-    def startTime(self):
+    def startTime(self) -> float:
         """Return timestamp of the last data point.
 
         Returns
         -------
         startTime : `float`
             None if cache is empty. Otherwise timestamp of the first data
-            point."""
+            point.
+
+        Raises
+        ------
+        RuntimeError
+            When cache is empty.
+
+        """
         if self.filled is False:
             if self.current_index > 0:
                 return self.data[0]["timestamp"]
-            return None
+            raise RuntimeError("Cannot retrieve start time from empty TimeCache.")
 
         if self.current_index >= self._size:
             return self.data[0]["timestamp"]
         return self.data[self.current_index]["timestamp"]
 
-    def endTime(self):
+    def endTime(self) -> float:
         """Return timestamp of the last data point.
 
         Returns
         -------
         endTime : `float`
             None if cache is empty. Otherwise timestamp of the last data
-            point."""
+            point.
+
+        Raises
+        ------
+        RuntimeError
+            When cache is empty.
+        """
         if self.current_index == 0:
             if self.filled is False:
-                return None
+                raise RuntimeError("Cannot retrieve end time from empty TimeCache.")
             return self.data[-1]["timestamp"]
         return self.data[self.current_index - 1]["timestamp"]
 
-    def timeRange(self):
+    def timeRange(self) -> tuple[float, float]:
         """Returns timestamp range.
 
         Returns
         -------
         startTime : `float`
             Equals startTime() call.
-        endTime : `float`a
+        endTime : `float`
             Equals endTime() call.
         """
         return (self.startTime(), self.endTime())
@@ -160,7 +176,7 @@ class TimeCache:
             return index - len(self) + self.current_index
         return index
 
-    def timestampIndex(self, timestamp: float) -> int:
+    def timestampIndex(self, timestamp: float) -> int | None:
         """Search for row's index with timestamp value bigger than timestamp.
 
         Parameters
@@ -199,7 +215,7 @@ class TimeCache:
 
         return left
 
-    def rows_reverse(self):
+    def rows_reverse(self) -> typing.Generator[float, None, None]:
         """Yields reversed row iterator."""
         for r in range(self.current_index - 1, -1, -1):
             yield self.data[r]
@@ -207,7 +223,9 @@ class TimeCache:
             for r in range(self._size - 1, self.current_index - 1, -1):
                 yield self.data[r]
 
-    def savetxt(self, filename, size=None, **kwargs):
+    def savetxt(
+        self, filename: str, size: int | None = None, **kwargs: typing.Any
+    ) -> None:
         """Saves data to CSV file. Saved data are forgotten.
 
         Parameters
@@ -243,7 +261,9 @@ class TimeCache:
 
         np.savetxt(filename, data[:size], **kwargs)
 
-    def create_hdf5_datasets(self, size, group, group_args={}):
+    def create_hdf5_datasets(
+        self, size: int, group: h5py.Group, **group_args: typing.Any
+    ) -> None:
         """Creates HDF5 datasets.
 
         Parameters
@@ -252,7 +272,7 @@ class TimeCache:
             Total size of records to be created.
         group : `h5py.Group`
             HDF5 group.
-        group_args : `dict`
+        **group_args : `dict`
             Keyword arguments passed to create_group call. It is recommended to
             pass at least chunks=True. Please See h5py.Group.create_dataset for
             details.
@@ -266,11 +286,11 @@ class TimeCache:
         self.hdf5_index = 0
         self._hdf5_size = size
 
-    def h5_filled(self):
+    def h5_filled(self) -> bool:
         """Returns True if HDF5 file is filled."""
         return self.hdf5_index >= self._hdf5_size
 
-    def savehdf5(self, size) -> None:
+    def savehdf5(self, size: int) -> None:
         """Save data to H5D group. Saved data are forgotten.
 
         Parameters
@@ -295,7 +315,7 @@ class TimeCache:
 
         self.hdf5_index += size
 
-    def columns(self):
+    def columns(self) -> list[str]:
         """Returns column names.
 
         Returns
@@ -305,7 +325,7 @@ class TimeCache:
         """
         return self.data.dtype.names
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> list[float]:
         if self.filled:
             return list(self.data[self.current_index :][key]) + list(
                 self.data[: self.current_index][key]
@@ -313,5 +333,5 @@ class TimeCache:
         else:
             return list(self.data[: self.current_index][key])
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._size if self.filled else self.current_index

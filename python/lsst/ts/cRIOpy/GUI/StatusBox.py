@@ -66,11 +66,11 @@ class StatusWidget(ColoredButton):
         self._color_true = color_true
         self._color_false = color_false
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         size = super().sizeHint()
         return QSize(20, size.height())
 
-    def setValue(self, value: bool):
+    def setValue(self, value: bool) -> None:
         """Sets new value.
 
         Parameters
@@ -93,7 +93,7 @@ class StatusBox(QWidget):
         Signal send when new data are available.
     """
 
-    def __init__(self, items, signal: Signal):
+    def __init__(self, items: list[StatusWidget], signal: Signal):
         super().__init__()
         hbox = QHBoxLayout()
         hbox.setSpacing(0)

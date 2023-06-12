@@ -25,5 +25,5 @@ from .EnumScale import EnumScale
 class OnOffScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__({True: ("On", Colors.OK), False: ("Off", Colors.ERROR)})

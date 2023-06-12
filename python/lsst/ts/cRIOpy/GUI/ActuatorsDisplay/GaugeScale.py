@@ -20,7 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import QSize, Qt
-from PySide2.QtGui import QBrush, QColor, QPainter
+from PySide2.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide2.QtWidgets import QWidget
 
 
@@ -36,35 +36,35 @@ class GaugeScale(QWidget):
 
     def __init__(self, fmt: str = ".02f"):
         super().__init__()
-        self._min = None
-        self._max = None
+        self._min: float = 1
+        self._max: float = 1
         self._fmt = fmt
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
-    def setRange(self, min, max):
+    def setRange(self, min_range: float, max_range: float) -> None:
         """Set value range. Color is mapped between min and max values, using
         change in hue.
 
         Parameters
         ----------
-        min : `float`
+        min_range : `float`
                Minimal data range.
-        max : `float`
+        max_range : `float`
                Maximal data range.
         """
-        self._min = min
-        self._max = max
+        self._min = min_range
+        self._max = max_range
         self.update()
 
-    def sizeHint(self):
+    def sizeHint(self) -> None:
         """Overridden method."""
         return QSize(100, 100)
 
-    def formatValue(self, value):
+    def formatValue(self, value: float) -> str:
         return f"{value:{self._fmt}}"
 
-    def getColor(self, value):
+    def getColor(self, value: float) -> QColor | None:
         """Returns color for given value.
 
         Parameters
@@ -75,7 +75,7 @@ class GaugeScale(QWidget):
         Returns
         -------
         color : `QColor`
-            QColor representing the value on scale.
+            QColor representing the value on scale. None - use default color.
         """
         if self._min == self._max:
             return None
@@ -83,7 +83,7 @@ class GaugeScale(QWidget):
         hue = 1 - (value - self._min) / (self._max - self._min)
         return self.getHueColor(hue)
 
-    def getHueColor(self, hue):
+    def getHueColor(self, hue: float) -> QColor:
         """Returns color from "hue" (0-1 range).
 
         Parameters
@@ -98,7 +98,7 @@ class GaugeScale(QWidget):
         """
         return QColor.fromHsvF(hue * 0.7, min(1, 1.5 - hue), 1)
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent) -> None:
         """Overridden method. Paint gauge as series of lines, and adds text
         labels."""
         painter = QPainter(self)
@@ -126,7 +126,12 @@ class GaugeScale(QWidget):
 
         painter.setPen(Qt.black)
         painter.drawText(
-            0, 0, self.width() - swidth, 30, Qt.AlignCenter, self.formatValue(self._max)
+            0,
+            0,
+            self.width() - swidth,
+            30,
+            Qt.AlignCenter,
+            self.formatValue(self._max),
         )
         painter.drawText(
             0,

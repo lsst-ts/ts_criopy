@@ -1,4 +1,4 @@
-FROM ts-dockerhub.lsst.org/develop-env:c0029.000
+FROM ts-dockerhub.lsst.org/develop-env:develop
 
 ARG cRIO_PY=develop
 

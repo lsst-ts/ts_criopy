@@ -23,12 +23,12 @@ from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from .SALComm import warning
+from ...SALComm import MetaSAL, warning
 from .SummaryStateLabel import SummaryStateLabel
 
 
 class ApplicationStatusWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -44,7 +44,9 @@ class ApplicationStatusWidget(QWidget):
         col = 0
         self.statusLayout.addWidget(QLabel("State"), row, col)
         self.statusLayout.addWidget(
-            SummaryStateLabel(self.m1m3.summaryState, "summaryState"), row, col + 1
+            SummaryStateLabel(self.m1m3.summaryState, "summaryState"),
+            row,
+            col + 1,
         )
         row += 1
         self.statusLayout.addWidget(QLabel("Mode"), row, col)
@@ -87,12 +89,12 @@ class ApplicationStatusWidget(QWidget):
         else:
             self._disconnectRaiseLowering()
 
-    def _connectRaiseLowering(self):
+    def _connectRaiseLowering(self) -> None:
         self.m1m3.raisingLoweringInfo.connect(
             self.raisingLoweringInfo, Qt.UniqueConnection
         )
 
-    def _disconnectRaiseLowering(self):
+    def _disconnectRaiseLowering(self) -> None:
         try:
             self.m1m3.raisingLoweringInfo.disconnect(self.raisingLoweringInfo)
         except RuntimeError:
@@ -161,7 +163,9 @@ class ApplicationStatusWidget(QWidget):
             self._disconnectRaiseLowering()
         else:
             warning(
-                self, "Unknown state", f"Unknown state received - {data.detailedState}"
+                self,
+                "Unknown state",
+                f"Unknown state received - {data.detailedState}",
             )
             self._disconnectRaiseLowering()
             return

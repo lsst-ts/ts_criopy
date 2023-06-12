@@ -3,7 +3,6 @@ from .ApplicationStatusWidget import ApplicationStatusWidget
 from .ChartWidget import Axis, ChartWidget
 from .CSCControlWidget import CSCControlWidget
 from .EUIWindow import EUIWindow
-from .SALComm import SALCommand, SALListCommand, create
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import (
@@ -13,6 +12,7 @@ from .StateEnabled import (
 )
 from .SummaryStateLabel import SummaryStateLabel
 from .TimeDeltaLabel import TimeDeltaLabel
-from .TopicData import TopicData
+from .TopicCollection import TopicCollection
+from .TopicData import TopicData, TopicField, WarningField
 from .TopicWindow import TopicWindow
 from .VersionWidget import VersionWidget

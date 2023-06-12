@@ -25,6 +25,7 @@ from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Slot
 
 from ..GUI.CustomLabels import DockWindow
+from ..SALComm import MetaSAL
 from .ChartView import ChartView
 from .TimeBoxChart import TimeBoxChart
 
@@ -36,13 +37,13 @@ class BoxChartWidget(DockWindow):
     ----------
     title : `str`
         QDockWidget title and object name.
-    comm : `SALComm`
+    comm : `MetaSAL`
         SALComm object providing data.
     channels : `[(sensor, axis)]`
         Enabled channels.
     """
 
-    def __init__(self, title, comm, channels):
+    def __init__(self, title: str, comm: MetaSAL, channels: list[tuple[int, str]]):
         super().__init__(title)
         self.channels = channels
         self.chart = TimeBoxChart()

@@ -25,12 +25,15 @@ from functools import partial
 import astropy.units as u
 from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Qt, Signal, Slot
+from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
 from .GUI.SAL import Application, SALLog
+from .SALComm import MetaSAL
 from .VMS import (
     BoxChartWidget,
     Cache,
+    CacheWidget,
     CSCPSDWidget,
     DisplacementWidget,
     MiscellaneousWidget,
@@ -47,7 +50,7 @@ class EUI(QMainWindow):
 
     cacheUpdated = Signal(int, int, float, float)
 
-    def __init__(self, *comms):
+    def __init__(self, *comms: MetaSAL):
         super().__init__()
 
         self.caches = [Cache(1000, 3), Cache(1000, 6), Cache(1000, 3)]
@@ -58,7 +61,7 @@ class EUI(QMainWindow):
             comm.data.connect(self.data)
             comm.fpgaState.connect(self.fpgaState)
 
-        logDock = SALLog.Dock(self.comms)
+        logDock = SALLog.Dock(*self.comms)
 
         menuBar = self.menuBar()
 
@@ -74,12 +77,16 @@ class EUI(QMainWindow):
             m.addAction(
                 "New &raw graph",
                 partial(
-                    self._addCacheWidget, i, "Raw acceleration", RawAccelerationWidget
+                    self._addCacheWidget,
+                    i,
+                    "Raw acceleration",
+                    RawAccelerationWidget,
                 ),
             )
             m.addAction("New &box graph", partial(self._addBox, i))
             m.addAction(
-                "New &PSD graph", partial(self._addCacheWidget, i, "PSD", PSDWidget)
+                "New &PSD graph",
+                partial(self._addCacheWidget, i, "PSD", PSDWidget),
             )
             m.addAction("&CSC PSD graph", partial(self._addCSCPSDWidget, i))
             m.addAction(
@@ -120,11 +127,11 @@ class EUI(QMainWindow):
         self.toolBar.frequencyChanged.emit(*self.toolBar.getFrequencyRange())
         self.toolBar.intervalChanged.emit(self.toolBar.interval.value())
 
-    def _addCSCPSDWidget(self, index):
+    def _addCSCPSDWidget(self, index: int) -> None:
         prefix = "CSC PSD " + self.SYSTEMS[index] + ":"
-        id = self.getNextId(prefix)
+        actuator_id = self.getNextId(prefix)
         aWidget = CSCPSDWidget(
-            prefix + str(id),
+            prefix + str(actuator_id),
             self.toolBar,
             self.comms[index].psd,
             self.caches[index].sensors(),
@@ -132,11 +139,13 @@ class EUI(QMainWindow):
         self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
         self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
 
-    def _addCacheWidget(self, index, prefix, ChartTypeClass):
+    def _addCacheWidget(
+        self, index: int, prefix: str, chartTypeClass: CacheWidget
+    ) -> None:
         prefix = prefix + " " + self.SYSTEMS[index] + ":"
-        id = self.getNextId(prefix)
-        aWidget = ChartTypeClass(
-            prefix + str(id),
+        actuator_id = self.getNextId(prefix)
+        aWidget = chartTypeClass(
+            prefix + str(actuator_id),
             self.caches[index],
             self.toolBar,
         )
@@ -145,32 +154,32 @@ class EUI(QMainWindow):
         self.toolBar.integralBinningChanged.connect(aWidget.integralBinningChanged)
         self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
 
-    def _addBox(self, index):
+    def _addBox(self, index: int) -> None:
         prefix = "Box " + self.SYSTEMS[index] + ":"
-        id = self.getNextId(prefix)
+        actuator_id = self.getNextId(prefix)
         self.addDockWidget(
             Qt.TopDockWidgetArea,
-            BoxChartWidget(prefix + str(id), self.comms[index], []),
+            BoxChartWidget(prefix + str(actuator_id), self.comms[index], []),
         )
 
-    def _showMiscellaneous(self, index):
+    def _showMiscellaneous(self, index: int) -> None:
         widget = self._miscellaneous[index]
         if widget.isHidden():
             self.addDockWidget(Qt.TopDockWidgetArea, widget)
             widget.show()
 
-    def removeAll(self):
+    def removeAll(self) -> None:
         for child in self.children():
             if child.objectName()[:3] in ["PSD", "Box", "Vel", "Acc"]:
                 self.removeDockWidget(child)
                 del child
 
-    def getNextId(self, prefix):
-        id = 1
+    def getNextId(self, prefix: str) -> int:
+        actuator_id = 1
         for child in self.children():
             if child.objectName().startswith(prefix):
-                id = int(child.objectName()[len(prefix) :]) + 1
-        return id
+                actuator_id = int(child.objectName()[len(prefix) :]) + 1
+        return actuator_id
 
     @Slot()
     def data(self, data: typing.Any) -> None:
@@ -191,12 +200,12 @@ class EUI(QMainWindow):
         self.caches[index].setSampleTime(fpgaState.period * u.ms.to(u.s))
 
     @Slot()
-    def intervalChanged(self, interval: float) -> None:
+    def intervalChanged(self, interval: int) -> None:
         for i, c in enumerate(self.caches):
             c.setInterval(interval)
 
     @asyncClose
-    async def closeEvent(self, event):
+    async def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings("LSST.TS", "VMSGUI")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
@@ -206,7 +215,7 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-def run():
+def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
     for index in range(1, 4):

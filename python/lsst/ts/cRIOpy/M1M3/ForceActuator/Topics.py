@@ -19,18 +19,10 @@
 
 import typing
 
-from lsst.ts.cRIOpy.M1M3FATable import (
-    FATABLE,
-    FATABLE_INDEX,
-    FATABLE_SINDEX,
-    FATABLE_XINDEX,
-    FATABLE_YINDEX,
-    FATABLE_ZINDEX,
-)
-from PySide2.QtCore import Slot
+from lsst.ts.cRIOpy.M1M3FATable import FATABLE, FAIndex
 
 from ...GUI.ActuatorsDisplay import Scales
-from ...GUI.SAL.SALComm import MetaSAL
+from ...GUI.SAL.TopicCollection import TopicCollection
 from ...GUI.SAL.TopicData import (
     EnabledDisabledField,
     TopicData,
@@ -43,7 +35,7 @@ __all__ = ["Topics"]
 
 
 class BumpTestField(TopicField):
-    def __init__(self, name, fieldName, valueIndex):
+    def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
 
 
@@ -60,78 +52,65 @@ class FAIndicesData(TopicData):
         super().__init__(
             name,
             [
-                TopicField("Z Indices", "zIndices", FATABLE_ZINDEX, Scales.INTEGER),
-                TopicField("Y Indices", "yIndices", FATABLE_YINDEX, Scales.INTEGER),
-                TopicField("X Indices", "xIndices", FATABLE_XINDEX, Scales.INTEGER),
+                TopicField("Z Indices", "zIndices", FAIndex.Z, Scales.INTEGER),
+                TopicField("Y Indices", "yIndices", FAIndex.Y, Scales.INTEGER),
+                TopicField("X Indices", "xIndices", FAIndex.X, Scales.INTEGER),
                 TopicField(
                     "Primary Cylinder Indices",
                     "pIndices",
-                    FATABLE_INDEX,
+                    FAIndex.PRIMARY,
                     Scales.INTEGER,
                 ),
                 TopicField(
                     "Secondary Cylinder Indices",
                     "sIndices",
-                    FATABLE_SINDEX,
+                    FAIndex.SECONDARY,
                     Scales.INTEGER,
                 ),
             ],
             None,
         )
 
-        self.xIndices = [
-            row[FATABLE_XINDEX] for row in FATABLE if row[FATABLE_XINDEX] is not None
-        ]
-        self.yIndices = [
-            row[FATABLE_YINDEX] for row in FATABLE if row[FATABLE_YINDEX] is not None
-        ]
-        self.zIndices = [row[FATABLE_ZINDEX] for row in FATABLE]
-        self.pIndices = [row[FATABLE_INDEX] for row in FATABLE]
-        self.sIndices = [
-            row[FATABLE_SINDEX] for row in FATABLE if row[FATABLE_SINDEX] is not None
-        ]
+        self.xIndices = [row.x_index for row in FATABLE if row.x_index is not None]
+        self.yIndices = [row.y_index for row in FATABLE if row.y_index is not None]
+        self.zIndices = [row.z_index for row in FATABLE]
+        self.pIndices = [row.index for row in FATABLE]
+        self.sIndices = [row.s_index for row in FATABLE if row.s_index is not None]
         self.timestamp = None
 
     def getTopic(self) -> typing.Any:
         return self
 
 
-class Topics:
+class Topics(TopicCollection):
     """
     Class constructing list of all available topics of the Force Actuators.
-
-    Attributes
-    ----------
-    topics : `[TopicData]`
-        Force Actuator topics. Holds topics and fields available for plotting.
     """
 
     def __init__(self) -> None:
-        self.__lastIndex = None
-
-        self.topics = [
+        super().__init__(
             TopicData(
                 "Applied Acceleration Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedAccelerationForces",
                 False,
             ),
             TopicData(
                 "Applied Active Optic Forces",
-                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
+                [TopicField("Z Forces", "zForces", FAIndex.Z)],
                 "appliedActiveOpticForces",
                 command="ActiveOpticForces",
             ),
             TopicData(
                 "Applied Azimuth Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedAzimuthForces",
                 False,
@@ -139,9 +118,9 @@ class Topics:
             TopicData(
                 "Applied Balance Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedBalanceForces",
                 False,
@@ -152,12 +131,12 @@ class Topics:
                     TopicField(
                         "Primary Cylinder Forces",
                         "primaryCylinderForces",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Cylinder Forces",
                         "secondaryCylinderForces",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "appliedCylinderForces",
@@ -166,9 +145,9 @@ class Topics:
             TopicData(
                 "Applied Elevation Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedElevationForces",
                 False,
@@ -176,9 +155,9 @@ class Topics:
             TopicData(
                 "Applied Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedForces",
                 False,
@@ -186,9 +165,9 @@ class Topics:
             TopicData(
                 "Applied Offset Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedOffsetForces",
                 command="OffsetForces",
@@ -196,18 +175,18 @@ class Topics:
             TopicData(
                 "Applied Static Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedStaticForces",
             ),
             TopicData(
                 "Applied Thermal Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedThermalForces",
                 False,
@@ -215,9 +194,9 @@ class Topics:
             TopicData(
                 "Applied Velocity Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "appliedVelocityForces",
                 False,
@@ -225,32 +204,32 @@ class Topics:
             TopicData(
                 "Pre-clipped Acceleration Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedAccelerationForces",
             ),
             TopicData(
                 "Pre-clipped Active Optic Forces",
-                [TopicField("Z Forces", "zForces", FATABLE_ZINDEX)],
+                [TopicField("Z Forces", "zForces", FAIndex.Z)],
                 "preclippedActiveOpticForces",
             ),
             TopicData(
                 "Pre-clipped Azimuth Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedAzimuthForces",
             ),
             TopicData(
                 "Pre-clipped Balance Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedBalanceForces",
             ),
@@ -260,12 +239,12 @@ class Topics:
                     TopicField(
                         "Primary Cylinder Forces",
                         "primaryCylinderForces",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Cylinder Forces",
                         "secondaryCylinderForces",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "preclippedCylinderForces",
@@ -273,54 +252,54 @@ class Topics:
             TopicData(
                 "Pre-clipped Elevation Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedElevationForces",
             ),
             TopicData(
                 "Pre-clipped Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedForces",
             ),
             TopicData(
                 "Pre-clipped Offset Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedOffsetForces",
             ),
             TopicData(
                 "Pre-clipped Static Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedStaticForces",
             ),
             TopicData(
                 "Pre-clipped Thermal Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedThermalForces",
             ),
             TopicData(
                 "Pre-clipped Velocity Forces",
                 [
-                    TopicField("Z Forces", "zForces", FATABLE_ZINDEX),
-                    TopicField("Y Forces", "yForces", FATABLE_YINDEX),
-                    TopicField("X Forces", "xForces", FATABLE_XINDEX),
+                    TopicField("Z Forces", "zForces", FAIndex.Z),
+                    TopicField("Y Forces", "yForces", FAIndex.Y),
+                    TopicField("X Forces", "xForces", FAIndex.X),
                 ],
                 "preclippedVelocityForces",
             ),
@@ -330,27 +309,27 @@ class Topics:
                     TopicField(
                         "Primary Cylinder Forces",
                         "primaryCylinderForce",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Cylinder Forces",
                         "secondaryCylinderForce",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Z Forces",
                         "zForce",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Y Forces",
                         "yForce",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "X Forces",
                         "xForce",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                 ],
                 "forceActuatorData",
@@ -362,12 +341,12 @@ class Topics:
                     TopicField(
                         "Primary Cylinder FE",
                         "primaryCylinderFollowingError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Cylinder FE",
                         "secondaryCylinderFollowingError",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorData",
@@ -376,15 +355,9 @@ class Topics:
             TopicData(
                 "FA Raising State",
                 [
-                    WaitingField(
-                        "Waiting for Z FA", "waitZForceActuator", FATABLE_ZINDEX
-                    ),
-                    WaitingField(
-                        "Waiting for Y FA", "waitYForceActuator", FATABLE_YINDEX
-                    ),
-                    WaitingField(
-                        "Waiting for X FA", "waitXForceActuator", FATABLE_XINDEX
-                    ),
+                    WaitingField("Waiting for Z FA", "waitZForceActuator", FAIndex.Z),
+                    WaitingField("Waiting for Y FA", "waitYForceActuator", FAIndex.Y),
+                    WaitingField("Waiting for X FA", "waitXForceActuator", FAIndex.X),
                 ],
                 "raisingLoweringInfo",
             ),
@@ -394,75 +367,81 @@ class Topics:
                     TopicField(
                         "Actuator Type",
                         "actuatorType",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Actuator Orientation",
                         "actuatorOrientation",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
-                    TopicField("Subnet", "modbusSubnet", FATABLE_ZINDEX),
-                    TopicField("Address", "modbusAddress", FATABLE_ZINDEX),
-                    TopicField("X Position", "xPosition", FATABLE_ZINDEX),
-                    TopicField("Y Position", "yPosition", FATABLE_ZINDEX),
-                    TopicField("Z Position", "zPosition", FATABLE_ZINDEX),
+                    TopicField("Subnet", "modbusSubnet", FAIndex.Z),
+                    TopicField("Address", "modbusAddress", FAIndex.Z),
+                    TopicField("X Position", "xPosition", FAIndex.Z),
+                    TopicField("Y Position", "yPosition", FAIndex.Z),
+                    TopicField("Z Position", "zPosition", FAIndex.Z),
                     TopicField(
                         "Major Revision",
                         "majorRevision",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Minor Revision",
                         "minorRevision",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
-                    TopicField("ADC Scan Rate", "adcScanRate", FATABLE_ZINDEX),
-                    TopicField("Reference ID", "referenceId", FATABLE_ZINDEX),
+                    TopicField("ADC Scan Rate", "adcScanRate", FAIndex.Z),
+                    TopicField("Reference ID", "referenceId", FAIndex.Z),
                     TopicField(
                         "X Data Reference Id",
                         "xDataReferenceId",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     TopicField(
                         "Y Data Reference Id",
                         "yDataReferenceId",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "Z Data Reference Id",
                         "zDataReferenceId",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
-                    TopicField("ILC Unique Id", "ilcUniqueId", FATABLE_ZINDEX),
+                    TopicField("ILC Unique Id", "ilcUniqueId", FAIndex.Z),
                     TopicField(
                         "ILC application type",
                         "ilcApplicationType",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
-                    TopicField("Network Node Type", "networkNodeType", FATABLE_ZINDEX),
+                    TopicField("Network Node Type", "networkNodeType", FAIndex.Z),
                     TopicField(
-                        "ILC Selected Options", "ilcSelectedOptions", FATABLE_ZINDEX
+                        "ILC Selected Options",
+                        "ilcSelectedOptions",
+                        FAIndex.Z,
                     ),
                     TopicField(
-                        "Network Node Options", "networkNodeOptions", FATABLE_ZINDEX
+                        "Network Node Options",
+                        "networkNodeOptions",
+                        FAIndex.Z,
                     ),
                     TopicField(
-                        "Mezzanine Unique ID", "mezzanineUniqueId", FATABLE_ZINDEX
+                        "Mezzanine Unique ID",
+                        "mezzanineUniqueId",
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Mezzanine Firmware Type",
                         "mezzanineFirmwareType",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Mezzanine Major Revision",
                         "mezzanineMajorRevision",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Mezzanine Minor Revision",
                         "mezzanineMinorRevision",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                 ],
                 "forceActuatorInfo",
@@ -472,97 +451,97 @@ class Topics:
                 "FA Settings",
                 [
                     EnabledDisabledField(
-                        "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
+                        "Enabled/Disabled", "enabledActuators", FAIndex.Z
                     ),
                     TopicField(
                         "Z Applied Force Low Limit",
                         "appliedZForceLowLimit",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Z Applied Force High Limit",
                         "appliedZForceHighLimit",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Y Applied Force Low Limit",
                         "appliedYForceLowLimit",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "Y Applied Force High Limit",
                         "appliedYForceHighLimit",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "X Applied Force Low Limit",
                         "appliedXForceLowLimit",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     TopicField(
                         "X Applied Force High Limit",
                         "appliedXForceHighLimit",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     TopicField(
                         "Z Measured Force Low Limit",
                         "measuredZForceLowLimit",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Z Measured Force High Limit",
                         "measuredZForceHighLimit",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Y Measured Force Low Limit",
                         "measuredYForceLowLimit",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "Y Measured Force High Limit",
                         "measuredYForceHighLimit",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     TopicField(
                         "X Measured Force Low Limit",
                         "measuredXForceLowLimit",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     TopicField(
                         "X Measured Force High Limit",
                         "measuredXForceHighLimit",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     TopicField(
                         "PC FE Warning",
                         "primaryFollowingErrorWarningThreshold",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "PC FE Counting",
                         "primaryFollowingErrorCountingFaultThreshold",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "PC FE Immediate",
                         "primaryFollowingErrorImmediateFaultThreshold",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "SC FE Warning",
                         "secondaryFollowingErrorWarningThreshold",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "SC FE Counting",
                         "secondaryFollowingErrorCountingFaultThreshold",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "SC FE Immediate",
                         "secondaryFollowingErrorImmediateFaultThreshold",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorSettings",
@@ -573,42 +552,42 @@ class Topics:
                     TopicField(
                         "Primary Coefficient",
                         "mainPrimaryCylinderCoefficient",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Primary Offset",
                         "mainPrimaryCylinderLoadCellOffset",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Primary Sensitivity",
                         "mainPrimaryCylinderLoadCellSensitivity",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Coefficient",
                         "mainSecondaryCylinderCoefficient",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Secondary Offset",
                         "mainSecondaryCylinderLoadCellOffset",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Secondary Sensitivity",
                         "mainSecondaryLoadCellSensitivity",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Primary Cylinder Gain",
                         "mezzaninePrimaryCylinderGain",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Cylinder Gain",
                         "mezzanineSecondaryCylinderGain",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorInfo",
@@ -619,180 +598,180 @@ class Topics:
                     TopicField(
                         "Primary Coefficient",
                         "backupPrimaryCylinderCoefficient",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Primary Offset",
                         "backupPrimaryCylinderLoadCellOffset",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Primary Sensitivity",
                         "backupPrimaryCylinderLoadCellSensitivity",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Coefficient",
                         "backupSecondaryCylinderCoefficient",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Secondary Offset",
                         "backupSecondaryCylinderLoadCellOffset",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Secondary Sensitivity",
                         "backupSecondaryLoadCellSensitivity",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorInfo",
             ),
             TopicData(
                 "FA State",
-                [TopicField("ILC State", "ilcState", FATABLE_ZINDEX)],
+                [TopicField("ILC State", "ilcState", FAIndex.Z)],
                 "forceActuatorState",
             ),
             TopicData(
                 "FA Warning",
                 [
-                    WarningField("Major Fault", "majorFault", FATABLE_ZINDEX),
-                    WarningField("Minor Fault", "minorFault", FATABLE_ZINDEX),
+                    WarningField("Major Fault", "majorFault", FAIndex.Z),
+                    WarningField("Minor Fault", "minorFault", FAIndex.Z),
                     WarningField(
                         "Fault Override",
                         "faultOverride",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Main Calibration Error",
                         "mainCalibrationError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Backup Calibration Error",
                         "backupCalibrationError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Error",
                         "mezzanineError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Bootloader Active",
                         "mezzanineBootloaderActive",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Unique Id CRC Error",
                         "uniqueIdCRCError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Application Type Mismatch",
                         "applicationTypeMismatch",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Application Missing",
                         "applicationMissing",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "OneWire Mismatch",
                         "oneWireMissing",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "OneWire1 Mismatch",
                         "oneWire1Mismatch",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "OnewWire2 Mismatch",
                         "oneWire2Mismatch",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Watchdog Reset",
                         "watchdogReset",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Brownout",
                         "brownOut",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Event Trap Reset",
                         "eventTrapReset",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "SSR Power Fault",
                         "ssrPowerFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "AUX Power Fault",
                         "auxPowerFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Power Fault",
                         "mezzaninePowerFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Current Ampl Fault",
                         "mezzanineCurrentAmp1Fault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Current Amp2 Fault",
                         "mezzanineCurrentAmp2Fault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Unique ID CRC Error",
                         "mezzanineUniqueIdCRCError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Main Calibration Error",
                         "mezzanineMainCalibrationError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Backup Calibration Error",
                         "mezzanineBackupCalibrationError",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Event Trap Reset",
                         "mezzanineEventTrapReset",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Application Missing",
                         "mezzanineApplicationMissing",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Mezzanine Application CRC Mismatch",
                         "mezzanineApplicationCRCMismatch",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "ILC Fault",
                         "ilcFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Broadcast Counter Warning",
                         "broadcastCounterWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                 ],
                 "forceActuatorWarning",
@@ -803,47 +782,47 @@ class Topics:
                     WarningField(
                         "Z Measured Force Warning",
                         "measuredZForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Y Measured Force Warning",
                         "measuredYForceWarning",
-                        FATABLE_YINDEX,
+                        FAIndex.Y,
                     ),
                     WarningField(
                         "X Measured Force Warning",
                         "measuredXForceWarning",
-                        FATABLE_XINDEX,
+                        FAIndex.X,
                     ),
                     WarningField(
                         "Primary Axis FE Warning",
                         "primaryAxisFollowingErrorWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Secondary Axis FE Warning",
                         "secondaryAxisFollowingErrorWarning",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     WarningField(
                         "Primary Axis FE Counting Fault",
                         "primaryAxisFollowingErrorCountingFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Secondary Axis FE Counting Fault",
                         "secondaryAxisFollowingErrorCountingFault",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     WarningField(
                         "Primary Axis FE Immediate Fault",
                         "primaryAxisFollowingErrorImmediateFault",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Secondary Axis FE Immediate Fault",
                         "secondaryAxisFollowingErrorImmediateFault",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorForceWarning",
@@ -854,22 +833,22 @@ class Topics:
                     TopicField(
                         "Primary axis FE warning counter",
                         "primaryAxisFollowingErrorWarningCounter",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary axis FE warning counter",
                         "secondaryAxisFollowingErrorWarningCounter",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Primary axis FE counting counter",
                         "primaryAxisFollowingErrorCountingCounter",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary axis FE counting counter",
                         "secondaryAxisFollowingErrorCountingCounter",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorFollowingErrorCounter",
@@ -880,67 +859,67 @@ class Topics:
                     WarningField(
                         "Safety limit",
                         "safetyLimitWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Near neighbor",
                         "nearNeighborWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Far neighbor",
                         "farNeighborWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Elevation force",
                         "elevationForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Azimuth force",
                         "azimuthForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Thermal force",
                         "thermalForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Balance force",
                         "balanceForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Acceleration force",
                         "accelerationForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Active optic",
                         "activeOpticForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Static force",
                         "staticForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Offset force",
                         "offsetForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Velocity force",
                         "velocityForceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     WarningField(
                         "Force setpoint",
                         "forceWarning",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                 ],
                 "forceSetpointWarning",
@@ -948,21 +927,21 @@ class Topics:
             TopicData(
                 "FA Bump Test",
                 [
-                    BumpTestField("Primary Test", "primaryTest", FATABLE_ZINDEX),
+                    BumpTestField("Primary Test", "primaryTest", FAIndex.Z),
                     BumpTestField(
                         "Secondary Test",
                         "secondaryTest",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                     TopicField(
                         "Primary Timestamps",
                         "primaryTestTimestamps",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Timestamps",
                         "secondaryTestTimestamps",
-                        FATABLE_SINDEX,
+                        FAIndex.SECONDARY,
                     ),
                 ],
                 "forceActuatorBumpTestStatus",
@@ -973,36 +952,9 @@ class Topics:
                     EnabledDisabledField(
                         "Enabled FAs",
                         "forceActuatorEnabled",
-                        FATABLE_ZINDEX,
+                        FAIndex.Z,
                     ),
                 ],
                 "enabledForceActuators",
             ),
-        ]
-
-    def changeTopic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
-        """Called when new topic is selected.
-
-        Parameters
-        ----------
-        index: `int`
-            New field index.
-        slot: `Slot`
-            Slot for data reception.
-        comm: `MetaSAL`
-            MetaSAL with data.
-        """
-        # disconnect/connect only for real M1M3 topics -  if topic is None,
-        # don't connect/disconnect
-        if self.__lastIndex is not None:
-            topic = self.topics[self.__lastIndex].topic
-            if topic is not None:
-                getattr(comm, topic).disconnect(slot)
-
-        self.__lastIndex = index
-        if index is None:
-            return
-
-        topic = self.topics[index].topic
-        if topic is not None:
-            getattr(comm, topic).connect(slot)
+        )

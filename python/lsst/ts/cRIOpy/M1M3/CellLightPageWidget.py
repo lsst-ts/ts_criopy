@@ -24,8 +24,8 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from ..GUI.CustomLabels import OnOffLabel, WarningLabel
-from ..GUI.SAL import EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..GUI.SAL import EngineeringButton
+from ..SALComm import MetaSAL, command
 
 
 class CellLightPageWidget(QWidget):
@@ -88,8 +88,8 @@ class CellLightPageWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandTurnLightsOn(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_turnLightsOn)
+        await command(self, self.m1m3.remote.cmd_turnLightsOn)
 
     @asyncSlot()
     async def issueCommandTurnLightsOff(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_turnLightsOff)
+        await command(self, self.m1m3.remote.cmd_turnLightsOff)

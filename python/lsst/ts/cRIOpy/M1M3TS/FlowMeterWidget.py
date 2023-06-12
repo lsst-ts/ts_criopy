@@ -20,6 +20,7 @@
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import DataFormWidget, DataLabel, DockWindow, Liter, LiterMinute
+from ..SALComm import MetaSAL
 
 
 class FlowMeterWidget(DockWindow):
@@ -27,11 +28,11 @@ class FlowMeterWidget(DockWindow):
 
     Parameters
     ----------
-    m1m3ts : `SALComm`
+    m1m3ts : `MetaSAL`
         SALComm object for MTM1M3TS.
     """
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__("Flow meter")
 
         layout = QVBoxLayout()
