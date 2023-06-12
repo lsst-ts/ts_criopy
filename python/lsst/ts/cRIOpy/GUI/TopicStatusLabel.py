@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from PySide2.QtCore import Signal
+from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from . import ColoredButton
@@ -40,7 +41,9 @@ class FieldButton(ColoredButton):
         color.
     """
 
-    def __init__(self, field: str, inactive: (str, str), active: (str, str)):
+    def __init__(
+        self, field: str, inactive: tuple[str, QColor], active: tuple[str, QColor]
+    ):
         super().__init__("---")
         self.field = field
         self.attributes = {False: inactive, True: active}
@@ -69,14 +72,14 @@ class TopicStatusLabel(ColoredButton):
         Fields in signal to display in sub-window.
     """
 
-    def __init__(self, signal: Signal, title: str, fields: [FieldButton]):
+    def __init__(self, signal: Signal, title: str, fields: list[FieldButton]):
         super().__init__("---")
         self._title = title
         self._window = None
         self.fields = fields
 
         self.clicked.connect(self._clicked)
-        signal.connect(self.data)
+        signal.connect(self.data)  # type: ignore
 
     def _clicked(self):
         if self._window is None:

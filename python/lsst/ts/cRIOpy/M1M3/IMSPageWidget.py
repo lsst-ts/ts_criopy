@@ -1,31 +1,91 @@
-import astropy.units as u
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+# This file is part of cRIO UIs.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
 
-from ..GUI import Arcsec, Mm, TimeChart, TimeChartView, WarningGrid
+import typing
+
+import astropy.units as u
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
+
+from ..GUI import (
+    Arcsec,
+    ArrayFields,
+    ArrayGrid,
+    ArrayItem,
+    ArrayLabels,
+    ArraySignal,
+    Mm,
+    TimeChart,
+    TimeChartView,
+    WarningGrid,
+)
 
 
 class IMSPageWidget(QWidget):
     def __init__(self, m1m3):
         super().__init__()
 
+        layout = QVBoxLayout()
+
         dataLayout = QGridLayout()
         plotLayout = QHBoxLayout()
 
-        self.rawPositiveXAxialLabel = Mm()
-        self.rawPositiveXTangentLabel = Mm()
-        self.rawNegativeYAxialLabel = Mm()
-        self.rawNegativeYTangentLabel = Mm()
-        self.rawNegativeXAxialLabel = Mm()
-        self.rawNegativeXTangentLabel = Mm()
-        self.rawPositiveYAxialLabel = Mm()
-        self.rawPositiveYTangentLabel = Mm()
-        self.xPositionLabel = Mm()
-        self.yPositionLabel = Mm()
-        self.zPositionLabel = Mm()
-        self.xRotationLabel = Arcsec()
-        self.yRotationLabel = Arcsec()
-        self.zRotationLabel = Arcsec()
+        layout.addWidget(
+            ArrayGrid(
+                "",
+                [f"<b>{label}</b>" for label in "XYZ"],
+                [
+                    ArraySignal(
+                        m1m3.imsData,
+                        [
+                            ArrayFields(
+                                ["xPosition", "yPosition", "zPosition"],
+                                "<b>Position</b>",
+                                Mm,
+                            ),
+                            ArrayFields(
+                                ["xRotation", "yRotation", "zRotation"],
+                                "<b>Rotation</b>",
+                                Arcsec,
+                            ),
+                            ArrayLabels(""),
+                            ArrayLabels(
+                                "<b>+X</b>", "<b>-Y</b>", "<b>-X</b>", "<b>+Y</b>"
+                            ),
+                            ArrayItem(
+                                "rawSensorData",
+                                "<b>Axial</b>",
+                                Mm,
+                                indices=[0, 2, 4, 6],
+                            ),
+                            ArrayItem(
+                                "rawSensorData",
+                                "<b>Tangent</b>",
+                                Mm,
+                                indices=[1, 3, 5, 7],
+                            ),
+                        ],
+                    )
+                ],
+                Qt.Horizontal,
+            )
+        )
 
         self.rawChart = TimeChart(
             {
@@ -53,45 +113,9 @@ class IMSPageWidget(QWidget):
         )
         self.posChartView = TimeChartView(self.posChart)
 
-        row = 0
-        col = 0
-        dataLayout.addWidget(QLabel("X"), row, col + 1)
-        dataLayout.addWidget(QLabel("Y"), row, col + 2)
-        dataLayout.addWidget(QLabel("Z"), row, col + 3)
-        row += 1
-        dataLayout.addWidget(QLabel("Position"), row, col)
-        dataLayout.addWidget(self.xPositionLabel, row, col + 1)
-        dataLayout.addWidget(self.yPositionLabel, row, col + 2)
-        dataLayout.addWidget(self.zPositionLabel, row, col + 3)
-        row += 1
-        dataLayout.addWidget(QLabel("Rotation"), row, col)
-        dataLayout.addWidget(self.xRotationLabel, row, col + 1)
-        dataLayout.addWidget(self.yRotationLabel, row, col + 2)
-        dataLayout.addWidget(self.zRotationLabel, row, col + 3)
-        row += 1
-        dataLayout.addWidget(QLabel(" "), row, col)
-        row += 1
-        dataLayout.addWidget(QLabel("+X"), row, col + 1)
-        dataLayout.addWidget(QLabel("-Y"), row, col + 2)
-        dataLayout.addWidget(QLabel("-X"), row, col + 3)
-        dataLayout.addWidget(QLabel("+Y"), row, col + 4)
-        row += 1
-        dataLayout.addWidget(QLabel("Axial (mm)"), row, col)
-        dataLayout.addWidget(self.rawPositiveXAxialLabel, row, col + 1)
-        dataLayout.addWidget(self.rawNegativeYAxialLabel, row, col + 2)
-        dataLayout.addWidget(self.rawNegativeXAxialLabel, row, col + 3)
-        dataLayout.addWidget(self.rawPositiveYAxialLabel, row, col + 4)
-        row += 1
-        dataLayout.addWidget(QLabel("Tangent (mm)"), row, col)
-        dataLayout.addWidget(self.rawPositiveXTangentLabel, row, col + 1)
-        dataLayout.addWidget(self.rawNegativeYTangentLabel, row, col + 2)
-        dataLayout.addWidget(self.rawNegativeXTangentLabel, row, col + 3)
-        dataLayout.addWidget(self.rawPositiveYTangentLabel, row, col + 4)
-
         plotLayout.addWidget(self.posChartView)
         plotLayout.addWidget(self.rawChartView)
 
-        layout = QVBoxLayout()
         layout.addLayout(dataLayout)
         layout.addSpacing(20)
         layout.addWidget(
@@ -123,23 +147,8 @@ class IMSPageWidget(QWidget):
 
         m1m3.imsData.connect(self.imsData)
 
-    @Slot(map)
-    def imsData(self, data):
-        self.rawPositiveXAxialLabel.setValue(data.rawSensorData[0])
-        self.rawPositiveXTangentLabel.setValue(data.rawSensorData[1])
-        self.rawNegativeYAxialLabel.setValue(data.rawSensorData[2])
-        self.rawNegativeYTangentLabel.setValue(data.rawSensorData[3])
-        self.rawNegativeXAxialLabel.setValue(data.rawSensorData[4])
-        self.rawNegativeXTangentLabel.setValue(data.rawSensorData[5])
-        self.rawPositiveYAxialLabel.setValue(data.rawSensorData[6])
-        self.rawPositiveYTangentLabel.setValue(data.rawSensorData[7])
-        self.xPositionLabel.setValue(data.xPosition)
-        self.yPositionLabel.setValue(data.yPosition)
-        self.zPositionLabel.setValue(data.zPosition)
-        self.xRotationLabel.setValue(data.xRotation)
-        self.yRotationLabel.setValue(data.yRotation)
-        self.zRotationLabel.setValue(data.zRotation)
-
+    @Slot()
+    def imsData(self, data: typing.Any) -> None:
         self.rawChart.append(
             data.timestamp,
             [

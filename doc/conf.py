@@ -5,7 +5,7 @@ For more information, see:
 https://developer.lsst.io/stack/building-single-package-docs.html
 """
 
-from documenteer.conf.pipelinespkg import *
+from documenteer.conf.pipelinespkg import html_theme_options
 
 project = "ts_cRIOpy"
 html_theme_options["logotext"] = project

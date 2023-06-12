@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
@@ -85,8 +87,8 @@ class MixingValveWidget(DockWindow):
 
         self.m1m3ts.mixingValve.connect(self.mixingValve)
 
-    @Slot(map)
-    def mixingValve(self, data):
+    @Slot()
+    def mixingValve(self, data: typing.Any) -> None:
         self.mixingValveChart.append(
             data.private_sndStamp,
             [data.rawValvePosition],

@@ -38,7 +38,7 @@ class TimeDeltaLabel(QLabel):
 
     def update(self):
         if self.eventTime is None:
-            self.setText("UNKNOWN")
+            self.setText("---")
         else:
             self.setText(f"{current_tai() - self.eventTime:.2f}")
 

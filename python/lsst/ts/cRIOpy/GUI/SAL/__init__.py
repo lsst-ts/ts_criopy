@@ -1,5 +1,6 @@
 from .Application import Application
 from .ApplicationStatusWidget import ApplicationStatusWidget
+from .ChartWidget import Axis, ChartWidget
 from .SALComm import SALCommand, SALListCommand, create
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar

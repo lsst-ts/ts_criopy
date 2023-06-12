@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QWidget
 
@@ -84,12 +86,14 @@ class ValueGrid(QGroupBox):
 
         event.connect(self._dataChanged)
 
-    @Slot(map)
-    def _dataChanged(self, data):
+    @Slot()
+    def _dataChanged(self, data: typing.Any) -> None:
         for e in dir(data):
             ch = self.findChild(QWidget, e)
             if ch is not None:
-                ch.setValue(getattr(data, e))
+                # child is either UnitLabel or DataLabel, those provide
+                # setValue method
+                ch.setValue(getattr(data, e))  # type: ignore
 
 
 class StatusGrid(ValueGrid):
@@ -139,8 +143,8 @@ class InterlockOffGrid(ValueGrid):
             self.anyWarningLabel = None
             super().__init__(InterlockOffLabel, items, event, cols)
 
-    @Slot(map)
-    def _dataChanged(self, data):
+    @Slot()
+    def _dataChanged(self, data: typing.Any) -> None:
         super()._dataChanged(data)
         if self.anyWarningLabel:
             anyWarning = False

@@ -19,6 +19,8 @@
 
 __all__ = ["BoxChartWidget"]
 
+import typing
+
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Slot
 
@@ -50,8 +52,8 @@ class BoxChartWidget(DockWindow):
         comm.data.connect(self.data)
         self.chartView.unitChanged.connect(self.chart.unitChanged)
 
-    @Slot(map)
-    def data(self, data):
+    @Slot()
+    def data(self, data: typing.Any) -> None:
         self.chartView.updateMaxSensor(data.sensor)
         for axis in ["X", "Y", "Z"]:
             name = f"{str(data.sensor)} {axis}"

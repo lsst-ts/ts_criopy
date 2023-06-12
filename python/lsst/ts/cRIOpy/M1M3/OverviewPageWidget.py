@@ -72,12 +72,12 @@ class OverviewPageWidget(QWidget):
                 "zRotation": Arcsec(),
             }
 
-        def addLabelRow(labels, row, col):
+        def add_label_row(labels: list[str], row: int, col: int) -> None:
             for label in labels:
                 dataLayout.addWidget(QLabel(f"<b>{label}</b>"), row, col)
                 col += 1
 
-        def addDataRow(variables, row, col):
+        def add_data_row(variables, row: int, col: int) -> None:
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
@@ -176,31 +176,31 @@ class OverviewPageWidget(QWidget):
         row = 0
         col = 2
         dataLayout.addWidget(QLabel("<b>Forces</b>"), row, col)
-        addLabelRow(["X", "Y", "Z", "Mx", "My", "Mz", "Magnitude"], row, col + 1)
+        add_label_row(["X", "Y", "Z", "Mx", "My", "Mz", "Magnitude"], row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Commanded</b>"), row, col)
-        addDataRow(self.faCommanded, row, col + 1)
+        add_data_row(self.faCommanded, row, col + 1)
         row += 1
 
         dataLayout.addWidget(QLabel("<b>Measured</b>"), row, col)
-        addDataRow(self.faMeasured, row, col + 1)
+        add_data_row(self.faMeasured, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Hardpoints</b>"), row, col)
-        addDataRow(self.hpMeasured, row, col + 1)
+        add_data_row(self.hpMeasured, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Mirror Position</b>"), row, col)
-        addLabelRow(["X", "Y", "Z", "Rx", "Ry", "Rz"], row, col + 1)
+        add_label_row(["X", "Y", "Z", "Rx", "Ry", "Rz"], row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>Hardpoints</b>"), row, col)
-        addDataRow(self.hpPosition, row, col + 1)
+        add_data_row(self.hpPosition, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("<b>IMS</b>"), row, col)
-        addDataRow(self.imsPosition, row, col + 1)
+        add_data_row(self.imsPosition, row, col + 1)
 
         row += 1
         dataLayout.addWidget(QLabel("Angular Acceleration"), row, col)
@@ -217,9 +217,9 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(self.accelationZLabel, row, col + 3)
         row += 1
         dataLayout.addWidget(QLabel("Angular Velocity"), row, col)
-        dataLayout.addWidget(QLabel("X (?)"), row, col + 1)
-        dataLayout.addWidget(QLabel("Y (?)"), row, col + 2)
-        dataLayout.addWidget(QLabel("Z (?)"), row, col + 3)
+        dataLayout.addWidget(QLabel("<b>X</b>"), row, col + 1)
+        dataLayout.addWidget(QLabel("<b>Y</b>"), row, col + 2)
+        dataLayout.addWidget(QLabel("<b>Z</b>"), row, col + 3)
         row += 1
         dataLayout.addWidget(self.velocityXLabel, row, col + 1)
         dataLayout.addWidget(self.velocityYLabel, row, col + 2)
@@ -244,7 +244,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(QLabel("<b>OSPL</b>"), row, col + 7)
         row += 1
         dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
-        dataLayout.addWidget(QLabel("-"), row, col + 1)
+        dataLayout.addWidget(QLabel("---"), row, col + 1)
         dataLayout.addWidget(self.tmaAzimuthLabel, row, col + 2)
         dataLayout.addWidget(QLabel("<b>M1M3</b>"), row, col + 3)
         dataLayout.addWidget(m1m3_cscVersion, row, col + 4)
@@ -267,6 +267,7 @@ class OverviewPageWidget(QWidget):
         m1m3.heartbeat.connect(self.heartbeatLabel.heartbeat)
 
         m1m3.accelerometerData.connect(self.accelerometerData)
+        m1m3.boosterValveStatus.connect(self.boosterValveStatus)
         m1m3.forceActuatorData.connect(self.forceActuatorData)
         m1m3.gyroData.connect(self.gyroData)
         m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
@@ -322,6 +323,10 @@ class OverviewPageWidget(QWidget):
         self.accelationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
 
     @Slot(map)
+    def boosterValveStatus(self, data):
+        self.slewFlag.setText("On" if data.slewFlag else "Off")
+
+    @Slot(map)
     def forceActuatorData(self, data):
         self._setValues(self.faMeasured, data)
 
@@ -361,7 +366,6 @@ class OverviewPageWidget(QWidget):
     @Slot(map)
     def outerLoopData(self, data):
         self.broadcastCounter.setText(str(data.broadcastCounter))
-        self.slewFlag.setText("True" if data.slewFlag else "False")
         self.executionTime.setText(f"{(data.executionTime * u.s.to(u.ms)):.2f}")
 
     @Slot(map)

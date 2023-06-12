@@ -1,3 +1,22 @@
+# This file is part of M1M3 SS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
 from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
@@ -187,18 +206,18 @@ class ForceBalanceSystemPageWidget(QWidget):
         self._setTotalForces()
 
     @asyncSlot()
-    async def issueCommandEnableHardpointCorrections(self):
+    async def issueCommandEnableHardpointCorrections(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_enableHardpointCorrections)
 
     @asyncSlot()
     async def issueCommandDisableHardpointCorrections(self):
         await SALCommand(self, self.m1m3.remote.cmd_disableHardpointCorrections)
 
-    def _fillRowSum(self, variables, d1, d2):
+    def _fillRowSum(self, variables, d1, d2) -> None:
         for k, v in variables.items():
             v.setValue(getattr(d1, k) + getattr(d2, k))
 
-    def _setTotalForces(self):
+    def _setTotalForces(self) -> None:
         if self._balanceData is None or self._hardpointData is None:
             return
 

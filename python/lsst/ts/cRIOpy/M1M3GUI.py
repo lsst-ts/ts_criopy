@@ -21,15 +21,18 @@
 
 
 import asyncio
+from functools import partial
 
 from asyncqt import asyncClose
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import QSettings, Slot
+from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QListWidget,
     QMainWindow,
+    QPushButton,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -37,10 +40,12 @@ from PySide2.QtWidgets import (
 
 from .AirCompressor import CompressorsPageWidget
 from .GUI.SAL import Application, SALErrorCodeWidget, SALLog, SALStatusBar
+from .GUI.SAL.SALComm import MetaSAL
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
     ApplicationControlWidget,
+    BoosterValveWidget,
     CellLightPageWidget,
     DCAccelerometerPageWidget,
     ForceActuator,
@@ -59,7 +64,13 @@ from .M1M3 import (
 
 
 class EUI(QMainWindow):
-    def __init__(self, m1m3, mtmount, compressor_1, compressor_2):
+    def __init__(
+        self,
+        m1m3: MetaSAL,
+        mtmount: MetaSAL,
+        compressor_1: MetaSAL,
+        compressor_2: MetaSAL,
+    ):
         super().__init__()
         self.m1m3 = m1m3
         self.mtmount = mtmount
@@ -72,45 +83,58 @@ class EUI(QMainWindow):
         applicationControlLayout.addWidget(applicationControl)
         controlWidget.setLayout(applicationControlLayout)
 
+        make_window = QPushButton("Open in &Window")
+        make_window.clicked.connect(self.make_window)
+
         self.applicationPagination = QListWidget()
         self.applicationPagination.currentRowChanged.connect(self.changePage)
 
         self.tabWidget = QTabWidget()
         self.tabWidget.tabBar().hide()
 
-        self.addPage("Overview", OverviewPageWidget(self.m1m3, self.mtmount))
-        self.addPage("Actuator Overview", ActuatorOverviewPageWidget(self.m1m3))
-        self.addPage("Hardpoints", HardpointsWidget(self.m1m3))
-        self.addPage("Offsets", OffsetsWidget(self.m1m3))
-        self.addPage("DC Accelerometers", DCAccelerometerPageWidget(self.m1m3))
-        self.addPage("Gyro", GyroPageWidget(self.m1m3))
-        self.addPage("IMS", IMSPageWidget(self.m1m3))
-        self.addPage("Inclinometer", InclinometerPageWidget(self.m1m3))
-        self.addPage("Interlock", InterlockPageWidget(self.m1m3))
-        self.addPage("Lights", CellLightPageWidget(self.m1m3))
-        self.addPage("Air", AirPageWidget(self.m1m3))
-        self.addPage("Power", PowerPageWidget(self.m1m3))
-        self.addPage("PID", PIDPageWidget(self.m1m3))
-        self.addPage("Force Balance System", ForceBalanceSystemPageWidget(self.m1m3))
-        self.addPage(
-            "Force Actuator Bump Test", ForceActuator.BumpTestPageWidget(self.m1m3)
-        )
-        self.addPage("Hardpoint Test", HardpointTestPageWidget(self.m1m3))
-        self.addPage("Enabled Force Actuators", ForceActuator.Enabled(self.m1m3))
-        self.addPage("Force Actuator Graph", ForceActuator.GraphPageWidget(self.m1m3))
-        self.addPage(
-            "Force Actuator Histogram", ForceActuator.HistogramPageWidget(self.m1m3)
-        )
-        self.addPage("Force Actuator Value", ForceActuator.ValuePageWidget(self.m1m3))
-        self.addPage("Compressor 1", CompressorsPageWidget(self.compressor_1))
-        self.addPage("Compressor 2", CompressorsPageWidget(self.compressor_2))
-        self.addPage("SAL Log", SALLog.Widget(self.m1m3))
-        self.addPage("SAL Errors", SALErrorCodeWidget(self.m1m3))
+        self.TABS = {
+            "Overview": partial(OverviewPageWidget, self.m1m3, self.mtmount),
+            "Actuator Overview": partial(ActuatorOverviewPageWidget, self.m1m3),
+            "Hardpoints": partial(HardpointsWidget, self.m1m3),
+            "Offsets": partial(OffsetsWidget, self.m1m3),
+            "DC Accelerometers": partial(DCAccelerometerPageWidget, self.m1m3),
+            "Gyro": partial(GyroPageWidget, self.m1m3),
+            "IMS": partial(IMSPageWidget, self.m1m3),
+            "Inclinometer": partial(InclinometerPageWidget, self.m1m3),
+            "Interlock": partial(InterlockPageWidget, self.m1m3),
+            "Lights": partial(CellLightPageWidget, self.m1m3),
+            "Air": partial(AirPageWidget, self.m1m3),
+            "Power": partial(PowerPageWidget, self.m1m3),
+            "PID": partial(PIDPageWidget, self.m1m3),
+            "Force Balance System": partial(ForceBalanceSystemPageWidget, self.m1m3),
+            "Booster Valve": partial(BoosterValveWidget, self.m1m3),
+            "Force Actuator Bump Test": partial(
+                ForceActuator.BumpTestPageWidget, self.m1m3
+            ),
+            "Hardpoint Test": partial(HardpointTestPageWidget, self.m1m3),
+            "Enabled Force Actuators": partial(ForceActuator.Enabled, self.m1m3),
+            "Force Actuator Graph": partial(ForceActuator.GraphPageWidget, self.m1m3),
+            "Force Actuator Histogram": partial(
+                ForceActuator.HistogramPageWidget, self.m1m3
+            ),
+            "Force Actuator Value": partial(ForceActuator.ValuePageWidget, self.m1m3),
+            "Compressor 1": partial(CompressorsPageWidget, self.compressor_1),
+            "Compressor 2": partial(CompressorsPageWidget, self.compressor_2),
+            "SAL Log": partial(SALLog.Widget, self.m1m3),
+            "SAL Errors": partial(SALErrorCodeWidget, self.m1m3),
+        }
+
+        self.windows: dict[str, QWidget] = {}
+
+        for title, tab in self.TABS.items():
+            self.addPage(title, tab())
+            self.windows[title] = []
 
         self.applicationPagination.setCurrentRow(0)
 
         leftLayout = QVBoxLayout()
         leftLayout.addWidget(controlWidget)
+        leftLayout.addWidget(make_window)
         leftLayout.addWidget(self.applicationPagination)
 
         layout = QHBoxLayout()
@@ -132,18 +156,28 @@ class EUI(QMainWindow):
         except AttributeError:
             self.resize(1000, 700)
 
-    def addPage(self, name, widget):
+    def addPage(self, name: str, widget: QWidget) -> None:
         self.applicationPagination.addItem(name)
         self.tabWidget.addTab(widget, name)
 
-    @Slot(int)
-    def changePage(self, row):
+    @Slot()
+    def make_window(self, checked: bool) -> None:
+        name = self.applicationPagination.currentItem().text()
+        widget = self.TABS[name]()
+        widget.setWindowTitle(f"{name}:{len(self.windows[name])+1}")
+        widget.show()
+        self.windows[name].append(widget)
+
+    def changePage(self, row: int) -> None:
         if row < 0:
             return
         self.tabWidget.setCurrentIndex(row)
 
     @asyncClose
-    async def closeEvent(self, event):
+    async def closeEvent(self, event: QCloseEvent) -> None:
+        for windows in self.windows.values():
+            for window in windows:
+                window.close()
         settings = QSettings("LSST.TS", "M1M3GUI")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
@@ -156,7 +190,7 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-def detailedStateString(detailedState):
+def detailedStateString(detailedState: int) -> str:
     """Returns string description of mirror state.
 
     Parameters
@@ -191,7 +225,7 @@ def detailedStateString(detailedState):
         return f"<font color='red'>Unknow : {detailedState}</font>"
 
 
-def run():
+def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
     app.addComm("MTM1M3")

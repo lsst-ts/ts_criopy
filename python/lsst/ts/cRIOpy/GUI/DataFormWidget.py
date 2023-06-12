@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QFormLayout, QWidget
 
@@ -56,8 +58,8 @@ class DataFormWidget(QWidget):
     def __init__(
         self,
         signal: Signal,
-        fields: list[tuple[str, DataLabel]],
-        timeChart: TimeChart = None,
+        fields: list[tuple[str | None, DataLabel]],
+        timeChart: TimeChart | None = None,
     ):
         super().__init__()
         self._timeChart = timeChart
@@ -70,7 +72,7 @@ class DataFormWidget(QWidget):
                 layout.addRow(text, label)
         self.setLayout(layout)
 
-        signal.connect(self._process_signal)
+        signal.connect(self._process_signal)  # type: ignore
 
     def _process_signal(self, data):
         for e in dir(data):
@@ -118,8 +120,8 @@ class DataFormButton(ColoredButton):
         signal.connect(self._dataChanged)
         self.clicked.connect(self._displayDetails)
 
-    @Slot(map)
-    def _dataChanged(self, data):
+    @Slot()
+    def _dataChanged(self, data: typing.Any) -> None:
         color = Colors.OK
         for f in self._fields:
             if getattr(data, f[1].objectName()) is True:

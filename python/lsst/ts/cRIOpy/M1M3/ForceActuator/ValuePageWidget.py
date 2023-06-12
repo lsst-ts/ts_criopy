@@ -1,11 +1,35 @@
+# This file is part of cRIOpy package.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https: //www.lsst.org).
+# See the COPYRIGHT file at the top - level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.If not, see < https:  // www.gnu.org/licenses/>.
+
+import typing
+
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
+from ...GUI.SAL.SALComm import MetaSAL
 from ...M1M3FATable import FATABLE, FATABLE_ZFA
 from .Widget import Widget
 
 
 class DataWidget(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.forceActuatorLabels = []
@@ -137,15 +161,15 @@ class DataWidget(QWidget):
 
 
 class ValuePageWidget(Widget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         self.dataWidget = DataWidget()
 
         super().__init__(m1m3, self.dataWidget)
 
-    def updateValues(self, data, changed):
+    def updateValues(self, data: typing.Any, changed: bool) -> None:
         if data is None:
             for label in self.dataWidget.forceActuatorLabels:
-                label.setText("UNKNOWN")
+                label.setText("---")
             return
 
         i = -1
@@ -154,7 +178,7 @@ class ValuePageWidget(Widget):
             i += 1
             index = row[self.field.valueIndex]
             if index is None:
-                self.dataWidget.forceActuatorLabels[i].setText("UNKNOWN")
+                self.dataWidget.forceActuatorLabels[i].setText("---")
             elif data is not None:
                 self.dataWidget.forceActuatorLabels[i].setText(f"{values[index]:.1f}")
             else:

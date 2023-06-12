@@ -1,3 +1,24 @@
+# This file is part of cRIO/VMS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
+import typing
+
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
@@ -16,8 +37,8 @@ class ApplicationStatusWidget(QWidget):
         self.layout.addLayout(self.statusLayout)
         self.setLayout(self.layout)
 
-        self.modeStateLabel = QLabel("UNKNOWN")
-        self.mirrorStateLabel = QLabel("UNKNOWN")
+        self.modeStateLabel = QLabel("---")
+        self.mirrorStateLabel = QLabel("---")
 
         row = 0
         col = 0
@@ -34,8 +55,8 @@ class ApplicationStatusWidget(QWidget):
 
         self.m1m3.detailedState.connect(self.processEventDetailedState)
 
-    @Slot(map)
-    def raisingLoweringInfo(self, data):
+    @Slot()
+    def raisingLoweringInfo(self, data: typing.Any) -> None:
         detailedData = self.m1m3.remote.evt_detailedState.get()
         if detailedData is None:
             return
@@ -79,8 +100,8 @@ class ApplicationStatusWidget(QWidget):
             # code might try to disconnect not connected slot
             pass
 
-    @Slot(map)
-    def processEventDetailedState(self, data):
+    @Slot()
+    def processEventDetailedState(self, data: typing.Any) -> None:
         modeStateText = "Unknown"
         mirrorStateText = "Unknown"
         if data.detailedState == MTM1M3.DetailedState.DISABLED:

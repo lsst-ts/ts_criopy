@@ -28,7 +28,7 @@ import h5py
 import numpy as np
 from lsst.ts.salobj import Domain, Remote
 
-from . import Cache
+from .Cache import Cache
 
 __all__ = ["Collector", "VMS_DEVICES"]
 
@@ -72,12 +72,12 @@ class Collector:
         self,
         index: int,
         fn_template: str,
-        size: int = None,
+        size: int | None = None,
         file_type: str = "z5",
         header: bool = True,
         chunk_size: int = 5000,
         daemonized: bool = False,
-        rotate: float = None,
+        rotate: float | None = None,
         rotate_offset: float = 0,
     ):
         self.log = logging.getLogger("VMSlogger")

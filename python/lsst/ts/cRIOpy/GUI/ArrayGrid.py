@@ -35,7 +35,7 @@ Usage
        Mm,
    )
 
-   # sal holds SALComm remote with signal "sig1", "sig2" and "sig3"
+   # sal holds SALComm remote with signal "sig1", "sig2", "sig3" and "sig4"
 
    grid = ArrayGrid(
        "<b>Some data</b>",
@@ -61,7 +61,20 @@ Usage
                    "mZ"
                ],
                "Forces",
-               sal.sig3
+               sal.sig3,
+           ),
+           ArrayLabels("Data", "", "", "", "", ""),
+           ArrayFields(
+               [
+                   "data",
+                   None,
+                   None,
+                   None,
+                   None,
+                   None,
+               ],
+               "Var Data",
+               sal.sig4,
            ),
        ],
    )
@@ -70,21 +83,25 @@ Usage
    layout.addWidget(grid)
 """
 
-__all__ = ["ArrayItem", "ArrayFields", "ArraySignal", "ArrayButton", "ArrayGrid"]
+__all__ = [
+    "ArrayItem",
+    "ArrayFields",
+    "ArrayLabels",
+    "ArraySignal",
+    "ArrayButton",
+    "ArrayGrid",
+]
+
+import typing
 
 from asyncqt import asyncSlot
 from lsst.ts.salobj import base
 from PySide2.QtCore import QObject, Qt, Signal, Slot
 from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
-from .CustomLabels import UnitLabel
+from .CustomLabels import DataLabel, UnitLabel
 from .SAL.SALComm import warning
 from .TimeChart import TimeChart
-
-
-# forward declaration for MyPy
-class ArrayGrid:
-    pass
 
 
 class AbstractColumn(QObject):
@@ -92,17 +109,18 @@ class AbstractColumn(QObject):
 
     Attributes
     ----------
-    items : `[UnitLabel]`
-        QWidgets/UnitLabes used to display array members.
-
+    widget : `QWidget`
+        QWidgets/UnitLabes used to display array members together with index in
+        data field, holding the value.
     """
 
     def __init__(
         self,
         field: str,
         label: str,
-        widget: UnitLabel = UnitLabel,
-        signal: Signal = None,
+        widget=UnitLabel,
+        signal: Signal | None = None,
+        indices: list[int] | None = None,
     ):
         """
         Creates member of grid representing an array.
@@ -124,13 +142,14 @@ class AbstractColumn(QObject):
         self.setObjectName(field)
         self._label = label
         self._widget = widget
+        self._indices = indices
 
-        self.items = None
+        self.items: list[UnitLabel | DataLabel] = []
 
         if signal:
-            signal.connect(self.data)
+            signal.connect(self.data)  # type: ignore
 
-    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+    def attach_into(self, parent, row: int) -> int:
         """
         Creates widgets in ArrayGrid.
 
@@ -153,7 +172,7 @@ class AbstractColumn(QObject):
         """
         raise RuntimeError("Abstract attach_into called")
 
-    def get_label(self, name: str, index: int) -> QWidget:
+    def get_label(self, name: str, index: int) -> QWidget | None:
         """Returns label with given name and index.
 
         Parameters
@@ -161,7 +180,7 @@ class AbstractColumn(QObject):
         name : `str`
             Row name - string with name of the variable.
         index : `int`
-            Value index.
+            Value index, 0 based, in the grid.
 
         Returns
         -------
@@ -172,8 +191,13 @@ class AbstractColumn(QObject):
             return self.items[index]
         return None
 
-    @Slot(map)
-    def data(self, data: map):
+    def get_data_index(self, idx):
+        if self._indices is not None:
+            return self._indices[idx]
+        return idx
+
+    @Slot()
+    def data(self, data: typing.Any) -> None:
         """Process incoming data.
 
         Parameters
@@ -184,7 +208,7 @@ class AbstractColumn(QObject):
         """
         fd = getattr(data, self.objectName())
         for idx, item in enumerate(self.items):
-            item.setValue(fd[idx])
+            item.setValue(fd[self.get_data_index(idx)])
 
 
 class ArrayItem(AbstractColumn):
@@ -194,13 +218,14 @@ class ArrayItem(AbstractColumn):
         self,
         field: str,
         label: str,
-        widget: UnitLabel = UnitLabel,
-        signal: Signal = None,
+        widget=UnitLabel,
+        signal: Signal | None = None,
+        indices: list[int] | None = None,
     ):
         """Construct QObject holding widgets for array."""
-        super().__init__(field, label, widget, signal)
+        super().__init__(field, label, widget, signal, indices)
 
-    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+    def attach_into(self, parent, row: int) -> int:
         self.items = [self._widget() for i in range(parent.get_data_rows())]
 
         parent.add_widget(QLabel(self._label), row, 0)
@@ -215,15 +240,15 @@ class ArrayItem(AbstractColumn):
 class ArrayFields(AbstractColumn):
     def __init__(
         self,
-        fields: [str],
-        label: str,
-        widget: UnitLabel = UnitLabel,
-        signal: Signal = None,
+        fields: list[str] | None,
+        label: str | None,
+        widget=UnitLabel,
+        signal: Signal | None = None,
     ):
         super().__init__("", label, widget, signal)
         self.fields = fields
 
-    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+    def attach_into(self, parent, row: int) -> int:
         self.items = [None if f is None else self._widget() for f in self.fields]
 
         parent.add_widget(QLabel(self._label), row, 0)
@@ -236,14 +261,32 @@ class ArrayFields(AbstractColumn):
             i.setCursor(Qt.PointingHandCursor)
         return row + 1
 
-    @Slot(map)
-    def data(self, data):
+    @Slot()
+    def data(self, data: typing.Any) -> None:
         for i in self.items:
             if i is None:
                 continue
 
             d = getattr(data, i.objectName())
-            i.setValue(d)
+            i.setValue(d)  # type: ignore
+
+
+class ArrayLabels(AbstractColumn):
+    def __init__(self, *labels):
+        super().__init__("", "")
+        self._labels = labels
+
+    def attach_into(self, parent, row: int) -> int:
+        parent.rows = self._labels
+
+        for c, l in enumerate(self._labels):
+            parent.add_widget(QLabel(l), row, c + 1)
+
+        return row + 1
+
+    @Slot()
+    def data(self, data: typing.Any) -> None:
+        pass
 
 
 class ArraySignal(AbstractColumn):
@@ -262,25 +305,29 @@ class ArraySignal(AbstractColumn):
         super().__init__("", "", None, signal)
         self.array_items = items
 
-    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+    def attach_into(self, parent, row: int) -> int:
         for i in self.array_items:
             i.attach_into(parent, row)
             row += 1
         return row
 
-    def get_label(self, name: str, index: int) -> QWidget:
+    def get_label(self, name: str, index: int) -> QWidget | None:
         for i in self.array_items:
             label = i.get_label(name, index)
             if label:
                 return label
         return None
 
-    @Slot(map)
-    def data(self, data):
+    @Slot()
+    def data(self, data: typing.Any) -> None:
         for i in self.array_items:
-            d = getattr(data, i.objectName())
-            for fi, c in enumerate(i.items):
-                c.setValue(d[fi])
+            field = i.objectName()
+            if field == "":
+                i.data(data)
+            else:
+                d = getattr(data, i.objectName())
+                for fi, c in enumerate(i.items):
+                    c.setValue(d[fi])
 
 
 class ArrayButton(AbstractColumn):
@@ -300,7 +347,7 @@ class ArrayButton(AbstractColumn):
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.buttonClicked.connect(self._buttonClicked)
 
-    def attach_into(self, parent: ArrayGrid, row: int) -> int:
+    def attach_into(self, parent, row: int) -> int:
         for i in range(parent.get_data_rows()):
             b = QPushButton(self._label)
             parent.add_widget(b, row, i + 1)
@@ -351,7 +398,7 @@ class ArrayGrid(QWidget):
         rows: list[str],
         items: list[AbstractColumn],
         orientation: Qt.Orientation = Qt.Vertical,
-        chart: TimeChart = None,
+        chart: TimeChart | None = None,
     ):
         """Construct grid item holding ArrayItems.
 
@@ -384,10 +431,9 @@ class ArrayGrid(QWidget):
         for c, r in enumerate(self.rows):
             self.add_widget(QLabel(r), 0, c + 1)
 
-        r = 1
-        self.labels_rows = {}
+        row = 1
         for i in items:
-            r = i.attach_into(self, r)
+            row = i.attach_into(self, row)
 
     def add_widget(self, widget, row, col):
         self.layout().addWidget(widget, *self._rowcol(row, col))
@@ -398,7 +444,7 @@ class ArrayGrid(QWidget):
     def get_data_rows(self) -> int:
         return len(self.rows)
 
-    def get_label(self, name: str, index: int) -> QWidget:
+    def get_label(self, name: str, index: int) -> QWidget | None:
         """Returns label with given name and index.
 
         Parameters

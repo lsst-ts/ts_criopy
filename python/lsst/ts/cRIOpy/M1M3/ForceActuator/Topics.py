@@ -17,14 +17,20 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from lsst.ts.cRIOpy.M1M3FATable import (
+    FATABLE,
+    FATABLE_INDEX,
     FATABLE_SINDEX,
     FATABLE_XINDEX,
     FATABLE_YINDEX,
     FATABLE_ZINDEX,
 )
+from PySide2.QtCore import Slot
 
 from ...GUI.ActuatorsDisplay import Scales
+from ...GUI.SAL.SALComm import MetaSAL
 from ...GUI.SAL.TopicData import (
     EnabledDisabledField,
     TopicData,
@@ -41,6 +47,55 @@ class BumpTestField(TopicField):
         super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
 
 
+class FAIndicesData(TopicData):
+    """Class for constant FA indices. Construct required fields, provides data.
+
+    Parameters
+    ----------
+    name : `str`
+        Topic name.
+    """
+
+    def __init__(self, name: str):
+        super().__init__(
+            name,
+            [
+                TopicField("Z Indices", "zIndices", FATABLE_ZINDEX, Scales.INTEGER),
+                TopicField("Y Indices", "yIndices", FATABLE_YINDEX, Scales.INTEGER),
+                TopicField("X Indices", "xIndices", FATABLE_XINDEX, Scales.INTEGER),
+                TopicField(
+                    "Primary Cylinder Indices",
+                    "pIndices",
+                    FATABLE_INDEX,
+                    Scales.INTEGER,
+                ),
+                TopicField(
+                    "Secondary Cylinder Indices",
+                    "sIndices",
+                    FATABLE_SINDEX,
+                    Scales.INTEGER,
+                ),
+            ],
+            None,
+        )
+
+        self.xIndices = [
+            row[FATABLE_XINDEX] for row in FATABLE if row[FATABLE_XINDEX] is not None
+        ]
+        self.yIndices = [
+            row[FATABLE_YINDEX] for row in FATABLE if row[FATABLE_YINDEX] is not None
+        ]
+        self.zIndices = [row[FATABLE_ZINDEX] for row in FATABLE]
+        self.pIndices = [row[FATABLE_INDEX] for row in FATABLE]
+        self.sIndices = [
+            row[FATABLE_SINDEX] for row in FATABLE if row[FATABLE_SINDEX] is not None
+        ]
+        self.timestamp = None
+
+    def getTopic(self) -> typing.Any:
+        return self
+
+
 class Topics:
     """
     Class constructing list of all available topics of the Force Actuators.
@@ -51,7 +106,7 @@ class Topics:
         Force Actuator topics. Holds topics and fields available for plotting.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__lastIndex = None
 
         self.topics = [
@@ -412,11 +467,72 @@ class Topics:
                 ],
                 "forceActuatorInfo",
             ),
+            FAIndicesData("FA Indices"),
             TopicData(
                 "FA Settings",
                 [
                     EnabledDisabledField(
                         "Enabled/Disabled", "enabledActuators", FATABLE_ZINDEX
+                    ),
+                    TopicField(
+                        "Z Applied Force Low Limit",
+                        "appliedZForceLowLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Z Applied Force High Limit",
+                        "appliedZForceHighLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Y Applied Force Low Limit",
+                        "appliedYForceLowLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "Y Applied Force High Limit",
+                        "appliedYForceHighLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "X Applied Force Low Limit",
+                        "appliedXForceLowLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
+                        "X Applied Force High Limit",
+                        "appliedXForceHighLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
+                        "Z Measured Force Low Limit",
+                        "measuredZForceLowLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Z Measured Force High Limit",
+                        "measuredZForceHighLimit",
+                        FATABLE_ZINDEX,
+                    ),
+                    TopicField(
+                        "Y Measured Force Low Limit",
+                        "measuredYForceLowLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "Y Measured Force High Limit",
+                        "measuredYForceHighLimit",
+                        FATABLE_YINDEX,
+                    ),
+                    TopicField(
+                        "X Measured Force Low Limit",
+                        "measuredXForceLowLimit",
+                        FATABLE_XINDEX,
+                    ),
+                    TopicField(
+                        "X Measured Force High Limit",
+                        "measuredXForceHighLimit",
+                        FATABLE_XINDEX,
                     ),
                     TopicField(
                         "PC FE Warning",
@@ -685,14 +801,19 @@ class Topics:
                 "FA Force Warning",
                 [
                     WarningField(
-                        "Primary Axis Measured Force Warning",
-                        "primaryAxisMeasuredForceWarning",
+                        "Z Measured Force Warning",
+                        "measuredZForceWarning",
                         FATABLE_ZINDEX,
                     ),
                     WarningField(
-                        "Secondary Axis Measured Force Warning",
-                        "secondaryAxisMeasuredForceWarning",
-                        FATABLE_SINDEX,
+                        "Y Measured Force Warning",
+                        "measuredYForceWarning",
+                        FATABLE_YINDEX,
+                    ),
+                    WarningField(
+                        "X Measured Force Warning",
+                        "measuredXForceWarning",
+                        FATABLE_XINDEX,
                     ),
                     WarningField(
                         "Primary Axis FE Warning",
@@ -859,13 +980,29 @@ class Topics:
             ),
         ]
 
-    def changeTopic(self, index, slot, comm):
-        """ """
+    def changeTopic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
+        """Called when new topic is selected.
+
+        Parameters
+        ----------
+        index: `int`
+            New field index.
+        slot: `Slot`
+            Slot for data reception.
+        comm: `MetaSAL`
+            MetaSAL with data.
+        """
+        # disconnect/connect only for real M1M3 topics -  if topic is None,
+        # don't connect/disconnect
         if self.__lastIndex is not None:
-            getattr(comm, self.topics[self.__lastIndex].topic).disconnect(slot)
+            topic = self.topics[self.__lastIndex].topic
+            if topic is not None:
+                getattr(comm, topic).disconnect(slot)
 
         self.__lastIndex = index
         if index is None:
             return
 
-        getattr(comm, self.topics[index].topic).connect(slot)
+        topic = self.topics[index].topic
+        if topic is not None:
+            getattr(comm, topic).connect(slot)

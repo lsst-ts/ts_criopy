@@ -1,10 +1,34 @@
 #!/usr/bin/env python
 
+# This file is part of M1M3 TS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org).
+# See the COPYRIGHT file at the top-level directory of this distribution
+# for details of code ownership.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Qt
+from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
 from .GUI.SAL import Application, SALLog, SALStatusBar
+from .GUI.SAL.SALComm import MetaSAL
 from .M1M3TS import (
     CoolantPumpWidget,
     FlowMeterWidget,
@@ -16,7 +40,7 @@ from .M1M3TS.M1M3TSGUI import ThermalStatesDock
 
 
 class EUI(QMainWindow):
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__()
 
         self.m1m3ts = m1m3ts
@@ -61,7 +85,7 @@ class EUI(QMainWindow):
         self.setCorner(Qt.TopLeftCorner, Qt.LeftDockWidgetArea)
 
     @asyncClose
-    async def closeEvent(self, event):
+    async def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings("LSST.TS", "M1M3TSGUI")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
@@ -69,7 +93,7 @@ class EUI(QMainWindow):
         super().closeEvent(event)
 
 
-def run():
+def run() -> None:
     app = Application(EUI)
     app.addComm("MTM1M3TS")
     app.run()

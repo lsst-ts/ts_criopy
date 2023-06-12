@@ -21,7 +21,8 @@ import typing
 from datetime import datetime
 
 import astropy.units as u
-from PySide2.QtCore import Qt, QTimer, Slot
+from astropy.coordinates import Angle
+from PySide2.QtCore import Qt, QTimer, Signal, Slot
 from PySide2.QtGui import QColor, QPalette
 from PySide2.QtWidgets import (
     QDockWidget,
@@ -58,8 +59,11 @@ __all__ = [
     "Hours",
     "Seconds",
     "KiloWatt",
+    "DMS",
     "DataDegC",
     "Hz",
+    "DegS2",
+    "MSec2",
     "ArcsecWarning",
     "MmWarning",
     "OnOffLabel",
@@ -139,11 +143,11 @@ class DataLabel(QLabel):
         object name. Defaults to None.
     """
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self._data)  # type: ignore
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
@@ -151,11 +155,11 @@ class DataLabel(QLabel):
     def __copy__(self):
         return DataLabel()
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets value.
 
         Parameters
@@ -211,11 +215,16 @@ class UnitLabel(QLabel):
         aliases = {
             "deg_C": "°C",
             "1 / min": "RPM",
+            "m N": "N m",
         }
         try:
             self.unit_name = aliases[self.unit_name]
         except KeyError:
             pass
+
+        # s2, s3 using sup
+        self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
+        self.unit_name = self.unit_name.replace("s3", "s<sup>3</sup>")
 
         self.unit_name = " " + self.unit_name
 
@@ -311,12 +320,12 @@ class DataUnitLabel(UnitLabel):
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
 
-class Force(UnitLabel):
+class Force(DataUnitLabel):
     """Displays force in N (Newtons).
 
     Parameters
@@ -325,8 +334,8 @@ class Force(UnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, fmt=".02f"):
-        super().__init__(fmt, u.N)
+    def __init__(self, signal=None, field=None, fmt="0.02f"):
+        super().__init__(signal, field, fmt, u.N)
 
 
 class Moment(UnitLabel):
@@ -556,6 +565,17 @@ class KiloWatt(DataUnitLabel):
         super().__init__(signal, field, ".01f", u.kW)
 
 
+class DMS(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt)
+
+    def setValue(self, value):
+        dms = Angle(value * u.deg).dms
+        self.setText(
+            f"{dms.d:.0f}<b>°</b> {dms.m:02.0f}<b>'</b> {dms.s:05.02f}<b>\"</b>"
+        )
+
+
 class DataDegC(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.deg_C)
@@ -564,6 +584,16 @@ class DataDegC(DataUnitLabel):
 class Hz(DataUnitLabel):
     def __init__(self, signal=None, field=None, fmt=".02f"):
         super().__init__(signal, field, fmt, u.Hz)
+
+
+class DegS2(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.deg / u.s**2)
+
+
+class MSec2(DataUnitLabel):
+    def __init__(self, signal=None, field=None, fmt=".02f"):
+        super().__init__(signal, field, fmt, u.m / u.s**2)
 
 
 class ArcsecWarning(Arcsec):
@@ -787,9 +817,9 @@ class WarningButton(ColoredButton):
         self.window = None
         self.clicked.connect(self._showWindow)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
     def _showWindow(self):
         if self.window is None:
@@ -832,20 +862,20 @@ class InterlockOffLabel(QLabel):
             self._field = field
             signal.connect(self._data)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
-    def setValue(self, value):
+    def setValue(self, interlock_off: bool) -> None:
         """Sets formatted value. Color codes WARNING (red)/OK (green).
 
         Parameters
         ----------
-        interlockOff : `bool`
+        interlock_off : `bool`
             Current interlock off state. True means interlock is locked
             (=PROBLEM).
         """
-        if value:
+        if interlock_off:
             self.setText("<font color='red'>PROBLEM</font>")
         else:
             self.setText("<font color='green'>OK</font>")
@@ -986,8 +1016,8 @@ class Heartbeat(QWidget):
             self.hbIndicator.setInvertedAppearance(False)
         self.timestamp.setText("<font color='red'>- timeouted -</font>")
 
-    @Slot(map)
-    def heartbeat(self, data):
+    @Slot()
+    def heartbeat(self, data: typing.Any) -> None:
         """Slot to connect to heartbeat data signal.
 
         Parameters
@@ -1042,8 +1072,8 @@ class LogEventWarning(QLabel):
         super().__init__("---")
         signal.connect(self._logEvent)
 
-    @Slot(map)
-    def _logEvent(self, data):
+    @Slot()
+    def _logEvent(self, data: typing.Any) -> None:
         if data.anyWarning:
             self.setText("<font color='yellow'>Warning</font>")
         else:
@@ -1068,8 +1098,8 @@ class SimulationStatus(QLabel):
             # simulationMode needs to be subscribed from remote
             self.setText(f"{comm.remote.salinfo.name} simulationMode missing")
 
-    @Slot(map)
-    def simulationMode(self, data):
+    @Slot()
+    def simulationMode(self, data: typing.Any) -> None:
         self.setText(
             "<font color='green'>HW</font>"
             if data.mode == 0
@@ -1092,8 +1122,8 @@ class DockWindow(QDockWidget):
         self.setObjectName(title)
         self.topLevelChanged.connect(self._topLevelChanged)
 
-    @Slot(bool)
-    def _topLevelChanged(self, topLevel):
+    @Slot()
+    def _topLevelChanged(self, topLevel: bool) -> None:
         if topLevel:
-            self.setWindowFlags(Qt.Window)
+            self.setWindowFlags(Qt.Window)  # type: ignore
         self.show()

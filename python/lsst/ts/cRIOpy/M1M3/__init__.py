@@ -1,6 +1,7 @@
 from .ActuatorOverviewPageWidget import ActuatorOverviewPageWidget
 from .AirPageWidget import AirPageWidget
 from .ApplicationControlWidget import ApplicationControlWidget
+from .BoosterValveWidget import BoosterValveWidget
 from .CellLightPageWidget import CellLightPageWidget
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget

@@ -173,7 +173,7 @@ class DirectionPadWidget(QWidget):
 
         self.setLayout(layout)
 
-    def setPosition(self, position):
+    def set_position(self, position: list[float | None]) -> None:
         """Set current pad position.
 
         Parameters

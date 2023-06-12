@@ -42,7 +42,9 @@ class CacheTimeWidget(CacheWidget):
         Enabled channels.
     """
 
-    def __init__(self, title, cache, toolBar, channels: [(int, int)] = None):
+    def __init__(
+        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+    ):
         super().__init__(title, cache, toolBar, channels)
 
     def setupAxes(self):
@@ -120,6 +122,6 @@ class CacheTimeWidget(CacheWidget):
                 )
         self.update_after = time.monotonic() + 0.5
 
-    @Slot(int)
-    def integralBinningChanged(self, newIntegralBinning):
+    @Slot()
+    def integralBinningChanged(self, newIntegralBinning: int) -> None:
         self.integralBinning = newIntegralBinning

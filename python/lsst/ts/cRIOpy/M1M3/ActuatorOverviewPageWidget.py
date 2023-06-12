@@ -1,17 +1,37 @@
+# This file is part of M1M3 SS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
 from functools import partial
 
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, UnitLabel
-from ..GUI.TimeChart import SALAxis, SALChartWidget
+from ..GUI.SAL import Axis, ChartWidget
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class Forces(ArrayFields):
-    def __init__(self, label, signal):
+    def __init__(self, label: str, signal: Signal):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
-            f"{label}",
+            label,
             partial(UnitLabel, ".02f"),
             signal,
         )
@@ -21,12 +41,12 @@ class PreclippedLabel(UnitLabel):
     def __init__(self, fmt: str = ".02f"):
         super().__init__(".02f")
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         self.setText(f"<i>{(value * self.scale):{self.fmt}}{self.unit_name}</i>")
 
 
 class PreclippedForces(ArrayFields):
-    def __init__(self, label, signal):
+    def __init__(self, label: str, signal: Signal):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             f"<i>{label}</i>",
@@ -36,7 +56,7 @@ class PreclippedForces(ArrayFields):
 
 
 class ActuatorOverviewPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -109,14 +129,14 @@ class ActuatorOverviewPageWidget(QWidget):
         layout.addLayout(dataLayout)
         layout.addLayout(plotLayout)
 
-        chartForces = SALChartWidget(
-            SALAxis("Force (N)", self.m1m3.appliedForces).addValue(
+        chartForces = ChartWidget(
+            Axis("Force (N)", self.m1m3.appliedForces).addValue(
                 "Total Mag", "forceMagnitude"
             ),
             maxItems=50 * 5,
         )
-        chartPercentage = SALChartWidget(
-            SALAxis("Percentage", self.m1m3.raisingLoweringInfo).addValue(
+        chartPercentage = ChartWidget(
+            Axis("Percentage", self.m1m3.raisingLoweringInfo).addValue(
                 "Weight Support Percentage", "weightSupportedPercent"
             ),
             maxItems=50 * 5,

@@ -3,6 +3,7 @@ from PySide2.QtWidgets import QHBoxLayout, QWidget
 from .BumpTestScale import BumpTestScale
 from .EnabledDisabledScale import EnabledDisabledScale
 from .GaugeScale import GaugeScale
+from .IntegerScale import IntegerScale
 from .MirrorView import MirrorView
 from .OnOffScale import OnOffScale
 from .Scales import Scales
@@ -25,10 +26,11 @@ class MirrorWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.mirrorView = MirrorView()
+        self.mirrorView: MirrorView = MirrorView()
         self._bumpTest = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
+        self._integer = IntegerScale()
         self._onoff = OnOffScale()
         self._waiting = WaitingScale()
         self._warning = WarningScale()
@@ -55,7 +57,7 @@ class MirrorWidget(QWidget):
         self.mirrorView.resetTransform()
         self.mirrorView.scale(*self.mirrorView.scaleHints())
 
-    def _replace(self, newWidget):
+    def _replace(self, newWidget: QWidget):
         if self._curentWidget == newWidget:
             return
         self._curentWidget.hide()
@@ -80,6 +82,8 @@ class MirrorWidget(QWidget):
             self._replace(self._enabled_disabled)
         elif scale == Scales.WAITING:
             self._replace(self._waiting)
+        elif scale == Scales.INTEGER:
+            self._replace(self._integer)
         else:
             self._replace(self._gauge)
 
@@ -109,3 +113,6 @@ class MirrorWidget(QWidget):
             Selected actuator ID.
         """
         self.mirrorView.selected = self.mirrorView.getForceActuator(id)
+
+    def clear(self) -> None:
+        self.mirrorView.clear()

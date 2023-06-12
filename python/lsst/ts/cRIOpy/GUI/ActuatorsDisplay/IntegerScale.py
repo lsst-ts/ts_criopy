@@ -18,17 +18,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-import enum
+from .GaugeScale import GaugeScale
 
 
-class Scales(enum.IntEnum):
-    """Scale kinds for discrete value display (EnumScale). Used to construct
-    proper scale."""
+class IntegerScale(GaugeScale):
+    """Draws gauge with integer range scale."""
 
-    GAUGE = 1
-    ONOFF = 2
-    WARNING = 3
-    BUMP_TEST = 4
-    ENABLED_DISABLED = 5
-    WAITING = 6
-    INTEGER = 7
+    def __init__(self):
+        super().__init__(".0f")

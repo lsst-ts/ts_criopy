@@ -1,13 +1,35 @@
+# This file is part of cRIO/VMS GUI.
+#
+# Developed for the LSST Telescope and Site Systems.
+# This product includes software developed by the LSST Project
+# (https://www.lsst.org). See the COPYRIGHT file at the top - level directory
+# of this distribution for details of code ownership.
+#
+# This program is free software : you can redistribute it and / or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.If not, see <https://www.gnu.org/licenses/>.
+
+import typing
+
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from ..GUI.CustomLabels import OnOffLabel, WarningLabel
 from ..GUI.SAL import EngineeringButton, SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class CellLightPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -56,8 +78,8 @@ class CellLightPageWidget(QWidget):
 
         self.m1m3.cellLightStatus.connect(self.cellLightStatus)
 
-    @Slot(map)
-    def cellLightStatus(self, data):
+    @Slot()
+    def cellLightStatus(self, data: typing.Any) -> None:
         self.cellLightsCommandedOnLabel.setValue(data.cellLightsCommandedOn)
         self.cellLightsOnLabel.setValue(data.cellLightsOn)
 
@@ -65,9 +87,9 @@ class CellLightPageWidget(QWidget):
         self.turnLightsOffButton.setEnabled(data.cellLightsCommandedOn)
 
     @asyncSlot()
-    async def issueCommandTurnLightsOn(self):
+    async def issueCommandTurnLightsOn(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_turnLightsOn)
 
     @asyncSlot()
-    async def issueCommandTurnLightsOff(self):
+    async def issueCommandTurnLightsOff(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_turnLightsOff)

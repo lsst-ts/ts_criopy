@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+import typing
 from functools import partial
 
 import astropy.units as u
@@ -36,6 +37,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import (
+    Arcsec,
     ArrayGrid,
     ArrayItem,
     ArraySignal,
@@ -47,6 +49,7 @@ from ..GUI import (
     UnitLabel,
 )
 from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class OffsetsTypeButton(QPushButton):
@@ -74,7 +77,7 @@ class OffsetsTypeButton(QPushButton):
             ["&Displacement (mm)", 1, 4, "mm"],
         ]
         self.setToolTip("Click to change move units")
-        self.setScales(0.0607, 0.2442)
+        self.set_scales(0.0607, 0.2442)
 
         self._selectedIndex = 0
         self.setSelectedIndex(0)
@@ -115,19 +118,21 @@ class OffsetsTypeButton(QPushButton):
     def getUnit(self):
         return self._units[self._selectedIndex][3]
 
-    def setScales(self, micrometersPerStep, micrometersPerEncoder):
+    def set_scales(
+        self, micrometersPerStep: float, micrometersPerEncoder: float
+    ) -> None:
         self._units[1][1] = micrometersPerEncoder / micrometersPerStep
         self._units[2][1] = 1.0 / micrometersPerStep
         self._units[3][1] = u.mm.to(u.um) / micrometersPerStep
 
-    @Slot(bool)
-    def _clicked(self, checked):
+    @Slot()
+    def _clicked(self, checked: bool) -> None:
         newIndex = self._selectedIndex + 1
         if newIndex >= len(self._units):
             newIndex = 0
         self.setSelectedIndex(newIndex)
 
-    def getSteps(self, value):
+    def get_steps(self, value: int) -> float:
         return int(value * self.getScale())
 
 
@@ -135,7 +140,7 @@ class HardpointsWidget(QWidget):
     """Displays hardpoint data - encoders and calculated position, hardpoint
     state, and M1M3 displacement."""
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -157,7 +162,7 @@ class HardpointsWidget(QWidget):
                         ArrayItem(
                             "measuredForce",
                             "Measured force",
-                            partial(Force, ".03f"),
+                            partial(Force, fmt=".03f"),
                         ),
                         ArrayItem(
                             "displacement",
@@ -371,9 +376,9 @@ class HardpointsWidget(QWidget):
             "xPosition": ("Position X", Mm()),
             "yPosition": ("Position Y", Mm()),
             "zPosition": ("Position Z", Mm()),
-            "xRotation": ("Rotation X", Mm()),
-            "yRotation": ("Rotation Y", Mm()),
-            "zRotation": ("Rotation Z", Mm()),
+            "xRotation": ("Rotation X", Arcsec()),
+            "yRotation": ("Rotation Y", Arcsec()),
+            "zRotation": ("Rotation Z", Arcsec()),
         }
         addDataRow(self.positions, row, 1)
 
@@ -400,7 +405,7 @@ class HardpointsWidget(QWidget):
         for hp in range(6):
             if decimals == 0:
                 sb = QSpinBox()
-                maxSteps = 70000 * 4.03 / self.offsetType.getSteps(1)
+                maxSteps = 70000 * 4.03 / self.offsetType.get_steps(1)
                 sb.setRange(-maxSteps, maxSteps)
                 sb.setSingleStep(100)
             else:
@@ -427,7 +432,7 @@ class HardpointsWidget(QWidget):
 
     @asyncSlot()
     async def _moveHP(self):
-        steps = [self.offsetType.getSteps(x.value()) for x in self.hpOffsets]
+        steps = [self.offsetType.get_steps(x.value()) for x in self.hpOffsets]
         await SALCommand(self, self.m1m3.remote.cmd_moveHardpointActuators, steps=steps)
 
     @asyncSlot()
@@ -444,19 +449,19 @@ class HardpointsWidget(QWidget):
             rowLabels[hp].setValue(hpData[hp])
 
     @asyncSlot()
-    async def _enableHPChase(self):
+    async def _enableHPChase(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_enableHardpointChase)
 
     @asyncSlot()
-    async def _disableHPChase(self):
+    async def _disableHPChase(self) -> None:
         await SALCommand(self, self.m1m3.remote.cmd_disableHardpointChase)
 
-    @Slot(map)
-    def hardpointActuatorSettings(self, data):
-        self.offsetType.setScales(data.micrometersPerStep, data.micrometersPerEncoder)
+    @Slot()
+    def hardpointActuatorSettings(self, data: typing.Any) -> None:
+        self.offsetType.set_scales(data.micrometersPerStep, data.micrometersPerEncoder)
 
-    @Slot(map)
-    def hardpointActuatorData(self, data):
+    @Slot()
+    def hardpointActuatorData(self, data: typing.Any) -> None:
         hs = self.m1m3.remote.evt_hardpointActuatorSettings.get()
         if hs is not None:
             for idx, f in enumerate(data.measuredForce):
@@ -472,14 +477,14 @@ class HardpointsWidget(QWidget):
                 ):
                     color = Colors.ERROR
 
-                self.grid.get_label("measuredForce", idx).setTextColor(color)
+                self.grid.get_label("measuredForce", idx).setTextColor(color)  # type: ignore
 
             for idx, e in enumerate(data.encoder):
                 color = self.palette().color(self.palette().WindowText)
                 if e < hs.lowProximityEncoder[idx] or e > hs.highProximityEncoder[idx]:
                     color = Colors.WARNING
 
-                self.grid.get_label("encoder", idx).setTextColor(color)
+                self.grid.get_label("encoder", idx).setTextColor(color)  # type: ignore
 
         for k, v in self.forces.items():
             getattr(self, k).setValue(getattr(data, k))
@@ -487,8 +492,8 @@ class HardpointsWidget(QWidget):
         for k, v in self.positions.items():
             getattr(self, k).setValue(getattr(data, k))
 
-    @Slot(map)
-    def hardpointActuatorState(self, data):
+    @Slot()
+    def hardpointActuatorState(self, data: typing.Any) -> None:
         states = {
             HardpointActuatorMotionStates.STANDBY: "Standby",
             HardpointActuatorMotionStates.CHASING: "Chasing",
@@ -497,7 +502,7 @@ class HardpointsWidget(QWidget):
             HardpointActuatorMotionStates.FINEPOSITIONING: "Fine positioning",
         }
 
-        def getHpState(state):
+        def getHpState(state) -> None:
             try:
                 return states[state]
             except KeyError:
