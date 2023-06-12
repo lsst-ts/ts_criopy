@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QFormLayout,
@@ -120,8 +122,8 @@ class TopicWindow(DockWindow):
 
         self.setWidget(splitter)
 
-    @Slot(int)
-    def currentTopicChanged(self, topicIndex):
+    @Slot()
+    def currentTopicChanged(self, topicIndex: int) -> None:
         if topicIndex < 0:
             self._setUnknown()
             return
@@ -138,8 +140,8 @@ class TopicWindow(DockWindow):
         self.fieldList.setCurrentRow(fieldIndex)
         self._changeField(topicIndex, fieldIndex)
 
-    @Slot(int)
-    def currentFieldChanged(self, fieldIndex):
+    @Slot()
+    def currentFieldChanged(self, fieldIndex: int) -> None:
         topicIndex = self.topicList.currentRow()
         if topicIndex < 0 or fieldIndex < 0:
             self._setUnknown()
@@ -186,8 +188,11 @@ class TopicWindow(DockWindow):
             print("TopicWidget._changeField", err)
             pass
 
-    @Slot(map)
-    def dataChanged(self, data):
+    def updateValues(self, data: typing.Any) -> None:
+        raise RuntimeError("Abstract method updateValues")
+
+    @Slot()
+    def dataChanged(self, data: typing.Any) -> None:
         """
         Called when selected data are updated.
 

@@ -45,10 +45,12 @@ class AbstractChart(QtCharts.QChart):
         self._next_update = 0
         self.updateInterval = updateInterval
 
-        self.updateTask: asyncio.Future = asyncio.Future()
+        self.updateTask = asyncio.Future()
         self.updateTask.set_result(None)
 
-    def findAxis(self, titleText, axisType=Qt.Vertical):
+    def findAxis(
+        self, titleText: str, axisType=Qt.Vertical
+    ) -> QtCharts.QAbstractAxis | None:
         for a in self.axes(axisType):
             if a.titleText() == titleText:
                 return a

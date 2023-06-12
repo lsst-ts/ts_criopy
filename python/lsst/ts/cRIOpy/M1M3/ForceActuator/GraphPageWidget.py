@@ -17,7 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from ...GUI.ActuatorsDisplay import ForceActuator, MirrorWidget
+from ...GUI.SAL.SALComm import MetaSAL
 from ...M1M3FATable import (
     FATABLE,
     FATABLE_ID,
@@ -35,15 +38,15 @@ class GraphPageWidget(Widget):
     callbacks to trigger updates.
     """
 
-    def __init__(self, m1m3):
-        self.mirrorWidget = MirrorWidget()
+    def __init__(self, m1m3: MetaSAL):
+        self.mirrorWidget: MirrorWidget = MirrorWidget()
         super().__init__(m1m3, self.mirrorWidget)
 
-        self.mirrorWidget.mirrorView.selectionChanged.connect(
+        self.mirrorWidget.mirrorView.selectionChanged.connect(  # type: ignore
             self.updateSelectedActuator
         )
 
-    def updateValues(self, data, changed):
+    def updateValues(self, data: typing.Any, changed: bool) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -59,13 +62,13 @@ class GraphPageWidget(Widget):
         if data is None:
             values = None
         else:
-            values = self.field.getValue(data)
+            values = self.field.getValue(data)  # type: ignore
 
         if changed:
-            self.mirrorWidget.mirrorView.clear()
-            self.mirrorWidget.setScaleType(self.field.scaleType)
+            self.mirrorWidget.mirrorView.clear()  # type: ignore
+            self.mirrorWidget.setScaleType(self.field.scaleType)  # type: ignore
 
-        def getWarning(index):
+        def get_warning(index: int) -> bool:
             return (
                 ForceActuator.STATE_WARNING
                 if warningData.minorFault[index] or warningData.majorFault[index]
@@ -74,26 +77,28 @@ class GraphPageWidget(Widget):
 
         for row in FATABLE:
             index = row[FATABLE_INDEX]
-            dataIndex = row[self.field.valueIndex]
-            if values is None or dataIndex is None:
+            data_index = row[self.field.valueIndex]
+            if values is None or data_index is None:
                 state = ForceActuator.STATE_INACTIVE
-            elif warningData is not None or dataIndex is None:
-                state = getWarning(index)
+            elif warningData is not None or data_index is None:
+                state = get_warning(index)
             else:
                 state = ForceActuator.STATE_ACTIVE
 
             id = row[FATABLE_ID]
-            value = None if (values is None or dataIndex is None) else values[dataIndex]
+            value = (
+                None if (values is None or data_index is None) else values[data_index]
+            )
 
             if changed:
-                self.mirrorWidget.mirrorView.addForceActuator(
+                self.mirrorWidget.mirrorView.addForceActuator(  # type: ignore
                     id,
                     index,
                     row[FATABLE_XPOSITION] * 1000,
                     row[FATABLE_YPOSITION] * 1000,
                     row[FATABLE_ORIENTATION],
                     value,
-                    dataIndex,
+                    data_index,
                     state,
                 )
             else:
@@ -110,4 +115,4 @@ class GraphPageWidget(Widget):
             if selected.data is not None:
                 self.selectedActuatorValueLabel.setText(selected.getValue())
             if warningData is not None:
-                self.selectedActuatorWarningLabel.setValue(getWarning(selected.index))
+                self.selectedActuatorWarningLabel.setValue(get_warning(selected.index))

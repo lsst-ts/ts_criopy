@@ -17,12 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 
 from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
 from ..GUI.SAL import EngineeringButton, SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 def bus(b):
@@ -45,7 +48,7 @@ class TurnButton(EngineeringButton):
         On or Off, command is turn On or Off.
     """
 
-    def __init__(self, m1m3, kind, bus, onOff):
+    def __init__(self, m1m3: MetaSAL, kind: str, bus: int, onOff: str):
         super().__init__(f"Turn {kind} {bus} {onOff}", m1m3)
         self.m1m3 = m1m3
         self.onOff = onOff
@@ -58,7 +61,7 @@ class TurnButton(EngineeringButton):
         self.clicked.connect(self.runCommand)
 
     @asyncSlot()
-    async def runCommand(self):
+    async def runCommand(self) -> None:
         await SALCommand(
             self,
             getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}"),
@@ -75,7 +78,7 @@ class PowerPageWidget(QWidget):
         M1M3 SAL object.
     """
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
@@ -121,7 +124,7 @@ class PowerPageWidget(QWidget):
         dataLayout.setColumnStretch(7, 1)
         dataLayout.setColumnStretch(8, 2)
 
-        def createLabels(title, row, onOff=True):
+        def create_labels(title, row: int, onOff: bool = True) -> None:
             dataLayout.addWidget(QLabel(f"<b>{title}</b>"), row, 0)
 
             if onOff:
@@ -143,10 +146,10 @@ class PowerPageWidget(QWidget):
             dataLayout.addWidget(self.currentLabels[-1], row, 7)
 
         for row in range(4):
-            createLabels(f"Power Network {bus(row)}", row + 1)
+            create_labels(f"Power Network {bus(row)}", row + 1)
 
-        createLabels("Light Network", 5, False)
-        createLabels("Controls Network", 6, False)
+        create_labels("Light Network", 5, False)
+        create_labels("Controls Network", 6, False)
 
         self.chart = TimeChart(
             {"Current (A)": ["A", "B", "C", "D", "Lights", "Controls"]}
@@ -204,8 +207,8 @@ class PowerPageWidget(QWidget):
         self.m1m3.powerWarning.connect(self.powerWarning)
         self.m1m3.powerSupplyData.connect(self.powerSupplyData)
 
-    @Slot(map)
-    def powerStatus(self, data):
+    @Slot()
+    def powerStatus(self, data: typing.Any) -> None:
         for b in range(4):
             busName = bus(b)
             mainCmd = getattr(data, f"powerNetwork{busName}CommandedOn")
@@ -222,8 +225,8 @@ class PowerPageWidget(QWidget):
             self.auxCommandedLabels[b].setValue(auxCmd)
             self.auxOutputLabels[b].setValue(auxOut)
 
-    @Slot(map)
-    def powerWarning(self, data):
+    @Slot()
+    def powerWarning(self, data: typing.Any) -> None:
         for b in range(4):
             busName = bus(b)
             mainMis = getattr(data, f"powerNetwork{busName}OutputMismatch")
@@ -232,8 +235,8 @@ class PowerPageWidget(QWidget):
             auxMis = getattr(data, f"auxPowerNetwork{busName}OutputMismatch")
             self.auxMismatchLabels[b].setValue(auxMis)
 
-    @Slot(map)
-    def powerSupplyData(self, data):
+    @Slot()
+    def powerSupplyData(self, data: typing.Any) -> None:
         for b in range(4):
             name = f"powerNetwork{chr(ord('A') + b)}Current"
             self.currentLabels[b].setText(f"{getattr(data, name):0.3f}")

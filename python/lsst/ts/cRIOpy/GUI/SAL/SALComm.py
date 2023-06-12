@@ -34,7 +34,7 @@ def _filterEvtTel(m):
     return m.startswith("tel_") or m.startswith("evt_")
 
 
-class MetaSAL(type(QObject)):
+class MetaSAL(type(QObject)):  # type: ignore
     """Metaclass for Qt<->SAL/DDS glue class. Creates Qt Signal objects for all
     read topics. Remote arguments are read from class variable _args. SALObj
     remote is accessible through 'remote' class variable."""
@@ -201,7 +201,7 @@ def warning(parent: QWidget, title: str, description: str):
         Descrption of warning occured.
     """
 
-    future = asyncio.Future()
+    future: asyncio.Future = asyncio.Future()
     dialog = QMessageBox(parent)
     dialog.setWindowTitle(title)
     dialog.setText(description)
@@ -211,7 +211,7 @@ def warning(parent: QWidget, title: str, description: str):
     return future
 
 
-async def SALCommand(parent: QWidget, cmd, **kwargs):
+async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
     """
 
     Parameters
@@ -240,7 +240,7 @@ async def SALCommand(parent: QWidget, cmd, **kwargs):
         )
 
 
-async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs):
+async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs) -> None:
     """
 
     Parameters

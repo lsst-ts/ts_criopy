@@ -22,7 +22,7 @@ from datetime import datetime
 
 import astropy.units as u
 from astropy.coordinates import Angle
-from PySide2.QtCore import Qt, QTimer, Slot
+from PySide2.QtCore import Qt, QTimer, Signal, Slot
 from PySide2.QtGui import QColor, QPalette
 from PySide2.QtWidgets import (
     QDockWidget,
@@ -143,11 +143,11 @@ class DataLabel(QLabel):
         object name. Defaults to None.
     """
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self._data)  # type: ignore
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
@@ -155,11 +155,11 @@ class DataLabel(QLabel):
     def __copy__(self):
         return DataLabel()
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets value.
 
         Parameters
@@ -320,9 +320,9 @@ class DataUnitLabel(UnitLabel):
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
 
 class Force(DataUnitLabel):
@@ -817,9 +817,9 @@ class WarningButton(ColoredButton):
         self.window = None
         self.clicked.connect(self._showWindow)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
     def _showWindow(self):
         if self.window is None:
@@ -862,20 +862,20 @@ class InterlockOffLabel(QLabel):
             self._field = field
             signal.connect(self._data)
 
-    @Slot(map)
-    def _data(self, data):
-        self.setValue(getattr(data, self._field))
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
+        self.setValue(getattr(data, self._field))  # type: ignore
 
-    def setValue(self, value):
+    def setValue(self, interlock_off: bool) -> None:
         """Sets formatted value. Color codes WARNING (red)/OK (green).
 
         Parameters
         ----------
-        interlockOff : `bool`
+        interlock_off : `bool`
             Current interlock off state. True means interlock is locked
             (=PROBLEM).
         """
-        if value:
+        if interlock_off:
             self.setText("<font color='red'>PROBLEM</font>")
         else:
             self.setText("<font color='green'>OK</font>")
@@ -1016,8 +1016,8 @@ class Heartbeat(QWidget):
             self.hbIndicator.setInvertedAppearance(False)
         self.timestamp.setText("<font color='red'>- timeouted -</font>")
 
-    @Slot(map)
-    def heartbeat(self, data):
+    @Slot()
+    def heartbeat(self, data: typing.Any) -> None:
         """Slot to connect to heartbeat data signal.
 
         Parameters
@@ -1072,8 +1072,8 @@ class LogEventWarning(QLabel):
         super().__init__("---")
         signal.connect(self._logEvent)
 
-    @Slot(map)
-    def _logEvent(self, data):
+    @Slot()
+    def _logEvent(self, data: typing.Any) -> None:
         if data.anyWarning:
             self.setText("<font color='yellow'>Warning</font>")
         else:
@@ -1098,8 +1098,8 @@ class SimulationStatus(QLabel):
             # simulationMode needs to be subscribed from remote
             self.setText(f"{comm.remote.salinfo.name} simulationMode missing")
 
-    @Slot(map)
-    def simulationMode(self, data):
+    @Slot()
+    def simulationMode(self, data: typing.Any) -> None:
         self.setText(
             "<font color='green'>HW</font>"
             if data.mode == 0
@@ -1122,8 +1122,8 @@ class DockWindow(QDockWidget):
         self.setObjectName(title)
         self.topLevelChanged.connect(self._topLevelChanged)
 
-    @Slot(bool)
-    def _topLevelChanged(self, topLevel):
+    @Slot()
+    def _topLevelChanged(self, topLevel: bool) -> None:
         if topLevel:
-            self.setWindowFlags(Qt.Window)
+            self.setWindowFlags(Qt.Window)  # type: ignore
         self.show()

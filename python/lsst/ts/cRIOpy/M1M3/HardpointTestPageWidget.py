@@ -24,7 +24,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
-from ..GUI.SAL import SALComm
+from ..GUI.SAL.SALComm import MetaSAL
 from ..GUI.TimeChart import TimeChartView, UserSelectedTimeChart
 
 
@@ -35,11 +35,11 @@ class HardpointTestPageWidget(QWidget):
 
     Parameters
     ----------
-    m1m3 : `SALComm object`
+    m1m3 : `MetaSAL`
         SALComm communication object.
     """
 
-    def __init__(self, m1m3: SALComm):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()

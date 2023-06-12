@@ -19,18 +19,19 @@
 
 from functools import partial
 
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class Forces(ArrayFields):
-    def __init__(self, label, signal):
+    def __init__(self, label: str, signal: Signal):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
-            f"{label}",
+            label,
             partial(UnitLabel, ".02f"),
             signal,
         )
@@ -40,12 +41,12 @@ class PreclippedLabel(UnitLabel):
     def __init__(self, fmt: str = ".02f"):
         super().__init__(".02f")
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         self.setText(f"<i>{(value * self.scale):{self.fmt}}{self.unit_name}</i>")
 
 
 class PreclippedForces(ArrayFields):
-    def __init__(self, label, signal):
+    def __init__(self, label: str, signal: Signal):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             f"<i>{label}</i>",
@@ -55,7 +56,7 @@ class PreclippedForces(ArrayFields):
 
 
 class ActuatorOverviewPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 

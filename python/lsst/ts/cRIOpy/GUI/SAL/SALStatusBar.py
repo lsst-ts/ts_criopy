@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
 from datetime import datetime
 from html import escape
 
@@ -83,16 +84,16 @@ class SALStatusBar(QStatusBar):
 
         comms[0].errorCode.connect(self.errorCode)
 
-    @Slot(map)
-    def detailedState(self, data):
+    @Slot()
+    def detailedState(self, data: typing.Any) -> None:
         self.detailedStateLabel.setText(self.detailedStateFunction(data.detailedState))
 
-    @Slot(map)
-    def configurationApplied(self, data):
+    @Slot()
+    def configurationApplied(self, data: typing.Any) -> None:
         self.settingsLabel.setText(data.version)
 
-    @Slot(map)
-    def errorCode(self, data):
+    @Slot()
+    def errorCode(self, data: typing.Any) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )

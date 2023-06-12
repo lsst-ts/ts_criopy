@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import astropy.units as u
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
@@ -145,8 +147,8 @@ class IMSPageWidget(QWidget):
 
         m1m3.imsData.connect(self.imsData)
 
-    @Slot(map)
-    def imsData(self, data):
+    @Slot()
+    def imsData(self, data: typing.Any) -> None:
         self.rawChart.append(
             data.timestamp,
             [

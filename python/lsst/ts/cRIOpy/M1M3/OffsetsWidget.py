@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import astropy.units as u
 from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
@@ -32,6 +34,7 @@ from PySide2.QtWidgets import (
 
 from ..GUI import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
 from ..GUI.SAL import SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 from .DirectionPadWidget import DirectionPadWidget
 
 
@@ -65,19 +68,19 @@ class OffsetsWidget(QWidget):
 
     FORCES = ["xForce", "yForce", "zForce", "xMoment", "yMoment", "zMoment"]
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
-        self._hpData = None
+        self.__hp_data = None
         self._imsData = None
 
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
         dataLayout = QGridLayout()
 
-        self.layout.addLayout(dataLayout)
-        self.setLayout(self.layout)
+        layout.addLayout(dataLayout)
+        self.setLayout(layout)
 
         directions = ["X", "Y", "Z", "Rotation X", "Rotation Y", "Rotation Z"]
 
@@ -164,10 +167,10 @@ class OffsetsWidget(QWidget):
         dataLayout.addWidget(self.copyCurrentButton, row, 4, 1, 3)
 
         row += 1
-        self.dirPad = DirectionPadWidget()
-        self.dirPad.setEnabled(False)
-        self.dirPad.positionChanged.connect(self._positionChanged)
-        dataLayout.addWidget(self.dirPad, row, 1, 3, 6)
+        self.dir_pad = DirectionPadWidget()
+        self.dir_pad.setEnabled(False)
+        self.dir_pad.positionChanged.connect(self._positionChanged)
+        dataLayout.addWidget(self.dir_pad, row, 1, 3, 6)
 
         def createForces():
             return {
@@ -220,7 +223,7 @@ class OffsetsWidget(QWidget):
         self.clearOffsetForcesButton.clicked.connect(self._clearOffsetForces)
         dataLayout.addWidget(self.clearOffsetForcesButton, row, 4, 1, 3)
 
-        self.layout.addStretch()
+        layout.addStretch()
 
         self.m1m3.hardpointActuatorData.connect(self._hardpointActuatorDataCallback)
         self.m1m3.imsData.connect(self._imsDataCallback)
@@ -243,7 +246,7 @@ class OffsetsWidget(QWidget):
     def _getScale(self, label):
         return u.mm.to(u.m) if label[1:] == "Position" else u.arcsec.to(u.deg)
 
-    def getTargets(self):
+    def get_targets(self) -> dict[str, float]:
         """Return current target values (from form target box).
 
         Returns
@@ -257,7 +260,7 @@ class OffsetsWidget(QWidget):
             args[p] = getattr(self, "target_" + p).value() * self._getScale(p)
         return args
 
-    def setTargets(self, targets):
+    def set_targets(self, targets: dict[str, float]):
         """Set current target values.
 
         Parameters
@@ -282,16 +285,16 @@ class OffsetsWidget(QWidget):
         return offsets
 
     @asyncSlot()
-    async def _moveMirror(self):
-        targets = self.getTargets()
-        self.dirPad.setPosition(targets[p] for p in self.POSITIONS)
-        await self.moveMirror(**self.getTargets())
+    async def _moveMirror(self) -> None:
+        targets = self.get_targets()
+        self.dir_pad.set_position(targets[p] for p in self.POSITIONS)
+        await self.moveMirror(**self.get_targets())
 
     @Slot()
-    def _copyCurrent(self):
-        args = {k: getattr(self._hpData, k) for k in self.POSITIONS}
-        self.setTargets(args)
-        self.dirPad.setPosition(args[p] for p in self.POSITIONS)
+    def _copyCurrent(self) -> None:
+        args = {k: getattr(self.__hp_data, k) for k in self.POSITIONS}
+        self.set_targets(args)
+        self.dir_pad.set_position(args[p] for p in self.POSITIONS)
 
     @asyncSlot()
     async def _applyOffsetForces(self):
@@ -312,49 +315,49 @@ class OffsetsWidget(QWidget):
         args = {}
         for i in range(6):
             args[self.POSITIONS[i]] = offsets[i]
-        self.setTargets(args)
+        self.set_targets(args)
         await self.moveMirror(**args)
 
-    def _fillRow(self, variables, data):
+    def __fill_row(self, variables, data):
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
-    def _updateDiffs(self):
-        if self._hpData is None or self._imsData is None:
+    def __update_diffs(self):
+        if self.__hp_data is None or self._imsData is None:
             return
         for k, v in self.diffs.items():
-            v.setValue(getattr(self._hpData, k) - getattr(self._imsData, k))
+            v.setValue(getattr(self.__hp_data, k) - getattr(self._imsData, k))
 
-    @Slot(map)
-    def _hardpointActuatorDataCallback(self, data):
-        self._fillRow(self.hpVariables, data)
-        self._hpData = data
+    @Slot()
+    def _hardpointActuatorDataCallback(self, data: typing.Any) -> None:
+        self.__fill_row(self.hpVariables, data)
+        self.__hp_data = data
         self.copyCurrentButton.setEnabled(True)
-        self._updateDiffs()
+        self.__update_diffs()
 
-    @Slot(map)
-    def _imsDataCallback(self, data):
-        self._fillRow(self.imsVariables, data)
+    @Slot()
+    def _imsDataCallback(self, data: typing.Any) -> None:
+        self.__fill_row(self.imsVariables, data)
         self._imsData = data
-        self._updateDiffs()
+        self.__update_diffs()
 
-    @Slot(map)
-    def _preclippedOffsetForces(self, data):
-        self._fillRow(self.preclipped, data)
+    @Slot()
+    def _preclippedOffsetForces(self, data: typing.Any) -> None:
+        self.__fill_row(self.preclipped, data)
 
-    @Slot(map)
-    def _appliedOffsetForces(self, data):
-        self._fillRow(self.applied, data)
+    @Slot()
+    def _appliedOffsetForces(self, data: typing.Any) -> None:
+        self.__fill_row(self.applied, data)
 
-    @Slot(map)
-    def _forceActuatorCallback(self, data):
-        self._fillRow(self.measured, data)
+    @Slot()
+    def _forceActuatorCallback(self, data: typing.Any) -> None:
+        self.__fill_row(self.measured, data)
 
-    @Slot(map)
-    def _detailedStateCallback(self, data):
+    @Slot()
+    def _detailedStateCallback(self, data: typing.Any) -> None:
         enabled = data.detailedState == DetailedState.ACTIVEENGINEERING
 
         self.moveMirrorButton.setEnabled(enabled)
-        self.dirPad.setEnabled(enabled)
+        self.dir_pad.setEnabled(enabled)
         self.offsetForces.setEnabled(enabled)
         self.clearOffsetForcesButton.setEnabled(enabled)

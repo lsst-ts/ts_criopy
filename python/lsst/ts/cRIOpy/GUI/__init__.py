@@ -8,6 +8,7 @@ from .ArrayGrid import (
     ArraySignal,
 )
 from .CustomLabels import (
+    DMS,
     RPM,
     Ampere,
     Arcsec,
@@ -20,7 +21,6 @@ from .CustomLabels import (
     DataUnitLabel,
     DegS2,
     DockWindow,
-    DMS,
     EnumLabel,
     ErrorLabel,
     Force,

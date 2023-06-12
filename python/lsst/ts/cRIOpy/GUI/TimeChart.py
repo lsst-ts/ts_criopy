@@ -21,13 +21,15 @@
 
 import concurrent.futures
 import time
+import typing
 
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
 from PySide2.QtGui import QPainter
 from PySide2.QtWidgets import QMenu
 
-from . import AbstractChart
+from .AbstractChart import AbstractChart
+from .CustomLabels import UnitLabel
 
 __all__ = ["TimeChart", "UserSelectedTimeChart", "TimeChartView"]
 
@@ -53,14 +55,19 @@ class TimeChart(AbstractChart):
         second.
     """
 
-    def __init__(self, items, maxItems=50 * 30, updateInterval=0.1):
+    def __init__(
+        self,
+        items: str | list[str],
+        maxItems: int = 50 * 30,
+        updateInterval: float = 0.1,
+    ):
         super().__init__(updateInterval=updateInterval)
-        self.timeAxis = None
+        self.timeAxis: QtCharts.QDateTimeAxis | None = None
 
         self._createCaches(items, maxItems)
         self._attachSeries()
 
-    def _addSerie(self, name, axis):
+    def _addSerie(self, name: str, axis: str) -> None:
         s = QtCharts.QLineSeries()
         s.setName(name)
         # TODO crashes (core dumps) on some systems. Need to investigate
@@ -71,12 +78,12 @@ class TimeChart(AbstractChart):
             a.setTickCount(10)
             a.setTitleText(axis)
             self.addAxis(
-                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft
+                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft  # type: ignore
             )
         self.addSeries(s)
         s.attachAxis(a)
 
-    def _attachSeries(self):
+    def _attachSeries(self) -> None:
         # Caveat emptor, the order here is important. Hard to find, but the
         # order in which chart, axis and series are constructed and attached
         # should always be:
@@ -94,12 +101,14 @@ class TimeChart(AbstractChart):
         self.timeAxis.setTitleText("Time (TAI)")
         self.timeAxis.setGridLineVisible(True)
 
-        self.addAxis(self.timeAxis, Qt.AlignBottom)
+        self.addAxis(self.timeAxis, Qt.AlignBottom)  # type: ignore
 
         for serie in self.series():
             serie.attachAxis(self.timeAxis)
 
-    def append(self, timestamp, data, axis_index=0, cache_index=None, update=False):
+    def append(
+        self, timestamp, data, axis_index=0, cache_index=None, update=False
+    ) -> None:
         """Add data to a serie. Creates axis and serie if needed. Shrink if
         more than expected elements are stored.
 
@@ -166,12 +175,12 @@ class TimeChart(AbstractChart):
         if (
             self._next_update < time.monotonic()
             and self.updateTask.done()
-            and self.isVisibleTo(None)
+            and self.isVisibleTo(None)  # type: ignore
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 self.updateTask = pool.submit(replot)
 
-    def clearData(self):
+    def clearData(self) -> None:
         """Removes all data from the chart."""
         super().removeAllSeries()
 
@@ -195,8 +204,8 @@ class UserSelectedTimeChart(TimeChart):
         self._index = None
         self.topicSelected.connect(self._topicSelected)
 
-    @Slot(str)
-    def _topicSelected(self, obj):
+    @Slot()
+    def _topicSelected(self, obj: UnitLabel) -> None:
         name = obj.objectName()
         index = None
         try:
@@ -212,7 +221,7 @@ class UserSelectedTimeChart(TimeChart):
                     continue
 
                 if self._signal is not None:
-                    self._signal.disconnect(self._appendData)
+                    self._signal.disconnect(self._appendData)  # type: ignore
 
                 self._createCaches({obj.unit_name: [name]})
                 self._attachSeries()
@@ -221,13 +230,13 @@ class UserSelectedTimeChart(TimeChart):
                 self._name = name
                 self._index = index
 
-                self._signal.connect(self._appendData)
+                self._signal.connect(self._appendData)  # type: ignore
                 self._next_update = 0
 
                 break
 
-    @Slot(map)
-    def _appendData(self, data):
+    @Slot()
+    def _appendData(self, data: typing.Any) -> None:
         if self._index is not None:
             self.append(data.private_sndStamp, [getattr(data, self._name)[self._index]])
         else:

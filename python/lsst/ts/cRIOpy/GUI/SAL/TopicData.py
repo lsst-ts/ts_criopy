@@ -51,7 +51,7 @@ class TopicData:
         self.isEvent = isEvent
         self.command = command
 
-    def getTopic(self):
+    def getTopic(self) -> str:
         if self.isEvent:
             return "evt_" + self.topic
         return "tel_" + self.topic

@@ -17,9 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
-from PySide2.QtCore import Slot
+from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QPushButton, QWidget
+
+from .SALComm import MetaSAL
 
 __all__ = [
     "SignalButton",
@@ -47,10 +51,10 @@ class SignalButton(QPushButton):
 
     def __init__(
         self,
-        title,
-        signal,
-        variable,
-        enabledValues,
+        title: str,
+        signal: Signal,
+        variable: str,
+        enabledValues: list[str],
     ):
         super().__init__(title)
         self.__correctState = False
@@ -60,22 +64,22 @@ class SignalButton(QPushButton):
 
         self.setEnabled()
 
-        signal.connect(self.__update)
+        signal.connect(self.__update)  # type: ignore
 
-    def setEnabled(self, enabled=True):
+    def setEnabled(self, enabled: bool = True) -> None:
         self.__askedEnabled = enabled
         self.__updateEnabled()
 
-    def setDisabled(self, disabled=True):
+    def setDisabled(self, disabled: bool = True) -> None:
         self.__askedEnabled = not (disabled)
         self.__updateEnabled()
 
-    @Slot(map)
-    def __update(self, data):
+    @Slot()
+    def __update(self, data: dict) -> None:
         self.__correctState = getattr(data, self._variable) in self._enabledValues
         self.__updateEnabled()
 
-    def __updateEnabled(self):
+    def __updateEnabled(self) -> None:
         super().setEnabled(self.__correctState and self.__askedEnabled)
 
 
@@ -143,15 +147,15 @@ class StateEnabledWidget(QWidget):
 
     def __init__(
         self,
-        m1m3,
+        m1m3: MetaSAL,
         enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
-    ):
+    ) -> None:
         super().__init__()
         self.setEnabled(False)
         self._enabledStates = enabledStates
 
         m1m3.detailedState.connect(self.detailedState)
 
-    @Slot(map)
-    def detailedState(self, data):
+    @Slot()
+    def detailedState(self, data: typing.Any):
         self.setEnabled(data.detailedState in self._enabledStates)

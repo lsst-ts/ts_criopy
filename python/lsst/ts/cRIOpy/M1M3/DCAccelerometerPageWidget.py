@@ -33,10 +33,11 @@ from ..GUI import (
     WarningGrid,
 )
 from ..GUI.SAL import Axis, ChartWidget
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class DCAccelerometerPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()

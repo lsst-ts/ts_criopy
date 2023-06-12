@@ -24,10 +24,11 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class PIDPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()

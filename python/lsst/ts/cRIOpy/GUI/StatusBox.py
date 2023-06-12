@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import QSize, Signal, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QHBoxLayout, QWidget
@@ -98,16 +100,16 @@ class StatusBox(QWidget):
         hbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(hbox)
 
-        self._boxes = []
         for i in items:
             hbox.addWidget(i)
 
-        signal.connect(self._data)
+        signal.connect(self._data)  # type: ignore
 
-    @Slot(map)
-    def _data(self, data):
+    @Slot()
+    def _data(self, data: typing.Any) -> None:
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
             if item is not None:
                 v = getattr(data, item.objectName())
-                item.setValue(v)
+                # item is either UnitLabel or DataLabel
+                item.setValue(v)  # type: ignore

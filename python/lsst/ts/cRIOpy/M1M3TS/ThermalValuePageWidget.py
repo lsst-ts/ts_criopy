@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
@@ -119,8 +121,8 @@ class CommandWidget(QWidget):
             self._parent.m1m3ts.engineeringMode.connect(self.engineeringMode)
             self.clicked.connect(self.edit)
 
-        @Slot(map)
-        def engineeringMode(self, data):
+        @Slot()
+        def engineeringMode(self, data: typing.Any) -> None:
             self.setEnabled(data.engineeringMode)
             if not (data.engineeringMode):
                 self.setText(self._edit_title)
