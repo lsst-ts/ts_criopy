@@ -23,8 +23,8 @@ import typing
 
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
-from ...M1M3FATable import FATABLE, FATABLE_ZFA
 from ...GUI.SAL.SALComm import MetaSAL
+from ...M1M3FATable import FATABLE, FATABLE_ZFA
 from .Widget import Widget
 
 

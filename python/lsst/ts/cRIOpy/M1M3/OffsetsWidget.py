@@ -21,6 +21,7 @@ import typing
 
 import astropy.units as u
 from asyncqt import asyncSlot
+from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QDoubleSpinBox,
@@ -30,8 +31,6 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
 
 from ..GUI import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
 from ..GUI.SAL import SALCommand
