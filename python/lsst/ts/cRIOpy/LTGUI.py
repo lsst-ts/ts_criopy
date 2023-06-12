@@ -1,6 +1,6 @@
 # -'''- coding: utf-8 -'''-
 
-# This file is part of M1M3 SS GUI.
+# This file is part of LSST EUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -27,8 +27,8 @@ from lsst.ts.idl.enums import LaserTracker
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QLabel
 
-from .LaserTracker import OverviewPageWidget
 from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
+from .LaserTracker import OverviewPageWidget
 
 
 class LTEUI(EUIWindow):

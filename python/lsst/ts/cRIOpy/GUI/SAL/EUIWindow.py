@@ -19,8 +19,8 @@
 
 import asyncio
 import enum
-from functools import partial
 import typing
+from functools import partial
 
 from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Slot

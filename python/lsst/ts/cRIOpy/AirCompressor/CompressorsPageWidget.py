@@ -21,11 +21,7 @@ import typing
 
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
-    QHBoxLayout,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import (
     RPM,

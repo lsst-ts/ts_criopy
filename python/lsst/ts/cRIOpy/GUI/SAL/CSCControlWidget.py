@@ -17,17 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from asyncqt import asyncSlot
 import typing
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
-    QButtonGroup,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
 
+from asyncqt import asyncSlot
 from lsst.ts import salobj
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QButtonGroup, QPushButton, QVBoxLayout, QWidget
 
 from .SALComm import MetaSAL, SALCommand
 
@@ -52,9 +47,9 @@ class CSCControlWidget(QWidget):
     extra_Buttons_commands : `dict[str, str]', optional
         Commands for buttons texts.
     state_signal : `str`, optional
-        Topic providing CSC state.
+        Topic providing CSC state. Defaults to summaryState.
     state_field : `str`, optional
-        Field inside topic providing CSC state. Defaults to
+        Field inside topic providing CSC state. Defaults to summaryState.
     """
 
     TEXT_START = "&Start"

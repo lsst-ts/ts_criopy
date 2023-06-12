@@ -19,8 +19,8 @@
 
 import typing
 
-from PySide2.QtCore import Slot, Qt
-from PySide2.QtWidgets import QVBoxLayout, QTableWidget, QTableWidgetItem, QWidget
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
 
 class OverviewPageWidget(QWidget):
