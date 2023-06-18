@@ -65,6 +65,13 @@ class MetaSAL(type(QObject)):  # type: ignore
                 dictionary["remote"].start()
             )
 
+        if dictionary["remote"].salinfo.indexed:
+            if "index" not in dictionary["_args"].keys():
+                raise RuntimeError(
+                    f"CSC Remote {dictionary['_args']['name']} is indexed, but "
+                    "index argument wasn't provided."
+                )
+
         for m in filter(
             lambda m: m.startswith("tel_") or m.startswith("evt_"),
             dir(dictionary["remote"]),
@@ -222,10 +229,16 @@ async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
         SAL command
     **kwargs : `dict`
         Arguments passed to SAL command.
+
+    Returns
+    -------
+    executed : `bool`
+        True if command was sucessfully executed.
     """
 
     try:
         await cmd.set_start(**kwargs)
+        return True
     except base.AckError as ackE:
         warning(
             parent,
@@ -238,6 +251,7 @@ async def SALCommand(parent: QWidget, cmd, **kwargs) -> None:
             f"Error executing {cmd.name}",
             f"Executing SAL/DDS command <b>{cmd.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
         )
+    return False
 
 
 async def SALListCommand(parent: QWidget, comms, cmdName: str, **kwargs) -> None:

@@ -21,25 +21,21 @@ import typing
 
 from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
-from lsst.ts.salobj import base
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
-    QAbstractButton,
-    QButtonGroup,
     QFormLayout,
     QHBoxLayout,
     QLCDNumber,
     QProgressBar,
-    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from ..GUI import Colors, StatusBox, StatusWidget
-from ..GUI.SAL import EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL, warning
+from ..GUI import ColoredButton, Colors, StatusBox, StatusWidget
+from ..GUI.SAL import CSCControlWidget, EngineeringButton, SALCommand
+from ..GUI.SAL.SALComm import MetaSAL
 
 
 class HPWarnings:
@@ -169,165 +165,48 @@ class SlewWidget(QWidget):
         self.slewFlagOff.setPalette(palOff)
 
 
-class ApplicationControlWidget(QWidget):
-    """Widget with control buttons for M1M3 operations. Buttons are
-    disabled/enabled and reasonable defaults sets on DetailedState changes."""
+class M1M3CSCControl(CSCControlWidget):
+    """Widget to control M1M3 states.
 
-    TEXT_START = "&Start"
-    """Constants for button titles. Titles are used to select command send to
-    SAL."""
-    TEXT_ENABLE = "&Enable"
-    TEXT_DISABLE = "&Disable"
-    TEXT_STANDBY = "&Standby"
+    As M1M3 uses detailed state to record internal M1M3 state, a modification
+    of CSCControlWidget is used to control M1M3 state transtions.
+
+    Parameters
+    ----------
+    m1m3: `MetaSAL`
+        M1M3 SAL object.
+    """
+
     TEXT_RAISE = "&Raise M1M3"
+    """Texts for additional commands."""
     TEXT_ABORT_RAISE = "&Abort M1M3 Raise"
     TEXT_LOWER = "&Lower M1M3"
     TEXT_ENTER_ENGINEERING = "&Enter Engineering"
     TEXT_EXIT_ENGINEERING = "&Exit Engineering"
-    TEXT_EXIT_CONTROL = "&Exit Control"
-    TEXT_PANIC = "&Panic!"
 
     def __init__(self, m1m3: MetaSAL):
-        super().__init__()
+        super().__init__(
+            m1m3,
+            [
+                self.TEXT_START,
+                self.TEXT_ENABLE,
+                self.TEXT_RAISE,
+                self.TEXT_ENTER_ENGINEERING,
+                self.TEXT_STANDBY,
+            ],
+            {
+                self.TEXT_RAISE: "raiseM1M3",
+                self.TEXT_ABORT_RAISE: "abortRaiseM1M3",
+                self.TEXT_LOWER: "lowerM1M3",
+                self.TEXT_ENTER_ENGINEERING: "enterEngineering",
+                self.TEXT_EXIT_ENGINEERING: "exitEngineering",
+            },
+            "detailedState",
+            "detailedState",
+        )
 
-        self.m1m3 = m1m3
-        self._lastEnabled: list[bool] | None = None
-        self._hpWarnings = HPWarnings()
-
-        self.commandButtons = QButtonGroup(self)
-        self.commandButtons.buttonClicked.connect(self._buttonClicked)
-
-        commandLayout = QVBoxLayout()
-
-        def _addButton(text: str) -> QPushButton:
-            button = QPushButton(text)
-            button.setEnabled(False)
-            self.commandButtons.addButton(button)
-            commandLayout.addWidget(button)
-            return button
-
-        panicButton = _addButton(self.TEXT_PANIC)
-        pal = panicButton.palette()
-        pal.setColor(pal.Button, QColor(255, 0, 0))
-        panicButton.setPalette(pal)
-        panicButton.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-
-        _addButton(self.TEXT_START)
-        _addButton(self.TEXT_ENABLE)
-        _addButton(self.TEXT_RAISE)
-        _addButton(self.TEXT_ENTER_ENGINEERING)
-        _addButton(self.TEXT_STANDBY)
-
-        self.supportedNumber = QLCDNumber(6)
-        self.supportedNumber.setAutoFillBackground(True)
-        self.minPressure = QLCDNumber(6)
-        self.minPressure.setAutoFillBackground(True)
-        self.maxPressure = QLCDNumber(6)
-        self.maxPressure.setAutoFillBackground(True)
-
-        self.minPressure.setToolTip("Limits weren't (yet) received")
-        self.maxPressure.setToolTip("Limits weren't (yet) received")
-
-        dataLayout = QFormLayout()
-        dataLayout.addRow("Supported", self.supportedNumber)
-        dataLayout.addRow("Min pressure", self.minPressure)
-        dataLayout.addRow("Max pressure", self.maxPressure)
-
-        commandLayout.addLayout(dataLayout)
-        self.slewWidget = SlewWidget(m1m3)
-        self.slewWidget.setEnabled(False)
-        commandLayout.addWidget(self.slewWidget)
-
-        commandLayout.addStretch()
-
-        self.weightSupportedPercent = QProgressBar()
-        self.weightSupportedPercent.setOrientation(Qt.Vertical)
-        self.weightSupportedPercent.setRange(0, 100)
-        self.weightSupportedPercent.setTextVisible(True)
-        self.weightSupportedPercent.setFormat("%p%")
-
-        layout = QHBoxLayout()
-        layout.addLayout(commandLayout)
-        layout.addWidget(self.weightSupportedPercent)
-
-        self.setLayout(layout)
-
-        # connect SAL signals
-        self.m1m3.detailedState.connect(self.detailedState)
-        self.m1m3.raisingLoweringInfo.connect(self.raisingLoweringInfo)
-        self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
-        self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
-
-    def disableAllButtons(self) -> None:
-        if self._lastEnabled is None:
-            self._lastEnabled = []
-            for b in self.commandButtons.buttons():
-                self._lastEnabled.append(b.isEnabled())
-                b.setEnabled(False)
-
-    def restoreEnabled(self) -> None:
-        if self._lastEnabled is None:
-            return
-        bi = 0
-        for b in self.commandButtons.buttons():
-            b.setEnabled(self._lastEnabled[bi])
-            bi += 1
-
-        self._lastEnabled = None
-
-    @asyncSlot()
-    async def _buttonClicked(self, bnt: QAbstractButton) -> None:
-        text = bnt.text()
-        self.disableAllButtons()
-        try:
-            if text == self.TEXT_PANIC:
-                await self.m1m3.remote.cmd_panic.start()
-            elif text == self.TEXT_START:
-                await self.m1m3.remote.cmd_start.set_start(
-                    configurationOverride="Default", timeout=60
-                )
-            elif text == self.TEXT_EXIT_CONTROL:
-                await self.m1m3.remote.cmd_exitControl.start()
-            elif text == self.TEXT_ENABLE:
-                await self.m1m3.remote.cmd_enable.start()
-            elif text == self.TEXT_DISABLE:
-                await self.m1m3.remote.cmd_disable.start()
-            elif text == self.TEXT_RAISE:
-                await self.m1m3.remote.cmd_raiseM1M3.set_start(
-                    bypassReferencePosition=False
-                )
-            elif text == self.TEXT_ABORT_RAISE:
-                await self.m1m3.remote.cmd_abortRaiseM1M3.start()
-            elif text == self.TEXT_LOWER:
-                await self.m1m3.remote.cmd_lowerM1M3.start()
-            elif text == self.TEXT_ENTER_ENGINEERING:
-                await self.m1m3.remote.cmd_enterEngineering.start()
-            elif text == self.TEXT_EXIT_ENGINEERING:
-                await self.m1m3.remote.cmd_exitEngineering.start()
-            elif text == self.TEXT_STANDBY:
-                await self.m1m3.remote.cmd_standby.start()
-            else:
-                raise RuntimeError(f"unassigned command for button {text}")
-        except (base.AckError, base.AckTimeoutError) as ackE:
-            warning(
-                self,
-                f"Error executing button {text}",
-                f"Error executing button <i>{text}</i>:<br/>{ackE.ackcmd.result}",
-            )
-        except RuntimeError as rte:
-            warning(
-                self,
-                f"Error executing {text}",
-                f"Executing button <i>{text}</i>:<br/>{str(rte)}",
-            )
-        finally:
-            self.restoreEnabled()
-
-    @Slot()
-    def detailedState(self, data: typing.Any) -> None:
-        # text mean button is enabled and given text shall be displayed. None
-        # for disabled buttons.
-        stateMap: dict[int, typing.Any] = {
+    def get_state_buttons_map(self, state):
+        stateMap = {
             DetailedState.STANDBY: [
                 self.TEXT_START,
                 None,
@@ -386,11 +265,99 @@ class ApplicationControlWidget(QWidget):
             DetailedState.PROFILEHARDPOINTCORRECTIONS: [None, None, None, None, None],
         }
 
+        return stateMap[state]
+
+
+class ApplicationControlWidget(QWidget):
+    """Widget with control buttons for M1M3 operations.
+
+    Buttons are disabled/enabled and reasonable defaults sets on DetailedState
+    changes.
+    """
+
+    TEXT_PANIC = "&Panic!"
+
+    def __init__(self, m1m3):
+        super().__init__()
+
+        self.m1m3 = m1m3
+        self._lastEnabled = None
+        self._hpWarnings = HPWarnings()
+
+        command_layout = QVBoxLayout()
+
+        self._panic_button = ColoredButton(self.TEXT_PANIC)
+        self._panic_button.setColor(Qt.red)
+        self._panic_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._panic_button.clicked.connect(self._panic)
+
+        command_layout.addWidget(self._panic_button)
+        command_layout.addWidget(M1M3CSCControl(m1m3))
+
+        self.supportedNumber = QLCDNumber(6)
+        self.supportedNumber.setAutoFillBackground(True)
+        self.minPressure = QLCDNumber(6)
+        self.minPressure.setAutoFillBackground(True)
+        self.maxPressure = QLCDNumber(6)
+        self.maxPressure.setAutoFillBackground(True)
+
+        self.minPressure.setToolTip("Limits weren't (yet) received")
+        self.maxPressure.setToolTip("Limits weren't (yet) received")
+
+        dataLayout = QFormLayout()
+        dataLayout.addRow("Supported", self.supportedNumber)
+        dataLayout.addRow("Min pressure", self.minPressure)
+        dataLayout.addRow("Max pressure", self.maxPressure)
+
+        command_layout.addLayout(dataLayout)
+        self.slewWidget = SlewWidget(m1m3)
+        self.slewWidget.setEnabled(False)
+        command_layout.addWidget(self.slewWidget)
+
+        command_layout.addStretch()
+
+        self.weightSupportedPercent = QProgressBar()
+        self.weightSupportedPercent.setOrientation(Qt.Vertical)
+        self.weightSupportedPercent.setRange(0, 100)
+        self.weightSupportedPercent.setTextVisible(True)
+        self.weightSupportedPercent.setFormat("%p%")
+
+        layout = QHBoxLayout()
+        layout.addLayout(command_layout)
+        layout.addWidget(self.weightSupportedPercent)
+
+        self.setLayout(layout)
+
+        # connect SAL signals
+        self.m1m3.detailedState.connect(self.detailedState)
+        self.m1m3.raisingLoweringInfo.connect(self.raisingLoweringInfo)
+        self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
+        self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
+
+    def disableAllButtons(self):
+        if self._lastEnabled is None:
+            self._lastEnabled = []
+            for b in self.commandButtons.buttons():
+                self._lastEnabled.append(b.isEnabled())
+                b.setEnabled(False)
+
+    def restoreEnabled(self):
+        if self._lastEnabled is None:
+            return
+        bi = 0
+        for b in self.commandButtons.buttons():
+            b.setEnabled(self._lastEnabled[bi])
+            bi += 1
+
         self._lastEnabled = None
 
-        self.commandButtons.buttons()[0].setEnabled(
-            not (data.detailedState == DetailedState.OFFLINE)
-        )
+    @asyncSlot()
+    async def _panic(self, checked: bool = False):
+        await SALCommand(self, self.m1m3.remote.cmd_panic)
+
+    @Slot()
+    def detailedState(self, data):
+        self._panic_button.setEnabled(not (data.detailedState == DetailedState.OFFLINE))
         self.slewWidget.setEnabled(
             not (
                 data.detailedState
@@ -402,26 +369,6 @@ class ApplicationControlWidget(QWidget):
                 )
             )
         )
-
-        try:
-            dbSet = True
-            stateData = stateMap[data.detailedState]
-            bi = 0
-            # we don't care about panic button..that's handled above
-            for b in self.commandButtons.buttons()[1:]:
-                text = stateData[bi]
-                if text is None:
-                    b.setEnabled(False)
-                    b.setDefault(False)
-                else:
-                    b.setText(text)
-                    b.setEnabled(True)
-                    b.setDefault(dbSet)
-                    dbSet = False
-                bi += 1
-
-        except KeyError:
-            print(f"Unhandled detailed state {data.detailedState}")
 
         self._set_hardpoint_warnings(data.detailedState)
 

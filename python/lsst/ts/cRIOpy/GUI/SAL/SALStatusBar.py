@@ -37,20 +37,17 @@ class SALStatusBar(QStatusBar):
     comms : `[SALComm]`
         SALComms for heartbeat displays. ErrorCode from the first SALComm will
         be displayed as well.
-    detailedStateFunction : `def(int)`, optional
-        If provided, a label showing detailedState (result of
+    stateLabel : `QLabel`, optional
+        If provided, aa label showing detailedState (result of
         detailedStateFunction call with detailedState as argument) will be
         added to beginning of the StatusBar.
     """
 
-    def __init__(self, comms, detailedStateFunction=None):
+    def __init__(self, comms, stateLabels: list[QLabel] = []):
         super().__init__()
 
-        if detailedStateFunction is not None:
-            self.detailedStateLabel = QLabel("---")
-            self.detailedStateFunction = detailedStateFunction
-            self.addWidget(self.detailedStateLabel)
-            comms[0].detailedState.connect(self.detailedState)
+        for stateLabel in stateLabels:
+            self.addWidget(stateLabel)
             self.addWidget(VLine())
 
         self.settingsLabel = QLabel("--")

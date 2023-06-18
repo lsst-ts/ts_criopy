@@ -19,17 +19,9 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
-    QAbstractButton,
-    QButtonGroup,
-    QHBoxLayout,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import (
     RPM,
@@ -53,39 +45,54 @@ from ..GUI import (
     Volt,
     WarningLabel,
 )
-from ..GUI.SAL import SALCommand, SummaryStateLabel, VersionWidget
-from ..GUI.SAL.SALComm import MetaSAL, warning
+from ..GUI.SAL import CSCControlWidget, SummaryStateLabel, VersionWidget
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
+
+__all__ = ["CompressorsPageWidget"]
+
+
+TEXT_POWER_ON = "Power &On"
+TEXT_POWER_OFF = "Power O&ff"
+TEXT_RESET = "&Reset"
+
+
+class CompressorCSC(CSCControlWidget):
+    """Air compressor's control widget."""
+
+    def __init__(self, comm):
+        super().__init__(comm)
+
+    def get_state_buttons_map(self, state: int) -> None:
+        default_buttons = super().get_state_buttons_map(state)
+        status = self.comm.remote.evt_status.get()
+
+        if status is None or state != salobj.State.ENABLED:
+            return default_buttons + ([None] * 3)
+
+        return default_buttons + [
+            TEXT_POWER_ON if status.startByRemote is True else None,
+            TEXT_POWER_OFF
+            if status.startByRemote is False and status.operating is True
+            else None,
+            TEXT_RESET,
+        ]
 
 
 class CompressorsPageWidget(QWidget):
     # Constants for button titles. Titles are used to select command send to
     # SAL.
-    TEXT_START = "&Start"
-    TEXT_ENABLE = "&Enable"
-    TEXT_DISABLE = "&Disable"
-    TEXT_STANDBY = "&Standby"
-    TEXT_EXIT_CONTROL = "&Exit Control"
-
-    TEXT_POWER_ON = "Power &On"
-    TEXT_POWER_OFF = "Power O&ff"
-    TEXT_RESET = "&Reset"
-
-    def __init__(self, compressor: MetaSAL):
+    def __init__(self, compressor):
         super().__init__()
         self.compressor = compressor
 
-        self._last_enabled: list[bool] | None = None
+        master_layout = QVBoxLayout()
+        top_layout = QHBoxLayout()
 
-        masterLayout = QVBoxLayout()
-        topLayout = QHBoxLayout()
-        commandLayout = QVBoxLayout()
-
-        userTimeChart = UserSelectedTimeChart(
+        user_time_chart = UserSelectedTimeChart(
             {compressor.remote.tel_analogData: compressor.analogData}
         )
 
-        errorsWidget = DataFormButton(
+        errors_widget = DataFormButton(
             "Errors",
             compressor.errors,
             [
@@ -147,7 +154,7 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        warningsWidget = DataFormButton(
+        warnings_widget = DataFormButton(
             "Warnings",
             compressor.warnings,
             [
@@ -188,22 +195,8 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        self.commandButtons = QButtonGroup(self)
-        self.commandButtons.buttonClicked.connect(self._button_clicked)
-
-        def _add_button(text: str) -> QPushButton:
-            button = QPushButton(text)
-            button.setEnabled(False)
-            self.commandButtons.addButton(button)
-            commandLayout.addWidget(button)
-            return button
-
-        _add_button(self.TEXT_START)
-        _add_button(self.TEXT_ENABLE)
-        _add_button(self.TEXT_EXIT_CONTROL)
-
-        dataLayout = QVBoxLayout()
-        dataLayout.addWidget(
+        data_layout = QVBoxLayout()
+        data_layout.addWidget(
             DataFormWidget(
                 self.compressor.compressorInfo,
                 [
@@ -213,7 +206,7 @@ class CompressorsPageWidget(QWidget):
             )
         )
 
-        dataLayout.addWidget(
+        data_layout.addWidget(
             DataFormWidget(
                 self.compressor.analogData,
                 [
@@ -251,11 +244,11 @@ class CompressorsPageWidget(QWidget):
                         DataDegC(field="stage1OutputTemperature", fmt=".0f"),
                     ),
                 ],
-                userTimeChart,
+                user_time_chart,
             )
         )
 
-        dataLayout.addWidget(
+        data_layout.addWidget(
             DataFormWidget(
                 self.compressor.timerInfo,
                 [
@@ -298,8 +291,8 @@ class CompressorsPageWidget(QWidget):
             ],
         )
 
-        statusLayout = QVBoxLayout()
-        statusLayout.addWidget(
+        status_layout = QVBoxLayout()
+        status_layout.addWidget(
             DataFormWidget(
                 self.compressor.status,
                 [
@@ -326,181 +319,48 @@ class CompressorsPageWidget(QWidget):
             )
         )
 
-        statusLayout.addWidget(VersionWidget(self.compressor))
+        status_layout.addWidget(VersionWidget(self.compressor))
 
-        commandLayout.addWidget(
+        self.__control_widget = CompressorCSC(self.compressor)
+
+        self.__control_widget.layout().addWidget(
             SummaryStateLabel(self.compressor.summaryState, "summaryState")
         )
 
-        commandLayout.addSpacing(15)
-        commandLayout.addWidget(
+        self.__control_widget.layout().addSpacing(15)
+        self.__control_widget.layout().addWidget(
             ConnectedLabel(self.compressor.connectionStatus, "connected")
         )
 
         hb = Heartbeat(indicator=False)
         self.compressor.heartbeat.connect(hb.heartbeat)
-        commandLayout.addWidget(hb)
+        self.__control_widget.layout().addWidget(hb)
 
-        def _add_command_button(text: str, clicked: typing.Any) -> QPushButton:
-            but = QPushButton(text)
-            but.setEnabled(False)
-            but.clicked.connect(clicked)
-            commandLayout.addWidget(but)
-            return but
+        self.power_on = self.__control_widget.add_csc_button(TEXT_POWER_ON, "powerOn")
+        self.power_off = self.__control_widget.add_csc_button(
+            TEXT_POWER_OFF, "powerOff"
+        )
+        self.reset = self.__control_widget.add_csc_button(TEXT_RESET, "reset")
 
-        self.powerOn = _add_command_button(self.TEXT_POWER_ON, self._powerOn)
-        self.powerOff = _add_command_button(self.TEXT_POWER_OFF, self._powerOff)
-        self.reset = _add_command_button(self.TEXT_RESET, self._reset)
+        self.__control_widget.layout().addWidget(errors_widget)
+        self.__control_widget.layout().addWidget(warnings_widget)
 
-        commandLayout.addWidget(self.powerOn)
-        commandLayout.addWidget(self.powerOff)
-        commandLayout.addWidget(self.reset)
+        self.__control_widget.layout().addStretch()
 
-        commandLayout.addWidget(errorsWidget)
-        commandLayout.addWidget(warningsWidget)
+        top_layout.addWidget(self.__control_widget)
+        top_layout.addLayout(data_layout)
+        top_layout.addLayout(status_layout)
+        top_layout.addWidget(TimeChartView(user_time_chart))
 
-        commandLayout.addStretch()
+        master_layout.addLayout(top_layout)
+        master_layout.addWidget(SALLogWidget(self.compressor))
 
-        topLayout.addLayout(commandLayout)
-        topLayout.addLayout(dataLayout)
-        topLayout.addLayout(statusLayout)
-        topLayout.addWidget(TimeChartView(userTimeChart))
+        self.setLayout(master_layout)
 
-        masterLayout.addLayout(topLayout)
-        masterLayout.addWidget(SALLogWidget(self.compressor))
-
-        self.setLayout(masterLayout)
-
-        self.compressor.summaryState.connect(self.summaryState)
         self.compressor.status.connect(self.status)
-
-    def disable_all_buttons(self) -> None:
-        if self._last_enabled is None:
-            self._last_enabled = []
-            for b in self.commandButtons.buttons():
-                self._last_enabled.append(b.isEnabled())
-                b.setEnabled(False)
-
-    def restore_enabled(self) -> None:
-        if self._last_enabled is None:
-            return
-        bi = 0
-        for b in self.commandButtons.buttons():
-            b.setEnabled(self._last_enabled[bi])
-            bi += 1
-
-        self._last_enabled = None
-
-    @Slot()
-    def summaryState(self, data: typing.Any) -> None:
-        # text mean button is enabled and given text shall be displayed. None
-        # for disabled buttons.
-        state_map: dict[int, list[str | None]] = {
-            salobj.State.STANDBY: [
-                self.TEXT_START,
-                None,
-                self.TEXT_EXIT_CONTROL,
-            ],
-            salobj.State.DISABLED: [
-                None,
-                self.TEXT_ENABLE,
-                self.TEXT_STANDBY,
-            ],
-            salobj.State.ENABLED: [
-                None,
-                self.TEXT_DISABLE,
-                None,
-            ],
-            salobj.State.FAULT: [None, None, self.TEXT_STANDBY],
-            salobj.State.OFFLINE: [None, None, None],
-        }
-
-        self._last_enabled = None
-
-        try:
-            db_set = True
-            state_data = state_map[data.summaryState]
-            for bi, b in enumerate(self.commandButtons.buttons()):
-                text = state_data[bi]
-                if text is None:
-                    b.setEnabled(False)
-                    b.setDefault(False)
-                else:
-                    b.setText(text)
-                    b.setEnabled(True)
-                    b.setDefault(db_set)
-                    db_set = False
-            if data.summaryState == salobj.State.ENABLED:
-                self._set_power_buttons(
-                    data.summaryState, self.compressor.remote.evt_status.get()
-                )
-                self.reset.setEnabled(True)
-            else:
-                self.powerOn.setEnabled(False)
-                self.powerOff.setEnabled(False)
-                self.reset.setEnabled(False)
-
-        except KeyError:
-            print(f"Unhandled summary state {data.summaryState}")
 
     @Slot()
     def status(self, data: typing.Any) -> None:
-        summaryState = self.compressor.remote.evt_summaryState.get()
-        if summaryState is not None:
-            self._set_power_buttons(summaryState.summaryState, data)
-
-    def _set_power_buttons(
-        self, summaryState: salobj.State, status: typing.Any | None
-    ) -> None:
-        if summaryState == salobj.State.ENABLED and status is not None:
-            self.powerOn.setEnabled(status.startByRemote)
-            self.powerOff.setEnabled(
-                status.startByRemote is False and status.operating is True
-            )
-        else:
-            self.powerOn.setEnabled(False)
-            self.powerOff.setEnabled(False)
-
-    @asyncSlot()
-    async def _button_clicked(self, bnt: QAbstractButton) -> None:
-        text = bnt.text()
-        self.disable_all_buttons()
-        try:
-            if text == self.TEXT_START:
-                await self.compressor.remote.cmd_start.start()
-            elif text == self.TEXT_EXIT_CONTROL:
-                await self.compressor.remote.cmd_exitControl.start()
-            elif text == self.TEXT_ENABLE:
-                await self.compressor.remote.cmd_enable.start()
-            elif text == self.TEXT_DISABLE:
-                await self.compressor.remote.cmd_disable.start()
-            elif text == self.TEXT_STANDBY:
-                await self.compressor.remote.cmd_standby.start()
-            else:
-                raise RuntimeError(f"unassigned command for button {text}")
-        except (salobj.base.AckError, salobj.base.AckTimeoutError) as ackE:
-            warning(
-                self,
-                f"Error executing button {text}",
-                f"Error executing button <i>{text}</i>:<br/>{ackE.ackcmd.result}",
-            )
-        except RuntimeError as rte:
-            warning(
-                self,
-                f"Error executing {text()}",
-                f"Executing button <i>{text()}</i>:<br/>{str(rte)}",
-            )
-        finally:
-            self.restore_enabled()
-
-    @asyncSlot()
-    async def _powerOn(self) -> None:
-        await SALCommand(self, self.compressor.remote.cmd_powerOn)
-
-    @asyncSlot()
-    async def _powerOff(self) -> None:
-        await SALCommand(self, self.compressor.remote.cmd_powerOff)
-
-    @asyncSlot()
-    async def _reset(self) -> None:
-        await SALCommand(self, self.compressor.remote.cmd_reset)
+        summary_state = self.compressor.remote.evt_summaryState.get()
+        if summary_state is not None:
+            self.__control_widget.csc_state(summary_state)
