@@ -21,7 +21,8 @@ __all__ = ["ChartView"]
 
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QMenu
+from PySide2.QtGui import QContextMenuEvent
+from PySide2.QtWidgets import QAction, QMenu
 
 from ..GUI.TimeChart import TimeChartView
 from .Unit import menuUnits, units
@@ -31,7 +32,7 @@ class ChartView(TimeChartView):
     axisChanged = Signal(bool, bool)
     unitChanged = Signal(str)
 
-    def __init__(self, title, serieType):
+    def __init__(self, title: str, serieType: QtCharts.QAbstractSeries):
         super().__init__(title)
         self._serieType = serieType
         self._maxSensor = 0
@@ -39,13 +40,13 @@ class ChartView(TimeChartView):
         self.logY = False
         self.unit = menuUnits[0]
 
-    def updateMaxSensor(self, maxSensor):
+    def updateMaxSensor(self, maxSensor: int) -> None:
         self._maxSensor = max(self._maxSensor, maxSensor)
 
-    def clear(self):
+    def clear(self) -> None:
         self.chart().clearData()
 
-    def addSerie(self, name):
+    def addSerie(self, name: str) -> None:
         s = self._serieType()
         s.setName(name)
         self.chart().addSeries(s)
@@ -56,16 +57,16 @@ class ChartView(TimeChartView):
             s.attachAxis(self.chart().axes(Qt.Horizontal)[0])
             s.attachAxis(self.chart().axes(Qt.Vertical)[0])
 
-    def removeSerie(self, name):
+    def removeSerie(self, name: str) -> None:
         self.chart().remove(name)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu()
         zoomOut = contextMenu.addAction("Zoom out")
         clear = contextMenu.addAction("Clear")
         unitMenu = contextMenu.addMenu("Unit")
 
-        def addUnit(unit):
+        def addUnit(unit: QAction) -> QAction:
             action = unitMenu.addAction(unit)
             action.setCheckable(True)
             action.setChecked(unit == self.unit)

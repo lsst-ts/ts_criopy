@@ -24,7 +24,7 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL
 
 
 class PIDPageWidget(QWidget):
@@ -42,7 +42,9 @@ class PIDPageWidget(QWidget):
                         m1m3.pidData,
                         [
                             ArrayItem(
-                                "setpoint", "Setpoint", partial(UnitLabel, fmt=".03f")
+                                "setpoint",
+                                "Setpoint",
+                                partial(UnitLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "measuredPID",
@@ -51,13 +53,19 @@ class PIDPageWidget(QWidget):
                             ),
                             ArrayItem("error", "Error", partial(UnitLabel, fmt=".03f")),
                             ArrayItem(
-                                "errorT1", "Error T1", partial(UnitLabel, fmt=".03f")
+                                "errorT1",
+                                "Error T1",
+                                partial(UnitLabel, fmt=".03f"),
                             ),
                             ArrayItem(
-                                "errorT2", "Error T2", partial(UnitLabel, fmt=".03f")
+                                "errorT2",
+                                "Error T2",
+                                partial(UnitLabel, fmt=".03f"),
                             ),
                             ArrayItem(
-                                "control", "Control", partial(UnitLabel, fmt=".03f")
+                                "control",
+                                "Control",
+                                partial(UnitLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "controlT1",
@@ -85,7 +93,9 @@ class PIDPageWidget(QWidget):
                         m1m3.pidInfo,
                         [
                             ArrayItem(
-                                "timestep", "Timestep", partial(UnitLabel, fmt=".03f")
+                                "timestep",
+                                "Timestep",
+                                partial(UnitLabel, fmt=".03f"),
                             ),
                             ArrayItem("p", "P", partial(UnitLabel, fmt=".03f")),
                             ArrayItem("i", "I", partial(UnitLabel, fmt=".03f")),

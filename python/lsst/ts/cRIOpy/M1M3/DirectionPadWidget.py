@@ -17,8 +17,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import astropy.units as u
 from PySide2.QtCore import Signal
+from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import (
     QApplication,
     QDoubleSpinBox,
@@ -50,22 +53,24 @@ class DirectionPadWidget(QWidget):
 
     Parameters
     ----------
-    list : `list`
+    list : `[float]`
         6 member array, holding new X Y Z translations and X Y Z
         rotations.
     """
     positionChanged = Signal(list)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.position = [0.0] * 6
 
-        def _positionChanged(index, change):
+        def _positionChanged(index: int, change: float) -> None:
             self.position[index] += change
             self.positionChanged.emit(self.position)
 
-        def positionButton(icon, text, index, delta, deltaScale):
+        def positionButton(
+            icon: QIcon, text: str, index: int, delta: QDoubleSpinBox, deltaScale: float
+        ) -> QPushButton:
             but = QPushButton(icon, text)
             but.clicked.connect(
                 lambda: _positionChanged(index, delta.value() * deltaScale)
@@ -74,7 +79,7 @@ class DirectionPadWidget(QWidget):
 
         style = QApplication.instance().style()
 
-        def addArrowsBox(title, indexOffset, scale):
+        def addArrowsBox(title: str, indexOffset: int, scale: float) -> QGroupBox:
             layout = QGridLayout()
 
             deltaSB = QDoubleSpinBox()
@@ -173,7 +178,7 @@ class DirectionPadWidget(QWidget):
 
         self.setLayout(layout)
 
-    def set_position(self, position: list[float | None]) -> None:
+    def set_position(self, position: typing.Iterable[float]) -> None:
         """Set current pad position.
 
         Parameters

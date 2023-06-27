@@ -27,6 +27,7 @@ import os
 import signal
 import sys
 import time
+import typing
 
 from . import parseDuration
 from .VMS import VMS_DEVICES, Collector
@@ -40,11 +41,13 @@ except ModuleNotFoundError:
 
 parser = argparse.ArgumentParser(
     description="Save VMS data to a file, either HDF5 or CSV.",
-    epilog="Data are read as they arrive in DDS messages, matched by"
-    " timestamps. Only complete (from all accelerometers the device provides)"
-    " records are stored. Allows either single or multiple devices recording. Can"
-    " be launched as daemon, running on background. Recorded data can be analysed"
-    " offline with VMSGUI.",
+    epilog=(
+        "Data are read as they arrive in DDS messages, matched by timestamps."
+        " Only complete (from all accelerometers the device provides) records"
+        " are stored. Allows either single or multiple devices recording. Can"
+        " be launched as daemon, running on background. Recorded data can be"
+        " analysed offline with VMSGUI."
+    ),
 )
 parser.add_argument(
     "devices",
@@ -57,16 +60,21 @@ parser.add_argument(
     "-5",
     dest="h5py",
     action="store_true",
-    help="save into HDF 5. Requires h5py (pip install h5py). Save to CSV if not provided.",
+    help=(
+        "save into HDF 5. Requires h5py (pip install h5py). Save to CSV if not"
+        " provided."
+    ),
 )
 parser.add_argument(
     "--chunk-size",
     dest="chunk_size",
     default=5000,
     type=int,
-    help="receiving chunk size. After receiving this number of records, data"
-    " are added to HDF5 file (and the file flushed to disk). Has no effect if CSV"
-    " (default) format is used. Defaults to 5000.",
+    help=(
+        "receiving chunk size. After receiving this number of records, data are"
+        " added to HDF5 file (and the file flushed to disk). Has no effect if"
+        " CSV (default) format is used. Defaults to 5000."
+    ),
 )
 parser.add_argument(
     "-d", dest="debug", default=0, action="count", help="increase debug level"
@@ -83,8 +91,10 @@ parser.add_argument(
     type=int,
     dest="size",
     default=None,
-    help="number of records to save in a file. Default to 86400 seconds"
-    " (assuming --rotate isn't specified)",
+    help=(
+        "number of records to save in a file. Default to 86400 seconds"
+        " (assuming --rotate isn't specified)"
+    ),
 )
 parser.add_argument(
     "-z", action="store_true", dest="zip_file", help="gzip output files"
@@ -101,12 +111,14 @@ parser.add_argument(
     dest="template",
     default="${name}_%Y-%m-%dT%H:%M:%S.${ext}",
     type=str,
-    help="template used to construct output file path. Default to"
-    " ${name}_%%Y-%%m-%%dT%%H:%%M:%%S.${ext}. strftime (%%) expansions are"
-    " performed (see man strftime for details, %%Y for full (4 digit) year, %%m"
-    " for calendar month,..) together with custom ${xx} expansion (${name} for"
-    " device name, ${ext} for extension - hd5, cvs or cvs.gz). Directories in"
-    " expanded file path are created as needed.",
+    help=(
+        "template used to construct output file path. Default to"
+        " ${name}_%%Y-%%m-%%dT%%H:%%M:%%S.${ext}. strftime (%%) expansions are"
+        " performed (see man strftime for details, %%Y for full (4 digit) year,"
+        " %%m for calendar month,..) together with custom ${xx} expansion"
+        " (${name} for device name, ${ext} for extension - hd5, cvs or cvs.gz)."
+        " Directories in expanded file path are created as needed."
+    ),
 )
 parser.add_argument(
     "--workdir",
@@ -134,8 +146,10 @@ parser.add_argument(
     dest="rotate",
     default=None,
     type=parseDuration,
-    help="rotate on given interval. Default to not rotate - rotate on reaching"
-    " size number of entries. Can be used only with HDF5 output.",
+    help=(
+        "rotate on given interval. Default to not rotate - rotate on reaching"
+        " size number of entries. Can be used only with HDF5 output."
+    ),
 )
 parser.add_argument(
     "--rotate-offset",
@@ -147,7 +161,7 @@ parser.add_argument(
 )
 
 
-async def main(args, pipe=None):
+async def main(args: typing.Any, pipe: typing.Any = None) -> None:
     logger = logging.getLogger("VMSlogger")
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -180,10 +194,10 @@ async def main(args, pipe=None):
         ch.setLevel(logging.INFO)
     logger.addHandler(ch)
 
-    tasks = []
+    tasks: list[asyncio.Task] = []
     collectors = []
 
-    def cancel_all(signum, frame):
+    def cancel_all(signum: int, frame: typing.Any) -> None:
         logger.info(f"Canceling after {signum}")
         for t in tasks:
             t.cancel()
@@ -244,7 +258,7 @@ async def main(args, pipe=None):
         c.close()
 
 
-def run():
+def run() -> None:
     args = parser.parse_args()
     if args.daemon:
         r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)

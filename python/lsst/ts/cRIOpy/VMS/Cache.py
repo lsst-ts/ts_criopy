@@ -21,6 +21,8 @@
 
 __all__ = ["Cache"]
 
+import typing
+
 import numpy as np
 
 from .. import TimeCache
@@ -41,11 +43,11 @@ class Cache(TimeCache):
         Receiving window size. Defaults to 3.
     """
 
-    def __init__(self, size, sensors, window=3):
+    def __init__(self, size: int, sensors: int, window: int = 3):
         self._sensors = sensors
         self._window = window
-        self.interval = 1
-        self.sampleTime = 1
+        self.interval: float = 1
+        self.sampleTime: float = 1
         items = [("timestamp", "f8")] + [
             (f"{s} {a}", "f8")
             for s in range(1, self._sensors + 1)
@@ -54,27 +56,27 @@ class Cache(TimeCache):
 
         super().__init__(size, items)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear cache."""
         super().clear()
-        self._receiving = []
+        self._receiving: list[tuple[float, list[typing.Any]]] = []
 
-    def sensors(self):
+    def sensors(self) -> int:
         """Returns number of sensors stored in cache."""
         return self._sensors
 
-    def _changedIntervalSampleTime(self):
+    def _changedIntervalSampleTime(self) -> None:
         self.resize(int(np.ceil(self.interval / self.sampleTime)))
 
-    def setInterval(self, interval):
+    def setInterval(self, interval: float) -> None:
         self.interval = interval
         self._changedIntervalSampleTime()
 
-    def setSampleTime(self, sampleTime):
+    def setSampleTime(self, sampleTime: float) -> None:
         self.sampleTime = sampleTime
         self._changedIntervalSampleTime()
 
-    def newChunk(self, data):
+    def newChunk(self, data: typing.Any) -> tuple[bool, bool]:
         """Add new data chunk. Append data to cache if all sensors are
         received. Keeps window cache, removes old entries if over window.
 
@@ -111,7 +113,7 @@ class Cache(TimeCache):
             dl = len(data.accelerationX)
             timestamps = np.arange(r[0], r[0] + self.sampleTime * dl, self.sampleTime)
 
-            def copy_data(start, lenght):
+            def copy_data(start: int, lenght: int) -> None:
                 self.data["timestamp"][
                     self.current_index : self.current_index + lenght
                 ] = timestamps[start : start + lenght]

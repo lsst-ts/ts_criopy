@@ -22,6 +22,7 @@
 import typing
 
 from PySide2.QtCore import Signal, Slot
+from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QFormLayout, QWidget
 
 from .CustomLabels import ColoredButton, Colors, DataLabel
@@ -74,13 +75,13 @@ class DataFormWidget(QWidget):
 
         signal.connect(self._process_signal)  # type: ignore
 
-    def _process_signal(self, data):
+    def _process_signal(self, data: typing.Any) -> None:
         for e in dir(data):
             ch = self.findChild(QWidget, e)
             if ch is not None:
                 ch.setValue(getattr(data, e))
 
-    def mousePressEvent(self, ev):
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
         if self._timeChart is not None:
             child = self.childAt(ev.pos())
             if child is not None:
@@ -94,10 +95,11 @@ class DataFormButton(ColoredButton):
 
     Parameters
     ----------
-    signal : `QSignal`
+    text : `str`
+        Button text.
+    signal : `Signal`
         Signal with new data. It is assumed DataLabel childs passed in fields
         contain DataLabel with field corresponding to fields in the signal.
-
     fields : `[(str, DataLabel)]`
         Tuple of text and label. Label shall be child of DataLabel with
         fieldname set.
@@ -109,8 +111,10 @@ class DataFormButton(ColoredButton):
        )])
     """
 
-    def __init__(self, title, signal, fields):
-        super().__init__(title)
+    def __init__(
+        self, text: str, signal: Signal, fields: list[tuple[str | None, DataLabel]]
+    ):
+        super().__init__(text)
 
         self._fields = fields
 
@@ -130,5 +134,5 @@ class DataFormButton(ColoredButton):
         self.setColor(color)
 
     @Slot()
-    def _displayDetails(self):
+    def _displayDetails(self) -> None:
         self._dataWidget.show()

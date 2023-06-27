@@ -24,7 +24,7 @@ from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL
 
 
 class Forces(ArrayFields):
@@ -80,7 +80,8 @@ class ActuatorOverviewPageWidget(QWidget):
                     Forces("Measured", m1m3.forceActuatorData),
                     Forces("Hardpoints", m1m3.hardpointActuatorData),
                     PreclippedForces(
-                        "Pre-clipped Acceleration", m1m3.preclippedAccelerationForces
+                        "Pre-clipped Acceleration",
+                        m1m3.preclippedAccelerationForces,
                     ),
                     Forces("Applied Acceleration", m1m3.appliedAccelerationForces),
                     ArrayFields(
@@ -133,13 +134,13 @@ class ActuatorOverviewPageWidget(QWidget):
             Axis("Force (N)", self.m1m3.appliedForces).addValue(
                 "Total Mag", "forceMagnitude"
             ),
-            maxItems=50 * 5,
+            max_items=50 * 5,
         )
         chartPercentage = ChartWidget(
             Axis("Percentage", self.m1m3.raisingLoweringInfo).addValue(
                 "Weight Support Percentage", "weightSupportedPercent"
             ),
-            maxItems=50 * 5,
+            max_items=50 * 5,
         )
 
         plotLayout = QHBoxLayout()

@@ -19,9 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtWidgets import QGraphicsScene
 
-from .ForceActuator import ForceActuator
+from ...M1M3FATable import ForceActuatorData
+from .ForceActuatorItem import FASelection, ForceActuatorItem
+from .GaugeScale import GaugeScale
 
 
 class Mirror(QGraphicsScene):
@@ -32,63 +36,58 @@ class Mirror(QGraphicsScene):
     Force Actuator data should be updated with updateForceActuator() call.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def setColorScale(self, scale):
+    def set_color_scale(self, scale: GaugeScale) -> None:
         """Set display color scale. Provides getColor method, returning color
         to be used with value.
 
         Parameters
         ----------
-        scale : `class`
+        scale : `GaugeScale`
             Data scale.
         """
         for a in self.items():
-            a.setColorScale(scale)
+            a.set_color_scale(scale)
 
     def addForceActuator(
-        self, id, index, x, y, orientation, data, dataIndex, state, kind
-    ):
+        self,
+        actuator: ForceActuatorData,
+        data: typing.Any,
+        data_index: int | None,
+        state: int,
+        kind: FASelection,
+    ) -> None:
         """Adds actuator to the list.
 
         Parameters
         ----------
-        id : `int`
-            Force Actuator ID. Actuators are matched by ID.
-        index : `int`
-            Force Actuator index (0-155).
-        x : `float`
-            Force Actuator X position (in mm).
-        y :  `float`
-            Force Actuator y position (in mm).
-        orientation : `str`
-            Secondary actuator orientation. Either NA, +Y, -Y, +X or -X.
+        actuator : `ForceActuatorData`
+            Row from M1M3FATable.
         data : `float`
             Force Actuator value.
-        dataIndex : `int`
+        data_index : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID,
-            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
+            Force Actuator state. ForceActuatorItem.STATE_INVALID,
+            ForceActuatorItem.STATE_VALID or ForceActuatorItem.STATE_WARNING.
         kind : `FASelection`
             Force actuator kind - normal, selected or selected neighbour.
         """
-        self.addItem(
-            ForceActuator(id, index, x, y, orientation, data, dataIndex, state, kind)
-        )
+        self.addItem(ForceActuatorItem(actuator, data, data_index, state, kind))
 
-    def getForceActuator(self, id):
+    def getForceActuator(self, actuator_id: int) -> ForceActuatorItem:
         """Returns actuator with given ID.
 
         Parameters
         ----------
-        id : `int`
+        actuator_id : `int`
             Force Actuator ID.
 
         Returns
         -------
-        `ForceActuator`
+        `ForceActuatorItem`
             Force Actuator with matched ID.
 
         Raises
@@ -96,27 +95,32 @@ class Mirror(QGraphicsScene):
         KeyError
             When actuator with given ID is not found.
         """
-        try:
-            return next(filter(lambda a: a.id == id, self.items()))
-        except StopIteration:
-            raise KeyError(f"Cannot find actuator with ID {id}")
+        for item in self.items():
+            if (
+                type(item) == ForceActuatorItem
+                and item.actuator.actuator_id == actuator_id
+            ):
+                return item
+        raise KeyError(f"Cannot find actuator with ID {actuator_id}")
 
-    def updateForceActuator(self, id, data, state):
+    def updateForceActuator(
+        self, actuator_id: int, data: typing.Any, state: int
+    ) -> None:
         """Updates actuator value and state.
 
         Parameters
         ----------
-        id : `int`
+        actuator_id : `int`
             Force Actuator ID number.
-        data : `float`
+        data : `Any`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID,
-            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuatorItem.STATE_INVALID,
+            ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
         Raises
         ------
         KeyError
             If actuator with the given ID cannot be found.
         """
-        self.getForceActuator(id).updateData(data, state)
+        self.getForceActuator(actuator_id).updateData(data, state)

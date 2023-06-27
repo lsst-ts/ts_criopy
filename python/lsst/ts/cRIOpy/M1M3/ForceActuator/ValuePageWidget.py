@@ -23,8 +23,8 @@ import typing
 
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
-from ...GUI.SAL.SALComm import MetaSAL
 from ...M1M3FATable import FATABLE, FATABLE_ZFA
+from ...SALComm import MetaSAL
 from .Widget import Widget
 
 
@@ -166,8 +166,11 @@ class ValuePageWidget(Widget):
 
         super().__init__(m1m3, self.dataWidget)
 
-    def updateValues(self, data: typing.Any, changed: bool) -> None:
-        if data is None:
+    def changeValues(self) -> None:
+        pass
+
+    def updateValues(self, data: typing.Any) -> None:
+        if data is None or self.field is None:
             for label in self.dataWidget.forceActuatorLabels:
                 label.setText("---")
             return
@@ -176,7 +179,7 @@ class ValuePageWidget(Widget):
         values = self.field.getValue(data)
         for row in FATABLE:
             i += 1
-            index = row[self.field.valueIndex]
+            index = row.get_index(self.field.valueIndex)
             if index is None:
                 self.dataWidget.forceActuatorLabels[i].setText("---")
             elif data is not None:

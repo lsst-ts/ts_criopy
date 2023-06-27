@@ -35,6 +35,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
+from ..SALComm import MetaSAL
 from . import Colors
 from .EventWindow import EventWindow
 
@@ -89,7 +90,7 @@ WARNING = "#FF6700"
 class VLine(QFrame):
     """A simple Vertical line."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
@@ -98,7 +99,7 @@ class VLine(QFrame):
 class ColoredButton(QPushButton):
     """Button with setColor method to change color."""
 
-    def __init__(self, text):
+    def __init__(self, text: str):
         super().__init__(text)
 
     def setColor(self, color: QColor) -> None:
@@ -152,7 +153,7 @@ class DataLabel(QLabel):
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
 
-    def __copy__(self):
+    def __copy__(self) -> "DataLabel":
         return DataLabel()
 
     @Slot()
@@ -193,7 +194,12 @@ class UnitLabel(QLabel):
         text). Default is None - no color coded error value."""
 
     def __init__(
-        self, fmt="d", unit=None, convert=None, is_warn_func=None, is_err_func=None
+        self,
+        fmt: str = "d",
+        unit: str | u.Unit | None = None,
+        convert: u.Unit | None = None,
+        is_warn_func: typing.Callable[[float], bool] | None = None,
+        is_err_func: typing.Callable[[float], bool] | None = None,
     ):
         super().__init__("---")
         self.fmt = fmt
@@ -202,11 +208,12 @@ class UnitLabel(QLabel):
         if convert is not None:
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
-            self.scale = unit.to(convert)
+            # safe, as unit is now u (astropy.units)
+            self.scale = unit.to(convert)  # type: ignore
             self.unit_name = convert.to_string()
         elif unit is not None:
             self.scale = 1
-            self.unit_name = unit.to_string()
+            self.unit_name = unit.to_string()  # type: ignore
         else:
             self.scale = 1
             self.unit_name = ""
@@ -233,12 +240,16 @@ class UnitLabel(QLabel):
         self.is_warn_func = is_warn_func
         self.is_err_func = is_err_func
 
-    def __copy__(self):
+    def __copy__(self) -> "UnitLabel":
         return UnitLabel(
-            self.fmt, self.unit, self.convert, self.is_warn_func, self.is_err_func
+            self.fmt,
+            self.unit,
+            self.convert,
+            self.is_warn_func,
+            self.is_err_func,
         )
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         """Sets value. Transformation and formatting is done according to unit,
         convert and fmt constructor arguments.
 
@@ -255,7 +266,7 @@ class UnitLabel(QLabel):
         else:
             self.setText(text)
 
-    def setTextColor(self, color: QColor):
+    def setTextColor(self, color: QColor) -> None:
         """Change text color.
 
         Parameters
@@ -304,13 +315,13 @@ class DataUnitLabel(UnitLabel):
 
     def __init__(
         self,
-        signal=None,
-        field=None,
-        fmt="d",
-        unit=None,
-        convert=None,
-        is_warn_func=None,
-        is_err_func=None,
+        signal: Signal | None = None,
+        field: str | None = None,
+        fmt: str = "d",
+        unit: u.Unit | None = None,
+        convert: u.Unit | None = None,
+        is_warn_func: typing.Callable[[float], bool] | None = None,
+        is_err_func: typing.Callable[[float], bool] | None = None,
     ):
         super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
         if signal is not None:
@@ -330,11 +341,17 @@ class Force(DataUnitLabel):
 
     Parameters
     ----------
+    signal : `Signal`, optional
+        Signal the force connect to.
+    field : `str`, optional
+        Topic/signal field holding the value to display.
     fmt : `str`, optional
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.N)
 
 
@@ -347,7 +364,7 @@ class Moment(UnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, fmt=".02f"):
+    def __init__(self, fmt: str = ".02f"):
         super().__init__(fmt, u.N * u.m)
 
 
@@ -360,7 +377,12 @@ class Mm(UnitLabel):
         Float formatting. Defaults to .04f.
     """
 
-    def __init__(self, fmt=".04f", is_warn_func=None, is_err_func=None):
+    def __init__(
+        self,
+        fmt: str = ".04f",
+        is_warn_func: typing.Callable[[float], bool] | None = None,
+        is_err_func: typing.Callable[[float], bool] | None = None,
+    ):
         super().__init__(fmt, u.meter, u.mm, is_warn_func, is_err_func)
 
 
@@ -382,9 +404,9 @@ class MmWarning(Mm):
 
     def __init__(
         self,
-        fmt=".04f",
-        warning_threshold=4 * u.um.to(u.meter),
-        error_threshold=8 * u.um.to(u.meter),
+        fmt: str = ".04f",
+        warning_threshold: float = 4 * u.um.to(u.meter),
+        error_threshold: float = 8 * u.um.to(u.meter),
     ):
         super().__init__(
             fmt,
@@ -402,7 +424,12 @@ class Arcsec(UnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(self, fmt="0.02f", is_warn_func=None, is_err_func=None):
+    def __init__(
+        self,
+        fmt: str = "0.02f",
+        is_warn_func: typing.Callable[[float], bool] | None = None,
+        is_err_func: typing.Callable[[float], bool] | None = None,
+    ):
         super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
 
 
@@ -422,7 +449,9 @@ class Ampere(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.A)
 
 
@@ -442,7 +471,9 @@ class Liter(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.liter)
 
 
@@ -462,7 +493,9 @@ class LiterMinute(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.liter / u.minute)
 
 
@@ -482,7 +515,9 @@ class Percent(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.percent)
 
 
@@ -502,7 +537,9 @@ class Volt(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(self, signal=None, field=None, fmt="0.02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
+    ):
         super().__init__(signal, field, fmt, u.V)
 
 
@@ -522,28 +559,30 @@ class RPM(DataUnitLabel):
         Float formatting. Defaults to .0f.
     """
 
-    def __init__(self, signal=None, field=None, fmt=".0f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".0f"
+    ):
         super().__init__(signal, field, fmt, u.Unit("min^-1"))
 
 
 class PressureInBar(DataLabel):
     """Display pressure in bar and psi"""
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
         self.unit_name = "bar"
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         psi = value * 14.5038
         self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
 
 
 class PressureInmBar(DataLabel):
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
         self.unit_name = "mbar"  # this is only for display
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         mbar = value * u.mbar
         bar = (mbar).to(u.bar).value
         psi = mbar.to(u.imperial.psi).value
@@ -551,25 +590,27 @@ class PressureInmBar(DataLabel):
 
 
 class Hours(DataUnitLabel):
-    def __init__(self, field=None):
+    def __init__(self, field: str | None = None):
         super().__init__(None, field, ".0f", u.h)
 
 
 class Seconds(DataUnitLabel):
-    def __init__(self, field=None):
+    def __init__(self, field: str | None = None):
         super().__init__(None, field, ".0f", u.s)
 
 
 class KiloWatt(DataUnitLabel):
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field, ".01f", u.kW)
 
 
 class DMS(DataUnitLabel):
-    def __init__(self, signal=None, field=None, fmt=".02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
+    ):
         super().__init__(signal, field, fmt)
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         dms = Angle(value * u.deg).dms
         self.setText(
             f"{dms.d:.0f}<b>°</b> {dms.m:02.0f}<b>'</b> {dms.s:05.02f}<b>\"</b>"
@@ -577,22 +618,30 @@ class DMS(DataUnitLabel):
 
 
 class DataDegC(DataUnitLabel):
-    def __init__(self, signal=None, field=None, fmt=".02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
+    ):
         super().__init__(signal, field, fmt, u.deg_C)
 
 
 class Hz(DataUnitLabel):
-    def __init__(self, signal=None, field=None, fmt=".02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
+    ):
         super().__init__(signal, field, fmt, u.Hz)
 
 
 class DegS2(DataUnitLabel):
-    def __init__(self, signal=None, field=None, fmt=".02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
+    ):
         super().__init__(signal, field, fmt, u.deg / u.s**2)
 
 
 class MSec2(DataUnitLabel):
-    def __init__(self, signal=None, field=None, fmt=".02f"):
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
+    ):
         super().__init__(signal, field, fmt, u.m / u.s**2)
 
 
@@ -616,9 +665,9 @@ class ArcsecWarning(Arcsec):
 
     def __init__(
         self,
-        fmt="0.02f",
-        warning_threshold=0.73 * u.arcsec.to(u.deg),
-        error_threshold=1.45 * u.arcsec.to(u.deg),
+        fmt: str = "0.02f",
+        warning_threshold: float = 0.73 * u.arcsec.to(u.deg),
+        error_threshold: float = 1.45 * u.arcsec.to(u.deg),
     ):
         super().__init__(
             fmt,
@@ -641,13 +690,13 @@ class OnOffLabel(DataLabel):
         as fieldname from data arriving with the signal. Defaults to None.
     """
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
 
-    def __copy__(self):
+    def __copy__(self) -> "OnOffLabel":
         return OnOffLabel()
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         """Sets formatted value. Color codes On (red)/Off (green).
 
         Parameters
@@ -665,13 +714,13 @@ class OnOffLabel(DataLabel):
 class PowerOnOffLabel(DataLabel):
     """Displays on/off power state"""
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
 
-    def __copy__(self):
+    def __copy__(self) -> "PowerOnOffLabel":
         return PowerOnOffLabel()
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
         """Sets formatted value. Color codes On (red)/Off (green).
 
         Parameters
@@ -701,10 +750,10 @@ class ConnectedLabel(DataLabel):
         object name. Defaults to None.
     """
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
 
-    def __copy__(self):
+    def __copy__(self) -> "ConnectedLabel":
         return ConnectedLabel()
 
     def setValue(self, is_connected: bool) -> None:
@@ -737,13 +786,13 @@ class ErrorLabel(DataLabel):
         object name. Defaults to None.
     """
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field)
 
-    def __copy__(self):
+    def __copy__(self) -> "ErrorLabel":
         return ErrorLabel()
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets formatted value. Color codes ERROR (red)/OK (green).
 
         Parameters
@@ -773,13 +822,13 @@ class WarningLabel(DataLabel):
         object name. Defaults to "anyWarning".
     """
 
-    def __init__(self, signal=None, field="anyWarning"):
+    def __init__(self, signal: Signal | None = None, field: str = "anyWarning"):
         super().__init__(signal, field)
 
-    def __copy__(self):
+    def __copy__(self) -> "WarningLabel":
         return WarningLabel()
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets formatted value. Color codes WARNING (red)/OK (green).
 
         Parameters
@@ -799,7 +848,7 @@ class WarningButton(ColoredButton):
 
     Parameters
     ----------
-    comm : `SALComm`
+    comm : `MetaSAL`
         SALComm object representing the signals
     topic : `str`
         Topic name. Should be event/telemetry name without leading evt_ (for
@@ -808,25 +857,25 @@ class WarningButton(ColoredButton):
         Field from topic used to display button state. Defaults to anyWarning
     """
 
-    def __init__(self, comm, topic, field="anyWarning"):
+    def __init__(self, comm: MetaSAL, topic: str, field: str = "anyWarning"):
         super().__init__("---")
         self.comm = comm
         self._topic = topic
         self._field = field
         getattr(comm, topic).connect(self._data)
-        self.window = None
+        self.window: None | EventWindow = None
         self.clicked.connect(self._showWindow)
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
         self.setValue(getattr(data, self._field))  # type: ignore
 
-    def _showWindow(self):
+    def _showWindow(self) -> None:
         if self.window is None:
             self.window = EventWindow(self.comm, self._topic)
         self.window.show()
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets formatted value. Color codes WARNING (red)/OK (green).
 
         Parameters
@@ -856,7 +905,7 @@ class InterlockOffLabel(QLabel):
         "anyWarning".
     """
 
-    def __init__(self, signal=None, field="anyWarning"):
+    def __init__(self, signal: Signal | None = None, field: str = "anyWarning"):
         super().__init__("---")
         if signal is not None:
             self._field = field
@@ -884,13 +933,13 @@ class InterlockOffLabel(QLabel):
 class StatusLabel(QLabel):
     """Displays OK/Error status."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("---")
 
-    def __copy__(self):
+    def __copy__(self) -> "StatusLabel":
         return StatusLabel()
 
-    def setValue(self, value):
+    def setValue(self, value: bool) -> None:
         """Sets formatted value. Color codes Error (red)/OK (green).
 
         Parameters
@@ -922,7 +971,7 @@ class EnumLabel(QLabel):
         super().__init__("---")
         self._mapping = mapping
 
-    def setValue(self, value):
+    def setValue(self, value: int) -> None:
         try:
             self.setText(self._mapping[value])
         except KeyError:
@@ -932,11 +981,11 @@ class EnumLabel(QLabel):
 class Clipped(QLabel):
     "Display clipped/not clipped"
 
-    def __init__(self, force):
+    def __init__(self, force: str):
         super().__init__()
         self._force = force
 
-    def setClipped(self, clipped):
+    def setClipped(self, clipped: bool) -> None:
         if clipped:
             self.setText(f"<font color='red'>{self._force} forces clipped</font>")
         else:
@@ -977,7 +1026,7 @@ class Heartbeat(QWidget):
     difftime_error = 0.5
     difftime_warning = 0.01
 
-    def __init__(self, parent=None, indicator=True):
+    def __init__(self, parent: QWidget | None = None, indicator: bool = True):
         super().__init__(parent)
 
         layout = QVBoxLayout()
@@ -996,10 +1045,10 @@ class Heartbeat(QWidget):
         layout.addWidget(self.timestamp)
         self.setLayout(layout)
 
-        self._timeoutTimer = None
+        self._timeoutTimer: QTimer | None = None
         self._initTimer(3000)
 
-    def _initTimer(self, timeout=2001):
+    def _initTimer(self, timeout: int = 2001) -> None:
         if self._timeoutTimer is not None:
             self._timeoutTimer.stop()
 
@@ -1009,7 +1058,7 @@ class Heartbeat(QWidget):
         self._timeoutTimer.start(timeout)
 
     @Slot()
-    def timeouted(self):
+    def timeouted(self) -> None:
         if self.hbIndicator is not None:
             self.hbIndicator.setFormat("")
             self.hbIndicator.setValue(0)
@@ -1068,7 +1117,7 @@ class LogEventWarning(QLabel):
         Signal fired when logevent data changes.
     """
 
-    def __init__(self, signal):
+    def __init__(self, signal: Signal):
         super().__init__("---")
         signal.connect(self._logEvent)
 
@@ -1090,7 +1139,7 @@ class SimulationStatus(QLabel):
 
     """
 
-    def __init__(self, comm):
+    def __init__(self, comm: MetaSAL):
         super().__init__("--")
         try:
             comm.simulationMode.connect(self.simulationMode)
@@ -1117,7 +1166,7 @@ class DockWindow(QDockWidget):
         Dock title and object name.
     """
 
-    def __init__(self, title):
+    def __init__(self, title: str):
         super().__init__(title)
         self.setObjectName(title)
         self.topLevelChanged.connect(self._topLevelChanged)

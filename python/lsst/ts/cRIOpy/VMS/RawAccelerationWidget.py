@@ -25,5 +25,7 @@ from .CacheTimeWidget import CacheTimeWidget
 class RawAccelerationWidget(CacheTimeWidget):
     """Display raw accelerometer signal."""
 
-    def calculateValues(self, timestamps, signal):
+    def calculateValues(
+        self, timestamps: list[float], signal: list[float]
+    ) -> tuple[list[float], list[float]]:
         return (timestamps, signal)

@@ -20,14 +20,15 @@
 import asyncio
 import signal
 import sys
+import typing
 
 from asyncqt import QEventLoop
 from PySide2.QtCore import QCommandLineOption, QCommandLineParser
-from PySide2.QtWidgets import QApplication
+from PySide2.QtWidgets import QApplication, QMainWindow
 
 from ... import __version__
+from ...SALComm import MetaSAL, create
 from ..SplashScreen import SplashScreen
-from .SALComm import create
 
 
 class Application:
@@ -39,7 +40,7 @@ class Application:
     ----------
     eui_class : `class`
         Class, ideally child of QMainWindow, which will be instantiated after
-        wait for SAL/DDS initialization. It's parameters are SALComm created
+        wait for SAL/DDS initialization. It's parameters are SAL created
         with addComm method.
 
     Usage
@@ -59,7 +60,7 @@ class Application:
            app.run()
     """
 
-    def __init__(self, eui_class):
+    def __init__(self, eui_class: type[QMainWindow]):
         self._eui_class = eui_class
         self._app = QApplication(sys.argv)
         self._app.setApplicationVersion(__version__)
@@ -72,7 +73,8 @@ class Application:
         parser.addOption(noSplash)
 
         salInfo = QCommandLineOption(
-            ["s", "SAL-info"], "show SAL info (including methods checksums) and exits"
+            ["s", "SAL-info"],
+            "show SAL info (including methods checksums) and exits",
         )
         parser.addOption(salInfo)
 
@@ -81,12 +83,17 @@ class Application:
         self._loop = QEventLoop(self._app)
         asyncio.set_event_loop(self._loop)
 
-        self._comms = []
+        self._comms: list[MetaSAL] = []
         self._salInfo = parser.isSet(salInfo)
         self._splash = not (parser.isSet(noSplash))
-        self._eui = None
+        self._eui: typing.Any | None = None
 
-    def addComm(self, name, manual=None, **kwargs):
+    def addComm(
+        self,
+        name: str,
+        manual: dict[str, typing.Any] | None = None,
+        **kwargs: typing.Any,
+    ) -> None:
         """Adds SALComm object to parameters of QMainWindow class.
 
         Parameters
@@ -97,7 +104,6 @@ class Application:
             Events and telemetry topics created with optional arguments. Keys
             are events and telemetry names, values is a hash of additional
             arguments.
-
         **kwargs : `dict`
             Optional parameters passed to remote.
         """
@@ -120,10 +126,11 @@ class Application:
             sys.exit(0)
 
         class AppSplashScreen(SplashScreen):
-            def started(splash, *comms):  # noqa: N805
-                self._eui = self._eui_class(*comms)
+            def started(splash, *comms: MetaSAL) -> None:  # noqa: N805
+                eui = self._eui_class(*comms)
                 splash.finish(self._eui)
-                self._eui.show()
+                eui.show()
+                self._eui = eui
                 # re-emit signals from history
                 for c in self._comms:
                     c.reemit_remote()
@@ -132,7 +139,7 @@ class Application:
         if self._splash:
             splash.show()
 
-        def handler(signum, frame):
+        def handler(signum: int, frame: typing.Any) -> None:
             print(f"Catching signal {signum}, exiting")
             self._loop.call_soon(splash.stop)
             self._loop.call_soon(self._app.closeAllWindows)

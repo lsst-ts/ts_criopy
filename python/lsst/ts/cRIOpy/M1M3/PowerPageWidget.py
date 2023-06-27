@@ -24,11 +24,11 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 
 from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
-from ..GUI.SAL import EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..GUI.SAL import EngineeringButton
+from ..SALComm import MetaSAL, command
 
 
-def bus(b):
+def bus(b: int) -> str:
     """Returns bus name from its number."""
     return chr(ord("A") + b)
 
@@ -48,7 +48,7 @@ class TurnButton(EngineeringButton):
         On or Off, command is turn On or Off.
     """
 
-    def __init__(self, m1m3: MetaSAL, kind: str, bus: int, onOff: str):
+    def __init__(self, m1m3: MetaSAL, kind: str, bus: str, onOff: str):
         super().__init__(f"Turn {kind} {bus} {onOff}", m1m3)
         self.m1m3 = m1m3
         self.onOff = onOff
@@ -62,7 +62,7 @@ class TurnButton(EngineeringButton):
 
     @asyncSlot()
     async def runCommand(self) -> None:
-        await SALCommand(
+        await command(
             self,
             getattr(self.m1m3.remote, f"cmd_turnPower{self.onOff}"),
             **{self.__commandName: True},
@@ -87,7 +87,7 @@ class PowerPageWidget(QWidget):
         commandLayout = QGridLayout()
         plotLayout = QVBoxLayout()
 
-        def createButtons(kind, onOff, col):
+        def createButtons(kind: str, onOff: str, col: int) -> list[TurnButton]:
             ret = []
             for b in range(4):
                 ret.append(TurnButton(m1m3, kind, bus(b), onOff))
@@ -100,15 +100,15 @@ class PowerPageWidget(QWidget):
         self.auxOnButtons = createButtons("Aux", "On", 2)
         self.auxOffButtons = createButtons("Aux", "Off", 3)
 
-        self.mainCommandedLabels = []
-        self.mainOutputLabels = []
-        self.mainMismatchLabels = []
+        self.mainCommandedLabels: list[PowerOnOffLabel] = []
+        self.mainOutputLabels: list[PowerOnOffLabel] = []
+        self.mainMismatchLabels: list[WarningLabel] = []
 
-        self.auxCommandedLabels = []
-        self.auxOutputLabels = []
-        self.auxMismatchLabels = []
+        self.auxCommandedLabels: list[PowerOnOffLabel] = []
+        self.auxOutputLabels: list[PowerOnOffLabel] = []
+        self.auxMismatchLabels: list[WarningLabel] = []
 
-        self.currentLabels = []
+        self.currentLabels: list[QLabel] = []
 
         dataLayout.addWidget(QLabel("<b>Main</b>"), 0, 1)
         dataLayout.addWidget(QLabel("Output"), 0, 2)
@@ -124,7 +124,7 @@ class PowerPageWidget(QWidget):
         dataLayout.setColumnStretch(7, 1)
         dataLayout.setColumnStretch(8, 2)
 
-        def create_labels(title, row: int, onOff: bool = True) -> None:
+        def create_labels(title: str, row: int, onOff: bool = True) -> None:
             dataLayout.addWidget(QLabel(f"<b>{title}</b>"), row, 0)
 
             if onOff:
@@ -164,7 +164,7 @@ class PowerPageWidget(QWidget):
                 "rcpCabinetUtility220VACStatus": "Cabinet 220VAC",
                 "rcpExternalEquipment220VACStatus": "External 220VAC",
                 "controlsPowerNetworkRedundantStatus": "Power Redundant",
-                "controlsPowerNetworkRedundancyControlStatus": "Redundancy Control",
+                "controlsPowerNetworkRedundancyControlStatus": ("Redundancy Control"),
                 "lightPowerNetworkStatus": "Light",
                 "externalEquipmentPowerNetworkStatus": "External",
                 "laserTrackerPowerNetworkStatus": "Laser",

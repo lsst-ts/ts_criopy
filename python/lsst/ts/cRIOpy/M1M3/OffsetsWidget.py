@@ -33,8 +33,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
-from ..GUI.SAL import SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL, command
 from .DirectionPadWidget import DirectionPadWidget
 
 
@@ -89,7 +88,7 @@ class OffsetsWidget(QWidget):
         for d in range(6):
             dataLayout.addWidget(QLabel(f"<b>{directions[d]}</b>"), row, d + 1)
 
-        def createXYZR():
+        def createXYZR() -> dict[str, QLabel]:
             return {
                 "xPosition": Mm(),
                 "yPosition": Mm(),
@@ -99,7 +98,7 @@ class OffsetsWidget(QWidget):
                 "zRotation": Arcsec(),
             }
 
-        def createXYZRWarning():
+        def createXYZRWarning() -> dict[str, QLabel]:
             return {
                 "xPosition": MmWarning(),
                 "yPosition": MmWarning(),
@@ -115,7 +114,7 @@ class OffsetsWidget(QWidget):
 
         self.diffs = createXYZRWarning()
 
-        def addDataRow(variables, row, col=1):
+        def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
@@ -172,7 +171,7 @@ class OffsetsWidget(QWidget):
         self.dir_pad.positionChanged.connect(self._positionChanged)
         dataLayout.addWidget(self.dir_pad, row, 1, 3, 6)
 
-        def createForces():
+        def createForces() -> dict[str, QLabel]:
             return {
                 "fx": Force(),
                 "fy": Force(),
@@ -232,7 +231,7 @@ class OffsetsWidget(QWidget):
         self.m1m3.forceActuatorData.connect(self._forceActuatorCallback)
         self.m1m3.detailedState.connect(self._detailedStateCallback)
 
-    async def moveMirror(self, **kwargs):
+    async def moveMirror(self, **kwargs: typing.Any) -> None:
         """Move mirror. Calls positionM1M3 command.
 
         Parameters
@@ -241,9 +240,9 @@ class OffsetsWidget(QWidget):
             New target position. Needs to have POSITIONS keys. Passed to
             positionM1M3 command.
         """
-        await SALCommand(self, self.m1m3.remote.cmd_positionM1M3, **kwargs)
+        await command(self, self.m1m3.remote.cmd_positionM1M3, **kwargs)
 
-    def _getScale(self, label):
+    def _getScale(self, label: str) -> float:
         return u.mm.to(u.m) if label[1:] == "Position" else u.arcsec.to(u.deg)
 
     def get_targets(self) -> dict[str, float]:
@@ -260,7 +259,7 @@ class OffsetsWidget(QWidget):
             args[p] = getattr(self, "target_" + p).value() * self._getScale(p)
         return args
 
-    def set_targets(self, targets: dict[str, float]):
+    def set_targets(self, targets: dict[str, float]) -> None:
         """Set current target values.
 
         Parameters
@@ -271,7 +270,7 @@ class OffsetsWidget(QWidget):
         for k, v in targets.items():
             getattr(self, "target_" + k).setValue(v / self._getScale(k))
 
-    def getForceOffsets(self):
+    def getForceOffsets(self) -> dict[str, float]:
         """Return current offset forces (from forceOffsets_ box).
 
         Returns
@@ -297,32 +296,32 @@ class OffsetsWidget(QWidget):
         self.dir_pad.set_position(args[p] for p in self.POSITIONS)
 
     @asyncSlot()
-    async def _applyOffsetForces(self):
-        await SALCommand(
+    async def _applyOffsetForces(self) -> None:
+        await command(
             self,
             self.m1m3.remote.cmd_applyOffsetForcesByMirrorForce,
             **self.getForceOffsets(),
         )
 
     @asyncSlot()
-    async def _clearOffsetForces(self):
-        await SALCommand(self, self.m1m3.remote.cmd_clearOffsetForces)
+    async def _clearOffsetForces(self) -> None:
+        await command(self, self.m1m3.remote.cmd_clearOffsetForces)
         for f in self.FORCES:
             getattr(self, "forceOffsets_" + f).setValue(0)
 
     @asyncSlot()
-    async def _positionChanged(self, offsets):
+    async def _positionChanged(self, offsets: list[float]) -> None:
         args = {}
         for i in range(6):
             args[self.POSITIONS[i]] = offsets[i]
         self.set_targets(args)
         await self.moveMirror(**args)
 
-    def __fill_row(self, variables, data):
+    def __fill_row(self, variables: dict[str, QLabel], data: typing.Any) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
-    def __update_diffs(self):
+    def __update_diffs(self) -> None:
         if self.__hp_data is None or self._imsData is None:
             return
         for k, v in self.diffs.items():

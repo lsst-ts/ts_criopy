@@ -19,22 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import QEvent, Signal
+from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QGraphicsView
 
-from ...M1M3FATable import (
-    FATABLE,
-    FATABLE_FAR_NEIGHBOR_INDEX,
-    FATABLE_NEAR_NEIGHBOR_INDEX,
-)
-from .ForceActuator import FASelection, ForceActuator
+from ...M1M3FATable import FATABLE, ForceActuatorData
+from .ForceActuatorItem import FASelection, ForceActuatorItem
+from .GaugeScale import GaugeScale
 from .Mirror import Mirror
 
 
 class MirrorView(QGraphicsView):
     """View on mirror populated by actuators."""
 
-    selectionChanged = Signal(ForceActuator)
+    selectionChanged = Signal(ForceActuatorItem)
     """Signal raised when another actuator is selected by a mouse click.
 
     Parameters
@@ -43,64 +43,67 @@ class MirrorView(QGraphicsView):
         Selected actuator.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._mirror = Mirror()
         super().__init__(self._mirror)
-        self._selectedId = None
+        self._selected_actuator: ForceActuatorItem | None = None
 
-    def getForceActuator(self, id):
-        """Returns ForceActuator object with given ID.
+    def getForceActuator(self, actuator_id: int) -> ForceActuatorItem:
+        """Returns ForceActuatorItem object with given ID.
 
         Parameters
         ----------
-        id : `int`
+        actuator_id : `int`
             ID of the force actuator to retrieve.
 
         Returns
         -------
-        actuator : `ForceActuator`
-            Force actuator object with give ID, or None if not found.
-        """
-        try:
-            return self._mirror.getForceActuator(id)
-        except KeyError:
-            return None
+        actuator : `ForceActuatorItem`
+            Force actuator object with give ID.
 
-    def changeEvent(self, event):
+        Raises
+        ------
+        KeyError
+            If actuator with given ID doesn't exists.
+        """
+        return self._mirror.getForceActuator(actuator_id)
+
+    def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.EnabledChange:
             for i in self._mirror.items():
                 i.setEnabled(self.isEnabled())
 
-    @property
-    def selected(self) -> ForceActuator | None:
-        """Selected actuator or None if no actuator selected
-        (ForceActuator)."""
-        return self.getForceActuator(self._selectedId)
-
-    def _setNeighbour(self, index, activate):
-        for fids in FATABLE[self.selected.index][FATABLE_FAR_NEIGHBOR_INDEX]:
+    def _setNeighbour(self, index: int, activate: bool) -> None:
+        for fids in FATABLE[index].far_neighbors:
             if activate:
-                if fids in FATABLE[self.selected.index][FATABLE_NEAR_NEIGHBOR_INDEX]:
+                if fids in FATABLE[index].near_neighbors:
                     self.getForceActuator(fids).setKind(FASelection.NEAR_NEIGHBOR)
                 else:
                     self.getForceActuator(fids).setKind(FASelection.FAR_NEIGHBOR)
             else:
                 self.getForceActuator(fids).setKind(FASelection.NORMAL)
 
-    @selected.setter  # type: ignore
-    def selected(self, s) -> None:
-        if self.selected is not None:
-            self._setNeighbour(self.selected.index, False)
-            self.selected.setKind(FASelection.NORMAL)
-        if s is None:
-            self._selectedId = None
-            return None
-        self._selectedId = s.id
-        s.setKind(FASelection.SELECTED)
-        self._setNeighbour(self.selected.index, True)  # type: ignore
-        self.selectionChanged.emit(s)
+    def selected(self) -> ForceActuatorItem | None:
+        return self._selected_actuator
 
-    def setColorScale(self, scale):
+    def set_selected_id(self, selected_id: int) -> None:
+        self.set_selected(self.getForceActuator(selected_id))
+
+    def clear_selected(self) -> None:
+        if self._selected_actuator is not None:
+            self._setNeighbour(self._selected_actuator.actuator.index, False)
+            self._selected_actuator.setKind(FASelection.NORMAL)
+            self._selected_actuator = None
+
+    def set_selected(self, selected_actuator: ForceActuatorItem) -> None:
+        self.clear_selected()
+
+        selected_actuator.setKind(FASelection.SELECTED)
+        self._setNeighbour(selected_actuator.actuator.index, True)
+        self.selectionChanged.emit(selected_actuator)
+        self._selected_actuator = selected_actuator
+
+    def set_color_scale(self, scale: GaugeScale) -> None:
         """Sets scale used for color scaling.
 
         Parameters
@@ -108,73 +111,79 @@ class MirrorView(QGraphicsView):
         scale : `class`
             New scale.
         """
-        self._mirror.setColorScale(scale)
+        self._mirror.set_color_scale(scale)
 
-    def clear(self):
+    def clear(self) -> None:
         """Removes all actuators from the view."""
+        self.clear_selected()
         self._mirror.clear()
 
-    def scaleHints(self):
-        """Returns preferred scaling. Overloaded method."""
+    def update_scale(self) -> None:
+        """Sets prefered scale."""
         s = min(self.width() / 8600, self.height() / 8600)
-        return (s, s)
+        self.scale(s, s)
 
-    def addForceActuator(self, id, index, x, y, orientation, data, dataIndex, state):
+    def addForceActuator(
+        self,
+        actuator: ForceActuatorData,
+        data: typing.Any,
+        dataIndex: int | None,
+        state: int,
+    ) -> None:
         """Adds actuator.
 
         Parameters
         ----------
-        id : `int`
-            Force Actuator ID. Actuators are matched by ID.
-        index : `int`
-            Actuator index (0-155).
-        x : `float`
-            Force Actuator X position (in mm).
-        y :  `float`
-            Force Actuator y position (in mm).
-        orientation : `str`
-            Secondary orientation. Either NA, +Y, -Y, +X or -X.
-        data : `float`
+        actuator : `ForceActuatorData`
+            Force Actuator data.
+        data : `Any`
             Force Actuator value.
         dataIndex : `int`
             Force Actuator value index.
         state : `int`
-            Force Actuator state. ForceActuator.STATE_INVALID,
-            ForceActuator.STATE_VALID or ForceActuator.STATE_WARNING.
+            Force Actuator state. ForceActuatorItem.STATE_INVALID,
+            ForceActuatorItem.STATE_VALID or ForceActuatorItem.STATE_WARNING.
         """
         self._mirror.addForceActuator(
-            id,
-            index,
-            x,
-            y,
-            orientation,
+            actuator,
             data,
             dataIndex,
             state,
-            FASelection.SELECTED if id == self._selectedId else FASelection.NORMAL,
+            FASelection.SELECTED
+            if self._selected_actuator is not None
+            and actuator.actuator_id == self._selected_actuator.actuator.actuator_id
+            else FASelection.NORMAL,
         )
 
-    def updateForceActuator(self, id, data, state):
+    def updateForceActuator(
+        self, actuator_id: int, data: typing.Any, state: int
+    ) -> None:
         """Update actuator value and state.
 
         Parameters
         ----------
-        id : `int`
+        actuator_id : `int`
             Force Actuator ID number.
-        data : `float`
+        data : `Any`
             Update actuator value.
         state : `int`
-            Updated actuator state. ForceActuator.STATE_INVALID,
-            ForceActuator.STATE_VALID, ForceActuator.STATE_WARNING.
+            Updated actuator state. ForceActuatorItem.STATE_INVALID,
+            ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
         Raises
         ------
         KeyError
             If actuator with the given ID cannot be found.
         """
-        self._mirror.updateForceActuator(id, data, state)
-        if self._selectedId == id:
-            self.selectionChanged.emit(self.selected if self.selected.active else None)
+        self._mirror.updateForceActuator(actuator_id, data, state)
+        if self._selected_actuator is None:
+            return
+        if self._selected_actuator.actuator.actuator_id == actuator_id:
+            self.selectionChanged.emit(
+                self._selected_actuator if self._selected_actuator.active else None
+            )
 
-    def mousePressEvent(self, event):
-        self.selected = self.itemAt(event.pos())
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        item = self.itemAt(event.pos())
+        if type(item) == ForceActuatorItem:
+            self.set_selected(item)

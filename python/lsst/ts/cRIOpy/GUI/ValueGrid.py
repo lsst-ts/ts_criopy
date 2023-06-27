@@ -19,8 +19,8 @@
 
 import typing
 
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QWidget
+from PySide2.QtCore import Signal, Slot
+from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QLabel, QWidget
 
 from .CustomLabels import (
     InterlockOffLabel,
@@ -41,7 +41,7 @@ class ValueGrid(QGroupBox):
         Type of values. A class which provides setValue method to change its
         value.
     items : `map(str, str)`
-        Keys are event items, values are labels for those items.
+        Keys are event items:dict[str,str], values are labels for those items.
     event : `Signal`
         Event emitted when new data arrives.
     cols : `int`
@@ -51,7 +51,14 @@ class ValueGrid(QGroupBox):
         processing.
     """
 
-    def __init__(self, valueLabel, items, event, cols, extraLabels=None):
+    def __init__(
+        self,
+        valueLabel: QLabel,
+        items: dict[str, str],
+        event: Signal,
+        cols: int,
+        extraLabels: list[tuple[str, QLabel]] | None = None,
+    ):
         super().__init__()
 
         layout = QHBoxLayout()
@@ -99,28 +106,28 @@ class ValueGrid(QGroupBox):
 class StatusGrid(ValueGrid):
     """A variation of ValueGrid, assuming all labels are StatusLabel."""
 
-    def __init__(self, items, event, cols):
+    def __init__(self, items: dict[str, str], event: Signal, cols: int):
         super().__init__(StatusLabel, items, event, cols)
 
 
 class WarningGrid(ValueGrid):
     """A variation of ValueGrid, assuming all labels are WarningLabel."""
 
-    def __init__(self, items, event, cols):
+    def __init__(self, items: dict[str, str], event: Signal, cols: int):
         super().__init__(WarningLabel, items, event, cols)
 
 
 class OnOffGrid(ValueGrid):
     """A variation of ValueGrid, assuming all labels are OnOffLabel."""
 
-    def __init__(self, items, event, cols):
+    def __init__(self, items: dict[str, str], event: Signal, cols: int):
         super().__init__(OnOffLabel, items, event, cols)
 
 
 class PowerOnOffGrid(ValueGrid):
     """A variation of ValueGrid, assuming all labels are PowerOnOffLabel."""
 
-    def __init__(self, items, event, cols):
+    def __init__(self, items: dict[str, str], event: Signal, cols: int):
         super().__init__(PowerOnOffLabel, items, event, cols)
 
 
@@ -129,7 +136,14 @@ class InterlockOffGrid(ValueGrid):
     Adds anyWarning to display if any interlock is locked.
     """
 
-    def __init__(self, items, event, cols, showAnyWarning=True):
+    def __init__(
+        self,
+        items: dict[str, str],
+        event: Signal,
+        cols: int,
+        showAnyWarning: bool = True,
+    ):
+        self.anyWarningLabel: WarningLabel | None = None
         if showAnyWarning:
             self.anyWarningLabel = WarningLabel()
             super().__init__(
@@ -140,13 +154,12 @@ class InterlockOffGrid(ValueGrid):
                 [("Any Warning", self.anyWarningLabel)],
             )
         else:
-            self.anyWarningLabel = None
             super().__init__(InterlockOffLabel, items, event, cols)
 
     @Slot()
     def _dataChanged(self, data: typing.Any) -> None:
         super()._dataChanged(data)
-        if self.anyWarningLabel:
+        if self.anyWarningLabel is not None:
             anyWarning = False
             for e in dir(data):
                 ch = self.findChild(QWidget, e)

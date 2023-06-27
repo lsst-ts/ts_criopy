@@ -24,8 +24,8 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
-from ..GUI.SAL.SALComm import MetaSAL
 from ..GUI.TimeChart import TimeChartView, UserSelectedTimeChart
+from ..SALComm import MetaSAL
 
 
 class HardpointTestPageWidget(QWidget):
@@ -55,10 +55,18 @@ class HardpointTestPageWidget(QWidget):
             EnumLabel,
             {
                 HardpointTest.NOTTESTED: "<font color='gray'>Not tested</font>",
-                HardpointTest.MOVINGNEGATIVE: "<font color='blue'>Moving negative</font>",
-                HardpointTest.TESTINGPOSITIVE: "<font color='orange'>Testing positive</font>",
-                HardpointTest.TESTINGNEGATIVE: "<font color='lime'>Testing negative</font>",
-                HardpointTest.MOVINGREFERENCE: "<font color='blue'>Moving to reference</font>",
+                HardpointTest.MOVINGNEGATIVE: (
+                    "<font color='blue'>Moving negative</font>"
+                ),
+                HardpointTest.TESTINGPOSITIVE: (
+                    "<font color='orange'>Testing positive</font>"
+                ),
+                HardpointTest.TESTINGNEGATIVE: (
+                    "<font color='lime'>Testing negative</font>"
+                ),
+                HardpointTest.MOVINGREFERENCE: (
+                    "<font color='blue'>Moving to reference</font>"
+                ),
                 HardpointTest.PASSED: "<font color='green'>Passed</font>",
                 HardpointTest.FAILED: "<font color='red'>Failed</font>",
             },

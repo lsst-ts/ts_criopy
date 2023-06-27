@@ -19,33 +19,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import argparse
+import typing
 import unittest
 
-from lsst.ts.cRIOpy import parseDuration
+from lsst.ts.cRIOpy.M1M3FATable import FATABLE, FAIndex
 
 
-class ParseDurationTestCase(unittest.TestCase):
-    def test_parse(self) -> None:
-        self.assertEqual(parseDuration("1"), 1)
-        self.assertEqual(parseDuration("1 "), 1)
-        self.assertEqual(parseDuration(" 1"), 1)
-        self.assertEqual(parseDuration(" 1 D "), 86400)
-        self.assertEqual(parseDuration("2h3m6s"), 2 * 3600 + 3 * 60 + 6)
-        self.assertEqual(
-            parseDuration(" 10h 67   m 12345s"), 10 * 3600 + 67 * 60 + 12345
+class M1M3FATableTestCase(unittest.TestCase):
+    def assert_sorted(
+        self, gen: typing.Generator[int, None, None], array: list[int]
+    ) -> None:
+        a1 = list(gen)
+        a1.sort()
+        self.assertEqual(a1, array)
+
+    def test_neighbors(self) -> None:
+        item = FATABLE[4]
+
+        self.assert_sorted(
+            item.near_neighbors_indices(FAIndex.Z), [3, 5, 10, 11, 125, 126]
         )
-        self.assertEqual(
-            parseDuration(" 10h 67   m 12345"), 10 * 3600 + 67 * 60 + 12345
-        )
+        self.assert_sorted(item.near_neighbors_indices(FAIndex.Y), [2, 7, 81])
 
-    def test_failures(self) -> None:
-        with self.assertRaises(argparse.ArgumentTypeError):
-            parseDuration("1d")
-            parseDuration("1Dd")
-            parseDuration("239  Dd")
-            parseDuration("2m@")
-            parseDuration(" 2m  3 S")
+        self.assert_sorted(
+            item.far_neighbors_indices(FAIndex.Y), [2, 6, 7, 13, 80, 81, 86]
+        )
+        self.assert_sorted(item.only_far_neighbors_indices(FAIndex.Y), [6, 13, 80, 86])
+
+        item2 = FATABLE[11]
+        self.assert_sorted(item2.near_neighbors_indices(FAIndex.X), [])
+        self.assert_sorted(item2.only_far_neighbors_indices(FAIndex.X), [9])
 
 
 if __name__ == "__main__":

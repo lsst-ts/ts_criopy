@@ -18,28 +18,34 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from ..GUI.ActuatorsDisplay import Scales
-from ..GUI.SAL.TopicData import TopicData, TopicField, WarningField
+from ..GUI.SAL import TopicCollection, TopicData, TopicField, WarningField
 
 __all__ = ["Thermals"]
 
 
-class Thermals:
+class Thermals(TopicCollection):
     """
     Class constructing list of all available topics.
     """
 
-    def __init__(self):
-        self.lastIndex = None
+    THERMAL_INDEX = 1
 
-        self.topics = [
+    def __init__(self) -> None:
+        super().__init__(
             TopicData(
                 "Thermal Data",
                 [
                     TopicField(
-                        "Differential temperature", "differentialTemperature", None
+                        "Differential temperature",
+                        "differentialTemperature",
+                        self.THERMAL_INDEX,
                     ),
-                    TopicField("Fan RPM", "fanRPM", None),
-                    TopicField("Absolute temperature", "absoluteTemperature", None),
+                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX),
+                    TopicField(
+                        "Absolute temperature",
+                        "absoluteTemperature",
+                        self.THERMAL_INDEX,
+                    ),
                 ],
                 "thermalData",
                 False,
@@ -47,23 +53,51 @@ class Thermals:
             TopicData(
                 "Thermal Info",
                 [
-                    TopicField("Reference ID", "referenceId", None, Scales.INTEGER),
-                    TopicField("Modbus Address", "modbusAddress", None, Scales.INTEGER),
-                    TopicField("X Position", "xPosition", None),
-                    TopicField("Y Position", "yPosition", None),
-                    TopicField("Z Position", "zPosition", None),
-                    TopicField("ILC Unique ID", "ilcUniqueId", None, Scales.INTEGER),
                     TopicField(
-                        "ILC Application Type",
-                        "ilcApplicationType",
-                        None,
+                        "Reference ID",
+                        "referenceId",
+                        self.THERMAL_INDEX,
                         Scales.INTEGER,
                     ),
                     TopicField(
-                        "Network Node Type", "networkNodeType", None, Scales.INTEGER
+                        "Modbus Address",
+                        "modbusAddress",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
                     ),
-                    TopicField("Major Revision", "majorRevision", None, Scales.INTEGER),
-                    TopicField("Minor Revision", "minorRevision", None, Scales.INTEGER),
+                    TopicField("X Position", "xPosition", self.THERMAL_INDEX),
+                    TopicField("Y Position", "yPosition", self.THERMAL_INDEX),
+                    TopicField("Z Position", "zPosition", self.THERMAL_INDEX),
+                    TopicField(
+                        "ILC Unique ID",
+                        "ilcUniqueId",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                    ),
+                    TopicField(
+                        "ILC Application Type",
+                        "ilcApplicationType",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                    ),
+                    TopicField(
+                        "Network Node Type",
+                        "networkNodeType",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                    ),
+                    TopicField(
+                        "Major Revision",
+                        "majorRevision",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                    ),
+                    TopicField(
+                        "Minor Revision",
+                        "minorRevision",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                    ),
                 ],
                 "thermalInfo",
                 True,
@@ -71,45 +105,77 @@ class Thermals:
             TopicData(
                 "Thermal Warning",
                 [
-                    WarningField("Major fault", "majorFault", None),
-                    WarningField("Minor fault", "minorFault", None),
-                    WarningField("Fault override", "faultOverride", None),
-                    WarningField("Ref. Resistor Error", "refResistorError", None),
-                    WarningField("RTD Error", "rtdError", None),
-                    WarningField("Breaker Heater 1 Erorr", "breakerHeater1Error", None),
-                    WarningField("Breaker Fan 2 Error", "breakerFan2Error", None),
-                    WarningField("Unique ID CRC Error", "uniqueIdCRCError", None),
+                    WarningField("Major fault", "majorFault", self.THERMAL_INDEX),
+                    WarningField("Minor fault", "minorFault", self.THERMAL_INDEX),
+                    WarningField("Fault override", "faultOverride", self.THERMAL_INDEX),
                     WarningField(
-                        "Application Type Mismatch", "applicationTypeMismatch", None
+                        "Ref. Resistor Error",
+                        "refResistorError",
+                        self.THERMAL_INDEX,
                     ),
-                    WarningField("Application Missing", "applicationMissing", None),
+                    WarningField("RTD Error", "rtdError", self.THERMAL_INDEX),
                     WarningField(
-                        "Application CRC Mismatch", "applicationCRCMismatch", None
+                        "Breaker Heater 1 Erorr",
+                        "breakerHeater1Error",
+                        self.THERMAL_INDEX,
                     ),
-                    WarningField("One Wire Missing", "oneWireMissing", None),
-                    WarningField("One Wire 1 Mismatch", "oneWire1Mismatch", None),
-                    WarningField("One Wire 2 Mismatch", "oneWire2Mismatch", None),
-                    WarningField("Watchdog Reset", "watchdogReset", None),
-                    WarningField("Brown Out", "brownOut", None),
-                    WarningField("Event Trap Reset", "eventTrapReset", None),
-                    WarningField("SSR Power Fault", "ssrPowerFault", None),
-                    WarningField("AUX Power Fault", "auxPowerFault", None),
-                    WarningField("ILC Fault", "ilcFault", None),
                     WarningField(
-                        "Broadcast Counter Warnign", "broadcastCounterWarning", None
+                        "Breaker Fan 2 Error",
+                        "breakerFan2Error",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "Unique ID CRC Error",
+                        "uniqueIdCRCError",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "Application Type Mismatch",
+                        "applicationTypeMismatch",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "Application Missing",
+                        "applicationMissing",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "Application CRC Mismatch",
+                        "applicationCRCMismatch",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "One Wire Missing", "oneWireMissing", self.THERMAL_INDEX
+                    ),
+                    WarningField(
+                        "One Wire 1 Mismatch",
+                        "oneWire1Mismatch",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField(
+                        "One Wire 2 Mismatch",
+                        "oneWire2Mismatch",
+                        self.THERMAL_INDEX,
+                    ),
+                    WarningField("Watchdog Reset", "watchdogReset", self.THERMAL_INDEX),
+                    WarningField("Brown Out", "brownOut", self.THERMAL_INDEX),
+                    WarningField(
+                        "Event Trap Reset", "eventTrapReset", self.THERMAL_INDEX
+                    ),
+                    WarningField(
+                        "SSR Power Fault", "ssrPowerFault", self.THERMAL_INDEX
+                    ),
+                    WarningField(
+                        "AUX Power Fault", "auxPowerFault", self.THERMAL_INDEX
+                    ),
+                    WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
+                    WarningField(
+                        "Broadcast Counter Warnign",
+                        "broadcastCounterWarning",
+                        self.THERMAL_INDEX,
                     ),
                 ],
                 "thermalWarning",
                 True,
             ),
-        ]
-
-    def changeTopic(self, index, slot, m1m3ts):
-        if self.lastIndex is not None:
-            getattr(m1m3ts, self.topics[self.lastIndex].topic).disconnect(slot)
-
-        self.lastIndex = index
-        if index is None:
-            return
-
-        getattr(m1m3ts, self.topics[index].topic).connect(slot)
+        )

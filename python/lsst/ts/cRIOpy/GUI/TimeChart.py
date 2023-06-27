@@ -25,7 +25,7 @@ import typing
 
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
-from PySide2.QtGui import QPainter
+from PySide2.QtGui import QContextMenuEvent, QPainter
 from PySide2.QtWidgets import QMenu
 
 from .AbstractChart import AbstractChart
@@ -46,25 +46,25 @@ class TimeChart(AbstractChart):
     ----------
     items : `{`str` : [`str`]}`
         Items stored in plot. Key is axis, items are labels.
-    maxItems : `int`, optional
+    max_items : `int`, optional
         Number of items to keep in graph. When series grows above the specified
         number of points, oldest points are removed. Defaults to 50 * 30 = 50Hz
         * 30s.
-    updateInterval: `float`, optional
+    update_interval: `float`, optional
         Interval for chart redraws responding to append call. Defaults to 0.1
         second.
     """
 
     def __init__(
         self,
-        items: str | list[str],
-        maxItems: int = 50 * 30,
-        updateInterval: float = 0.1,
+        items: dict[str, list[str | None]] | None,
+        max_items: int = 50 * 30,
+        update_interval: float = 0.1,
     ):
-        super().__init__(updateInterval=updateInterval)
+        super().__init__(update_interval=update_interval)
         self.timeAxis: QtCharts.QDateTimeAxis | None = None
 
-        self._createCaches(items, maxItems)
+        self._createCaches(items, max_items)
         self._attachSeries()
 
     def _addSerie(self, name: str, axis: str) -> None:
@@ -107,7 +107,12 @@ class TimeChart(AbstractChart):
             serie.attachAxis(self.timeAxis)
 
     def append(
-        self, timestamp, data, axis_index=0, cache_index=None, update=False
+        self,
+        timestamp: float,
+        data: list[float],
+        axis_index: int = 0,
+        cache_index: int | None = None,
+        update: bool = False,
     ) -> None:
         """Add data to a serie. Creates axis and serie if needed. Shrink if
         more than expected elements are stored.
@@ -124,7 +129,7 @@ class TimeChart(AbstractChart):
             Cache index. Equals to axis_index if None. Defaults to None.
         update : `boolean`, optional
             If true, updates plot. Otherwise, store points for future update
-            call and update plot if updateInterval passed since the last
+            call and update plot if update_interval passed since the last
             completed update."""
         if cache_index is None:
             cache = self._caches[axis_index]
@@ -133,12 +138,15 @@ class TimeChart(AbstractChart):
 
         cache.append(tuple([timestamp * 1000.0] + data))
 
-        def replot():
+        def replot() -> None:
+            if self.timeAxis is None:
+                return
+
             axis = self.axes(Qt.Vertical)[axis_index]
             d_min = d_max = None
             for n in cache.columns()[1:]:
                 serie = self.findSerie(n)
-                if serie.isVisible() is False:
+                if serie is None or serie.isVisible() is False:
                     continue
 
                 data = cache[n]
@@ -153,10 +161,10 @@ class TimeChart(AbstractChart):
                 serie.replace(points)
 
             self.timeAxis.setRange(
-                *(map(QDateTime().fromMSecsSinceEpoch, map(int, cache.timeRange())))
+                *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.timeRange()]
             )
             if d_min == d_max:
-                if d_min == 0:
+                if d_min == 0 or d_min is None or d_max is None:
                     d_min = -1
                     d_max = 1
                 else:
@@ -165,7 +173,7 @@ class TimeChart(AbstractChart):
 
             axis.setRange(d_min, d_max)
 
-            self._next_update = time.monotonic() + self.updateInterval
+            self._next_update = time.monotonic() + self.update_interval
 
         # replot if needed
         if update:
@@ -187,6 +195,9 @@ class TimeChart(AbstractChart):
 
 class UserSelectedTimeChart(TimeChart):
     """
+    Parameters
+    ----------
+    topics : `dict[topic, signal]`
     Signals
     -------
     topicSelected : `Signal(object)`
@@ -196,12 +207,12 @@ class UserSelectedTimeChart(TimeChart):
 
     topicSelected = Signal(object)
 
-    def __init__(self, topics):
+    def __init__(self, topics: dict[typing.Any, typing.Any]):
         super().__init__(None)
         self._topics = topics
         self._signal = None
-        self._name = None
-        self._index = None
+        self._name: str | None = None
+        self._index: int | None = None
         self.topicSelected.connect(self._topicSelected)
 
     @Slot()
@@ -237,6 +248,9 @@ class UserSelectedTimeChart(TimeChart):
 
     @Slot()
     def _appendData(self, data: typing.Any) -> None:
+        if self._name is None:
+            return
+
         if self._index is not None:
             self.append(data.private_sndStamp, [getattr(data, self._name)[self._index]])
         else:
@@ -252,7 +266,7 @@ class TimeChartView(QtCharts.QChartView):
         Chart associated with view. Defaults to None.
     """
 
-    def __init__(self, chart=None):
+    def __init__(self, chart: QtCharts.QChart | None = None):
         if chart is None:
             super().__init__()
         else:
@@ -260,7 +274,7 @@ class TimeChartView(QtCharts.QChartView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu()
 
         for s in self.chart().series():

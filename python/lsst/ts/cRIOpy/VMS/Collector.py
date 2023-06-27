@@ -21,6 +21,7 @@ import asyncio
 import logging
 import os
 import time
+import typing
 from datetime import datetime
 
 import click
@@ -72,7 +73,7 @@ class Collector:
         self,
         index: int,
         fn_template: str,
-        size: int | None = None,
+        size: int = -1,
         file_type: str = "z5",
         header: bool = True,
         chunk_size: int = 5000,
@@ -93,7 +94,7 @@ class Collector:
         self.daemonized = daemonized
         self.rotate = rotate
         self.rotate_offset = rotate_offset
-        self.next_rotate = None
+        self.next_rotate: float | None = None
         self.h5file = None
 
         self._bar_index = 0
@@ -111,18 +112,20 @@ class Collector:
 
         self.cache = Cache(self.cache_size, device_sensors[self.index])
 
-    def _calculate_next_rotate(self, timestamp):
-        (q, r) = divmod(timestamp, self.rotate)
-        return (q + 1) * self.rotate + self.rotate_offset
+    def __calculate_next_rotate(self, timestamp: float) -> float:
+        # calleres qurantee self.rotate is not None
+        (q, r) = divmod(timestamp, self.rotate)  # type: ignore
+        return (q + 1) * self.rotate + self.rotate_offset  # type: ignore
 
-    def _need_rotate(self, timestamp):
+    def _need_rotate(self, timestamp: float) -> bool:
         if self.rotate is None:
             return False
         elif self.next_rotate is None:
-            self.next_rotate = self._calculate_next_rotate(timestamp)
+            self.next_rotate = self.__calculate_next_rotate(timestamp)
             self.log.debug(
-                f"Will rotate at {self.next_rotate} - current timestamp is "
-                f"{timestamp:.04f}, in {self.next_rotate - timestamp:.04f} seconds"
+                f"Will rotate at {self.next_rotate} - current timestamp is"
+                f" {timestamp:.04f}, in"
+                f" {self.next_rotate - timestamp:.04f} seconds"
             )
             return False
         elif self.next_rotate <= timestamp:
@@ -130,7 +133,7 @@ class Collector:
             return True
         return False
 
-    def _get_filename(self, date):
+    def _get_filename(self, date: datetime) -> str:
         filename = datetime.strftime(date, self.fn_template)
         repl = [
             ("name", VMS_DEVICES[self.index]),
@@ -147,7 +150,7 @@ class Collector:
             filename = filename.replace("${" + name + "}", value)
         return filename
 
-    def _create_file(self, date):
+    def _create_file(self, date: datetime) -> None:
         self.filename = self._get_filename(date)
         self.log.debug(f"Creating {self.filename}")
 
@@ -160,12 +163,12 @@ class Collector:
 
         if "5" in self.file_type:
             self.h5file = h5py.File(self.filename, "a")
-            group_args = {"chunks": (self.chunk_size)}
+            group_args: dict[str, str | int] = {"chunks": (self.chunk_size)}
             if "z" in self.file_type:
                 group_args["compression"] = "gzip"
-            self.cache.create_hdf5_datasets(self.size, self.h5file, group_args)
+            self.cache.create_hdf5_datasets(self.size, self.h5file, **group_args)
 
-    def _save_hdf5(self):
+    def _save_hdf5(self) -> bool:
         if self.h5file is None:
             return False
         count = self.chunk_size
@@ -195,24 +198,25 @@ class Collector:
             self.h5file.flush()
         return True
 
-    def close(self):
+    def close(self) -> None:
         if self.h5file is not None:
             self.log.info(f"Closing HDF5 {self.h5file.file.filename}")
             self.h5file.close()
 
-    def _h5_filled(self):
+    def _h5_filled(self) -> bool:
         et = self.cache.endTime()
         if et is not None and self._need_rotate(et):
             return True
         return self.cache.h5_filled()
 
-    async def _sample_daemon(self):
+    async def _sample_daemon(self) -> None:
         saved_len = 0
         while True:
             current_len = saved_len + len(self.cache)
             self.log.debug(
                 f"Waiting {VMS_DEVICES[self.index]}.."
-                f" {100 * (current_len)/self.size:.02f}% {current_len} of {self.size}"
+                f" {100 * (current_len)/self.size:.02f}% {current_len} of"
+                f" {self.size}"
             )
             if self.h5file is None:
                 if current_len >= self.size:
@@ -224,8 +228,8 @@ class Collector:
                     break
             await asyncio.sleep(0.5)
 
-    async def _sample_cli(self):
-        async def collect_it(bar):
+    async def _sample_cli(self) -> None:
+        async def collect_it(bar: typing.Any) -> None:
             while True:
                 cur_index = self._bar_index
                 bar.update(cur_index - self._last_bar)
@@ -237,12 +241,14 @@ class Collector:
                 if self._save_hdf5():
                     break
 
+        bar_size: float = 0
+
         if self.rotate is None:
             bar_size = self.size
         else:
             if self.next_rotate is None:
                 bar_size = (
-                    self._calculate_next_rotate(self._current_file_date)
+                    self.__calculate_next_rotate(self._current_file_date)
                     - self._current_file_date
                 )
             else:
@@ -251,7 +257,7 @@ class Collector:
 
         with click.progressbar(
             length=bar_size,
-            label=f"{VMS_DEVICES[self.index]} - {os.path.basename(self.filename)}",
+            label=(f"{VMS_DEVICES[self.index]} - {os.path.basename(self.filename)}"),
             show_eta=True,
             show_percent=True,
             width=0,
@@ -266,7 +272,7 @@ class Collector:
 
             bar.update(self.size)
 
-    async def _sample_file(self):
+    async def _sample_file(self) -> None:
         if self.daemonized:
             await self._sample_daemon()
         else:
@@ -281,7 +287,7 @@ class Collector:
             kwargs["header"] = ",".join(self.cache.columns())
         self.cache.savetxt(self.filename, self.size, **kwargs)
 
-    async def collect_data(self, single_shot):
+    async def collect_data(self, single_shot: bool) -> None:
         """Create data files, fills them with data.
 
         Parameters
@@ -300,7 +306,7 @@ class Collector:
                 await self._fpgaState(remote.evt_fpgaState.get())
 
                 while True:
-                    if self.next_rotate is not None:
+                    if self.next_rotate is not None and self.rotate is not None:
                         self._current_file_date = self.next_rotate - self.rotate
                     ts = time.localtime(self._current_file_date)
                     self._create_file(datetime(*ts[:6]))
@@ -311,26 +317,26 @@ class Collector:
         except Exception:
             self.log.exception(f"Cannot collect data for {VMS_DEVICES[self.index]}")
 
-    async def _data(self, data):
+    async def _data(self, data: typing.Any) -> None:
         self.cache.newChunk(data)
         if data.sensor == 1:
             self._bar_index += len(data.accelerationX)
 
-    async def _fpgaState(self, data):
+    async def _fpgaState(self, data: typing.Any) -> None:
         period = 1 if data is None else data.period
         freq = 1000 if data is None else int(np.ceil(1000.0 / period))
         self.log.info(f"{VMS_DEVICES[self.index]} frequency {freq}, period {period}")
         self.cache.setSampleTime(period / 1000.0)
         if "5" in self.file_type:
-            if self.configured_size is None:
+            if self.configured_size < 0:
                 if self.rotate is None:
                     self.size = 86400 * freq
                 else:
                     # TIME_RESERVE second more than needed
-                    self.size = (self.rotate + TIME_RESERVE) * freq
+                    self.size = int((self.rotate + TIME_RESERVE) * freq)
             self.chunk_size = min(self.configured_chunk_size, self.size - 10)
         else:
-            if self.configured_size is None:
+            if self.configured_size < 0:
                 self.size = 86400 * freq
             self.chunk_size = self.size - 10
 

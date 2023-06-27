@@ -24,6 +24,8 @@ import time
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QDateTime, QPointF, Qt, Slot
 
+from .Bars import ToolBar
+from .Cache import Cache
 from .CacheWidget import CacheWidget
 
 
@@ -34,7 +36,7 @@ class CacheTimeWidget(CacheWidget):
     ----------
     title : `str`
         QDockWidget title and object name.
-    cache : `VMS.Cache`
+    cache : `Cache`
         Data cache.
     toolBar : `ToolBar`
         Provides getFrequencyRange() method.
@@ -43,11 +45,15 @@ class CacheTimeWidget(CacheWidget):
     """
 
     def __init__(
-        self, title, cache, toolBar, channels: list[tuple[int, int]] | None = None
+        self,
+        title: str,
+        cache: Cache,
+        toolBar: ToolBar,
+        channels: list[tuple[int, int]] | None = None,
     ):
         super().__init__(title, cache, toolBar, channels)
 
-    def setupAxes(self):
+    def setupAxes(self) -> None:
         for a in self.chart.axes():
             self.chart.removeAxis(a)
 
@@ -82,13 +88,15 @@ class CacheTimeWidget(CacheWidget):
 
         self.callSetupAxes = False
 
-    def calculateValues(self, timestamps, signal):
-        raise RuntimeError(
+    def calculateValues(
+        self, timestamps: list[float], signal: list[float]
+    ) -> tuple[list[float] | None, list[float] | None]:
+        raise NotImplementedError(
             "Abstract CacheTimeWidget.calculateValues called - please make sure"
             " all child classes implements getPoints method."
         )
 
-    def plotAll(self):
+    def plotAll(self) -> None:
         """Plot all signals. Run as task in a thread."""
 
         min_value = []
@@ -100,7 +108,7 @@ class CacheTimeWidget(CacheWidget):
             timestamps = [1000 * t for t in self.cache["timestamp"]]
 
             (result_times, values) = self.calculateValues(timestamps, signal)
-            if result_times is None:
+            if result_times is None or values is None:
                 continue
 
             s.replace([QPointF(result_times[r], values[r]) for r in range(len(values))])

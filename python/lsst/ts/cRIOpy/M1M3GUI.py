@@ -19,12 +19,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtWidgets import QLabel
 
 from .AirCompressor import CompressorsPageWidget
 from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
-from .GUI.SAL.SALComm import MetaSAL
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
@@ -45,6 +46,7 @@ from .M1M3 import (
     PIDPageWidget,
     PowerPageWidget,
 )
+from .SALComm import MetaSAL
 
 
 class EUI(EUIWindow):
@@ -101,7 +103,7 @@ class EUI(EUIWindow):
 
         self.m1m3.detailedState.connect(self.detailed_state)
 
-    def detailed_state(self, data):
+    def detailed_state(self, data: typing.Any) -> None:
         self.statusLabel.setText(detailedStateString(data.detailedState))
 
 
@@ -126,13 +128,22 @@ def detailedStateString(detailedState: int) -> str:
         MTM1M3.DetailedState.RAISING: "<font color='magenta'>Raising</font>",
         MTM1M3.DetailedState.ACTIVE: "<font color='blue'>Active</font>",
         MTM1M3.DetailedState.LOWERING: "<font color='magenta'>Lowering</font>",
-        MTM1M3.DetailedState.PARKEDENGINEERING: "<font color='green'>Parked Engineering</font>",
-        MTM1M3.DetailedState.RAISINGENGINEERING: "<font color='magenta'>Raising Engineering</font>",
-        MTM1M3.DetailedState.ACTIVEENGINEERING: "<font color='blue'>Active Engineering</font>",
-        MTM1M3.DetailedState.LOWERINGENGINEERING: "<font color='magenta'>Lowering Engineering</font>",
-        MTM1M3.DetailedState.LOWERINGFAULT: "<font color='red'>Lowering Fault</font>",
-        MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS: "<font color='red'>"
-        "Profile Hardpoint Corrections</font>",
+        MTM1M3.DetailedState.PARKEDENGINEERING: (
+            "<font color='green'>Parked Engineering</font>"
+        ),
+        MTM1M3.DetailedState.RAISINGENGINEERING: (
+            "<font color='magenta'>Raising Engineering</font>"
+        ),
+        MTM1M3.DetailedState.ACTIVEENGINEERING: (
+            "<font color='blue'>Active Engineering</font>"
+        ),
+        MTM1M3.DetailedState.LOWERINGENGINEERING: (
+            "<font color='magenta'>Lowering Engineering</font>"
+        ),
+        MTM1M3.DetailedState.LOWERINGFAULT: ("<font color='red'>Lowering Fault</font>"),
+        MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS: (
+            "<font color='red'>Profile Hardpoint Corrections</font>"
+        ),
     }
     try:
         return _map[detailedState]

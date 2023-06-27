@@ -35,10 +35,11 @@ from ..GUI import (
     TimeChartView,
     WarningGrid,
 )
+from ..SALComm import MetaSAL
 
 
 class IMSPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -66,7 +67,10 @@ class IMSPageWidget(QWidget):
                             ),
                             ArrayLabels(""),
                             ArrayLabels(
-                                "<b>+X</b>", "<b>-Y</b>", "<b>-X</b>", "<b>+Y</b>"
+                                "<b>+X</b>",
+                                "<b>-Y</b>",
+                                "<b>-X</b>",
+                                "<b>+Y</b>",
                             ),
                             ArrayItem(
                                 "rawSensorData",
@@ -123,11 +127,15 @@ class IMSPageWidget(QWidget):
                 {
                     "anyWarning": "Any Warnings",
                     "sensorReportsInvalidCommand": "Sensor Invalid Command",
-                    "sensorReportsCommunicationTimeoutError": "Sensor Communication Timeout",
+                    "sensorReportsCommunicationTimeoutError": (
+                        "Sensor Communication Timeout"
+                    ),
                     "sensorReportsDataLengthError": "Sensor Data Length",
-                    "sensorReportsNumberOfParametersError": "Sensor Number of Parameters",
+                    "sensorReportsNumberOfParametersError": (
+                        "Sensor Number of Parameters"
+                    ),
                     "sensorReportsParameterError": "Sensor Parameter",
-                    "sensorReportsCommunicationError": "Sensor Communication Error",
+                    "sensorReportsCommunicationError": ("Sensor Communication Error"),
                     "sensorReportsIDNumberErrorLabel": "Sensor ID Number",
                     "sensorReportsExpansionLineError": "Sensor Expansion Line",
                     "sensorReportsWriteControlError": "Sensor Write Control",

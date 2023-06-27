@@ -17,13 +17,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import numpy as np
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
 from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
 from ..GUI.SAL import Axis, ChartWidget
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL
 
 __all__ = ["BoosterValveWidget"]
 
@@ -50,10 +52,12 @@ class FollowingErrorTrigger(QWidget):
             OnOffLabel(m1m3.boosterValveSettings, "followingErrorTriggerEnabled"),
         )
         operationalLayout.addRow(
-            "Open", Force(m1m3.boosterValveSettings, "followingErrorTriggerOpen")
+            "Open",
+            Force(m1m3.boosterValveSettings, "followingErrorTriggerOpen"),
         )
         operationalLayout.addRow(
-            "Close", Force(m1m3.boosterValveSettings, "followingErrorTriggerClose")
+            "Close",
+            Force(m1m3.boosterValveSettings, "followingErrorTriggerClose"),
         )
         operationalLayout.addRow(
             "Slew Flag", OnOffLabel(m1m3.boosterValveStatus, "slewFlag")
@@ -96,8 +100,8 @@ class FollowingErrorTrigger(QWidget):
 
         m1m3.forceActuatorData.connect(self._forceActuatorData)
 
-    @Slot(map)
-    def _forceActuatorData(self, data):
+    @Slot()
+    def _forceActuatorData(self, data: typing.Any) -> None:
         primaryFEMax = np.max(data.primaryCylinderFollowingError)
         primaryFEMin = np.min(data.primaryCylinderFollowingError)
 
@@ -105,7 +109,8 @@ class FollowingErrorTrigger(QWidget):
         secondaryFEMin = np.min(data.secondaryCylinderFollowingError)
 
         self.__followingErrorChart.append(
-            data.timestamp, [primaryFEMax, primaryFEMin, secondaryFEMax, secondaryFEMin]
+            data.timestamp,
+            [primaryFEMax, primaryFEMin, secondaryFEMax, secondaryFEMin],
         )
 
         self._pmax.setValue(primaryFEMax)
@@ -141,7 +146,10 @@ class Accelerometer(QWidget):
             )
             operationalLayout.addRow(
                 f"Close {axis}",
-                DegS2(m1m3.boosterValveSettings, f"accelerometer{axis}TriggerClose"),
+                DegS2(
+                    m1m3.boosterValveSettings,
+                    f"accelerometer{axis}TriggerClose",
+                ),
             )
         operationalLayout.addRow(
             "Accelerometer Triggered",

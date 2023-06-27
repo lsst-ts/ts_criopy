@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import copy
 import typing
 from functools import partial
 
@@ -48,8 +47,21 @@ from ..GUI import (
     OnOffLabel,
     UnitLabel,
 )
-from ..GUI.SAL import DetailedStateEnabledButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..GUI.SAL import DetailedStateEnabledButton
+from ..SALComm import MetaSAL, command
+
+
+class OffsetUnit:
+    """Helper class.
+
+    Holds data for offset types presented.
+    """
+
+    def __init__(self, text: str, scale: float, decimals: int, unit: str):
+        self.text = text
+        self.scale = scale
+        self.decimals = decimals
+        self.unit = unit
 
 
 class OffsetsTypeButton(QPushButton):
@@ -65,16 +77,16 @@ class OffsetsTypeButton(QPushButton):
 
     unitChanged = Signal(float, float, str, int)
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # member array is unit name, scale factor, numbe of decimals, unit
         # abbrevation
         self._units = [
-            ["&Motor steps", 1, 0, "motor"],
-            ["&Encoder steps", 1, 0, "encoder"],
-            ["&Displacement (um)", 1, 1, "um"],
-            ["&Displacement (mm)", 1, 4, "mm"],
+            OffsetUnit("&Motor steps", 1, 0, "motor"),
+            OffsetUnit("&Encoder steps", 1, 0, "encoder"),
+            OffsetUnit("&Displacement (um)", 1, 1, "um"),
+            OffsetUnit("&Displacement (mm)", 1, 4, "mm"),
         ]
         self.setToolTip("Click to change move units")
         self.set_scales(0.0607, 0.2442)
@@ -83,7 +95,7 @@ class OffsetsTypeButton(QPushButton):
         self.setSelectedIndex(0)
         self.clicked.connect(self._clicked)
 
-    def setSelectedIndex(self, index):
+    def setSelectedIndex(self, index: int) -> None:
         """Sets new selected index.
 
         Parameters
@@ -94,13 +106,13 @@ class OffsetsTypeButton(QPushButton):
         oldScale = self.getScale()
 
         self._selectedIndex = index
-        self.setText(self._units[index][0])
+        self.setText(self._units[index].text)
 
         self.unitChanged.emit(
             oldScale, self.getScale(), self.getUnit(), self.getDecimals()
         )
 
-    def getScale(self):
+    def getScale(self) -> float:
         """Returns scale used.
 
         Returns
@@ -108,22 +120,22 @@ class OffsetsTypeButton(QPushButton):
         scale : float
             Scale factor for the current unit.
         """
-        return self._units[self._selectedIndex][1]
+        return self._units[self._selectedIndex].scale
 
-    def getDecimals(self):
+    def getDecimals(self) -> int:
         """Returns number of decimals suggested for display. 0 for integer
         values."""
-        return self._units[self._selectedIndex][2]
+        return self._units[self._selectedIndex].decimals
 
-    def getUnit(self):
-        return self._units[self._selectedIndex][3]
+    def getUnit(self) -> u:
+        return self._units[self._selectedIndex].unit
 
     def set_scales(
         self, micrometersPerStep: float, micrometersPerEncoder: float
     ) -> None:
-        self._units[1][1] = micrometersPerEncoder / micrometersPerStep
-        self._units[2][1] = 1.0 / micrometersPerStep
-        self._units[3][1] = u.mm.to(u.um) / micrometersPerStep
+        self._units[1].scale = micrometersPerEncoder / micrometersPerStep
+        self._units[2].scale = 1.0 / micrometersPerStep
+        self._units[3].scale = u.mm.to(u.um) / micrometersPerStep
 
     @Slot()
     def _clicked(self, checked: bool) -> None:
@@ -281,15 +293,6 @@ class HardpointsWidget(QWidget):
 
         row = 1
 
-        def addRow(textValue, row):
-            ret = []
-            self.dataLayout.addWidget(QLabel(textValue[0]), row, 0)
-            for hp in range(6):
-                label = copy.copy(textValue[1])
-                self.dataLayout.addWidget(label, row, 1 + hp)
-                ret.append(label)
-            return ret
-
         self.lastEditedSteps = [0] * 6
 
         self.offsetType = OffsetsTypeButton()
@@ -307,7 +310,7 @@ class HardpointsWidget(QWidget):
             DetailedState.LOWERINGENGINEERING,
         ]
 
-        self._lastOffsetFocused = None
+        self._lastOffsetFocused: int | None = None
 
         copyHPButton = QPushButton("Copy")
         copyHPButton.setToolTip("Use last edited (focused) value for all HP offsets")
@@ -361,7 +364,9 @@ class HardpointsWidget(QWidget):
         self.dataLayout.addWidget(QLabel(), row, 0)
         row += 1
 
-        def addDataRow(variables, row, col=0):
+        def addDataRow(
+            variables: dict[str, tuple[str, UnitLabel]], row: int, col: int = 0
+        ) -> None:
             for k, v in variables.items():
                 self.dataLayout.addWidget(QLabel(f"<b>{v[0]}</b>"), row, col)
                 setattr(self, k, v[1])
@@ -391,16 +396,18 @@ class HardpointsWidget(QWidget):
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
         self.m1m3.hardpointActuatorState.connect(self.hardpointActuatorState)
 
-    @Slot(QWidget, QWidget)
-    def focusChanged(self, old, new):
+    @Slot()
+    def focusChanged(self, old: QWidget, new: QWidget) -> None:
         for hp in range(len(self.hpOffsets)):
             if self.hpOffsets[hp] == old:
                 self.lastEditedSteps[hp] = self.offsetType.getScale() * old.value()
                 self._lastOffsetFocused = hp
                 return
 
-    @Slot(float, float, str, int)
-    def _HPUnitChanged(self, oldScale, newScale, units, decimals):
+    @Slot()
+    def _HPUnitChanged(
+        self, oldScale: float, newScale: float, units: str, decimals: int
+    ) -> None:
         self.hpOffsets = []
         for hp in range(6):
             if decimals == 0:
@@ -423,38 +430,38 @@ class HardpointsWidget(QWidget):
             self.hpOffsets.append(sb)
 
     @Slot()
-    def _copyHP(self):
-        if self._lastOffsetFocused:
+    def _copyHP(self) -> None:
+        if self._lastOffsetFocused is not None:
             v = self.hpOffsets[self._lastOffsetFocused].value()
             for offset in self.hpOffsets:
                 offset.setValue(v)
             self.lastEditedSteps = [self.offsetType.getScale() * v] * 6
 
     @asyncSlot()
-    async def _moveHP(self):
+    async def _moveHP(self) -> None:
         steps = [self.offsetType.get_steps(x.value()) for x in self.hpOffsets]
-        await SALCommand(self, self.m1m3.remote.cmd_moveHardpointActuators, steps=steps)
+        await command(self, self.m1m3.remote.cmd_moveHardpointActuators, steps=steps)
 
     @asyncSlot()
-    async def _stopHP(self):
-        await SALCommand(self, self.m1m3.remote.cmd_stopHardpointMotion)
+    async def _stopHP(self) -> None:
+        await command(self, self.m1m3.remote.cmd_stopHardpointMotion)
 
     @Slot()
-    def _reset(self):
+    def _reset(self) -> None:
         for hp in range(6):
             self.hpOffsets[hp].setValue(0)
 
-    def _fillRow(self, hpData, rowLabels):
+    def _fillRow(self, hpData: list[float], rowLabels: list[UnitLabel]) -> None:
         for hp in range(6):
             rowLabels[hp].setValue(hpData[hp])
 
     @asyncSlot()
     async def _enableHPChase(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_enableHardpointChase)
+        await command(self, self.m1m3.remote.cmd_enableHardpointChase)
 
     @asyncSlot()
     async def _disableHPChase(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_disableHardpointChase)
+        await command(self, self.m1m3.remote.cmd_disableHardpointChase)
 
     @Slot()
     def hardpointActuatorSettings(self, data: typing.Any) -> None:
@@ -502,7 +509,7 @@ class HardpointsWidget(QWidget):
             HardpointActuatorMotionStates.FINEPOSITIONING: "Fine positioning",
         }
 
-        def getHpState(state) -> None:
+        def getHpState(state: HardpointActuatorMotionStates) -> str:
             try:
                 return states[state]
             except KeyError:

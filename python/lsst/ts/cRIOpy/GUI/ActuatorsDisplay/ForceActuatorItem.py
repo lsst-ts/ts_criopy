@@ -19,12 +19,15 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 import enum
+import typing
 
 from PySide2.QtCore import QPointF, QRect, Qt
 from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
-from PySide2.QtWidgets import QGraphicsItem
+from PySide2.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
 from ...GUI import Colors
+from ...M1M3FATable import ForceActuatorData
+from .GaugeScale import GaugeScale
 
 
 class FASelection(enum.IntEnum):
@@ -34,7 +37,7 @@ class FASelection(enum.IntEnum):
     FAR_NEIGHBOR = 4
 
 
-class ForceActuator(QGraphicsItem):
+class ForceActuatorItem(QGraphicsItem):
     """Combines graphical display of an actuator with its data. Record if an
     actuator is selected by a mouse click.
 
@@ -46,20 +49,11 @@ class ForceActuator(QGraphicsItem):
 
     Parameters
     ----------
-    id : `int`
-        Force Actuator identification number. Starting with 101, the first
-        number identified segment (1-4). The value ranges up to 443.
-    index : `int`
-        Force actuator index (0-155).
-    x : `float`
-        Force Actuator X coordinate (in mm).
-    y : `float`
-        Force Actuator Y coordinate (in mm).
-    orientation : `str`
-         Secondary orientation. Either NA, +Y, -Y, +X or -X.
+    actuator : `ForceActuatorData`
+        Row from force actuator table.
     data : `float`
         Data associated with the actuator (actual force, calculated force, ..).
-    dataIndex : `int`
+    data_index : `int`
         Index in value arrays. Points to selected actuator value.
     scale: `object`
         Object providing getColor(value) method.
@@ -83,27 +77,34 @@ class ForceActuator(QGraphicsItem):
     attached (`int`).
     """
 
-    def __init__(self, id, index, x, y, orientation, data, dataIndex, state, kind):
+    def __init__(
+        self,
+        actuator: ForceActuatorData,
+        data: typing.Any,
+        data_index: int | None,
+        state: int,
+        kind: FASelection,
+    ):
         super().__init__()
-        self.id = id
-        self.index = index
+        self.actuator = actuator
         # actuator position
-        self._center = QPointF(x, -y)
-        self._orientation = orientation
+        self._center = QPointF(
+            actuator.x_position * 1000.0, -actuator.y_position * 1000.0
+        )
         # actuator data
         self._data = data
-        self.dataIndex = dataIndex
+        self.data_index = data_index
         self._state = state
         self._kind = kind
         # scale. Provides getColor(data) object, returning brush to fill data
-        self._color_scale = None
+        self._color_scale: None | GaugeScale = None
         # scalign factor. The actuator default size is 20x20 units. As
         # actuators are placed on mirror, the size needs to be adjusted to show
         # properly actuator on display in e.g. mm (where X and Y ranges are
         # ~-4400 .. +4400).
         self._scale_factor = 25
 
-    def updateData(self, data, state):
+    def updateData(self, data: float, state: int) -> None:
         """Updates actuator data.
 
         If new data differs from the current data, calls update() to force
@@ -122,7 +123,7 @@ class ForceActuator(QGraphicsItem):
             self._state = state
             self.update()
 
-    def setKind(self, kind):
+    def setKind(self, kind: FASelection) -> None:
         """Set actuator kind (selection status).
 
         Parameters
@@ -134,26 +135,26 @@ class ForceActuator(QGraphicsItem):
         self.update()
 
     @property
-    def data(self):
+    def data(self) -> float:
         """Value associated with the actuator (`float`)."""
         return self._data
 
     @data.setter
-    def data(self, data):
+    def data(self, data: float) -> None:
         self._data = data
         self.update()
 
     @property
-    def warning(self):
+    def warning(self) -> bool:
         """If actuator is in warning state (`bool`)."""
         return self._state == self.STATE_WARNING
 
     @property
-    def active(self):
+    def active(self) -> bool:
         """If actuator is active (`bool`)."""
         return not (self._state == self.STATE_INACTIVE)
 
-    def setColorScale(self, scale):
+    def set_color_scale(self, scale: GaugeScale) -> None:
         """Set actuator data display scale. This is used for setting display
         color and formatting values.
 
@@ -165,7 +166,7 @@ class ForceActuator(QGraphicsItem):
         self._color_scale = scale
         self.update()
 
-    def boundingRect(self):
+    def boundingRect(self) -> QRect:
         """Returns rectangle occupied by drawing. Overridden method."""
         return QRect(
             self._center.x() - 10 * self._scale_factor,
@@ -174,7 +175,7 @@ class ForceActuator(QGraphicsItem):
             20 * self._scale_factor,
         )
 
-    def getValue(self):
+    def getValue(self) -> str:
         """Returns current value, string formated to scale.
 
         Returns
@@ -183,7 +184,7 @@ class ForceActuator(QGraphicsItem):
            Current value formatted by the currently used color scale."""
         return self.formatValue(self.data)
 
-    def formatValue(self, v):
+    def formatValue(self, v: float) -> str:
         """Returns
 
         Parameters
@@ -197,9 +198,13 @@ class ForceActuator(QGraphicsItem):
         formattedValue : `str`
             Value formatted by the currently used color scale.
         """
+        if self._color_scale is None:
+            return str(v)
         return self._color_scale.formatValue(v)
 
-    def paint(self, painter, option, widget):
+    def paint(
+        self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget
+    ) -> None:
         """Paint actuator. Overridden method."""
         # if scale isn't set, don't draw
         if self._color_scale is None:
@@ -243,7 +248,8 @@ class ForceActuator(QGraphicsItem):
             else:
                 painter.setBrush(
                     QBrush(
-                        color, Qt.SolidPattern if self.isEnabled() else Qt.Dense4Pattern
+                        color,
+                        Qt.SolidPattern if self.isEnabled() else Qt.Dense4Pattern,
                     )
                 )
         # draw actuator, write value
@@ -263,7 +269,7 @@ class ForceActuator(QGraphicsItem):
             20 * self._scale_factor,
             10 * self._scale_factor,
             Qt.AlignBottom | Qt.AlignHCenter,
-            str(self.id),
+            str(self.actuator.actuator_id),
         )
 
         vstr = self.getValue()

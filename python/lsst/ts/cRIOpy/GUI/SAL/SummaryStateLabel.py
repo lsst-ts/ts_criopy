@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.salobj import State
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 
 from ..CustomLabels import DataLabel
 
@@ -28,11 +28,11 @@ __all__ = ["SummaryStateLabel"]
 class SummaryStateLabel(DataLabel):
     """Display state label."""
 
-    def __init__(self, signal=None, field=None):
+    def __init__(self, signal: Signal = None, field: str | None = None):
         super().__init__(signal, field)
         self.setAlignment(Qt.AlignCenter)
 
-    def setValue(self, value):
+    def setValue(self, value: State) -> None:
         states = {
             State.DISABLED: "Disabled",
             State.ENABLED: "Enabled",

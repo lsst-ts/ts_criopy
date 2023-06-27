@@ -23,7 +23,7 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QPushButton, QWidget
 
-from .SALComm import MetaSAL
+from ...SALComm import MetaSAL
 
 __all__ = [
     "SignalButton",
@@ -90,8 +90,8 @@ class DetailedStateEnabledButton(SignalButton):
     ----------
     title : `str`
         Button title. Passed to QPushButton.
-    m1m3 : `SALComm`
-        SALComm. Its detailed state is connected to a handler
+    m1m3 : `MetaSAL`
+        SAL. Its detailed state is connected to a handler
         enabling/disabling the button.
     enabledStates : `[DetailedState.*]`
         States in which button shall be enabled. It will be disabled in all
@@ -100,9 +100,12 @@ class DetailedStateEnabledButton(SignalButton):
 
     def __init__(
         self,
-        title,
-        m1m3,
-        enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
+        title: str,
+        m1m3: MetaSAL,
+        enabledStates: list[DetailedState] = [
+            DetailedState.ACTIVE,
+            DetailedState.ACTIVEENGINEERING,
+        ],
     ):
         super().__init__(title, m1m3.detailedState, "detailedState", enabledStates)
 
@@ -114,12 +117,12 @@ class EngineeringButton(DetailedStateEnabledButton):
     ----------
     title : `str`
         Button title. Passed to QPushButton.
-    m1m3 : `SALComm`
-        SALComm. When detailed state is in one of the engineering states,
+    m1m3 : `MetaSAL`
+        SAL. When detailed state is in one of the engineering states,
         button is enabled. It is disabled otherwise.
     """
 
-    def __init__(self, title, m1m3):
+    def __init__(self, title: str, m1m3: MetaSAL):
         super().__init__(
             title,
             m1m3,
@@ -138,8 +141,8 @@ class StateEnabledWidget(QWidget):
 
     Parameters
     ----------
-    m1m3 : `SALComm`
-        SALComm. When detailed state is in one of the enabledStates, widget is
+    m1m3 : `MetaSAL`
+        SAL. When detailed state is in one of the enabledStates, widget is
         enabled. It is disabled otehrwise.
     enabledStates : `[DetailedState]`
         States in which the widget is enabled.
@@ -148,7 +151,10 @@ class StateEnabledWidget(QWidget):
     def __init__(
         self,
         m1m3: MetaSAL,
-        enabledStates=[DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
+        enabledStates: list[DetailedState] = [
+            DetailedState.ACTIVE,
+            DetailedState.ACTIVEENGINEERING,
+        ],
     ) -> None:
         super().__init__()
         self.setEnabled(False)
@@ -157,5 +163,5 @@ class StateEnabledWidget(QWidget):
         m1m3.detailedState.connect(self.detailedState)
 
     @Slot()
-    def detailedState(self, data: typing.Any):
+    def detailedState(self, data: typing.Any) -> None:
         self.setEnabled(data.detailedState in self._enabledStates)

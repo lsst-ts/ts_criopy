@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import astropy.units as u
 from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
@@ -38,14 +40,14 @@ from ..GUI import (
     TopicStatusLabel,
     Volt,
 )
-from ..GUI.SAL import SALCommand
+from ..SALComm import MetaSAL, command
 
 
 class CoolantPumpWidget(DockWindow):
     """Display Glycol coolant re-circulation pump telemetry, allows motor
     commanding."""
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__("Glycol coolant re-circulation pump")
         self.m1m3ts = m1m3ts
 
@@ -100,7 +102,10 @@ class CoolantPumpWidget(DockWindow):
                     ("Output Frequency", Hz(field="outputFrequency")),
                     ("Output Current", Ampere(field="outputCurrent")),
                     ("Bus Voltage", Volt(field="busVoltage", fmt="0.0f")),
-                    ("Output Voltage", Volt(field="outputVoltage", fmt="0.01f")),
+                    (
+                        "Output Voltage",
+                        Volt(field="outputVoltage", fmt="0.01f"),
+                    ),
                 ],
             )
         )
@@ -173,8 +178,8 @@ class CoolantPumpWidget(DockWindow):
 
         self.m1m3ts.engineeringMode.connect(self.engineeringMode)
 
-    @Slot(map)
-    def engineeringMode(self, data):
+    @Slot()
+    def engineeringMode(self, data: typing.Any) -> None:
         """Called when engineeringMode event is received. Intercept to
         enable/disable form buttons."""
         if data.engineeringMode:
@@ -183,29 +188,29 @@ class CoolantPumpWidget(DockWindow):
             self.setEnabled(False)
 
     @asyncSlot()
-    async def _power(self):
+    async def _power(self) -> None:
         if self.powerButton.text() == "Power on":
-            await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=True)
+            await command(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=True)
             self.powerButton.setText("Power off")
         else:
-            await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=False)
+            await command(self, self.m1m3ts.remote.cmd_coolantPumpPower, power=False)
             self.powerButton.setText("Power on")
 
     @asyncSlot()
-    async def _start(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpStart)
+    async def _start(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_coolantPumpStart)
 
     @asyncSlot()
-    async def _stop(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpStop)
+    async def _stop(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_coolantPumpStop)
 
     @asyncSlot()
-    async def _reset(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_coolantPumpReset)
+    async def _reset(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_coolantPumpReset)
 
     @asyncSlot()
-    async def _setCoolantPumpFrequency(self):
-        await SALCommand(
+    async def _setCoolantPumpFrequency(self) -> None:
+        await command(
             self,
             self.m1m3ts.remote.cmd_coolantPumpFrequency,
             targetFrequency=self.frequency.value(),

@@ -43,15 +43,15 @@ class TimeBoxChart(AbstractChart):
     Parameters
     ----------
 
-    maxItems : `int`, optional
+    max_items : `int`, optional
         Number of items to keep in graph. When series grows above the specified
         number of points, oldest points are removed. Defaults to 10.
     """
 
-    def __init__(self, maxItems=10):
+    def __init__(self, max_items: int = 10):
         super().__init__()
-        self.maxItems = maxItems
-        self.coefficient = 1
+        self.max_items = max_items
+        self.coefficient: float = 1.0
         self.unit = units[0]
 
     @Slot()
@@ -64,7 +64,9 @@ class TimeBoxChart(AbstractChart):
         self.coefficient = coefficients(unit)
         self.unit = unit
 
-    def append(self, serie, timestamp, data):
+    def append(
+        self, serie: QtCharts.QBoxPlotSeries, timestamp: float, data: list[float]
+    ) -> None:
         """Add data to a serie. Creates serie if needed. Shrink if
         more than expected elements are stored.
 
@@ -77,8 +79,8 @@ class TimeBoxChart(AbstractChart):
         data : [float]
             Serie data."""
 
-        if serie.count() > self.maxItems - 1:
-            for r in range(serie.count() - self.maxItems + 1):
+        if serie.count() > self.max_items - 1:
+            for r in range(serie.count() - self.max_items + 1):
                 serie.remove(serie.boxSets()[0])
 
         quantiles = np.quantile(data, [0, 0.25, 0.5, 0.75, 1]) * self.coefficient
@@ -94,10 +96,12 @@ class TimeBoxChart(AbstractChart):
             bs = s.boxSets()
             if len(bs) > 0:
                 d_min = min(
-                    d_min, min([b.at(QtCharts.QBoxSet.LowerExtreme) for b in bs])
+                    d_min,
+                    min([b.at(QtCharts.QBoxSet.LowerExtreme) for b in bs]),
                 )
                 d_max = max(
-                    d_max, max([b.at(QtCharts.QBoxSet.UpperExtreme) for b in bs])
+                    d_max,
+                    max([b.at(QtCharts.QBoxSet.UpperExtreme) for b in bs]),
                 )
 
         self.createDefaultAxes()

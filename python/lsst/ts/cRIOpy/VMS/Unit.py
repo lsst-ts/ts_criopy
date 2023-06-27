@@ -26,11 +26,11 @@ G_TO_MS2 = 9.80665
 MS2_TO_G = 1 / G_TO_MS2
 
 
-def coefficients(unit):
+def coefficients(unit: str) -> float:
     n_i = units.index(unit)
     _matrix = [1, 1000.0, MS2_TO_G, MS2_TO_G * 1000.0, MS2_TO_G * 1000000.0]
     return _matrix[n_i]
 
 
-def deltas(current_unit, new_unit):
+def deltas(current_unit: str, new_unit: str) -> float:
     return coefficients(new_unit) / coefficients(current_unit)

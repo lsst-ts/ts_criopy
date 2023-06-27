@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
 from functools import partial
 
 from PySide2.QtCore import Signal
@@ -26,6 +27,8 @@ from PySide2.QtCore import Signal
 from ..TimeChart import TimeChart, TimeChartView
 
 __all__ = ["Axis", "ChartWidget"]
+
+AxisVar = typing.TypeVar("AxisVar", bound="Axis")
 
 
 class Axis:
@@ -46,15 +49,15 @@ class Axis:
         self.signal = signal
         self.fields: dict[str, str | tuple[str, int]] = {}
 
-    def addValue(self, name: str, field: str):
+    def addValue(self: AxisVar, name: str, field: str) -> AxisVar:
         self.fields[name] = field
         return self
 
-    def addArrayValue(self, name: str, field: str, index: int):
+    def addArrayValue(self: AxisVar, name: str, field: str, index: int) -> AxisVar:
         self.fields[name] = (field, index)
         return self
 
-    def addValues(self, fields):
+    def addValues(self: AxisVar, fields: dict[str, str]) -> AxisVar:
         self.fields = {**self.fields, **fields}
         return self
 
@@ -85,19 +88,25 @@ class ChartWidget(TimeChartView):
         ).addValue("X", "xForce"))
     """
 
-    def __init__(self, *values, **kwargs):
-        self.chart = TimeChart({v.title: v.fields.keys() for v in values}, **kwargs)
+    def __init__(
+        self, *values: Axis, max_items: int = 50 * 30, update_interval: float = 0.1
+    ):
+        self.chart = TimeChart(
+            {v.title: list(v.fields.keys()) for v in values}, max_items, update_interval
+        )
         axis_index = 0
         for v in values:
             v.signal.connect(
-                partial(self._append, axis_index=axis_index, fields=v.fields)
+                partial(
+                    self._append, axis_index=axis_index, fields=list(v.fields.values())
+                )
             )
             axis_index += 1
-        self._has_timestamp = None
+        self._has_timestamp: bool | None = None
 
         super().__init__(self.chart)
 
-    def _append(self, data, axis_index, fields):
+    def _append(self, data: typing.Any, axis_index: int, fields: list[str]) -> None:
         if self._has_timestamp is None:
             try:
                 getattr(data, "timestamp")
@@ -106,7 +115,7 @@ class ChartWidget(TimeChartView):
                 self._has_timestamp = False
 
         displayData = []
-        for f in fields.values():
+        for f in fields:
             if type(f) is tuple:
                 displayData.append(getattr(data, f[0])[f[1]])
             else:

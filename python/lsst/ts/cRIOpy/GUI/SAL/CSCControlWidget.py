@@ -24,7 +24,7 @@ from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QButtonGroup, QPushButton, QVBoxLayout, QWidget
 
-from .SALComm import MetaSAL, SALCommand
+from ...SALComm import MetaSAL, command
 
 
 class CSCControlWidget(QWidget):
@@ -80,7 +80,7 @@ class CSCControlWidget(QWidget):
         }
         self.buttons_commands.update(extra_buttons_commands)
 
-        self.__last_enabled = None
+        self.__last_enabled: None | list[bool] = None
 
         self.buttons_group = QButtonGroup(self)
         self.buttons_group.buttonClicked.connect(self.csc_button_clicked)
@@ -138,15 +138,15 @@ class CSCControlWidget(QWidget):
         self.__last_enabled = None
 
     @asyncSlot()
-    async def csc_button_clicked(self, bnt):
+    async def csc_button_clicked(self, bnt: QPushButton) -> None:
         text = bnt.text()
         cmd = self.get_buttons_command(text)
         self.disable_all_buttons()
-        executed = await SALCommand(self, getattr(self.comm.remote, "cmd_" + cmd))
+        executed = await command(self, getattr(self.comm.remote, "cmd_" + cmd))
         if not (executed):
             self.restore_enabled()
 
-    def get_buttons_command(self, text):
+    def get_buttons_command(self, text: str) -> str:
         return self.buttons_commands[text]
 
     def get_state_buttons_map(self, state: int) -> list[str | None]:
@@ -164,7 +164,7 @@ class CSCControlWidget(QWidget):
            Text for buttons. Index corresponds to order add_csc_button calls.
            If None is used, the button is disabled.
         """
-        states_map = {
+        states_map: dict[int, list[str | None]] = {
             salobj.State.STANDBY: [
                 self.TEXT_START,
                 None,

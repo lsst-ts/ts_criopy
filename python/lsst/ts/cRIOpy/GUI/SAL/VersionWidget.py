@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from ...SALComm import MetaSAL
 from ..CustomLabels import DataLabel
 from ..DataFormWidget import DataFormWidget
 
@@ -28,7 +29,7 @@ __all__ = ["VersionWidget"]
 class VersionWidget(DataFormWidget):
     """Shows widget with CSC data - versions, simulation mode, .."""
 
-    def __init__(self, remote, simulationMode=True):
+    def __init__(self, remote: MetaSAL, simulationMode: bool = True):
         """
         Parameters
         ----------
@@ -47,5 +48,6 @@ class VersionWidget(DataFormWidget):
         )
         if simulationMode:
             self.layout().addRow(
-                "Simulation mode", DataLabel(signal=remote.simulationMode, field="mode")
+                "Simulation mode",
+                DataLabel(signal=remote.simulationMode, field="mode"),
             )

@@ -19,7 +19,7 @@
 
 from PySide2.QtWidgets import QComboBox
 
-from ...M1M3FATable import FATABLE, FATABLE_ID
+from ...M1M3FATable import FATABLE
 
 __all__ = ["ComboBox"]
 
@@ -28,9 +28,9 @@ class ComboBox(QComboBox):
     """Allows user to select force actuator. Either its ID can be typed, or it
     can be selected from a listbox. See QComboBox for signals etc."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setEditable(True)
         self.lineEdit().setInputMask("999")
         for row in FATABLE:
-            self.addItem(str(row[FATABLE_ID]))
+            self.addItem(str(row.actuator_id))

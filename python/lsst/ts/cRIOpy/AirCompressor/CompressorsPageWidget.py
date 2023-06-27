@@ -47,9 +47,12 @@ from ..GUI import (
 )
 from ..GUI.SAL import CSCControlWidget, SummaryStateLabel, VersionWidget
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
+from ..SALComm import MetaSAL
 
 __all__ = ["CompressorsPageWidget"]
 
+# Constants for button titles. Titles are used to select command send to
+# SAL.
 
 TEXT_POWER_ON = "Power &On"
 TEXT_POWER_OFF = "Power O&ff"
@@ -59,10 +62,10 @@ TEXT_RESET = "&Reset"
 class CompressorCSC(CSCControlWidget):
     """Air compressor's control widget."""
 
-    def __init__(self, comm):
+    def __init__(self, comm: MetaSAL):
         super().__init__(comm)
 
-    def get_state_buttons_map(self, state: int) -> None:
+    def get_state_buttons_map(self, state: int) -> list[str | None]:
         default_buttons = super().get_state_buttons_map(state)
         status = self.comm.remote.evt_status.get()
 
@@ -79,9 +82,7 @@ class CompressorCSC(CSCControlWidget):
 
 
 class CompressorsPageWidget(QWidget):
-    # Constants for button titles. Titles are used to select command send to
-    # SAL.
-    def __init__(self, compressor):
+    def __init__(self, compressor: MetaSAL):
         super().__init__()
         self.compressor = compressor
 
@@ -96,7 +97,10 @@ class CompressorsPageWidget(QWidget):
             "Errors",
             compressor.errors,
             [
-                ("Power supply failure", ErrorLabel(field="powerSupplyFailureE400")),
+                (
+                    "Power supply failure",
+                    ErrorLabel(field="powerSupplyFailureE400"),
+                ),
                 (
                     "Emergency stop activated",
                     ErrorLabel(field="emergencyStopActivatedE401"),
@@ -129,15 +133,24 @@ class CompressorsPageWidget(QWidget):
                     "Discharge Temperature Sensor R2",
                     ErrorLabel(field="dischargeTemperatureSensorR2E408"),
                 ),
-                ("Controller Hardware", ErrorLabel(field="controllerHardwareE409")),
+                (
+                    "Controller Hardware",
+                    ErrorLabel(field="controllerHardwareE409"),
+                ),
                 ("Cooling", ErrorLabel(field="coolingE410")),
                 ("Oil Pressure Low", ErrorLabel(field="oilPressureLowE411")),
                 ("External Fault", ErrorLabel(field="externalFaultE412")),
                 ("Dryer", ErrorLabel(field="dryerE413")),
                 ("Condensate Drain", ErrorLabel(field="condensateDrainE414")),
-                ("No Pressure Build Up", ErrorLabel(field="noPressureBuildUpE415")),
+                (
+                    "No Pressure Build Up",
+                    ErrorLabel(field="noPressureBuildUpE415"),
+                ),
                 ("Heavy Startup", ErrorLabel(field="heavyStartupE416")),
-                ("Pre Adjustment VSD", ErrorLabel(field="preAdjustmentVSDE500")),
+                (
+                    "Pre Adjustment VSD",
+                    ErrorLabel(field="preAdjustmentVSDE500"),
+                ),
                 ("Pre Adjustment", ErrorLabel(field="preAdjustmentE501")),
                 ("Locked VSD", ErrorLabel(field="lockedVSDE502")),
                 ("Write Fault VSD", ErrorLabel(field="writeFaultVSDE503")),
@@ -167,7 +180,10 @@ class CompressorsPageWidget(QWidget):
                     "Compressor Discharge Temperature",
                     WarningLabel(field="compressorDischargeTemperatureA602"),
                 ),
-                ("Line Pressure High", WarningLabel(field="linePressureHighA606")),
+                (
+                    "Line Pressure High",
+                    WarningLabel(field="linePressureHighA606"),
+                ),
                 (
                     "Controller Battery Empty",
                     WarningLabel(field="controllerBatteryEmptyA607"),
@@ -178,7 +194,10 @@ class CompressorsPageWidget(QWidget):
                 ("Air Filter", WarningLabel(field="airFilterA611")),
                 ("Oil Filter", WarningLabel(field="oilFilterA612")),
                 ("Oil Level Low", WarningLabel(field="oilLevelLowA613")),
-                ("Oil Temperature High", WarningLabel(field="oilTemperatureHighA614")),
+                (
+                    "Oil Temperature High",
+                    WarningLabel(field="oilTemperatureHighA614"),
+                ),
                 ("External Warning", WarningLabel(field="externalWarningA615")),
                 (
                     "Motor Lubrication System",
@@ -191,7 +210,10 @@ class CompressorsPageWidget(QWidget):
                 ("Input 5", WarningLabel(field="input5A621")),
                 ("Input 6", WarningLabel(field="input6A622")),
                 ("Full SD Card", WarningLabel(field="fullSDCardA623")),
-                ("Temperature High VSD", WarningLabel(field="temperatureHighVSDA700")),
+                (
+                    "Temperature High VSD",
+                    WarningLabel(field="temperatureHighVSDA700"),
+                ),
             ],
         )
 
@@ -200,7 +222,10 @@ class CompressorsPageWidget(QWidget):
             DataFormWidget(
                 self.compressor.compressorInfo,
                 [
-                    ("Compressor Software Version", DataLabel(field="softwareVersion")),
+                    (
+                        "Compressor Software Version",
+                        DataLabel(field="softwareVersion"),
+                    ),
                     ("Serial Number", DataLabel(field="serialNumber")),
                 ],
             )

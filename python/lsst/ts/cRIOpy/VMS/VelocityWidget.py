@@ -27,7 +27,9 @@ from .CacheTimeWidget import CacheTimeWidget
 class VelocityWidget(CacheTimeWidget):
     """Display signal as velocity (single acceleration integral)."""
 
-    def calculateValues(self, timestamps, signal):
+    def calculateValues(
+        self, timestamps: list[float], signal: list[float]
+    ) -> tuple[list[float] | None, list[float] | None]:
         if len(signal) <= self.integralBinning:
             return (None, None)
 

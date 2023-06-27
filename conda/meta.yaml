@@ -34,7 +34,6 @@ test:
     - python
     - bin
     - tests
-    - setup.cfg
   commands:
     - pytest
 

@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["LEVELS", "ToolBar", "Dock", "Messages"]
+__all__ = ["LEVELS", "LogToolBar", "Dock", "Messages"]
 
+import typing
 from datetime import datetime
 from html import escape
 
@@ -38,26 +39,22 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
+from ...SALComm import MetaSAL, command_group
 from ..CustomLabels import DockWindow
-from .SALComm import SALListCommand
 
 LEVELS = ["Trace", "Debug", "Info", "Warning", "Error", "Critical"]
 
 
-def _levelToIndex(level):
+def _levelToIndex(level: int) -> int:
     return min(int(level / 10), 5)
 
 
-def _isCommArray(comms):
-    return isinstance(comms, tuple)
-
-
-class ToolBar(QWidget):
+class LogToolBar(QWidget):
     """Toolbar for DockWidget. Can handle messages coming from multiple CSC.
 
     Parameters
     ----------
-    comms : `[SALComm]` or `SALComm`
+    *comms : `MetaSAL`
         SAL/DDS communications to handle.
     """
 
@@ -65,7 +62,7 @@ class ToolBar(QWidget):
     changeLevel = Signal(int)
     setSize = Signal(int)
 
-    def __init__(self, comms, parent):
+    def __init__(self, parent: QWidget, *comms: MetaSAL):
         super().__init__(parent)
         toolbar = QHBoxLayout()
 
@@ -88,18 +85,15 @@ class ToolBar(QWidget):
         toolbar.addWidget(level)
         toolbar.addWidget(QLabel("Current"))
 
-        def addLevelLabel(comm):
+        def addLevelLabel(comm: MetaSAL) -> None:
             currentLevel = QLabel("---")
             toolbar.addWidget(currentLevel)
             comm.logLevel.connect(
                 lambda data: currentLevel.setText(LEVELS[_levelToIndex(data.level)])
             )
 
-        if _isCommArray(comms):
-            for comm in comms:
-                addLevelLabel(comm)
-        else:
-            addLevelLabel(comms)
+        for comm in comms:
+            addLevelLabel(comm)
 
         toolbar.addWidget(QLabel("Max lines"))
         toolbar.addWidget(maxBlock)
@@ -110,7 +104,7 @@ class ToolBar(QWidget):
                 self.style().standardIcon(QStyle.SP_TitleBarNormalButton), ""
             )
 
-            def _toggleFloating():
+            def _toggleFloating() -> None:
                 parent.setFloating(not parent.isFloating())
 
             floatButton.clicked.connect(_toggleFloating)
@@ -153,7 +147,7 @@ class Messages(QPlainTextEdit):
         "color:red; font-weight:bold;",
     ]
 
-    def __init__(self, comms):
+    def __init__(self, *comms: MetaSAL):
         super().__init__()
         self.setReadOnly(True)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
@@ -162,14 +156,11 @@ class Messages(QPlainTextEdit):
         font.setStyleHint(QFont.TypeWriter)
         self.setFont(font)
 
-        if _isCommArray(comms):
-            for comm in comms:
-                comm.logMessage.connect(self.logMessage)
-        else:
-            comms.logMessage.connect(self.logMessage)
+        for comm in comms:
+            comm.logMessage.connect(self.logMessage)
 
     @Slot()
-    def logMessage(self, data):
+    def logMessage(self, data: typing.Any) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )
@@ -178,7 +169,7 @@ class Messages(QPlainTextEdit):
             f"{date} [<b>{self.LEVELS_IDS[level]}</b>]"
             f" <span style='{self.LEVEL_TEXT_STYLE[level]}'>"
             f"{escape(data.message)}"
-            f"</span>"
+            "</span>"
         )
         self.ensureCursorVisible()
 
@@ -186,33 +177,31 @@ class Messages(QPlainTextEdit):
 class Object(QObject):
     """Construct and populate toolbar and messages."""
 
-    def __init__(self, comms, toolbar, messages):
-        if _isCommArray(comms):
-            self.comms = comms
-        else:
-            self.comms = [comms]
+    def __init__(self, toolbar: LogToolBar, messages: Messages, *comms: MetaSAL):
+        self.comms = comms
+        self.messages = messages
 
         toolbar.clear.connect(messages.clear)
         toolbar.changeLevel.connect(self.changeLevel)
         toolbar.setSize.connect(self.setMessageSize)
 
     @Slot()
-    def setMessageSize(self, i):
+    def setMessageSize(self, i: int) -> None:
         self.messages.setMaximumBlockCount(i)
 
     @asyncSlot()
-    async def changeLevel(self, index):
-        await SALListCommand(self, self.comms, "setLogLevel", level=index * 10)
+    async def changeLevel(self, index: int) -> None:
+        await command_group(self, list(self.comms), "setLogLevel", level=index * 10)
 
 
 class Widget(QWidget, Object):
-    def __init__(self, comms):
-        super().__init__()
+    def __init__(self, *comms: MetaSAL):
+        QWidget.__init__(self)
 
-        messages = Messages(comms)
-        toolbar = ToolBar(comms, self)
+        messages = Messages(*comms)
+        toolbar = LogToolBar(self, *comms)
 
-        Object.__init__(self, comms, toolbar, messages)
+        Object.__init__(self, toolbar, messages, *comms)
 
         layout = QVBoxLayout()
         layout.addWidget(toolbar)
@@ -226,17 +215,17 @@ class Dock(DockWindow, Object):
 
     Parameters
     ----------
-    comms : `[SALComm]` or `SALComm`
+    *comms : `MetaSAL`
         SAL/DDS communications to handle.
     """
 
-    def __init__(self, comms):
+    def __init__(self, *comms: MetaSAL):
         super().__init__("SAL Log")
 
-        messages = Messages(comms)
-        toolbar = ToolBar(comms, self)
+        messages = Messages(*comms)
+        toolbar = LogToolBar(self, *comms)
 
-        Object.__init__(self, comms, toolbar, messages)
+        Object.__init__(self, toolbar, messages, *comms)
 
         self.setTitleBarWidget(toolbar)
         self.setWidget(messages)

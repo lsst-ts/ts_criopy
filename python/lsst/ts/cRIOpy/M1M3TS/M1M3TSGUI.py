@@ -19,16 +19,18 @@
 
 __all__ = ["summaryStateString", "ThermalStatesDock"]
 
+import typing
+
 from asyncqt import asyncSlot
 from lsst.ts.salobj import State
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..GUI import DockWindow
-from ..GUI.SAL import SALCommand
+from ..SALComm import MetaSAL, command
 
 
-def summaryStateString(summaryState):
+def summaryStateString(summaryState: int) -> str:
     """Returns HTML string sumarizing device state.
 
     Parameters
@@ -59,20 +61,22 @@ class ThermalStatesDock(DockWindow):
 
     Paramaters
     ----------
-    m1m3ts : `SALComm`
-        SALComm object, connection to M1M3 TS.
+    m1m3ts : `MetaSAL`
+        MetaSAL object, connection to M1M3 TS.
     """
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__("Status")
         self.m1m3ts = m1m3ts
         self.setMinimumWidth(200)
 
         layout = QVBoxLayout()
 
-        self._controlButtons = []
+        self._controlButtons: list[QPushButton] = []
 
-        def _addButton(text, onClick, default=False):
+        def _addButton(
+            text: str, onClick: typing.Callable[[], None], default: bool = False
+        ) -> QPushButton:
             button = QPushButton(text)
             button.clicked.connect(onClick)
             button.setEnabled(False)
@@ -104,7 +108,7 @@ class ThermalStatesDock(DockWindow):
 
         self.setWidget(widget)
 
-    def setButtonsToState(self, state):
+    def setButtonsToState(self, state: int) -> None:
         """Sets button for given state. Changes button enabled/disabled to
         actions allowed at the given state.
 
@@ -127,42 +131,42 @@ class ThermalStatesDock(DockWindow):
             print(f"Undefined buttonstate: {state} - {str(ke)}")
 
     @asyncSlot()
-    async def start(self):
-        await SALCommand(
+    async def start(self) -> None:
+        await command(
             self, self.m1m3ts.remote.cmd_start, configurationOverride="Default"
         )
 
     @asyncSlot()
-    async def enable(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_enable)
+    async def enable(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_enable)
 
     @asyncSlot()
-    async def setEngineeringMode(self):
-        await SALCommand(
+    async def setEngineeringMode(self) -> None:
+        await command(
             self,
             self.m1m3ts.remote.cmd_setEngineeringMode,
             enableEngineeringMode=self.engineeringButton.text() == "Enter Engineering",
         )
 
     @asyncSlot()
-    async def disable(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_disable)
+    async def disable(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_disable)
 
     @asyncSlot()
-    async def standby(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_standby)
+    async def standby(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_standby)
 
     @asyncSlot()
-    async def exitControl(self):
-        await SALCommand(self, self.m1m3ts.remote.cmd_exitControl)
+    async def exitControl(self) -> None:
+        await command(self, self.m1m3ts.remote.cmd_exitControl)
 
-    @Slot(map)
-    def summaryState(self, data):
+    @Slot()
+    def summaryState(self, data: typing.Any) -> None:
         self.stateLabel.setText(summaryStateString(data.summaryState))
         self.setButtonsToState(data.summaryState)
 
-    @Slot(map)
-    def engineeringMode(self, data):
+    @Slot()
+    def engineeringMode(self, data: typing.Any) -> None:
         if data.engineeringMode:
             self.engineeringButton.setText("Exit Engineering")
         else:

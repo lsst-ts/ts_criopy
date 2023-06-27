@@ -25,17 +25,18 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import InterlockOffGrid, PowerOnOffGrid, TimeChart, TimeChartView
+from ..SALComm import MetaSAL
 
 
 class InterlockPageWidget(QWidget):
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
         layout.addWidget(
             PowerOnOffGrid(
                 {
-                    "heartbeatCommandedState": "Controller to Interlock Heartbeat",
+                    "heartbeatCommandedState": ("Controller to Interlock Heartbeat"),
                     "heartbeatOutputState": "Interlock heartbeat state",
                 },
                 m1m3.interlockStatus,

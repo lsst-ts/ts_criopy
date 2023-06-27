@@ -1,5 +1,3 @@
-# -'''- coding: utf-8 -'''-
-
 # This file is part of LSST EUI.
 #
 # Developed for the LSST Telescope and Site Systems.
@@ -29,10 +27,11 @@ from PySide2.QtWidgets import QLabel
 
 from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
 from .LaserTracker import OverviewPageWidget
+from .SALComm import MetaSAL
 
 
 class LTEUI(EUIWindow):
-    def __init__(self, laser_tracker):
+    def __init__(self, laser_tracker: MetaSAL):
         super().__init__("LTGUI", [laser_tracker], (700, 400))
 
         self.add_page("Overview", OverviewPageWidget, laser_tracker)
@@ -68,7 +67,7 @@ class LTEUI(EUIWindow):
         )
 
 
-def run():
+def run() -> None:
     # Create the Qt Application
     app = Application(LTEUI)
     app.addComm("LaserTracker", index=1)

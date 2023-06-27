@@ -25,7 +25,7 @@ from PySide2.QtGui import QContextMenuEvent, QPainter
 from PySide2.QtWidgets import QInputDialog, QMenu
 
 from ...GUI import Histogram
-from ...GUI.SAL.SALComm import MetaSAL
+from ...SALComm import MetaSAL
 from .Widget import Widget
 
 
@@ -83,20 +83,17 @@ class HistogramPageWidget(Widget):
         self.histogramView = HistogramView()
         super().__init__(m1m3, self.histogramView)
 
-    def updateValues(self, data: typing.Any, changed: bool) -> None:
+    def changeValues(self) -> None:
+        self.histogramView.setName(self.getCurrentFieldName())
+
+    def updateValues(self, data: typing.Any) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
         ----------
         data : `object`
             New data structure, passed from SAL handler.
-        changed : `bool`
-            True when data shall be added as a new value selection. Mirror View
-            is cleared when true, and new FA items are created.
         """
-        if changed:
-            self.histogramView.setName(self.getCurrentFieldName())
-
         if data is None:
             return
 

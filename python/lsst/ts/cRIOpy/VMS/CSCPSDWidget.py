@@ -28,6 +28,7 @@ from PySide2.QtCore import QPointF, Qt, Slot
 
 from ..GUI import AbstractChart
 from ..GUI.CustomLabels import DockWindow
+from .Bars import ToolBar
 from .ChartView import ChartView
 from .Unit import coefficients, units
 
@@ -59,9 +60,9 @@ class CSCPSDWidget(DockWindow):
 
     def __init__(
         self,
-        title,
-        toolBar,
-        psd,
+        title: str,
+        toolBar: ToolBar,
+        psd: typing.Any,
         num_sensor: int,
         channels: list[tuple[int, int]] | None = None,
     ):
@@ -97,7 +98,7 @@ class CSCPSDWidget(DockWindow):
         self.unit = unit
         self.callSetupAxes = True
 
-    def setupAxes(self):
+    def setupAxes(self) -> None:
         for a in self.chart.axes():
             self.chart.removeAxis(a)
 
@@ -146,7 +147,7 @@ class CSCPSDWidget(DockWindow):
         if self.callSetupAxes is True:
             self.setupAxes()
 
-        def plot(serie, psd):
+        def plot(serie: QtCharts.QLineSeries, psd: typing.Any) -> tuple[float, float]:
             """Plot recieved PSD.
 
             Parameters

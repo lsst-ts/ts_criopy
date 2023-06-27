@@ -18,8 +18,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide2.QtCore import QSize, Qt
-from PySide2.QtGui import QGuiApplication, QPainter
+from PySide2.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent
 from PySide2.QtWidgets import QWidget
 
 
@@ -33,17 +35,17 @@ class EnumScale(QWidget):
     levels : `{value : (name, color)}`
     """
 
-    def __init__(self, levels):
+    def __init__(self, levels: dict[typing.Any, tuple[str, QColor]]):
         super().__init__()
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
         self._levels = levels
 
-    def sizeHint(self):
+    def sizeHint(self) -> None:
         """Overridden method."""
         return QSize(100, 100)
 
-    def getLabels(self):
+    def getLabels(self) -> list[typing.Any]:
         """Returns array of labels scale represents.
 
         Returns
@@ -51,19 +53,18 @@ class EnumScale(QWidget):
         labels : `[..]`
             Array (in order labels shall be pletted) with all supported values.
         """
-        return self._levels.keys()
+        return list(self._levels.keys())
 
-    def formatValue(self, value):
+    def formatValue(self, value: typing.Any) -> str:
         return self._levels[value][0]
 
-    def getColor(self, value):
+    def getColor(self, value: typing.Any) -> QColor:
         """Returns color value.
 
         Parameters
         ----------
-        value : `bool`
-            Value for which color shall be returned. True is assumed to be good
-            (=green).
+        value : `Any`
+            Value for which color shall be returned.
 
         Returns
         -------
@@ -72,7 +73,7 @@ class EnumScale(QWidget):
         """
         return self._levels[value][1]
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent) -> None:
         """Overridden method. Paint gauge as series of lines, and adds text
         labels."""
         painter = QPainter(self)
@@ -91,7 +92,7 @@ class EnumScale(QWidget):
         t_height = max(5, (sheight / l_labels) / 5)
         x_offset = 5
 
-        def box(y, value):
+        def box(y: float, value: typing.Any) -> None:
             painter.setBrush(self.getColor(value))
             painter.drawRect(0, y, swidth, sheight / l_labels)
 

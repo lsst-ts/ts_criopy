@@ -25,7 +25,7 @@ from .EnumScale import EnumScale
 class EnabledDisabledScale(EnumScale):
     """Draws gauge with color scale for boolean (enabled/disabled) values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             {True: ("Enabled", Colors.OK), False: ("Disabled", Colors.DISABLED)}
         )

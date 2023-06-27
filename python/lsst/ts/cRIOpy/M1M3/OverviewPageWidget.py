@@ -17,11 +17,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 import astropy.units as u
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from ..GUI import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
+from ..SALComm import MetaSAL
 
 
 class OverviewPageWidget(QWidget):
@@ -36,7 +39,7 @@ class OverviewPageWidget(QWidget):
 
     FORCES = ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]
 
-    def __init__(self, m1m3, mtmount):
+    def __init__(self, m1m3: MetaSAL, mtmount: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -51,7 +54,7 @@ class OverviewPageWidget(QWidget):
         self.errorCodeLabel = QLabel("---")
         self.heartbeatLabel = Heartbeat()
 
-        def createForcesAndMoments():
+        def createForcesAndMoments() -> dict[str, QLabel]:
             return {
                 "fx": Force(),
                 "fy": Force(),
@@ -62,7 +65,7 @@ class OverviewPageWidget(QWidget):
                 "forceMagnitude": Force(),
             }
 
-        def createXYR():
+        def createXYR() -> dict[str, QLabel]:
             return {
                 "xPosition": Mm(),
                 "yPosition": Mm(),
@@ -77,7 +80,7 @@ class OverviewPageWidget(QWidget):
                 dataLayout.addWidget(QLabel(f"<b>{label}</b>"), row, col)
                 col += 1
 
-        def add_data_row(variables, row: int, col: int) -> None:
+        def add_data_row(variables: dict[str, QLabel], row: int, col: int) -> None:
             for k, v in variables.items():
                 dataLayout.addWidget(v, row, col)
                 col += 1
@@ -279,16 +282,16 @@ class OverviewPageWidget(QWidget):
         mtmount.azimuth.connect(self.azimuth)
         mtmount.elevation.connect(self.elevation)
 
-    def _setValues(self, variables, data):
+    def _setValues(self, variables: dict[str, QLabel], data: typing.Any) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
-    @Slot(map)
-    def appliedForces(self, data):
+    @Slot()
+    def appliedForces(self, data: typing.Any) -> None:
         self._setValues(self.faCommanded, data)
 
-    @Slot(map)
-    def detailedState(self, data):
+    @Slot()
+    def detailedState(self, data: typing.Any) -> None:
         # summary state, mirror state, mode
         matrix = [
             ["---", "---", "---"],
@@ -312,45 +315,45 @@ class OverviewPageWidget(QWidget):
         self.mirrorStateLabel.setText(m[1])
         self.modeStateLabel.setText(m[2])
 
-    @Slot(map)
-    def errorCode(self, data):
+    @Slot()
+    def errorCode(self, data: typing.Any) -> None:
         self.errorCodeLabel.setText(hex(data.errorCode))
 
-    @Slot(map)
-    def accelerometerData(self, data):
+    @Slot()
+    def accelerometerData(self, data: typing.Any) -> None:
         self.accelationXLabel.setText("%0.3f" % (data.angularAccelerationX))
         self.accelationYLabel.setText("%0.3f" % (data.angularAccelerationY))
         self.accelationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
 
-    @Slot(map)
-    def boosterValveStatus(self, data):
+    @Slot()
+    def boosterValveStatus(self, data: typing.Any) -> None:
         self.slewFlag.setText("On" if data.slewFlag else "Off")
 
-    @Slot(map)
-    def forceActuatorData(self, data):
+    @Slot()
+    def forceActuatorData(self, data: typing.Any) -> None:
         self._setValues(self.faMeasured, data)
 
-    @Slot(map)
-    def gyroData(self, data):
+    @Slot()
+    def gyroData(self, data: typing.Any) -> None:
         self.velocityXLabel.setText("%0.3f" % (data.angularVelocityX))
         self.velocityYLabel.setText("%0.3f" % (data.angularVelocityY))
         self.velocityZLabel.setText("%0.3f" % (data.angularVelocityZ))
 
-    @Slot(map)
-    def hardpointActuatorData(self, data):
+    @Slot()
+    def hardpointActuatorData(self, data: typing.Any) -> None:
         self._setValues(self.hpMeasured, data)
         self._setValues(self.hpPosition, data)
 
-    @Slot(map)
-    def imsData(self, data):
+    @Slot()
+    def imsData(self, data: typing.Any) -> None:
         self._setValues(self.imsPosition, data)
 
-    @Slot(map)
-    def inclinometerData(self, data):
+    @Slot()
+    def inclinometerData(self, data: typing.Any) -> None:
         self.inclinometerElevationLabel.setText(f"{data.inclinometerAngle:.3f}")
 
-    @Slot(map)
-    def forceActuatorSettings(self, data):
+    @Slot()
+    def forceActuatorSettings(self, data: typing.Any) -> None:
         self.inclinometerLabel.setEnabled(data.useInclinometer)
         self.inclinometerElevationLabel.setEnabled(data.useInclinometer)
 
@@ -363,15 +366,15 @@ class OverviewPageWidget(QWidget):
         else:
             self.inclinometerTMALabel.setText("<b>TMA</b>")
 
-    @Slot(map)
-    def outerLoopData(self, data):
+    @Slot()
+    def outerLoopData(self, data: typing.Any) -> None:
         self.broadcastCounter.setText(str(data.broadcastCounter))
         self.executionTime.setText(f"{(data.executionTime * u.s.to(u.ms)):.2f}")
 
-    @Slot(map)
-    def azimuth(self, data):
+    @Slot()
+    def azimuth(self, data: typing.Any) -> None:
         self.tmaAzimuthLabel.setText("%0.3f" % (data.actualPosition))
 
-    @Slot(map)
-    def elevation(self, data):
+    @Slot()
+    def elevation(self, data: typing.Any) -> None:
         self.tmaElevationLabel.setText("%0.3f" % (data.actualPosition))

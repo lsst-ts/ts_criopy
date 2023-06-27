@@ -34,8 +34,8 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import ColoredButton, Colors, StatusBox, StatusWidget
-from ..GUI.SAL import CSCControlWidget, EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..GUI.SAL import CSCControlWidget, EngineeringButton
+from ..SALComm import MetaSAL, command
 
 
 class HPWarnings:
@@ -107,20 +107,25 @@ class SlewWidget(QWidget):
             StatusBox(
                 [
                     StatusWidget(
-                        "S", "slewFlag", "SlewFlag - if booster valves are opened"
+                        "S",
+                        "slewFlag",
+                        "SlewFlag - if booster valves are opened",
                     ),
                     StatusWidget(
-                        "U", "userTriggered", "User would like to open booster valves"
+                        "U",
+                        "userTriggered",
+                        "User would like to open booster valves",
                     ),
                     StatusWidget(
                         "FE",
                         "followingErrorTriggered",
-                        "Force Actuator Following error values suggests booster valves shall be opened",
+                        "Force Actuator Following error values suggests booster"
+                        " valves shall be opened",
                     ),
                     StatusWidget(
                         "A",
                         "accelerometerTriggered",
-                        "Accelerometer values suggest booster valve shall be opened",
+                        "Accelerometer values suggest booster valve shall be" " opened",
                     ),
                 ],
                 self.m1m3.boosterValveStatus,
@@ -145,11 +150,11 @@ class SlewWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_boosterValveOpen)
+        await command(self, self.m1m3.remote.cmd_boosterValveOpen)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_boosterValveClose)
+        await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
     def boosterValveStatus(self, data: typing.Any) -> None:
@@ -205,8 +210,8 @@ class M1M3CSCControl(CSCControlWidget):
             "detailedState",
         )
 
-    def get_state_buttons_map(self, state):
-        stateMap = {
+    def get_state_buttons_map(self, state: int) -> list[str | None]:
+        states_map: dict[int, list[str | None]] = {
             DetailedState.STANDBY: [
                 self.TEXT_START,
                 None,
@@ -237,7 +242,13 @@ class M1M3CSCControl(CSCControlWidget):
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedState.RAISING: [None, self.TEXT_ABORT_RAISE, None, None, None],
+            DetailedState.RAISING: [
+                None,
+                self.TEXT_ABORT_RAISE,
+                None,
+                None,
+                None,
+            ],
             DetailedState.RAISINGENGINEERING: [
                 None,
                 self.TEXT_ABORT_RAISE,
@@ -262,10 +273,16 @@ class M1M3CSCControl(CSCControlWidget):
             DetailedState.LOWERING: [None, None, None, None, None],
             DetailedState.LOWERINGENGINEERING: [None, None, None, None, None],
             DetailedState.LOWERINGFAULT: [None, None, None, None, None],
-            DetailedState.PROFILEHARDPOINTCORRECTIONS: [None, None, None, None, None],
+            DetailedState.PROFILEHARDPOINTCORRECTIONS: [
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
         }
 
-        return stateMap[state]
+        return states_map[state]
 
 
 class ApplicationControlWidget(QWidget):
@@ -277,11 +294,10 @@ class ApplicationControlWidget(QWidget):
 
     TEXT_PANIC = "&Panic!"
 
-    def __init__(self, m1m3):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
 
         self.m1m3 = m1m3
-        self._lastEnabled = None
         self._hpWarnings = HPWarnings()
 
         command_layout = QVBoxLayout()
@@ -334,29 +350,12 @@ class ApplicationControlWidget(QWidget):
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
-    def disableAllButtons(self):
-        if self._lastEnabled is None:
-            self._lastEnabled = []
-            for b in self.commandButtons.buttons():
-                self._lastEnabled.append(b.isEnabled())
-                b.setEnabled(False)
-
-    def restoreEnabled(self):
-        if self._lastEnabled is None:
-            return
-        bi = 0
-        for b in self.commandButtons.buttons():
-            b.setEnabled(self._lastEnabled[bi])
-            bi += 1
-
-        self._lastEnabled = None
-
     @asyncSlot()
-    async def _panic(self, checked: bool = False):
-        await SALCommand(self, self.m1m3.remote.cmd_panic)
+    async def _panic(self, checked: bool = False) -> None:
+        await command(self, self.m1m3.remote.cmd_panic)
 
     @Slot()
-    def detailedState(self, data):
+    def detailedState(self, data: typing.Any) -> None:
         self._panic_button.setEnabled(not (data.detailedState == DetailedState.OFFLINE))
         self.slewWidget.setEnabled(
             not (

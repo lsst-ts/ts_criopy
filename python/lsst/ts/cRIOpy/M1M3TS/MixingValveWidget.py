@@ -31,13 +31,13 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
-from ..GUI.SAL import SALCommand
+from ..SALComm import MetaSAL, command
 
 
 class MixingValveWidget(DockWindow):
     """Displays Mixing Valve data."""
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__("Mixing valve")
         self.m1m3ts = m1m3ts
 
@@ -102,8 +102,8 @@ class MixingValveWidget(DockWindow):
         )
 
     @asyncSlot()
-    async def _setMixingValve(self):
-        await SALCommand(
+    async def _setMixingValve(self) -> None:
+        await command(
             self,
             self.m1m3ts.remote.cmd_setMixingValve,
             mixingValveTarget=self.target.value(),

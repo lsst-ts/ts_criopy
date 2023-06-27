@@ -27,7 +27,9 @@ from .CacheTimeWidget import CacheTimeWidget
 class DisplacementWidget(CacheTimeWidget):
     """Display signal as displacement (double acceleration integral)."""
 
-    def calculateValues(self, timestamps, signal):
+    def calculateValues(
+        self, timestamps: list[float], signal: list[float]
+    ) -> tuple[list[float] | None, list[float] | None]:
         # use 2 bin for velocity
         velocity = np.trapz(
             [(signal[i], signal[i + 1]) for i in range(len(signal) - 1)], axis=1

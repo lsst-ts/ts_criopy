@@ -22,11 +22,13 @@ import typing
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
+from ..SALComm import MetaSAL
+
 
 class OverviewPageWidget(QWidget):
     PUBLISH_FIELDS = ["target", "dX", "dY", "dZ", "dRX", "dRY", "dRZ"]
 
-    def __init__(self, laser_tracker):
+    def __init__(self, laser_tracker: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -45,5 +47,5 @@ class OverviewPageWidget(QWidget):
     def offsets_publish(self, data: typing.Any) -> None:
         r = self.measurements.rowCount() + 1
         self.measurements.setRowCount(r)
-        for f, c in enumerate(self.PUBLISH_FIELDS):
+        for c, f in enumerate(self.PUBLISH_FIELDS):
             self.measurements.setItem(r, c, QTableWidgetItem(getattr(data, f)))

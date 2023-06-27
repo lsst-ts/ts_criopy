@@ -24,6 +24,7 @@ __all__ = ["GlycolLoopTemperatureWidget"]
 from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import DataDegC, DockWindow
+from ..SALComm import MetaSAL
 
 
 class GlycolLoopTemperatureWidget(DockWindow):
@@ -31,11 +32,11 @@ class GlycolLoopTemperatureWidget(DockWindow):
 
     Parameters
     ----------
-    m1m3ts : `SALComm`
+    m1m3ts : `MetaSAL`
         SALComm object representing M1M3 Termal System.
     """
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__("Glycol Loop Temperature")
 
         outside = QFormLayout()
@@ -49,7 +50,8 @@ class GlycolLoopTemperatureWidget(DockWindow):
             inside.addRow(
                 str(i),
                 DataDegC(
-                    m1m3ts.glycolLoopTemperature, "insideCellTemperature" + str(i)
+                    m1m3ts.glycolLoopTemperature,
+                    "insideCellTemperature" + str(i),
                 ),
             )
 
@@ -63,11 +65,17 @@ class GlycolLoopTemperatureWidget(DockWindow):
         glycol = QFormLayout()
         glycol.addRow(
             "Telescope Supply",
-            DataDegC(m1m3ts.glycolLoopTemperature, "telescopeCoolantSupplyTemperature"),
+            DataDegC(
+                m1m3ts.glycolLoopTemperature,
+                "telescopeCoolantSupplyTemperature",
+            ),
         )
         glycol.addRow(
             "Telescope Return",
-            DataDegC(m1m3ts.glycolLoopTemperature, "telescopeCoolantReturnTemperature"),
+            DataDegC(
+                m1m3ts.glycolLoopTemperature,
+                "telescopeCoolantReturnTemperature",
+            ),
         )
         glycol.addRow(
             "Mirror Supply",

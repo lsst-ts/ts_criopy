@@ -17,44 +17,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
+from PySide2.QtCore import Slot
+
+from ...SALComm import MetaSAL
 from ..ActuatorsDisplay import Scales
 
 __all__ = ["TopicData", "TopicField"]
-
-
-class TopicData:
-    """
-    Holds topic available for display.
-
-    Attributes
-    ----------
-    name : `str`
-        Name to display in selection list box.
-    fields : `[TopicField]`
-        Fields available inside topic. Array of TopicField.
-    topic : `str`
-        Name of the topics. Equals to SAL/DDS topic name for telemetry, needs
-        evt_ prefix for events.
-    isEvent : `bool`, optional
-        True if topic is an event. Data are extracted from remote with evt_
-        prefix. Defaults to True
-    command : `str`, optional
-        If not None (the default value), suffix of commands to clear and apply
-        (update) values.
-    """
-
-    def __init__(self, name, fields, topic, isEvent=True, command=None):
-        self.name = name
-        self.fields = fields
-        self.selectedField = 0
-        self.topic = topic
-        self.isEvent = isEvent
-        self.command = command
-
-    def getTopic(self) -> str:
-        if self.isEvent:
-            return "evt_" + self.topic
-        return "tel_" + self.topic
 
 
 class TopicField:
@@ -73,31 +43,95 @@ class TopicField:
         Scale type. Select scale used to display field values.
     """
 
-    def __init__(self, name, fieldName, valueIndex, scaleType=Scales.GAUGE):
+    def __init__(
+        self,
+        name: str,
+        fieldName: str,
+        valueIndex: int,
+        scaleType: Scales = Scales.GAUGE,
+    ):
         self.name = name
         self.fieldName = fieldName
         self.valueIndex = valueIndex
         self.scaleType = scaleType
 
-    def getValue(self, data):
+    def getValue(self, data: object) -> typing.Any:
         return getattr(data, self.fieldName)
 
 
 class OnOffField(TopicField):
-    def __init__(self, name, fieldName, valueIndex):
+    def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.ONOFF)
 
 
 class WarningField(TopicField):
-    def __init__(self, name, fieldName, valueIndex):
+    def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.WARNING)
 
 
 class WaitingField(TopicField):
-    def __init__(self, name, fieldName, valueIndex):
+    def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.WAITING)
 
 
 class EnabledDisabledField(TopicField):
-    def __init__(self, name, fieldName, valueIndex):
+    def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.ENABLED_DISABLED)
+
+
+class TopicData:
+    """
+    Holds topic available for display.
+
+    Attributes
+    ----------
+    name : `str`
+        Name to display in selection list box.
+    fields : `[TopicField]`
+        Fields available inside topic. Array of TopicField.
+    topic : `str`
+        Name of the topic. Equals to SAL/DDS topic name for telemetry, needs
+        evt_ prefix for events.
+    isEvent : `bool`, optional
+        True if topic is an event. Data are extracted from remote with evt_
+        prefix. Defaults to True
+    command : `str`, optional
+        If not None (the default value), suffix of commands to clear and apply
+        (update) values.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        fields: list[TopicField],
+        topic: str | None,
+        isEvent: bool = True,
+        command: str | None = None,
+    ):
+        self.name = name
+        self.fields = fields
+        self.selectedField = 0
+        self.topic = topic
+        self.isEvent = isEvent
+        self.command = command
+
+    def getTopic(self) -> str:
+        if self.topic is None:
+            raise RuntimeError("Called getTopic for topic-less Topic")
+        if self.isEvent:
+            return "evt_" + self.topic
+        return "tel_" + self.topic
+
+    def change_topic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
+        """Called when new topic is selected.
+
+        Parameters
+        ----------
+        index: `int`
+            New field index.
+        slot: `Slot`
+            Slot for data reception.
+        comm: `MetaSAL`
+            MetaSAL with data.
+        """
+        raise NotImplementedError("TopicData structure must implement change_topic")

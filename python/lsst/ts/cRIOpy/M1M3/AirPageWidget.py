@@ -24,8 +24,8 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import OnOffGrid, WarningGrid
-from ..GUI.SAL import Axis, ChartWidget, EngineeringButton, SALCommand
-from ..GUI.SAL.SALComm import MetaSAL
+from ..GUI.SAL import Axis, ChartWidget, EngineeringButton
+from ..SALComm import MetaSAL, command
 
 
 class AirPageWidget(QWidget):
@@ -90,8 +90,8 @@ class AirPageWidget(QWidget):
 
     @asyncSlot()
     async def issueCommandTurnAirOn(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_turnAirOn)
+        await command(self, self.m1m3.remote.cmd_turnAirOn)
 
     @asyncSlot()
     async def issueCommandTurnAirOff(self) -> None:
-        await SALCommand(self, self.m1m3.remote.cmd_turnAirOff)
+        await command(self, self.m1m3.remote.cmd_turnAirOff)

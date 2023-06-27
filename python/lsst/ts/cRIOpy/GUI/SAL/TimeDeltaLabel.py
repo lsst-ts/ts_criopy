@@ -20,6 +20,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.utils import current_tai
+from PySide2.QtCore import QTimerEvent
 from PySide2.QtWidgets import QLabel
 
 __all__ = ["TimeDeltaLabel"]
@@ -31,28 +32,28 @@ class TimeDeltaLabel(QLabel):
     time from that past event.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.eventTime = None
+        self.eventTime: float | None = None
         self.timer = None
 
-    def update(self):
+    def update(self) -> None:
         if self.eventTime is None:
             self.setText("---")
         else:
             self.setText(f"{current_tai() - self.eventTime:.2f}")
 
-    def setTime(self, time):
+    def setTime(self, time: float) -> None:
         if self.eventTime is None:
             self.timer = self.startTimer(50)
         self.eventTime = time
 
-    def setUnknown(self):
+    def setUnknown(self) -> None:
         self.eventTime = None
         if self.timer is not None:
             self.killTimer(self.timer)
             self.timer = None
         self.update()
 
-    def timerEvent(self, event):
+    def timerEvent(self, event: QTimerEvent) -> None:
         self.update()

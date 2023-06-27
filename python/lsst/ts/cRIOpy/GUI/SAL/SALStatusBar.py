@@ -24,6 +24,7 @@ from html import escape
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
 
+from ...SALComm import MetaSAL
 from ..CustomLabels import Heartbeat, SimulationStatus, VLine
 
 __all__ = ["SALStatusBar"]
@@ -34,8 +35,8 @@ class SALStatusBar(QStatusBar):
 
     Parameters
     ----------
-    comms : `[SALComm]`
-        SALComms for heartbeat displays. ErrorCode from the first SALComm will
+    comms : `[MetaSAL]`
+        SALs for heartbeat displays. ErrorCode from the first SAL will
         be displayed as well.
     stateLabel : `QLabel`, optional
         If provided, aa label showing detailedState (result of
@@ -43,7 +44,7 @@ class SALStatusBar(QStatusBar):
         added to beginning of the StatusBar.
     """
 
-    def __init__(self, comms, stateLabels: list[QLabel] = []):
+    def __init__(self, comms: list[MetaSAL], stateLabels: list[QLabel] = []):
         super().__init__()
 
         for stateLabel in stateLabels:

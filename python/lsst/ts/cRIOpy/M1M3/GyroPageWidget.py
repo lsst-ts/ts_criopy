@@ -32,7 +32,7 @@ from ..GUI import (
     WarningGrid,
 )
 from ..GUI.SAL import Axis, ChartWidget
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL
 
 
 class GyroPageWidget(QWidget):
@@ -60,7 +60,8 @@ class GyroPageWidget(QWidget):
                             ),
                             ArrayLabels(""),
                             ArrayFields(
-                                ["sequenceNumber", None, None], "<b>Sequence Number</b>"
+                                ["sequenceNumber", None, None],
+                                "<b>Sequence Number</b>",
                             ),
                             ArrayFields(
                                 ["temperature", None, None],

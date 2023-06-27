@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
 from datetime import datetime
 from html import escape
 
@@ -24,13 +25,15 @@ from PySide2.QtCore import Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
+from ...SALComm import MetaSAL
+
 __all__ = ["SALErrorCodeWidget"]
 
 
 class SALErrorCodeWidget(QWidget):
     """Displays errorCode messages."""
 
-    def __init__(self, comm):
+    def __init__(self, comm: MetaSAL) -> None:
         super().__init__()
 
         layout = QVBoxLayout()
@@ -49,7 +52,7 @@ class SALErrorCodeWidget(QWidget):
         comm.errorCode.connect(self.errorCode)
 
     @Slot()
-    def errorCode(self, data):
+    def errorCode(self, data: typing.Any) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )

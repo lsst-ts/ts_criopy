@@ -33,7 +33,7 @@ from ..GUI import (
     WarningGrid,
 )
 from ..GUI.SAL import Axis, ChartWidget
-from ..GUI.SAL.SALComm import MetaSAL
+from ..SALComm import MetaSAL
 
 
 class DCAccelerometerPageWidget(QWidget):

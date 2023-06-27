@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import enum
 import typing
 
 from asyncqt import asyncSlot
@@ -33,17 +34,20 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..GUI.SAL import SALCommand, TopicWindow
+from ..GUI.SAL import TopicWindow
+from ..SALComm import MetaSAL, command
 from .ThermalData import Thermals
 
-BUTTON_FANS = 1
-BUTTON_HEATERS = 2
+
+class Buttons(enum.IntEnum):
+    FANS = 1
+    HEATERS = 2
 
 
 class DataWidget(QTableWidget):
     """Table with ILC values. Stores ILC values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(10, 10)
         for r in range(0, 10):
             self.setVerticalHeaderItem(r, QTableWidgetItem(str(r * 10)))
@@ -53,10 +57,10 @@ class DataWidget(QTableWidget):
         self.empty()
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
-    def empty(self):
+    def empty(self) -> None:
         self.setValues(range(1, 97))
 
-    def setValues(self, data):
+    def setValues(self, data: typing.Any) -> None:
         r = 0
         c = 0
         for value in data:
@@ -66,8 +70,8 @@ class DataWidget(QTableWidget):
                 c = 0
                 r += 1
 
-    def getValues(self):
-        data = []
+    def getValues(self) -> list[int]:
+        data: list[int] = []
         for r in range(0, 10):
             for c in range(0, 10):
                 index = r * 10 + c
@@ -81,7 +85,7 @@ class CommandWidget(QWidget):
 
     Parameters
     ----------
-    m1m3ts : `SALComm`
+    m1m3ts : `MetaSAL`
         SAL communication object.
     """
 
@@ -92,22 +96,22 @@ class CommandWidget(QWidget):
         ----------
         parent : `CommandWidget`
             Command widget holding the button.
-        kind : `int`
-            Button type. Either BUTTON_HEATERS or BUTTON_FANS.
+        kind : `Buttons`
+            Button type.
         """
 
-        def __init__(self, parent, kind):
+        def __init__(self, parent: "CommandWidget", kind: Buttons):
             self._kind = kind
-            if self._kind == BUTTON_HEATERS:
+            if self._kind == Buttons.HEATERS:
                 self._edit_title = "Edit FCU Heaters PWM"
                 self._set_title = "Set FCU Heaters PWM"
                 tooltip = "Edit and sets Fan Coil Units (FCU) Heaters Power"
                 " Wave Modulationi (PWM) (0-255 equals 0-100%)"
-            elif self._kind == BUTTON_FANS:
+            elif self._kind == Buttons.FANS:
                 self._edit_title = "Edit FCU Fans speed"
                 self._set_title = "Set FCU Fans speed"
                 tooltip = (
-                    "Edit and sets Fan Coil Units (FCU) Fans Speed (0-255, *10 RPM)"
+                    "Edit and sets Fan Coil Units (FCU) Fans Speed (0-255, *10" " RPM)"
                 )
             else:
                 raise RuntimeError(f"Unknown set button kind {kind}")
@@ -128,7 +132,7 @@ class CommandWidget(QWidget):
                 self.setText(self._edit_title)
 
         @asyncSlot()
-        async def edit(self):
+        async def edit(self) -> None:
             if self.text() == self._edit_title:
                 self._parent.startEdit(self._kind)
                 self.setText(self._set_title)
@@ -136,11 +140,11 @@ class CommandWidget(QWidget):
                 await self._parent.heaterFanDemand(self._kind)
                 self.setText(self._edit_title)
 
-        def cancel(self):
+        def cancel(self) -> None:
             self.setText(self._edit_title)
             self.setEnabled(True)
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         super().__init__()
         self.m1m3ts = m1m3ts
         self.freezed = False
@@ -150,8 +154,8 @@ class CommandWidget(QWidget):
         self.fans = [0] * 96
         self.heaters = [0] * 96
 
-        self.setHeatersButton = self.SetButton(self, BUTTON_HEATERS)
-        self.setFansButton = self.SetButton(self, BUTTON_FANS)
+        self.setHeatersButton = self.SetButton(self, Buttons.HEATERS)
+        self.setFansButton = self.SetButton(self, Buttons.FANS)
 
         self.flatDemand = QSpinBox()
         self.flatDemand.setRange(0, 255)
@@ -185,11 +189,11 @@ class CommandWidget(QWidget):
         self.setLayout(layout)
 
     @Slot()
-    def setConstant(self):
+    def setConstant(self) -> None:
         self.dataWidget.setValues([self.flatDemand.text()] * 96)
 
     @Slot()
-    def cancel(self):
+    def cancel(self) -> None:
         self.freezed = False
         self.dataWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setConstantButton.setDisabled(True)
@@ -199,11 +203,11 @@ class CommandWidget(QWidget):
         self.setHeatersButton.cancel()
         self.cancelButton.setDisabled(True)
 
-    async def _heaterFanDemand(self, **kwargs):
-        await SALCommand(self, self.m1m3ts.remote.cmd_heaterFanDemand, **kwargs)
+    async def _heaterFanDemand(self, **kwargs: typing.Any) -> None:
+        await command(self, self.m1m3ts.remote.cmd_heaterFanDemand, **kwargs)
 
-    def startEdit(self, kind):
-        if kind == BUTTON_HEATERS:
+    def startEdit(self, kind: Buttons) -> None:
+        if kind == Buttons.HEATERS:
             self.updateValues(self.heaters, True)
             self.setFansButton.setDisabled(True)
         else:
@@ -215,9 +219,9 @@ class CommandWidget(QWidget):
         self.cancelButton.setEnabled(True)
         self.setConstantButton.setEnabled(True)
 
-    async def heaterFanDemand(self, kind):
+    async def heaterFanDemand(self, kind: Buttons) -> None:
         data = self.dataWidget.getValues()
-        if kind == BUTTON_HEATERS:
+        if kind == Buttons.HEATERS:
             await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
         else:
@@ -226,7 +230,7 @@ class CommandWidget(QWidget):
 
         self.cancel()
 
-    def updateValues(self, values, freeze=False):
+    def updateValues(self, values: typing.Any, freeze: bool = False) -> None:
         if self.freezed:
             return
 
@@ -244,17 +248,17 @@ class ThermalValuePageWidget(TopicWindow):
 
     Parameters
     ----------
-    m1m3ts : `SALComm`
-        SALComm TS object
+    m1m3ts : `MetaSAL`
+        SAL TS object
     """
 
-    def __init__(self, m1m3ts):
+    def __init__(self, m1m3ts: MetaSAL):
         self.commandWidget = CommandWidget(m1m3ts)
 
         super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
 
-    def updateValues(self, data):
-        if data is None:
+    def updateValues(self, data: typing.Any) -> None:
+        if data is None or self.field is None:
             self.commandWidget.updateValues(None)
         else:
             self.commandWidget.updateValues(self.field.getValue(data))
