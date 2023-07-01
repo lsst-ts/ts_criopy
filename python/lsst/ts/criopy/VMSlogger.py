@@ -30,7 +30,7 @@ import time
 import typing
 
 from . import parseDuration
-from .VMS import VMS_DEVICES, Collector
+from .vms import VMS_DEVICES, Collector
 
 try:
     importlib.import_module("h5py")

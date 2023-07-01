@@ -24,9 +24,9 @@ import typing
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtWidgets import QLabel
 
-from .AirCompressor import CompressorsPageWidget
+from .aircompressor import CompressorsPageWidget
 from .gui.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
-from .M1M3 import (
+from .m1m3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,
     ApplicationControlWidget,

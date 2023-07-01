@@ -30,7 +30,7 @@ from PySide2.QtWidgets import QMainWindow
 
 from .gui.SAL import Application, SALLog
 from .salcomm import MetaSAL
-from .VMS import (
+from .vms import (
     BoxChartWidget,
     Cache,
     CacheWidget,

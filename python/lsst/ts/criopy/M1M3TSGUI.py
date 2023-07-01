@@ -28,14 +28,14 @@ from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
 from .gui.SAL import Application, SALLog, SALStatusBar
-from .M1M3TS import (
+from .m1m3ts import (
     CoolantPumpWidget,
     FlowMeterWidget,
     GlycolLoopTemperatureWidget,
     MixingValveWidget,
     ThermalValuePageWidget,
 )
-from .M1M3TS.M1M3TSGUI import ThermalStatesDock
+from .m1m3ts.M1M3TSGUI import ThermalStatesDock
 from .salcomm import MetaSAL
 
 
