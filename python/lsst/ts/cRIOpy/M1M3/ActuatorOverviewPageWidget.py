@@ -17,23 +17,94 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import typing
 from functools import partial
 
-from PySide2.QtCore import Qt, Signal
+from asyncqt import asyncSlot
+from lsst.ts.idl.enums.MTM1M3 import DetailedState, EnableDisableForceComponent
+from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
-from ..GUI import ArrayFields, ArrayGrid, UnitLabel
+from ..GUI import ArrayFields, ArrayGrid, ColoredButton, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL
+from ..SALComm import MetaSAL, command
+
+
+class ForceButton(ColoredButton):
+    def __init__(self, enable: bool, name: str, m1m3: MetaSAL):
+        super().__init__("Enable" if enable else "Disable")
+        self.setObjectName(name)
+        self.m1m3 = m1m3
+
+        self.__enable = enable
+        self.__engineering_state = False
+
+        self.clicked.connect(self.enable_force)
+        self.m1m3.forceActuatorState.connect(self.force_actuator_state)
+        self.m1m3.detailedState.connect(self.detailed_state)
+
+    @asyncSlot()
+    async def enable_force(self) -> None:
+        await command(
+            self,
+            self.m1m3.remote.cmd_enableDisableForceComponent,
+            forceComponent=int(
+                getattr(
+                    EnableDisableForceComponent, self.objectName().upper() + "FORCE"
+                )
+            ),
+            enable=self.__enable,
+        )
+
+    def set_button_enable(self, applied: bool) -> None:
+        self.setDisabled(applied if self.__enable else not (applied))
+
+    @Slot()
+    def force_actuator_state(self, data: typing.Any) -> None:
+        applied = getattr(data, self.objectName() + "ForcesApplied")
+        if applied:
+            self.setColor(Qt.green if self.__enable else None)
+        else:
+            self.setColor(None if self.__enable else Qt.red)
+
+        if self.__engineering_state:
+            self.set_button_enable(applied)
+
+    @Slot()
+    def detailed_state(self, data: typing.Any) -> None:
+        self.__engineering_state = data.detailedState == DetailedState.ACTIVEENGINEERING
+        if self.__engineering_state:
+            force_state = self.m1m3.remote.evt_forceActuatorState.get()
+            if force_state is not None:
+                self.set_button_enable(
+                    getattr(force_state, self.objectName() + "ForcesApplied")
+                )
+            else:
+                self.setEnabled(True)
+        else:
+            self.setDisabled(True)
 
 
 class Forces(ArrayFields):
-    def __init__(self, label: str, signal: Signal):
+    def __init__(
+        self,
+        label: str,
+        signal: Signal,
+        force_component: tuple[str, MetaSAL] | None = None,
+    ):
+        extra_widgets: list[QWidget] = []
+        if force_component is not None:
+            extra_widgets = [
+                ForceButton(True, *force_component),
+                ForceButton(False, *force_component),
+            ]
+
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             label,
             partial(UnitLabel, ".02f"),
             signal,
+            extra_widgets=extra_widgets,
         )
 
 
@@ -83,7 +154,11 @@ class ActuatorOverviewPageWidget(QWidget):
                         "Pre-clipped Acceleration",
                         m1m3.preclippedAccelerationForces,
                     ),
-                    Forces("Applied Acceleration", m1m3.appliedAccelerationForces),
+                    Forces(
+                        "Applied Acceleration",
+                        m1m3.appliedAccelerationForces,
+                        ("acceleration", m1m3),
+                    ),
                     ArrayFields(
                         [None, None, "fz", "mx", "my"],
                         "<i>Pre-clipped Active Optics</i>",
@@ -91,35 +166,53 @@ class ActuatorOverviewPageWidget(QWidget):
                         m1m3.preclippedActiveOpticForces,
                     ),
                     ArrayFields(
-                        [None, None, "fz", "mx", "my"],
+                        [None, None, "fz", "mx", "my", None, None],
                         "Applied Active Optics",
                         partial(UnitLabel, ".02f"),
                         m1m3.appliedActiveOpticForces,
+                        extra_widgets=[
+                            ForceButton(True, "activeOptic", m1m3),
+                            ForceButton(False, "activeOptic", m1m3),
+                        ],
                     ),
                     PreclippedForces(
                         "Pre-clipped Azimuth", m1m3.preclippedAzimuthForces
                     ),
-                    Forces("Applied Azimuth", m1m3.appliedAzimuthForces),
+                    Forces(
+                        "Applied Azimuth", m1m3.appliedAzimuthForces, ("azimuth", m1m3)
+                    ),
                     PreclippedForces(
                         "Pre-clipped Balance", m1m3.preclippedBalanceForces
                     ),
-                    Forces("Applied Balance", m1m3.appliedBalanceForces),
+                    Forces(
+                        "Applied Balance", m1m3.appliedBalanceForces, ("balance", m1m3)
+                    ),
                     PreclippedForces(
                         "Pre-clipped Elevation", m1m3.preclippedElevationForces
                     ),
                     Forces("Applied Elevation", m1m3.appliedElevationForces),
                     PreclippedForces("Pre-clipped Offset", m1m3.preclippedOffsetForces),
-                    Forces("Applied Offset", m1m3.appliedOffsetForces),
+                    Forces(
+                        "Applied Offset", m1m3.appliedOffsetForces, ("offset", m1m3)
+                    ),
                     PreclippedForces("Pre-clipped Static", m1m3.preclippedStaticForces),
-                    Forces("Applied Static", m1m3.appliedStaticForces),
+                    Forces(
+                        "Applied Static", m1m3.appliedStaticForces, ("static", m1m3)
+                    ),
                     PreclippedForces(
                         "Pre-clipped Thermal", m1m3.preclippedThermalForces
                     ),
-                    Forces("Applied Thermal", m1m3.appliedThermalForces),
+                    Forces(
+                        "Applied Thermal", m1m3.appliedThermalForces, ("thermal", m1m3)
+                    ),
                     PreclippedForces(
                         "Pre-clipped Velocity", m1m3.preclippedVelocityForces
                     ),
-                    Forces("Applied Velocity", m1m3.appliedVelocityForces),
+                    Forces(
+                        "Applied Velocity",
+                        m1m3.appliedVelocityForces,
+                        ("velocity", m1m3),
+                    ),
                 ],
                 Qt.Horizontal,
             )

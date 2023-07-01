@@ -168,10 +168,10 @@ class AbstractColumn(QObject):
 
         Raises
         ------
-        RuntimeError
+        NotImplementedError
             Raised when abstract method is used.
         """
-        raise RuntimeError("Abstract attach_into called")
+        raise NotImplementedError("Abstract attach_into called")
 
     def get_label(self, name: str, index: int) -> QWidget | None:
         """Returns label with given name and index.
@@ -244,15 +244,34 @@ class ArrayItem(AbstractColumn):
 
 
 class ArrayFields(AbstractColumn):
+    """Class insrted into ArrayGrid to display an arrya of value, with optional
+    widgets at the end.
+
+    Parameters
+    ----------
+    fields: `[str]`
+        Fields to display. Can include None in order to skip a column.
+    label: `str`
+        Row label text.
+    widget: `UnitLabel`
+        Type of widget added into row.
+    signal:`Signal`
+        Signal delivering fields values to be displayed.
+    extra_widgets: `[QWidget]`
+        Extra widgets added at the end of row.
+    """
+
     def __init__(
         self,
         fields: list[str | None],
         label: str | None,
         widget: typing.Callable[[], UnitLabel] = UnitLabel,
         signal: Signal | None = None,
+        extra_widgets: list[QWidget] = [],
     ):
         super().__init__("", label, widget, signal)
         self.fields = fields
+        self.extra_widgets = extra_widgets
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         if self._widget is None:
@@ -268,6 +287,11 @@ class ArrayFields(AbstractColumn):
             parent.add_widget(i, row, c + 1)
             i.setObjectName(self.fields[c])
             i.setCursor(Qt.PointingHandCursor)
+
+        base_col = len(self.fields) + 1
+        for c, w in enumerate(self.extra_widgets):
+            parent.add_widget(w, row, c + base_col)
+
         return row + 1
 
     @Slot()

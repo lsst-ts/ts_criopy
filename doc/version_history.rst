@@ -9,6 +9,7 @@ v1.0.0
 
 * Common EUI mechanism - EUIWindow, CSCControlWidget classes
 * LTGUI
+* Code MyPy compliant
 
 v0.3.0
 ------

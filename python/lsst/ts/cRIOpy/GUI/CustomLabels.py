@@ -102,7 +102,7 @@ class ColoredButton(QPushButton):
     def __init__(self, text: str):
         super().__init__(text)
 
-    def setColor(self, color: QColor) -> None:
+    def setColor(self, color: QColor | None) -> None:
         """Sets button color.
 
         Parameters
