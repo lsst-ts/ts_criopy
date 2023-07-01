@@ -23,8 +23,8 @@ from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 
-from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
-from ..GUI.SAL import EngineeringButton
+from ..gui import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
+from ..gui.SAL import EngineeringButton
 from ..salcomm import MetaSAL, command
 
 

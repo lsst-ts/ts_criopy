@@ -24,7 +24,7 @@ import typing
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Slot
 
-from ..GUI.CustomLabels import DockWindow
+from ..gui.CustomLabels import DockWindow
 from ..salcomm import MetaSAL
 from .ChartView import ChartView
 from .TimeBoxChart import TimeBoxChart

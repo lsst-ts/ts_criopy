@@ -30,7 +30,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..GUI import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
+from ..gui import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
 from ..salcomm import MetaSAL, command
 
 

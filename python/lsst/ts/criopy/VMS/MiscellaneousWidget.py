@@ -19,7 +19,7 @@
 
 from PySide2.QtWidgets import QFormLayout, QWidget
 
-from ..GUI.CustomLabels import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
+from ..gui.CustomLabels import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
 from ..salcomm import MetaSAL
 
 

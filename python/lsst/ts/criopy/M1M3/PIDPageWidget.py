@@ -22,8 +22,8 @@ from functools import partial
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
-from ..GUI.SAL import Axis, ChartWidget
+from ..gui import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
+from ..gui.SAL import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
 

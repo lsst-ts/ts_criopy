@@ -26,8 +26,8 @@ from lsst.ts.utils import make_done_future
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Slot
 
-from ..GUI.CustomLabels import DockWindow
-from ..GUI.TimeChart import AbstractChart
+from ..gui.CustomLabels import DockWindow
+from ..gui.TimeChart import AbstractChart
 from .Bars import ToolBar
 from .Cache import Cache
 from .ChartView import ChartView

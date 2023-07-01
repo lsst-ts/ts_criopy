@@ -23,7 +23,7 @@ import astropy.units as u
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from ..GUI import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
+from ..gui import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
 from ..salcomm import MetaSAL
 
 

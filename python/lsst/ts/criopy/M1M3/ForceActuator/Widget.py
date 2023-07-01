@@ -34,9 +34,9 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ...GUI import WarningLabel
-from ...GUI.ActuatorsDisplay import ForceActuatorItem
-from ...GUI.SAL import TimeDeltaLabel, TopicData
+from ...gui import WarningLabel
+from ...gui.ActuatorsDisplay import ForceActuatorItem
+from ...gui.SAL import TimeDeltaLabel, TopicData
 from ...M1M3FATable import FATABLE, FAIndex
 from ...salcomm import MetaSAL, command
 from .Topics import Topics

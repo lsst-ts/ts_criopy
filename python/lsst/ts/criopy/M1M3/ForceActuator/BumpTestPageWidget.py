@@ -40,9 +40,9 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ...GUI import Colors
-from ...GUI.SAL import SALLog
-from ...GUI.TimeChart import TimeChart, TimeChartView
+from ...gui import Colors
+from ...gui.SAL import SALLog
+from ...gui.TimeChart import TimeChart, TimeChartView
 from ...M1M3FATable import FATABLE, FATABLE_ZFA, actuator_id_to_index
 from ...salcomm import MetaSAL, command
 

@@ -23,8 +23,8 @@ from lsst.ts.idl.enums.MTM1M3 import HardpointTest
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
-from ..GUI.TimeChart import TimeChartView, UserSelectedTimeChart
+from ..gui import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
+from ..gui.TimeChart import TimeChartView, UserSelectedTimeChart
 from ..salcomm import MetaSAL
 
 

@@ -25,7 +25,7 @@ from PySide2.QtCore import QPointF, QRect, Qt
 from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
 from PySide2.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
-from ...GUI import Colors
+from ...gui import Colors
 from ...M1M3FATable import ForceActuatorData
 from .GaugeScale import GaugeScale
 

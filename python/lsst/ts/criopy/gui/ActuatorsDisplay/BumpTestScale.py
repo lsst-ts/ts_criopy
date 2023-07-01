@@ -21,7 +21,7 @@
 from lsst.ts.idl.enums.MTM1M3 import BumpTest
 from PySide2.QtCore import Qt
 
-from ...GUI import Colors
+from ...gui import Colors
 from .EnumScale import EnumScale
 
 

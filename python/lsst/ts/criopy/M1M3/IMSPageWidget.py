@@ -23,7 +23,7 @@ import astropy.units as u
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
-from ..GUI import (
+from ..gui import (
     Arcsec,
     ArrayFields,
     ArrayGrid,

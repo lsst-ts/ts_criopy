@@ -23,7 +23,7 @@ Applications are located in bin directory. Before running those, please make
 sure that required Python packages (in python directory) are available:
 
 ```bash
-python3.8 -c "from lsst.ts.criopy.GUI import *"
+python3.8 -c "from lsst.ts.criopy.gui import *"
 ```
 
 shall pass without error.
@@ -81,7 +81,7 @@ ts\_salobj, including code in GUI subdirectories (ActuatorsDisplay, SAL).
 You shall be able to:
 
 ```python
-from lsst.ts.criopy.GUI import *
+from lsst.ts.criopy.gui import *
 ```
 
 to get access to common GUI widgets (UnitLabel & friends, various improved

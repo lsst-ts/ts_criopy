@@ -23,7 +23,7 @@ __all__ = ["GlycolLoopTemperatureWidget"]
 
 from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QVBoxLayout, QWidget
 
-from ..GUI import DataDegC, DockWindow
+from ..gui import DataDegC, DockWindow
 from ..salcomm import MetaSAL
 
 

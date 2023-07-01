@@ -27,7 +27,7 @@ import numpy as np
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Slot
 
-from ..GUI import AbstractChart
+from ..gui import AbstractChart
 from .Unit import coefficients, deltas, units
 
 

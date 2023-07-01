@@ -25,7 +25,7 @@ from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtWidgets import QLabel
 
 from .AirCompressor import CompressorsPageWidget
-from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
+from .gui.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
 from .M1M3 import (
     ActuatorOverviewPageWidget,
     AirPageWidget,

@@ -23,8 +23,8 @@ from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
-from ..GUI.CustomLabels import OnOffLabel, WarningLabel
-from ..GUI.SAL import EngineeringButton
+from ..gui.CustomLabels import OnOffLabel, WarningLabel
+from ..gui.SAL import EngineeringButton
 from ..salcomm import MetaSAL, command
 
 

@@ -25,7 +25,7 @@ from lsst.ts.idl.enums import LaserTracker
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QLabel
 
-from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
+from .gui.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
 from .LaserTracker import OverviewPageWidget
 from .salcomm import MetaSAL
 

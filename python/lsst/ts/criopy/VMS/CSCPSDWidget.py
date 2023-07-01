@@ -26,8 +26,8 @@ import numpy as np
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QPointF, Qt, Slot
 
-from ..GUI import AbstractChart
-from ..GUI.CustomLabels import DockWindow
+from ..gui import AbstractChart
+from ..gui.CustomLabels import DockWindow
 from .Bars import ToolBar
 from .ChartView import ChartView
 from .Unit import coefficients, units

@@ -23,8 +23,8 @@ from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import OnOffGrid, WarningGrid
-from ..GUI.SAL import Axis, ChartWidget, EngineeringButton
+from ..gui import OnOffGrid, WarningGrid
+from ..gui.SAL import Axis, ChartWidget, EngineeringButton
 from ..salcomm import MetaSAL, command
 
 

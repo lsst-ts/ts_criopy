@@ -27,7 +27,7 @@ rows are hardpoint numbers.
 Usage
 -----
 .. code-block:: python
-   from lsst.ts.criopy.GUI import (
+   from lsst.ts.criopy.gui import (
        ArraySignal,
        ArrayGrid,
        ArrayItem,

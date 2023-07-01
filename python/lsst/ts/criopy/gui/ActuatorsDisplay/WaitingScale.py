@@ -18,12 +18,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from ...GUI import Colors
+from ...gui import Colors
 from .EnumScale import EnumScale
 
 
-class OnOffScale(EnumScale):
-    """Draws gauge with color scale for boolean (on/off) values."""
+class WaitingScale(EnumScale):
+    """Draws gauge with color scale for boolean (Running/Waiting) values."""
 
     def __init__(self) -> None:
-        super().__init__({True: ("On", Colors.OK), False: ("Off", Colors.ERROR)})
+        super().__init__(
+            {False: ("Running", Colors.OK), True: ("Waiting", Colors.ERROR)}
+        )

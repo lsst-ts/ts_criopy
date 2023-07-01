@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..GUI import (
+from ..gui import (
     Arcsec,
     ArrayGrid,
     ArrayItem,
@@ -47,7 +47,7 @@ from ..GUI import (
     OnOffLabel,
     UnitLabel,
 )
-from ..GUI.SAL import DetailedStateEnabledButton
+from ..gui.SAL import DetailedStateEnabledButton
 from ..salcomm import MetaSAL, command
 
 

@@ -19,7 +19,7 @@
 
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
-from ..GUI import DataFormWidget, DataLabel, DockWindow, Liter, LiterMinute
+from ..gui import DataFormWidget, DataLabel, DockWindow, Liter, LiterMinute
 from ..salcomm import MetaSAL
 
 

@@ -19,7 +19,7 @@
 
 import typing
 
-from ...GUI.ActuatorsDisplay import ForceActuatorItem, MirrorWidget
+from ...gui.ActuatorsDisplay import ForceActuatorItem, MirrorWidget
 from ...M1M3FATable import FATABLE
 from ...salcomm import MetaSAL
 from .Widget import Widget

@@ -24,7 +24,7 @@ from PySide2.QtCore import Qt, Signal
 from PySide2.QtGui import QContextMenuEvent
 from PySide2.QtWidgets import QAction, QMenu
 
-from ..GUI.TimeChart import TimeChartView
+from ..gui.TimeChart import TimeChartView
 from .Unit import menuUnits, units
 
 

@@ -24,8 +24,8 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from ..GUI import Clipped, Force, Moment, TimeChart, TimeChartView
-from ..GUI.SAL import DetailedStateEnabledButton
+from ..gui import Clipped, Force, Moment, TimeChart, TimeChartView
+from ..gui.SAL import DetailedStateEnabledButton
 from ..salcomm import MetaSAL, command
 
 

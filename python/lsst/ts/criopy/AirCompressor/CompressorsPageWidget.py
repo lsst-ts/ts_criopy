@@ -23,7 +23,7 @@ from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
-from ..GUI import (
+from ..gui import (
     RPM,
     Ampere,
     ConnectedLabel,
@@ -45,8 +45,8 @@ from ..GUI import (
     Volt,
     WarningLabel,
 )
-from ..GUI.SAL import CSCControlWidget, SummaryStateLabel, VersionWidget
-from ..GUI.SAL.SALLog import Widget as SALLogWidget
+from ..gui.SAL import CSCControlWidget, SummaryStateLabel, VersionWidget
+from ..gui.SAL.SALLog import Widget as SALLogWidget
 from ..salcomm import MetaSAL
 
 __all__ = ["CompressorsPageWidget"]

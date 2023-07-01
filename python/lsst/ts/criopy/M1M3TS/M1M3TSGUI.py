@@ -26,7 +26,7 @@ from lsst.ts.salobj import State
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from ..GUI import DockWindow
+from ..gui import DockWindow
 from ..salcomm import MetaSAL, command
 
 

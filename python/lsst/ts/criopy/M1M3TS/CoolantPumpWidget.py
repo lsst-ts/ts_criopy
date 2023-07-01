@@ -30,7 +30,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..GUI import (
+from ..gui import (
     Ampere,
     Colors,
     DataFormWidget,

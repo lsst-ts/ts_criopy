@@ -23,8 +23,8 @@ import numpy as np
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
-from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
-from ..GUI.SAL import Axis, ChartWidget
+from ..gui import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
+from ..gui.SAL import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
 __all__ = ["BoosterValveWidget"]
