@@ -5,7 +5,7 @@ classes as well as SALobj specific classes.
 
 ## Directory structure
 
-Under python/lsst/ts/cRIOpy, the directories are:
+Under python/lsst/ts/criopy, the directories are:
 
 * __AirCompressor__ widget for M1M3-ComCam air compressor
 * __GUI__ Generic GUI widgets
@@ -23,7 +23,7 @@ Applications are located in bin directory. Before running those, please make
 sure that required Python packages (in python directory) are available:
 
 ```bash
-python3.8 -c "from lsst.ts.cRIOpy.GUI import *"
+python3.8 -c "from lsst.ts.criopy.GUI import *"
 ```
 
 shall pass without error.
@@ -74,14 +74,14 @@ For SAL etc:
 # SAL binding
 
 The GUI/EUI contains code which depends on ts\_salobj and related
-infrastructure. Files in (and only in) python/lsst/ts/cRIOpy/GUI directory are
+infrastructure. Files in (and only in) python/lsst/ts/criopy/GUI directory are
 generics and don't depend on ts\_salobj. All other code usually depends on
 ts\_salobj, including code in GUI subdirectories (ActuatorsDisplay, SAL).
 
 You shall be able to:
 
 ```python
-from lsst.ts.cRIOpy.GUI import *
+from lsst.ts.criopy.GUI import *
 ```
 
 to get access to common GUI widgets (UnitLabel & friends, various improved
@@ -107,5 +107,5 @@ the widget SALComm provided Qt Signals are connected to slots in the widget.
 Qt Slots are decorated with @Slot and usually not documented, as the only
 functions is to update widgets with data received from SAL/DDS. Please see
 [PySide2 documentation](https://wiki.qt.io/Qt_for_Python_Signals_and_Slots) and
-[SALComm](tree/main/python/lsst/ts/cRIOpy/GUI/SAL/SALComm.py) for details how
+[SALComm](tree/main/python/lsst/ts/criopy/SALComm/MetaSAL.py) for details how
 this works.

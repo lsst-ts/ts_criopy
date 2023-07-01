@@ -7,7 +7,7 @@ https://developer.lsst.io/stack/building-single-package-docs.html
 
 from documenteer.conf.pipelinespkg import html_theme_options
 
-project = "ts_cRIOpy"
+project = "ts_criopy"
 html_theme_options["logotext"] = project
 html_title = project
 html_short_title = project

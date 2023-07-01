@@ -21,13 +21,13 @@
 import typing
 
 from asyncqt import asyncSlot
-from lsst.ts.cRIOpy.M1M3FATable import FATABLE, actuator_id_to_index
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
 from ...GUI.ActuatorsDisplay import ForceActuatorItem, MirrorWidget, Scales
 from ...GUI.SAL import StateEnabledWidget
+from ...M1M3FATable import FATABLE, actuator_id_to_index
 from ...SALComm import MetaSAL, command
 from .ComboBox import ComboBox
 

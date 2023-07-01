@@ -19,8 +19,6 @@
 
 import typing
 
-from lsst.ts.cRIOpy.M1M3FATable import FATABLE, FAIndex
-
 from ...GUI.ActuatorsDisplay import Scales
 from ...GUI.SAL.TopicCollection import TopicCollection
 from ...GUI.SAL.TopicData import (
@@ -30,6 +28,7 @@ from ...GUI.SAL.TopicData import (
     WaitingField,
     WarningField,
 )
+from ...M1M3FATable import FATABLE, FAIndex
 
 __all__ = ["Topics"]
 

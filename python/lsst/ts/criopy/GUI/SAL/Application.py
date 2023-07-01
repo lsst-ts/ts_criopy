@@ -46,7 +46,7 @@ class Application:
     Usage
     -----
     .. code-block:: python
-       from lsst.ts.cRIOpy.GUI import Application
+       from lsst.ts.criopy.GUI import Application
 
 
        class EUI(QMainWindow):

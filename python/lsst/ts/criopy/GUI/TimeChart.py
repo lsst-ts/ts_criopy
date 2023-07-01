@@ -1,4 +1,4 @@
-# This file is part of cRIOpy package.
+# This file is part of criopy package.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project

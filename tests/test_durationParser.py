@@ -1,4 +1,4 @@
-# This file is part of ts_cRIOpy.
+# This file is part of ts_criopy.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
 # This product includes software developed by the LSST Project
@@ -22,7 +22,7 @@
 import argparse
 import unittest
 
-from lsst.ts.cRIOpy import parseDuration
+from lsst.ts.criopy import parseDuration
 
 
 class ParseDurationTestCase(unittest.TestCase):
