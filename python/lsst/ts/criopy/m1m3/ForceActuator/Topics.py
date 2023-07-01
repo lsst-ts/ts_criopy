@@ -19,9 +19,9 @@
 
 import typing
 
-from ...gui.ActuatorsDisplay import Scales
-from ...gui.SAL.TopicCollection import TopicCollection
-from ...gui.SAL.TopicData import (
+from ...gui.actuatorsdisplay import Scales
+from ...gui.sal.TopicCollection import TopicCollection
+from ...gui.sal.TopicData import (
     EnabledDisabledField,
     TopicData,
     TopicField,

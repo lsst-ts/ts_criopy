@@ -22,7 +22,7 @@ import typing
 from PySide2.QtCore import Slot
 
 from ...salcomm import MetaSAL
-from ..ActuatorsDisplay import Scales
+from ..actuatorsdisplay import Scales
 
 __all__ = ["TopicData", "TopicField"]
 

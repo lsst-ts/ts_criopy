@@ -24,7 +24,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from ..gui.CustomLabels import OnOffLabel, WarningLabel
-from ..gui.SAL import EngineeringButton
+from ..gui.sal import EngineeringButton
 from ..salcomm import MetaSAL, command
 
 

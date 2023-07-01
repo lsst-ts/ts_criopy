@@ -28,7 +28,7 @@ from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
-from .gui.SAL import Application, SALLog
+from .gui.sal import Application, SALLog
 from .salcomm import MetaSAL
 from .vms import (
     BoxChartWidget,

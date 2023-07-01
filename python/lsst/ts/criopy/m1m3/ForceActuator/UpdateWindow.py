@@ -33,8 +33,8 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ...gui.ActuatorsDisplay import ForceActuatorItem, MirrorWidget
-from ...gui.SAL import EngineeringButton
+from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
+from ...gui.sal import EngineeringButton
 from ...M1M3FATable import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
 from ...salcomm import MetaSAL, command
 

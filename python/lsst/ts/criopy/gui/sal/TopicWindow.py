@@ -33,7 +33,7 @@ from PySide2.QtWidgets import (
 )
 
 from ...salcomm import MetaSAL
-from ..ActuatorsDisplay import ForceActuatorItem
+from ..actuatorsdisplay import ForceActuatorItem
 from ..CustomLabels import DockWindow, WarningLabel
 from .TimeDeltaLabel import TimeDeltaLabel
 from .TopicCollection import TopicCollection

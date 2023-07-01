@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from ..gui.ActuatorsDisplay import Scales
-from ..gui.SAL import TopicCollection, TopicData, TopicField, WarningField
+from ..gui.actuatorsdisplay import Scales
+from ..gui.sal import TopicCollection, TopicData, TopicField, WarningField
 
 __all__ = ["Thermals"]
 

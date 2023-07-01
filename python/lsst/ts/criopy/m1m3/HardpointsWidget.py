@@ -47,7 +47,7 @@ from ..gui import (
     OnOffLabel,
     UnitLabel,
 )
-from ..gui.SAL import DetailedStateEnabledButton
+from ..gui.sal import DetailedStateEnabledButton
 from ..salcomm import MetaSAL, command
 
 

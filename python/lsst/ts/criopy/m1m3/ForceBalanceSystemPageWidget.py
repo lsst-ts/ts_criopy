@@ -25,7 +25,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from ..gui import Clipped, Force, Moment, TimeChart, TimeChartView
-from ..gui.SAL import DetailedStateEnabledButton
+from ..gui.sal import DetailedStateEnabledButton
 from ..salcomm import MetaSAL, command
 
 

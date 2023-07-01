@@ -26,7 +26,7 @@ from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..gui import ArrayFields, ArrayGrid, ColoredButton, UnitLabel
-from ..gui.SAL import Axis, ChartWidget
+from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL, command
 
 

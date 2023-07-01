@@ -20,7 +20,7 @@
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui import DMS, DataFormWidget, WarningGrid
-from ..gui.SAL import Axis, ChartWidget
+from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
 

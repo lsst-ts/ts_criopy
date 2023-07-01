@@ -31,7 +31,7 @@ from ..gui import (
     UnitLabel,
     WarningGrid,
 )
-from ..gui.SAL import Axis, ChartWidget
+from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
 

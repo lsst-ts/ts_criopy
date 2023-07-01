@@ -27,7 +27,7 @@ from PySide2.QtCore import QSettings, Qt
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
-from .gui.SAL import Application, SALLog, SALStatusBar
+from .gui.sal import Application, SALLog, SALStatusBar
 from .m1m3ts import (
     CoolantPumpWidget,
     FlowMeterWidget,

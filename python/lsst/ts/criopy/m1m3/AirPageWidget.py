@@ -24,7 +24,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui import OnOffGrid, WarningGrid
-from ..gui.SAL import Axis, ChartWidget, EngineeringButton
+from ..gui.sal import Axis, ChartWidget, EngineeringButton
 from ..salcomm import MetaSAL, command
 
 

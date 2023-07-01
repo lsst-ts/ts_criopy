@@ -34,7 +34,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..gui import ColoredButton, Colors, StatusBox, StatusWidget
-from ..gui.SAL import CSCControlWidget, EngineeringButton
+from ..gui.sal import CSCControlWidget, EngineeringButton
 from ..salcomm import MetaSAL, command
 
 
