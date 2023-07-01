@@ -36,7 +36,7 @@ from PySide2.QtWidgets import (
 from ...GUI.ActuatorsDisplay import ForceActuatorItem, MirrorWidget
 from ...GUI.SAL import EngineeringButton
 from ...M1M3FATable import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
-from ...SALComm import MetaSAL, command
+from ...salcomm import MetaSAL, command
 
 ALL_AXIS = "xyz"
 FORCES_KEYS = ["xForces", "yForces", "zForces"]

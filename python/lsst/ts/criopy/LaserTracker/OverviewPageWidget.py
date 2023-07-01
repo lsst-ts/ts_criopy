@@ -22,7 +22,7 @@ import typing
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class OverviewPageWidget(QWidget):

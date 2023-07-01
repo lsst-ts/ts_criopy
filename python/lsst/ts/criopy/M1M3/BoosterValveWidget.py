@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
 from ..GUI import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 __all__ = ["BoosterValveWidget"]
 

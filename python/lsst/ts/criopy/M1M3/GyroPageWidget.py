@@ -32,7 +32,7 @@ from ..GUI import (
     WarningGrid,
 )
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class GyroPageWidget(QWidget):

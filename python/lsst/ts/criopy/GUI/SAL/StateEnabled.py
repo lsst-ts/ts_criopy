@@ -23,7 +23,7 @@ from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QPushButton, QWidget
 
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 
 __all__ = [
     "SignalButton",

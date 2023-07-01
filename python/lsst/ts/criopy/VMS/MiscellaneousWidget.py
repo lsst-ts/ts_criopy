@@ -20,7 +20,7 @@
 from PySide2.QtWidgets import QFormLayout, QWidget
 
 from ..GUI.CustomLabels import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class MiscellaneousWidget(DockWindow):

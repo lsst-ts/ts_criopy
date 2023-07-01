@@ -28,7 +28,7 @@ from PySide2.QtCore import QTimer, Slot
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QApplication, QSplashScreen
 
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class SplashScreen(QSplashScreen):

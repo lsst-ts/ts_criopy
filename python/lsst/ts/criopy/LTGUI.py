@@ -27,7 +27,7 @@ from PySide2.QtWidgets import QLabel
 
 from .GUI.SAL import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
 from .LaserTracker import OverviewPageWidget
-from .SALComm import MetaSAL
+from .salcomm import MetaSAL
 
 
 class LTEUI(EUIWindow):

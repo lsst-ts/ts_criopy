@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from ..GUI.CustomLabels import OnOffLabel, WarningLabel
 from ..GUI.SAL import EngineeringButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class CellLightPageWidget(QWidget):

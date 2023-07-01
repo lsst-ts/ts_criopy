@@ -25,7 +25,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class EventWindow(QWidget):

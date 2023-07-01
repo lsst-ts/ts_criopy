@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayButton, ArrayGrid, ArrayItem, ArraySignal, EnumLabel, Force, Mm
 from ..GUI.TimeChart import TimeChartView, UserSelectedTimeChart
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class HardpointTestPageWidget(QWidget):

@@ -21,7 +21,7 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import DMS, DataFormWidget, WarningGrid
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class InclinometerPageWidget(QWidget):

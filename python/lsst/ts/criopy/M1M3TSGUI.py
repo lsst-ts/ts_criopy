@@ -36,7 +36,7 @@ from .M1M3TS import (
     ThermalValuePageWidget,
 )
 from .M1M3TS.M1M3TSGUI import ThermalStatesDock
-from .SALComm import MetaSAL
+from .salcomm import MetaSAL
 
 
 class EUI(QMainWindow):

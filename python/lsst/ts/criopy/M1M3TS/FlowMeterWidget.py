@@ -20,7 +20,7 @@
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import DataFormWidget, DataLabel, DockWindow, Liter, LiterMinute
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class FlowMeterWidget(DockWindow):

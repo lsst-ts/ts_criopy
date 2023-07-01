@@ -27,7 +27,7 @@ from PySide2.QtCore import QCommandLineOption, QCommandLineParser
 from PySide2.QtWidgets import QApplication, QMainWindow
 
 from ... import __version__
-from ...SALComm import MetaSAL, create
+from ...salcomm import MetaSAL, create
 from ..SplashScreen import SplashScreen
 
 

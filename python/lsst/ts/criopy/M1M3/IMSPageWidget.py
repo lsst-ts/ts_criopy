@@ -35,7 +35,7 @@ from ..GUI import (
     TimeChartView,
     WarningGrid,
 )
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class IMSPageWidget(QWidget):

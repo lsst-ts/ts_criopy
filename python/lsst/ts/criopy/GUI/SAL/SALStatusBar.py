@@ -24,7 +24,7 @@ from html import escape
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
 
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 from ..CustomLabels import Heartbeat, SimulationStatus, VLine
 
 __all__ = ["SALStatusBar"]

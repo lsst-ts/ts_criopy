@@ -28,7 +28,7 @@ from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVB
 from ...GUI.ActuatorsDisplay import ForceActuatorItem, MirrorWidget, Scales
 from ...GUI.SAL import StateEnabledWidget
 from ...M1M3FATable import FATABLE, actuator_id_to_index
-from ...SALComm import MetaSAL, command
+from ...salcomm import MetaSAL, command
 from .ComboBox import ComboBox
 
 

@@ -25,7 +25,7 @@ from PySide2.QtGui import QContextMenuEvent, QPainter
 from PySide2.QtWidgets import QInputDialog, QMenu
 
 from ...GUI import Histogram
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 from .Widget import Widget
 
 

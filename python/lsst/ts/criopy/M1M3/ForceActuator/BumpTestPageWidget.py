@@ -44,7 +44,7 @@ from ...GUI import Colors
 from ...GUI.SAL import SALLog
 from ...GUI.TimeChart import TimeChart, TimeChartView
 from ...M1M3FATable import FATABLE, FATABLE_ZFA, actuator_id_to_index
-from ...SALComm import MetaSAL, command
+from ...salcomm import MetaSAL, command
 
 
 class BumpTestPageWidget(QWidget):

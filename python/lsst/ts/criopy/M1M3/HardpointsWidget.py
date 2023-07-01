@@ -48,7 +48,7 @@ from ..GUI import (
     UnitLabel,
 )
 from ..GUI.SAL import DetailedStateEnabledButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class OffsetUnit:

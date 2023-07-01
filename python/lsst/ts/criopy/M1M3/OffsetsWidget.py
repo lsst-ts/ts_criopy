@@ -33,7 +33,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 from .DirectionPadWidget import DirectionPadWidget
 
 

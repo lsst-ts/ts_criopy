@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import OnOffGrid, WarningGrid
 from ..GUI.SAL import Axis, ChartWidget, EngineeringButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class AirPageWidget(QWidget):

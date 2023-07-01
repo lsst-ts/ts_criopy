@@ -27,7 +27,7 @@ from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..GUI import ArrayFields, ArrayGrid, ColoredButton, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class ForceButton(ColoredButton):

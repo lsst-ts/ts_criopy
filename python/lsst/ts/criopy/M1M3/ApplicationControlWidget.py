@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
 
 from ..GUI import ColoredButton, Colors, StatusBox, StatusWidget
 from ..GUI.SAL import CSCControlWidget, EngineeringButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class HPWarnings:

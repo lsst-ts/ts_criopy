@@ -23,7 +23,7 @@ from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from ...SALComm import MetaSAL, warning
+from ...salcomm import MetaSAL, warning
 from .SummaryStateLabel import SummaryStateLabel
 
 

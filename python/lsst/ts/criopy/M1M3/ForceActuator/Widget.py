@@ -38,7 +38,7 @@ from ...GUI import WarningLabel
 from ...GUI.ActuatorsDisplay import ForceActuatorItem
 from ...GUI.SAL import TimeDeltaLabel, TopicData
 from ...M1M3FATable import FATABLE, FAIndex
-from ...SALComm import MetaSAL, command
+from ...salcomm import MetaSAL, command
 from .Topics import Topics
 from .UpdateWindow import UpdateWindow
 

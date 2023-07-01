@@ -21,7 +21,7 @@ import typing
 
 from ...GUI.ActuatorsDisplay import ForceActuatorItem, MirrorWidget
 from ...M1M3FATable import FATABLE
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 from .Widget import Widget
 
 

@@ -25,7 +25,7 @@ from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWi
 
 from ..GUI import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel
 from ..GUI.SAL import EngineeringButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 def bus(b: int) -> str:

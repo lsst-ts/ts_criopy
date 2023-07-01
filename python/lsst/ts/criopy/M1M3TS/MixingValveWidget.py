@@ -31,7 +31,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class MixingValveWidget(DockWindow):

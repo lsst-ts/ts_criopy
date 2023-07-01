@@ -25,7 +25,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import InterlockOffGrid, PowerOnOffGrid, TimeChart, TimeChartView
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class InterlockPageWidget(QWidget):

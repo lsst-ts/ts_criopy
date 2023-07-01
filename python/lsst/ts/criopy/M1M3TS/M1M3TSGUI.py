@@ -27,7 +27,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..GUI import DockWindow
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 def summaryStateString(summaryState: int) -> str:

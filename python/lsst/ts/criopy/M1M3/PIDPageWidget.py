@@ -24,7 +24,7 @@ from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from ..GUI import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
 from ..GUI.SAL import Axis, ChartWidget
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class PIDPageWidget(QWidget):

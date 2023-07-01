@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
 )
 
 from ..GUI.SAL import TopicWindow
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 from .ThermalData import Thermals
 
 

@@ -24,7 +24,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from ..GUI import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 
 class OverviewPageWidget(QWidget):

@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 from ..CustomLabels import DataLabel
 from ..DataFormWidget import DataFormWidget
 

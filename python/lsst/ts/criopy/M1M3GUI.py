@@ -46,7 +46,7 @@ from .M1M3 import (
     PIDPageWidget,
     PowerPageWidget,
 )
-from .SALComm import MetaSAL
+from .salcomm import MetaSAL
 
 
 class EUI(EUIWindow):

@@ -25,7 +25,7 @@ from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import Qt, Slot
 
 from ..GUI.CustomLabels import DockWindow
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 from .ChartView import ChartView
 from .TimeBoxChart import TimeBoxChart
 

@@ -29,7 +29,7 @@ from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
 
 from .GUI.SAL import Application, SALLog
-from .SALComm import MetaSAL
+from .salcomm import MetaSAL
 from .VMS import (
     BoxChartWidget,
     Cache,

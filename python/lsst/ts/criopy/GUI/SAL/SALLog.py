@@ -39,7 +39,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ...SALComm import MetaSAL, command_group
+from ...salcomm import MetaSAL, command_group
 from ..CustomLabels import DockWindow
 
 LEVELS = ["Trace", "Debug", "Info", "Warning", "Error", "Critical"]

@@ -100,7 +100,7 @@ from PySide2.QtCore import QObject, Qt, Signal, Slot
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 
-from ..SALComm import warning
+from ..salcomm import warning
 from .CustomLabels import UnitLabel
 from .TimeChart import TimeChart
 

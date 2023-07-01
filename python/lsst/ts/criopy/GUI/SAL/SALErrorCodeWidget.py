@@ -25,7 +25,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
-from ...SALComm import MetaSAL
+from ...salcomm import MetaSAL
 
 __all__ = ["SALErrorCodeWidget"]
 

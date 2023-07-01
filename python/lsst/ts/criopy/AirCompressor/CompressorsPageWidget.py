@@ -47,7 +47,7 @@ from ..GUI import (
 )
 from ..GUI.SAL import CSCControlWidget, SummaryStateLabel, VersionWidget
 from ..GUI.SAL.SALLog import Widget as SALLogWidget
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 
 __all__ = ["CompressorsPageWidget"]
 

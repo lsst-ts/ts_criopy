@@ -24,7 +24,7 @@ from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QButtonGroup, QPushButton, QVBoxLayout, QWidget
 
-from ...SALComm import MetaSAL, command
+from ...salcomm import MetaSAL, command
 
 
 class CSCControlWidget(QWidget):

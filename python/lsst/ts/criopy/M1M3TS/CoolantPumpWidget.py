@@ -40,7 +40,7 @@ from ..GUI import (
     TopicStatusLabel,
     Volt,
 )
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class CoolantPumpWidget(DockWindow):

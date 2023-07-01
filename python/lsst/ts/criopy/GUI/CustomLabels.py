@@ -35,7 +35,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
-from ..SALComm import MetaSAL
+from ..salcomm import MetaSAL
 from . import Colors
 from .EventWindow import EventWindow
 

@@ -26,7 +26,7 @@ from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWi
 
 from ..GUI import Clipped, Force, Moment, TimeChart, TimeChartView
 from ..GUI.SAL import DetailedStateEnabledButton
-from ..SALComm import MetaSAL, command
+from ..salcomm import MetaSAL, command
 
 
 class ForceBalanceSystemPageWidget(QWidget):
