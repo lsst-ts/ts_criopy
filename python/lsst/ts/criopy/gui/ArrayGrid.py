@@ -267,7 +267,7 @@ class ArrayFields(AbstractColumn):
         label: str | None,
         widget: typing.Callable[[], UnitLabel] = UnitLabel,
         signal: Signal | None = None,
-        extra_widgets: list[QWidget] = [],
+        extra_widgets: list[QWidget] | None = None,
     ):
         super().__init__("", label, widget, signal)
         self.fields = fields
@@ -289,8 +289,9 @@ class ArrayFields(AbstractColumn):
             i.setCursor(Qt.PointingHandCursor)
 
         base_col = len(self.fields) + 1
-        for c, w in enumerate(self.extra_widgets):
-            parent.add_widget(w, row, c + base_col)
+        if self.extra_widgets is not None:
+            for c, w in enumerate(self.extra_widgets):
+                parent.add_widget(w, row, c + base_col)
 
         return row + 1
 
