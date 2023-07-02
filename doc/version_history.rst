@@ -4,11 +4,13 @@
 Version History
 ===============
 
-v1.0.0
+v0.4.0
 ------
 
 * Common EUI mechanism - EUIWindow, CSCControlWidget classes
 * LTGUI
+* Code MyPy compliant
+* use lowercase for directory/modules names
 
 v0.3.0
 ------
