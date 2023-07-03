@@ -6,11 +6,11 @@ Version History
 
 v0.4.0
 ------
-
 * Common EUI mechanism - EUIWindow, CSCControlWidget classes
 * LTGUI
 * Code MyPy compliant
 * use lowercase for directory/modules names
+* asyncqt (Qt async loop) replaced with qasync
 
 v0.3.0
 ------

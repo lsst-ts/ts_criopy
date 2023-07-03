@@ -19,10 +19,10 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qasync import asyncSlot
 
 from ..gui import Clipped, Force, Moment, TimeChart, TimeChartView
 from ..gui.sal import DetailedStateEnabledButton

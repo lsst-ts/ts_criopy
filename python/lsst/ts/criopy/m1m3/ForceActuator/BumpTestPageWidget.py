@@ -20,7 +20,6 @@
 import asyncio
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums import MTM1M3
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
@@ -39,6 +38,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ...gui import Colors
 from ...gui.sal import SALLog

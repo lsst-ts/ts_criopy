@@ -19,9 +19,9 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
+from qasync import asyncSlot
 
 from ..gui.CustomLabels import OnOffLabel, WarningLabel
 from ..gui.sal import EngineeringButton

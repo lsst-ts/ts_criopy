@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from asyncqt import asyncSlot
 from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
@@ -32,6 +31,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
 from ...gui.sal import EngineeringButton

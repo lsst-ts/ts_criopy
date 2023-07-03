@@ -136,7 +136,7 @@ def create(
        import SALComm
 
        import sys
-       from asyncqt import QEventLoop, asyncSlot
+       from qasync import QEventLoop, asyncSlot
        from PySide2.QtWidgets import QApplication, QPushButton
 
        app = QApplication(sys.argv)

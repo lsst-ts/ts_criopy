@@ -19,7 +19,6 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
@@ -32,6 +31,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ..gui import ColoredButton, Colors, StatusBox, StatusWidget
 from ..gui.sal import CSCControlWidget, EngineeringButton

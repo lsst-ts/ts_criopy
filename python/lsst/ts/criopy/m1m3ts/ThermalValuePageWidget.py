@@ -20,7 +20,6 @@
 import enum
 import typing
 
-from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QAbstractItemView,
@@ -33,6 +32,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ..gui.sal import TopicWindow
 from ..salcomm import MetaSAL, command

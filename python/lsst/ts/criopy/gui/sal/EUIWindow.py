@@ -22,7 +22,6 @@ import enum
 import typing
 from functools import partial
 
-from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
@@ -35,6 +34,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncClose
 
 from ...salcomm import MetaSAL
 from .CSCControlWidget import CSCControlWidget

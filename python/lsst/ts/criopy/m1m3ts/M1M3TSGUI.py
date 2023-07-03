@@ -21,10 +21,10 @@ __all__ = ["summaryStateString", "ThermalStatesDock"]
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.salobj import State
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from qasync import asyncSlot
 
 from ..gui import DockWindow
 from ..salcomm import MetaSAL, command

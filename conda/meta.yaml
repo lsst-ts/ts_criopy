@@ -27,7 +27,7 @@ test:
     - ts-conda-build =0.3
     - numpy
     - pyside2
-    - asyncqt
+    - qasync
     - ts-idl {{ idl_version }}
     - ts-salobj {{ salobj_version }}
   source_files:
@@ -60,6 +60,6 @@ requirements:
     - setuptools
     - setuptools_scm
     - pyside2
-    - asyncqt
+    - qasync
     - ts-idl
     - ts-salobj

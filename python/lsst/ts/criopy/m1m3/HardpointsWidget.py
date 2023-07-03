@@ -21,7 +21,6 @@ import typing
 from functools import partial
 
 import astropy.units as u
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import (
@@ -34,6 +33,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ..gui import (
     Arcsec,
