@@ -22,10 +22,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Qt
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
+from qasync import asyncClose
 
 from .gui.sal import Application, SALLog, SALStatusBar
 from .m1m3ts import (

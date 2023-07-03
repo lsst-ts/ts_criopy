@@ -94,11 +94,11 @@ __all__ = [
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.salobj import base
 from PySide2.QtCore import QObject, Qt, Signal, Slot
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
+from qasync import asyncSlot
 
 from ..salcomm import warning
 from .CustomLabels import UnitLabel

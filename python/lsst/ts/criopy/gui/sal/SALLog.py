@@ -23,7 +23,6 @@ import typing
 from datetime import datetime
 from html import escape
 
-from asyncqt import asyncSlot
 from PySide2.QtCore import QObject, Signal, Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import (
@@ -38,6 +37,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, command_group
 from ..CustomLabels import DockWindow

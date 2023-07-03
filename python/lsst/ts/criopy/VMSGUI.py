@@ -23,10 +23,10 @@ import typing
 from functools import partial
 
 import astropy.units as u
-from asyncqt import asyncClose
 from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
+from qasync import asyncClose
 
 from .gui.sal import Application, SALLog
 from .salcomm import MetaSAL

@@ -19,10 +19,10 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QButtonGroup, QPushButton, QVBoxLayout, QWidget
+from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, command
 

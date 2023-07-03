@@ -32,7 +32,7 @@ __all__ = ["warning", "command", "command_group"]
 
 def warning(parent: QWidget, title: str, description: str) -> asyncio.Future:
     """Creates future with QMessageBox. Enables use of QMessageBox with
-    asyncqt/asyncio. Mimics QMessageBox.warning behaviour - but QMessageBox
+    qasync/asyncio. Mimics QMessageBox.warning behaviour - but QMessageBox
     cannot be used, as it blocks Qt loops from executing (as all modal dialogs
     does).
 

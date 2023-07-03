@@ -22,9 +22,9 @@ import signal
 import sys
 import typing
 
-from asyncqt import QEventLoop
 from PySide2.QtCore import QCommandLineOption, QCommandLineParser
 from PySide2.QtWidgets import QApplication, QMainWindow
+from qasync import QEventLoop
 
 from ... import __version__
 from ...salcomm import MetaSAL, create

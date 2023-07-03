@@ -20,10 +20,10 @@
 
 import typing
 
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+from qasync import asyncSlot
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget, Scales
 from ...gui.sal import StateEnabledWidget

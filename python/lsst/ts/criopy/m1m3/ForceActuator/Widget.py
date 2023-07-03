@@ -22,7 +22,6 @@
 import typing
 
 import numpy
-from asyncqt import asyncSlot
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QGridLayout,
@@ -33,6 +32,7 @@ from PySide2.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ...gui import WarningLabel
 from ...gui.actuatorsdisplay import ForceActuatorItem

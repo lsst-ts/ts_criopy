@@ -20,10 +20,10 @@
 import typing
 from functools import partial
 
-from asyncqt import asyncSlot
 from lsst.ts.idl.enums.MTM1M3 import DetailedState, EnableDisableForceComponent
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
+from qasync import asyncSlot
 
 from ..gui import ArrayFields, ArrayGrid, ColoredButton, UnitLabel
 from ..gui.sal import Axis, ChartWidget

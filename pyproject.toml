@@ -9,7 +9,7 @@ license = { text = "GPL" }
 classifiers = [ "Programming Language :: Python :: 3" ]
 urls = { documentation = "https://ts-criopy.lsst.io", repository = "https://github.com/lsst-ts/ts_criopy" }
 dynamic = [ "version" ]
-dependencies = [ "pyside2", "asyncqt", "numpy", "astropy" ]
+dependencies = [ "pyside2", "qasync", "numpy", "astropy" ]
 
 [project.scripts]
 M1M3GUI = "lsst.ts.criopy.M1M3GUI:run"
