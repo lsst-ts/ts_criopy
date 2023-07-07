@@ -1,4 +1,4 @@
-# This file is part of ts_cRIOpy.
+# This file is part of ts_criopy.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
 # This product includes software developed by the LSST Project
@@ -21,18 +21,19 @@
 
 import unittest
 
-from lsst.ts.cRIOpy import TimeCache
+from lsst.ts.criopy import TimeCache
 
 
 class TimeCacheTestCase(unittest.TestCase):
-    def test_clear(self):
+    def test_clear(self) -> None:
         cache = TimeCache(5, [("timestamp", "f8"), ("df", "f8"), ("di", "i4")])
 
         self.assertEqual(cache.columns(), ("timestamp", "df", "di"))
 
         self.assertEqual(len(cache), 0)
-        self.assertIsNone(cache.startTime())
-        self.assertIsNone(cache.endTime())
+        with self.assertRaises(RuntimeError):
+            cache.startTime()
+            cache.endTime()
 
         cache.append((1, 0.5, 2))
         self.assertEqual(len(cache), 1)
@@ -45,10 +46,11 @@ class TimeCacheTestCase(unittest.TestCase):
 
         cache.clear()
         self.assertEqual(len(cache), 0)
-        self.assertIsNone(cache.startTime())
-        self.assertIsNone(cache.endTime())
+        with self.assertRaises(RuntimeError):
+            cache.startTime()
+            cache.endTime()
 
-    def test_append(self):
+    def test_append(self) -> None:
         cache = TimeCache(5, [("timestamp", "i4"), ("data1", "i4"), ("data2", "i4")])
 
         self.assertEqual(cache.columns(), ("timestamp", "data1", "data2"))
@@ -63,7 +65,7 @@ class TimeCacheTestCase(unittest.TestCase):
             self.assertEqual(cache["data1"][i], testValue * 2)
             self.assertEqual(cache["data2"][i], testValue**2)
 
-    def test_resize(self):
+    def test_resize(self) -> None:
         cache = TimeCache(5, [("timestamp", "i4"), ("data1", "i4"), ("data2", "i4")])
 
         self.assertEqual(cache.columns(), ("timestamp", "data1", "data2"))
@@ -124,12 +126,12 @@ class TimeCacheTestCase(unittest.TestCase):
             self.assertEqual(cache["data1"][i], testvalue**2)
             self.assertEqual(cache["data2"][i], testvalue * 6)
 
-    def test_timestampIndex(self):
+    def test_timestampIndex(self) -> None:
         cache = TimeCache(10, [("timestamp", "f8"), ("data1", "i4"), ("data2", "i4")])
 
-        timestamp = 10
+        timestamp: float = 10.0
 
-        def addValues(vals):
+        def addValues(vals: int) -> None:
             nonlocal cache, timestamp
             for i in range(vals):
                 cache.append((timestamp, timestamp * 2, timestamp * 3))

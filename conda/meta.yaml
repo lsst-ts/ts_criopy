@@ -11,10 +11,10 @@ build:
   noarch: generic
   script: python -m pip install --no-deps --ignore-installed .
   entry_points:
-    - M1M3GUI = lsst.ts.cRIO.M1M3GUI:run
-    - M1M3TSGUI = lsst.ts.cRIOpy.M1M3TSGUI:run
-    - VMSGUI = lsst.ts.cRIOpy.VMSGUI:run
-    - VMSlogger = lsst.ts.cRIOpy.VMSlogger:run
+    - M1M3GUI = lsst.ts.criopy.M1M3GUI:run
+    - M1M3TSGUI = lsst.ts.criopy.M1M3TSGUI:run
+    - VMSGUI = lsst.ts.criopy.VMSGUI:run
+    - VMSlogger = lsst.ts.criopy.VMSlogger:run
 
 test:
   requires:
@@ -27,14 +27,13 @@ test:
     - ts-conda-build =0.3
     - numpy
     - pyside2
-    - asyncqt
+    - qasync
     - ts-idl {{ idl_version }}
     - ts-salobj {{ salobj_version }}
   source_files:
     - python
     - bin
     - tests
-    - setup.cfg
   commands:
     - pytest
 
@@ -61,6 +60,6 @@ requirements:
     - setuptools
     - setuptools_scm
     - pyside2
-    - asyncqt
+    - qasync
     - ts-idl
     - ts-salobj

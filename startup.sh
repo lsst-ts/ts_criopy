@@ -31,7 +31,7 @@ fi
 par=$(echo $1 | tr [:lower:] [:upper:])
 shift
 
-cd repos/ts_cRIOpy/bin
+cd repos/ts_criopy/bin
 
 case $par in
   SSGUI)

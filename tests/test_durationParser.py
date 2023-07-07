@@ -1,4 +1,4 @@
-# This file is part of ts_cRIOpy.
+# This file is part of ts_criopy.
 #
 # Developed for the Rubin Observatory Telescope and Site System.
 # This product includes software developed by the LSST Project
@@ -22,11 +22,11 @@
 import argparse
 import unittest
 
-from lsst.ts.cRIOpy import parseDuration
+from lsst.ts.criopy import parseDuration
 
 
 class ParseDurationTestCase(unittest.TestCase):
-    def test_parse(self):
+    def test_parse(self) -> None:
         self.assertEqual(parseDuration("1"), 1)
         self.assertEqual(parseDuration("1 "), 1)
         self.assertEqual(parseDuration(" 1"), 1)
@@ -39,7 +39,7 @@ class ParseDurationTestCase(unittest.TestCase):
             parseDuration(" 10h 67   m 12345"), 10 * 3600 + 67 * 60 + 12345
         )
 
-    def test_failures(self):
+    def test_failures(self) -> None:
         with self.assertRaises(argparse.ArgumentTypeError):
             parseDuration("1d")
             parseDuration("1Dd")

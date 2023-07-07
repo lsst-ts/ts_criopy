@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline([], "ts-criopy", "lsst.ts.cRIOpy", "noarch")
+CondaPipeline([], "ts-criopy", "lsst.ts.criopy", "noarch")

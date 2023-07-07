@@ -24,7 +24,7 @@ set +a
 
 # exports settings
 export LSST_DDS_PARTITION_PREFIX=summit
-export PYTHONPATH=/home/pkubanek/ts_cRIOpy/python:$PYTHONPATH
+export PYTHONPATH=/home/pkubanek/ts_criopy/python:$PYTHONPATH
 
 startdaemon() {
   case $1 in
