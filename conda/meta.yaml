@@ -27,6 +27,8 @@ test:
     - ts-conda-build =0.3
     - ts-idl {{ idl_version }}
     - ts-salobj {{ salobj_version }}
+    - pandas
+    - pyyaml
   source_files:
     - python
     - bin
@@ -59,3 +61,5 @@ requirements:
     - qasync
     - ts-idl
     - ts-salobj
+    - pandas
+    - pyyaml

@@ -1,0 +1,9 @@
+ForceActuatorSettings:
+  AccelerationXTablePath: AccelerationXTable.csv
+  AccelerationYTablePath: AccelerationYTable.csv
+  AccelerationZTablePath: AccelerationZTable.csv
+  VelocityXTablePath: VelocityXTable.csv
+  VelocityYTablePath: VelocityYTable.csv
+  VelocityZTablePath: VelocityZTable.csv
+  VelocityXZTablePath: VelocityXZTable.csv
+  VelocityYZTablePath: VelocityYZTable.csv
