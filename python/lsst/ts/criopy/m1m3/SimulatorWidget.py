@@ -21,13 +21,7 @@
 __all__ = ["SimulatorWidget"]
 
 import numpy as np
-from PySide2.QtWidgets import (
-    QDoubleSpinBox,
-    QFormLayout,
-    QHBoxLayout,
-    QPushButton,
-    QWidget,
-)
+from PySide2.QtWidgets import QDoubleSpinBox, QFormLayout, QPushButton, QWidget
 
 from .Simulator import Simulator
 
@@ -42,17 +36,14 @@ class DegreeEntry(QDoubleSpinBox):
         self.setValue(0)
 
 
-class AccelVel(QWidget):
+class HardpointForceEntry(QDoubleSpinBox):
     def __init__(self) -> None:
         super().__init__()
-        self.acceleration = DegreeEntry("°/sec")
-        self.velocity = DegreeEntry("°/sec**2")
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.velocity)
-        layout.addWidget(self.acceleration)
-
-        self.setLayout(layout)
+        self.setDecimals(1)
+        self.setRange(-4000, 4000)
+        self.setSingleStep(10)
+        self.setSuffix(" N")
+        self.setValue(0)
 
 
 class SimulatorWidget(QWidget):
@@ -63,10 +54,33 @@ class SimulatorWidget(QWidget):
 
         layout = QFormLayout()
 
-        self.accelvel = [AccelVel(), AccelVel(), AccelVel()]
+        self.hardpoints = [
+            HardpointForceEntry(),
+            HardpointForceEntry(),
+            HardpointForceEntry(),
+            HardpointForceEntry(),
+            HardpointForceEntry(),
+            HardpointForceEntry(),
+        ]
+        self.velocities = [
+            DegreeEntry(" °/sec"),
+            DegreeEntry(" °/sec"),
+            DegreeEntry(" °/sec"),
+        ]
+        self.accelerations = [
+            DegreeEntry(" °/sec**2"),
+            DegreeEntry(" °/sec**2"),
+            DegreeEntry(" °/sec**2"),
+        ]
+
+        for hp in range(6):
+            layout.addRow(f"Hardpoint {hp+1}", self.hardpoints[hp])
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"{axis}", self.accelvel[idx])
+            layout.addRow(f"{axis} Velocity", self.velocities[idx])
+
+        for idx, axis in enumerate("XYZ"):
+            layout.addRow(f"{axis} Acceleration", self.accelerations[idx])
 
         recalculate = QPushButton("Set")
         recalculate.clicked.connect(self.recalculate)
@@ -76,7 +90,6 @@ class SimulatorWidget(QWidget):
         self.setLayout(layout)
 
     def recalculate(self) -> None:
-        self.simulator.acceleration(
-            np.radians([a.acceleration.value() for a in self.accelvel])
-        )
-        self.simulator.velocity(np.radians([a.velocity.value() for a in self.accelvel]))
+        self.simulator.acceleration(np.radians([a.value() for a in self.accelerations]))
+        self.simulator.velocity(np.radians([v.value() for v in self.velocities]))
+        self.simulator.hardpoint_forces([hp.value() for hp in self.hardpoints])

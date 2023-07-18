@@ -34,6 +34,33 @@ class ForceCalculatorTestCase(unittest.TestCase):
             pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / "data"
         )
 
+    def test_hardpoints(self) -> None:
+        fam = self.calculator.hardpoint_forces_and_moments(
+            [100, -100, 200, -200, 300, -300]
+        )
+        np.testing.assert_array_equal(fam, [-600, -600, 100, -100, -200, -100])
+
+    def test_distribute_forces(self) -> None:
+        forces = self.calculator.forces_and_moments_forces(
+            [-100, 200, -300, 400, -500, 600]
+        )
+        np.testing.assert_array_equal(
+            forces.xForces, [0, 900] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+        )
+
+        forces = self.calculator.forces_and_moments_forces(
+            [-600, -600, 100, -100, -200, -100]
+        )
+        np.testing.assert_array_equal(
+            forces.xForces, [0, 100] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+        )
+
+    def test_hardpoint_forces(self) -> None:
+        forces = self.calculator.hardpoint_forces([100, -100, 200, -200, 300, -300])
+        np.testing.assert_array_equal(
+            forces.xForces, [0, 100] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+        )
+
     def test_acceleration(self) -> None:
         acceleration = self.calculator.acceleration([0, 0, 0])
 

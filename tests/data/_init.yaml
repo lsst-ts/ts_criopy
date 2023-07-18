@@ -6,6 +6,9 @@ ForceActuatorSettings:
   ForceDistributionXTablePath: ForceDistributionXTable.csv
   ForceDistributionYTablePath: ForceDistributionYTable.csv
   ForceDistributionZTablePath: ForceDistributionZTable.csv
+  MomentDistributionXTablePath: MomentDistributionXTable.csv
+  MomentDistributionYTablePath: MomentDistributionYTable.csv
+  MomentDistributionZTablePath: MomentDistributionZTable.csv
   VelocityXTablePath: VelocityXTable.csv
   VelocityYTablePath: VelocityYTable.csv
   VelocityZTablePath: VelocityZTable.csv

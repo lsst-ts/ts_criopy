@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from ..M1M3FATable import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
+from ..M1M3FATable import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, HP_COUNT
 
 
 def calculate_forces_and_moments(
@@ -84,6 +84,13 @@ class AppliedForces:
         self.mz = fam[5]
 
 
+class AppliedFullMirrorForces(AppliedForces):
+    def __init__(self, forces: list[list[float]]):
+        super().__init__(
+            list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
+        )
+
+
 class ForceCalculator:
     """
     Reads M1M3 configuration, load tables and performs various transformation
@@ -103,12 +110,25 @@ class ForceCalculator:
 
         fas = config["ForceActuatorSettings"]
 
+        self.forces_and_moments_to_mirror: list[pd.DataFrame] = []
         self.accelerations_tables: list[pd.DataFrame] = []
         self.velocity_tables: list[pd.DataFrame] = []
 
         tables_path = config_dir / "tables"
 
+        self.hardpoint_to_forces_moments = self.__load_table(
+            tables_path / fas["HardpointForceMomentTablePath"], HP_COUNT
+        )
+
         for axis in "XYZ":
+            fam = self.__load_table(
+                tables_path / fas[f"ForceDistribution{axis}TablePath"], FATABLE_ZFA
+            )
+            fam[["mX", "mY", "mZ"]] = self.__load_table(
+                tables_path / fas[f"MomentDistribution{axis}TablePath"], FATABLE_ZFA
+            )
+            self.forces_and_moments_to_mirror.append(fam)
+
             self.accelerations_tables.append(
                 self.__load_table(
                     tables_path / fas[f"Acceleration{axis}TablePath"],
@@ -149,14 +169,27 @@ class ForceCalculator:
             )
         return ret.drop(columns=["ID"])
 
+    def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:
+        return self.hardpoint_to_forces_moments @ hardpoints
+
+    def forces_and_moments_forces(self, fam: list[float]) -> AppliedForces:
+        forces = []
+        for m in self.forces_and_moments_to_mirror:
+            forces.append(m @ fam)
+
+        return AppliedFullMirrorForces(forces)
+
+    def hardpoint_forces(self, hardpoints: list[float]) -> AppliedForces:
+        return self.forces_and_moments_forces(
+            self.hardpoint_forces_and_moments(hardpoints).values
+        )
+
     def acceleration(self, accelerations: list[float]) -> AppliedForces:
         forces = []
         for m in self._acceleration_computation:
             forces.append(m @ accelerations)
 
-        return AppliedForces(
-            list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
-        )
+        return AppliedFullMirrorForces(forces)
 
     def velocity(self, velocities: list[float]) -> AppliedForces:
         vector = np.hstack(
@@ -172,6 +205,4 @@ class ForceCalculator:
         for m in self._velocity_computation:
             forces.append(m @ vector)
 
-        return AppliedForces(
-            list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
-        )
+        return AppliedFullMirrorForces(forces)

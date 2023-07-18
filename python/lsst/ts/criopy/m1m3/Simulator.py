@@ -48,6 +48,7 @@ class M1M3Remote:
 
 class Simulator(QObject):
     appliedAccelerationForces = Signal(map)
+    appliedBalanceForces = Signal(map)
     appliedVelocityForces = Signal(map)
 
     def __init__(self, calculator: ForceCalculator) -> None:
@@ -56,6 +57,11 @@ class Simulator(QObject):
         self.force_calculator = calculator
 
         self.remote = M1M3Remote()
+
+    def hardpoint_forces(self, hardpoints: list[float]) -> None:
+        abf = self.force_calculator.hardpoint_forces(hardpoints)
+        self.remote.emitted("tel_appliedBalanceForces", abf)
+        self.appliedBalanceForces.emit(abf)
 
     def acceleration(self, accelerations: list[float]) -> None:
         aaf = self.force_calculator.acceleration(accelerations)
