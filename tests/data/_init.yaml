@@ -2,6 +2,10 @@ ForceActuatorSettings:
   AccelerationXTablePath: AccelerationXTable.csv
   AccelerationYTablePath: AccelerationYTable.csv
   AccelerationZTablePath: AccelerationZTable.csv
+  HardpointForceMomentTablePath: HardpointForceMomentTable.csv
+  ForceDistributionXTablePath: ForceDistributionXTable.csv
+  ForceDistributionYTablePath: ForceDistributionYTable.csv
+  ForceDistributionZTablePath: ForceDistributionZTable.csv
   VelocityXTablePath: VelocityXTable.csv
   VelocityYTablePath: VelocityYTable.csv
   VelocityZTablePath: VelocityZTable.csv
