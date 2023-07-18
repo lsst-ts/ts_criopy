@@ -21,19 +21,38 @@
 __all__ = ["SimulatorWidget"]
 
 import numpy as np
-from PySide2.QtWidgets import QDoubleSpinBox, QFormLayout, QPushButton, QWidget
+from PySide2.QtWidgets import (
+    QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QPushButton,
+    QWidget,
+)
 
 from .Simulator import Simulator
 
 
 class DegreeEntry(QDoubleSpinBox):
-    def __init__(self) -> None:
+    def __init__(self, unit: str):
         super().__init__()
         self.setDecimals(3)
         self.setRange(-6, 6)
         self.setSingleStep(0.01)
-        self.setSuffix("°/sec^2")
+        self.setSuffix(unit)
         self.setValue(0)
+
+
+class AccelVel(QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+        self.acceleration = DegreeEntry("°/sec")
+        self.velocity = DegreeEntry("°/sec**2")
+
+        layout = QHBoxLayout()
+        layout.addWidget(self.velocity)
+        layout.addWidget(self.acceleration)
+
+        self.setLayout(layout)
 
 
 class SimulatorWidget(QWidget):
@@ -44,10 +63,10 @@ class SimulatorWidget(QWidget):
 
         layout = QFormLayout()
 
-        self.accels = [DegreeEntry(), DegreeEntry(), DegreeEntry()]
+        self.accelvel = [AccelVel(), AccelVel(), AccelVel()]
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"{axis} Acceleration", self.accels[idx])
+            layout.addRow(f"{axis}", self.accelvel[idx])
 
         recalculate = QPushButton("Set")
         recalculate.clicked.connect(self.recalculate)
@@ -57,4 +76,7 @@ class SimulatorWidget(QWidget):
         self.setLayout(layout)
 
     def recalculate(self) -> None:
-        self.simulator.acceleration(np.radians([a.value() for a in self.accels]))
+        self.simulator.acceleration(
+            np.radians([a.acceleration.value() for a in self.accelvel])
+        )
+        self.simulator.velocity(np.radians([a.velocity.value() for a in self.accelvel]))

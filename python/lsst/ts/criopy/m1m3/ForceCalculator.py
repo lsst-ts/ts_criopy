@@ -122,6 +122,25 @@ class ForceCalculator:
                 ),
             )
 
+        for axis in "XY":
+            self.velocity_tables.append(
+                self.__load_table(
+                    tables_path / fas[f"Velocity{axis}ZTablePath"],
+                    FATABLE_ZFA,
+                ),
+            )
+
+        # convert tables for efficient calculation
+        self._acceleration_computation: list[pd.DataFrame] = []
+        self._velocity_computation: list[pd.DataFrame] = []
+        for axis in "XYZ":
+            self._acceleration_computation.append(
+                pd.DataFrame([(t[axis] / 1000.0) for t in self.accelerations_tables]).T
+            )
+            self._velocity_computation.append(
+                pd.DataFrame([(t[axis] / 1000.0) for t in self.velocity_tables]).T
+            )
+
     def __load_table(self, filename: str | pathlib.Path, rows: int) -> pd.DataFrame:
         ret = pd.read_csv(filename)
         if len(ret.index) != rows:
@@ -131,17 +150,28 @@ class ForceCalculator:
         return ret.drop(columns=["ID"])
 
     def acceleration(self, accelerations: list[float]) -> AppliedForces:
-        forces = [[0.0] * FATABLE_ZFA] * 3
-
-        for idx, a in enumerate("XYZ"):
-            forces[idx] = (
-                pd.DataFrame([t[a] for t in self.accelerations_tables]).T.values
-                @ accelerations
-            ) / 1000.0
+        forces = []
+        for m in self._acceleration_computation:
+            forces.append(m @ accelerations)
 
         return AppliedForces(
             list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
         )
 
     def velocity(self, velocities: list[float]) -> AppliedForces:
-        pass
+        vector = np.hstack(
+            [
+                np.square(velocities),
+                [
+                    velocities[0] * velocities[2],
+                    velocities[1] * velocities[2],
+                ],
+            ]
+        )
+        forces = []
+        for m in self._velocity_computation:
+            forces.append(m @ vector)
+
+        return AppliedForces(
+            list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
+        )
