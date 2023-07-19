@@ -4,6 +4,10 @@
 Version History
 ===============
 
+v0.4.1
+------
+* Fix conda recipe.
+
 v0.4.0
 ------
 * Common EUI mechanism - EUIWindow, CSCControlWidget classes
