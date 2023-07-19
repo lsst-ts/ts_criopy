@@ -8,8 +8,8 @@ source:
   path: ../
 
 build:
-  noarch: generic
-  script: python -m pip install --no-deps --ignore-installed .
+  noarch: python
+  script: {{PYTHON}} -m pip install --no-deps --ignore-installed .
   entry_points:
     - M1M3GUI = lsst.ts.criopy.M1M3GUI:run
     - M1M3TSGUI = lsst.ts.criopy.M1M3TSGUI:run
@@ -25,9 +25,6 @@ test:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - ts-conda-build =0.3
-    - numpy
-    - pyside2
-    - qasync
     - ts-idl {{ idl_version }}
     - ts-salobj {{ salobj_version }}
   source_files:
@@ -46,19 +43,18 @@ requirements:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
   host:
-    - numpy
-    - python
-    - pip
-    - setuptools_scm
+    - python {{python}}
     - setuptools
+    - setuptools_scm
     - xorg-libxfixes # [linux]
+  build:
+    - python {{python}}
+    - ts-conda-build =0.3
   run:
-    - python
+    - python {{python}}
     - numpy
     - astropy
     - h5py
-    - setuptools
-    - setuptools_scm
     - pyside2
     - qasync
     - ts-idl

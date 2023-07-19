@@ -21,3 +21,5 @@ pytest_session.txt
 .flake8
 .isort.cfg
 .mypy.ini
+
+*.egg-info
