@@ -160,7 +160,7 @@ class ForceBalanceSystemPageWidget(QWidget):
 
         self.m1m3.appliedBalanceForces.connect(self.appliedBalanceForces)
         self.m1m3.preclippedBalanceForces.connect(self.preclippedBalanceForces)
-        self.m1m3.forceActuatorState.connect(self.forceActuatorState)
+        self.m1m3.forceControllerState.connect(self.force_controller_state)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
     def _fillRow(self, variables: dict[str, QLabel], data: typing.Any) -> None:
@@ -198,7 +198,7 @@ class ForceBalanceSystemPageWidget(QWidget):
             self.balanceForcesClipped.setClipped(False)
 
     @Slot()
-    def forceActuatorState(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: typing.Any) -> None:
         self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
         self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
 
