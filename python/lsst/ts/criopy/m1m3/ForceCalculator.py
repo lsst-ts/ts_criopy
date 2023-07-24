@@ -108,7 +108,7 @@ class ForceCalculator:
         with open(config_file, "r") as file:
             config = yaml.safe_load(file)
 
-        fas = config["ForceActuatorSettings"]
+        self.fas = config["ForceActuatorSettings"]
 
         self.forces_and_moments_to_mirror: list[pd.DataFrame] = []
         self.accelerations_tables: list[pd.DataFrame] = []
@@ -117,27 +117,28 @@ class ForceCalculator:
         tables_path = config_dir / "tables"
 
         self.hardpoint_to_forces_moments = self.__load_table(
-            tables_path / fas["HardpointForceMomentTablePath"], HP_COUNT
+            tables_path / self.fas["HardpointForceMomentTablePath"], HP_COUNT
         )
 
         for axis in "XYZ":
             fam = self.__load_table(
-                tables_path / fas[f"ForceDistribution{axis}TablePath"], FATABLE_ZFA
+                tables_path / self.fas[f"ForceDistribution{axis}TablePath"], FATABLE_ZFA
             )
             fam[["mX", "mY", "mZ"]] = self.__load_table(
-                tables_path / fas[f"MomentDistribution{axis}TablePath"], FATABLE_ZFA
+                tables_path / self.fas[f"MomentDistribution{axis}TablePath"],
+                FATABLE_ZFA,
             )
             self.forces_and_moments_to_mirror.append(fam)
 
             self.accelerations_tables.append(
                 self.__load_table(
-                    tables_path / fas[f"Acceleration{axis}TablePath"],
+                    tables_path / self.fas[f"Acceleration{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.velocity_tables.append(
                 self.__load_table(
-                    tables_path / fas[f"Velocity{axis}TablePath"],
+                    tables_path / self.fas[f"Velocity{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
@@ -145,11 +146,35 @@ class ForceCalculator:
         for axis in "XY":
             self.velocity_tables.append(
                 self.__load_table(
-                    tables_path / fas[f"Velocity{axis}ZTablePath"],
+                    tables_path / self.fas[f"Velocity{axis}ZTablePath"],
                     FATABLE_ZFA,
                 ),
             )
 
+        self.convert_tables()
+
+    def save(self, out_dir: pathlib.Path) -> None:
+        """Save modified table to out_dir.
+
+        Parameters
+        ----------
+        out_dir: `pathlib.Path`
+            Path where table shall be saved.
+        """
+        for i, axis in enumerate("XYZ"):
+            self.accelerations_tables[i].to_csv(
+                out_dir / self.fas[f"Acceleration{axis}TablePath"]
+            )
+            self.velocity_tables[i].to_csv(
+                out_dir / self.fas[f"Velocity{axis}TablePath"]
+            )
+
+        for i, axis in enumerate("XY"):
+            self.velocity_tables[i + 3].to_csv(
+                out_dir / self.fas[f"Velocity{axis}ZTablePath"]
+            )
+
+    def convert_tables(self) -> None:
         # convert tables for efficient calculation
         self._acceleration_computation: list[pd.DataFrame] = []
         self._velocity_computation: list[pd.DataFrame] = []
@@ -190,6 +215,19 @@ class ForceCalculator:
             forces.append(m @ accelerations)
 
         return AppliedFullMirrorForces(forces)
+
+    def update_acceleration_and_velocity(self, updates: pd.DataFrame) -> None:
+        for row in FATABLE:
+            def write_accel_vel(a:str, idx: int, coeff: pd.Series ) -> None:
+                for tab in range(5):
+                    self.velocity_tables[tab][a][idx] = coeff[i]
+                for tab in range(3):
+                    self.accelerations_tables[tab][a][idx] = coeff[i + 5]
+            if row.x_index is not None:
+                write_accel_vel("X", row.index, updates[f"X{row.x_index}"])
+            if row.y_index is not None:
+                write_accel_vel("Y", row.index, updates[f"Y{row.y_index}"])
+            write_accel_vel("Z", row.index, updates[f"Z{row.z_index}"])
 
     def velocity(self, velocities: list[float]) -> AppliedForces:
         vector = np.hstack(
