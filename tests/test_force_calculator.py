@@ -25,7 +25,7 @@ import unittest
 
 import numpy as np
 from lsst.ts.criopy import M1M3FATable
-from lsst.ts.criopy.m1m3.ForceCalculator import ForceCalculator
+from lsst.ts.criopy.m1m3.ForceCalculator import AppliedForces, ForceCalculator
 
 
 class ForceCalculatorTestCase(unittest.TestCase):
@@ -33,6 +33,20 @@ class ForceCalculatorTestCase(unittest.TestCase):
         self.calculator = ForceCalculator(
             pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / "data"
         )
+
+    def test_appliedForces(self) -> None:
+        a = AppliedForces(
+            self.calculator.fas,
+            [1] * M1M3FATable.FATABLE_XFA,
+            [2] * M1M3FATable.FATABLE_YFA,
+            [3] * M1M3FATable.FATABLE_ZFA,
+        )
+        self.assertEqual(a.fx, 12)
+        self.assertEqual(a.fy, 200)
+        self.assertEqual(a.fz, 3 * 156)
+        self.assertEqual(a.forceMagnitude, np.sqrt(12**2 + 200**2 + (3 * 156) ** 2))
+
+        self.assertEqual(a.mx, 1099.7485905139997)
 
     def test_hardpoints(self) -> None:
         fam = self.calculator.hardpoint_forces_and_moments(

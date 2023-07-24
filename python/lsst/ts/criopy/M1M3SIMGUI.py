@@ -43,7 +43,7 @@ class ConfigDir(QWidget):
 
         layout = QHBoxLayout()
 
-        layout.addWidget(QLabel("Configuration:"))
+        layout.addWidget(QLabel("<b>Configuration:</b>"))
 
         self.path = QLabel()
         self.path.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)

@@ -6,6 +6,9 @@ ForceActuatorSettings:
   ForceDistributionXTablePath: ForceDistributionXTable.csv
   ForceDistributionYTablePath: ForceDistributionYTable.csv
   ForceDistributionZTablePath: ForceDistributionZTable.csv
+  MirrorCenterOfGravityX:  1
+  MirrorCenterOfGravityY: -1
+  MirrorCenterOfGravityZ:  1
   MomentDistributionXTablePath: MomentDistributionXTable.csv
   MomentDistributionYTablePath: MomentDistributionYTable.csv
   MomentDistributionZTablePath: MomentDistributionZTable.csv
