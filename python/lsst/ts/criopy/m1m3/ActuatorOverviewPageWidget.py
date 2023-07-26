@@ -40,7 +40,7 @@ class ForceButton(ColoredButton):
         self.__engineering_state = False
 
         self.clicked.connect(self.enable_force)
-        self.m1m3.forceActuatorState.connect(self.force_actuator_state)
+        self.m1m3.forceControllerState.connect(self.force_controller_state)
         self.m1m3.detailedState.connect(self.detailed_state)
 
     @asyncSlot()
@@ -60,7 +60,7 @@ class ForceButton(ColoredButton):
         self.setDisabled(applied if self.__enable else not (applied))
 
     @Slot()
-    def force_actuator_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: typing.Any) -> None:
         applied = getattr(data, self.objectName() + "ForcesApplied")
         if applied:
             self.setColor(Qt.green if self.__enable else None)
@@ -74,10 +74,10 @@ class ForceButton(ColoredButton):
     def detailed_state(self, data: typing.Any) -> None:
         self.__engineering_state = data.detailedState == DetailedState.ACTIVEENGINEERING
         if self.__engineering_state:
-            force_state = self.m1m3.remote.evt_forceActuatorState.get()
-            if force_state is not None:
+            force_controller_state = self.m1m3.remote.evt_forceControllerState.get()
+            if force_controller_state is not None:
                 self.set_button_enable(
-                    getattr(force_state, self.objectName() + "ForcesApplied")
+                    getattr(force_controller_state, self.objectName() + "ForcesApplied")
                 )
             else:
                 self.setEnabled(True)
