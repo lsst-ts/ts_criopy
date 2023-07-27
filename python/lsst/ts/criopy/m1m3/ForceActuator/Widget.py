@@ -392,7 +392,7 @@ class Widget(QSplitter):
 
             try:
                 d = getattr(data, f"m{axis}")
-                self.forces_moments[i + 3].setText(f"{d:.3f} N")
+                self.forces_moments[i + 3].setText(f"{d:.3f} Nm")
             except AttributeError:
                 self.forces_moments[i + 3].setText("-N-")
 
