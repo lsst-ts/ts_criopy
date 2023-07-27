@@ -1,3 +1,4 @@
+from .AccelerationAndVelocitiesFitter import AccelerationAndVelocitiesFitter
 from .ActuatorOverviewPageWidget import ActuatorOverviewPageWidget
 from .AirPageWidget import AirPageWidget
 from .ApplicationControlWidget import ApplicationControlWidget

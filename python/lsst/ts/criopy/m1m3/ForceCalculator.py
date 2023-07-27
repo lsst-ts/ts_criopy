@@ -42,92 +42,147 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
             yield forces[fa.index]
 
 
-class AppliedForces:
-    def __init__(
-        self,
-        fas: dict[str, Any],
-        x_forces: list[float],
-        y_forces: list[float],
-        z_forces: list[float],
-    ):
-        self.timestamp = 0
-        self.fas = fas
-        self.xForces = x_forces
-        self.yForces = y_forces
-        self.zForces = z_forces
-
-        fam = self.calculate_forces_and_moments(x_forces, y_forces, z_forces)
-        self.fx = fam[0]
-        self.fy = fam[1]
-        self.fz = fam[2]
-        self.mx = fam[3]
-        self.my = fam[4]
-        self.mz = fam[5]
-        self.forceMagnitude = fam[6]
-
-    def calculate_forces_and_moments(
-        self,
-        x_forces: list[float] = [0] * FATABLE_XFA,
-        y_forces: list[float] = [0] * FATABLE_YFA,
-        z_forces: list[float] = [0] * FATABLE_ZFA,
-    ) -> list[float]:
-        ret = np.zeros(7)
-
-        for row in FATABLE:
-            fx = 0.0 if row.x_index is None else x_forces[row.x_index]
-            fy = 0.0 if row.y_index is None else y_forces[row.y_index]
-            fz = z_forces[row.z_index]
-
-            rx = row.x_position - self.fas["MirrorCenterOfGravityX"]
-            ry = row.y_position - self.fas["MirrorCenterOfGravityY"]
-            rz = row.z_position - self.fas["MirrorCenterOfGravityZ"]
-
-            ret[:6] += [
-                fx,
-                fy,
-                fz,
-                (fz * ry) - (fy * rz),
-                (fx * rz) - (fz * rx),
-                (fy * rx) - (fx * ry),
-            ]
-
-        ret[6] = np.sqrt(ret[0] ** 2 + ret[1] ** 2 + ret[2] ** 2)
-
-        return ret
-
-    def __add__(self, obj2: Any) -> "AppliedForces":
-        if isinstance(obj2, AppliedForces):
-            return AppliedForces(
-                self.fas,
-                np.array(self.xForces) + np.array(obj2.xForces),
-                np.array(self.yForces) + np.array(obj2.yForces),
-                np.array(self.zForces) + np.array(obj2.zForces),
-            )
-        return NotImplemented
-
-
-class AppliedFullMirrorForces(AppliedForces):
-    def __init__(self, fas: dict[str, Any], forces: list[list[float]]):
-        super().__init__(
-            fas, list(reduce_to_x(forces[0])), list(reduce_to_y(forces[1])), forces[2]
-        )
-
-
 class ForceCalculator:
     """
     Reads M1M3 configuration, load tables and performs various transformation
     between hardpoints and forces.
     """
 
+    fas: dict[str, Any] | None = None
+
+    class AppliedForces:
+        """Class simulating applied forces event. Used as parameter for
+        simulated force telemetry messages.
+
+        Parameters
+        ----------
+        x_forces: `[float]`
+            Vector of X forces.
+        y_forces: `[float]`
+            Vector of Y forces.
+        z_forces: `[float]`
+            Vector of Z forces.
+        fas: `{str, Any}`, optional
+            Force Actuator Settings map. Holds MirrorCenterOfGravity values.
+        """
+
+        def __init__(
+            self,
+            x_forces: list[float],
+            y_forces: list[float],
+            z_forces: list[float],
+            fas: dict[str, Any] | None = None,
+        ):
+            assert len(x_forces) == FATABLE_XFA
+            assert len(y_forces) == FATABLE_YFA
+            assert len(z_forces) == FATABLE_ZFA
+
+            self.timestamp = 0
+            # those values need to have same name as in SAL/DDS (including
+            # capitalization style)
+            self.xForces = x_forces
+            self.yForces = y_forces
+            self.zForces = z_forces
+
+            self.fas = fas
+
+            self.__calculate_forces_and_moments()
+
+        def __calculate_forces_and_moments(self) -> None:
+            self.fx = 0.0
+            self.fy = 0.0
+            self.fz = 0.0
+            self.mx = 0.0
+            self.my = 0.0
+            self.mz = 0.0
+
+            for row in FATABLE:
+                fa_fx = 0.0 if row.x_index is None else self.xForces[row.x_index]
+                fa_fy = 0.0 if row.y_index is None else self.yForces[row.y_index]
+                fa_fz = self.zForces[row.z_index]
+
+                rx = row.x_position
+                ry = row.y_position
+                rz = row.z_position
+
+                if self.fas is not None:
+                    rx -= self.fas["MirrorCenterOfGravityX"]
+                    ry -= self.fas["MirrorCenterOfGravityY"]
+                    rz -= self.fas["MirrorCenterOfGravityZ"]
+
+                self.fx += fa_fx
+                self.fy += fa_fy
+                self.fz += fa_fz
+                self.mx += (fa_fz * ry) - (fa_fy * rz)
+                self.my += (fa_fx * rz) - (fa_fz * rx)
+                self.mz += (fa_fy * rx) - (fa_fx * ry)
+
+            self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
+
+        def __add__(self, obj2: Any) -> "ForceCalculator.AppliedForces":
+            if isinstance(obj2, ForceCalculator.AppliedForces):
+                return ForceCalculator.AppliedForces(
+                    np.array(self.xForces) + np.array(obj2.xForces),
+                    np.array(self.yForces) + np.array(obj2.yForces),
+                    np.array(self.zForces) + np.array(obj2.zForces),
+                    self.fas,
+                )
+            return NotImplemented
+
     def __init__(self, config_dir: None | str | pathlib.Path = None):
-        self.forces_and_moments_to_mirror: list[pd.DataFrame] = []
+        self.forces_to_mirror: list[pd.DataFrame] = []
+        self.moments_to_mirror: list[pd.DataFrame] = []
         self.accelerations_tables: list[pd.DataFrame] = []
         self.velocity_tables: list[pd.DataFrame] = []
 
         if config_dir is not None:
             self.load_config(config_dir)
 
+    def get_applied_forces(
+        self, x_forces: list[float], y_forces: list[float], z_forces: list[float]
+    ) -> AppliedForces:
+        """Return ForceCalculator.AppliedForces, constructed from vector
+        source.
+
+        Parameters
+        ----------
+        x_forces: `[float]`
+            Vector of X forces.
+        y_forces: `[float]`
+            Vector of Y forces.
+        z_forces: `[float]`
+            Vector of Z forces.
+
+        Returns
+        -------
+        applied_forces : `AppliedForces`
+            AppliedForces class holding forces details.
+        """
+        return ForceCalculator.AppliedForces(x_forces, y_forces, z_forces, self.fas)
+
+    def get_applied_forces_from_mirror(
+        self, forces: list[list[float]]
+    ) -> AppliedForces:
+        """Return ForceCalculator.AppliedForces from mirror forces. Each passed
+        array shall have length equal to FATABLE_ZFA (156).
+
+        Parameters
+        ----------
+        forces: `[[float]]`
+            Mirror forces. Vector of three (XYZ) mirror forces (length equals
+            to FATABLE_ZFA).
+        """
+        for i in range(3):
+            assert len(forces[i]) == FATABLE_ZFA
+
+        return self.get_applied_forces(
+            list(reduce_to_x(forces[0])),
+            list(reduce_to_y(forces[1])),
+            forces[2],
+        )
+
     def load_config(self, config_dir: str | pathlib.Path) -> None:
+        """Load ForceActuator configuration files."""
         config_dir = pathlib.Path(config_dir)
         config_file = config_dir / "_init.yaml"
 
@@ -135,8 +190,10 @@ class ForceCalculator:
             config = yaml.safe_load(file)
 
         self.fas = config["ForceActuatorSettings"]
+        assert self.fas is not None
 
-        self.forces_and_moments_to_mirror = []
+        self.forces_to_mirror = []
+        self.moments_to_mirror = []
         self.accelerations_tables = []
         self.velocity_tables = []
 
@@ -147,15 +204,18 @@ class ForceCalculator:
         ).drop(columns="ID")
 
         for axis in "XYZ":
-            fam = self.__load_table(
-                tables_path / self.fas[f"ForceDistribution{axis}TablePath"], FATABLE_ZFA
-            ).drop(columns="ID")
-            fam[["mX", "mY", "mZ"]] = self.__load_table(
-                tables_path / self.fas[f"MomentDistribution{axis}TablePath"],
-                FATABLE_ZFA,
-            ).drop(columns="ID")
-            self.forces_and_moments_to_mirror.append(fam)
-
+            self.forces_to_mirror.append(
+                self.__load_table(
+                    tables_path / self.fas[f"ForceDistribution{axis}TablePath"],
+                    FATABLE_ZFA,
+                ),
+            )
+            self.moments_to_mirror.append(
+                self.__load_table(
+                    tables_path / self.fas[f"MomentDistribution{axis}TablePath"],
+                    FATABLE_ZFA,
+                ),
+            )
             self.accelerations_tables.append(
                 self.__load_table(
                     tables_path / self.fas[f"Acceleration{axis}TablePath"],
@@ -177,16 +237,18 @@ class ForceCalculator:
                 ),
             )
 
-        self.convert_tables()
+        self.__convert_tables()
 
     def save(self, out_dir: pathlib.Path) -> None:
-        """Save modified table to out_dir.
+        """Save modified tables to out_dir.
 
         Parameters
         ----------
         out_dir: `pathlib.Path`
             Path where table shall be saved.
         """
+        assert self.fas is not None
+
         for i, axis in enumerate("XYZ"):
             self.accelerations_tables[i].to_csv(
                 out_dir / self.fas[f"Acceleration{axis}TablePath"],
@@ -203,11 +265,18 @@ class ForceCalculator:
                 index=False,
             )
 
-    def convert_tables(self) -> None:
-        # convert tables for efficient calculation
+    def __convert_tables(self) -> None:
+        """Convert tables for efficient calculations."""
+        self._fam_computation: list[pd.DataFrame] = []
         self._acceleration_computation: list[pd.DataFrame] = []
         self._velocity_computation: list[pd.DataFrame] = []
         for axis in "XYZ":
+            self._fam_computation.append(
+                pd.DataFrame(
+                    [t[axis] for t in self.forces_to_mirror]
+                    + [t[axis] for t in self.moments_to_mirror]
+                ).T
+            )
             self._acceleration_computation.append(
                 pd.DataFrame([(t[axis] / 1000.0) for t in self.accelerations_tables]).T
             )
@@ -228,10 +297,10 @@ class ForceCalculator:
 
     def forces_and_moments_forces(self, fam: list[float]) -> AppliedForces:
         forces = []
-        for m in self.forces_and_moments_to_mirror:
+        for m in self._fam_computation:
             forces.append(m @ fam)
 
-        return AppliedFullMirrorForces(self.fas, forces)
+        return self.get_applied_forces_from_mirror(forces)
 
     def hardpoint_forces(self, hardpoints: list[float]) -> AppliedForces:
         return self.forces_and_moments_forces(
@@ -255,9 +324,15 @@ class ForceCalculator:
         for m in self._acceleration_computation:
             forces.append(m @ accelerations)
 
-        return AppliedFullMirrorForces(self.fas, forces)
+        return self.get_applied_forces_from_mirror(forces)
 
+    # TODO: create object for sets, insteada of DataFrame
     def set_acceleration_and_velocity(self, sets: pd.DataFrame) -> None:
+        """Set acceleration and velocities coefficients from fitted dataset.
+
+        Parameters
+        ----------
+        """
         self.accelerations_tables = []
         self.velocity_tables = []
 
@@ -291,7 +366,14 @@ class ForceCalculator:
                 do_update("Y", row.index, sets[f"Y{row.y_index}"])
             do_update("Z", row.index, sets[f"Z{row.z_index}"])
 
+        self.__convert_tables()
+
     def update_acceleration_and_velocity(self, updates: pd.DataFrame) -> None:
+        """Update current acceleration and velocities coefficients.
+
+        Parameters
+        ----------
+        """
         for row in FATABLE:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
@@ -305,6 +387,8 @@ class ForceCalculator:
             if row.y_index is not None:
                 do_update("Y", row.index, updates[f"Y{row.y_index}"])
             do_update("Z", row.index, updates[f"Z{row.z_index}"])
+
+        self.__convert_tables()
 
     def velocity(self, velocities: list[float]) -> AppliedForces:
         """Calculate velocity forces.
@@ -332,4 +416,4 @@ class ForceCalculator:
         for m in self._velocity_computation:
             forces.append(m @ vector)
 
-        return AppliedFullMirrorForces(self.fas, forces)
+        return self.get_applied_forces_from_mirror(forces)

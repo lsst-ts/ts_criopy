@@ -25,18 +25,19 @@ import unittest
 
 import numpy as np
 from lsst.ts.criopy import M1M3FATable
-from lsst.ts.criopy.m1m3.ForceCalculator import AppliedForces, ForceCalculator
+from lsst.ts.criopy.m1m3.ForceCalculator import ForceCalculator
 
 
 class ForceCalculatorTestCase(unittest.TestCase):
+    """Tests ForceCalculator."""
+
     def setUp(self) -> None:
         self.calculator = ForceCalculator(
             pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / "data"
         )
 
     def test_appliedForces(self) -> None:
-        a = AppliedForces(
-            self.calculator.fas,
+        a = self.calculator.get_applied_forces(
             [1] * M1M3FATable.FATABLE_XFA,
             [2] * M1M3FATable.FATABLE_YFA,
             [3] * M1M3FATable.FATABLE_ZFA,
@@ -47,6 +48,8 @@ class ForceCalculatorTestCase(unittest.TestCase):
         self.assertEqual(a.forceMagnitude, np.sqrt(12**2 + 200**2 + (3 * 156) ** 2))
 
         self.assertEqual(a.mx, 1099.7485905139997)
+        self.assertEqual(a.my, 430.0953056310003)
+        self.assertEqual(a.mz, -212.0001997679999)
 
     def test_hardpoints(self) -> None:
         fam = self.calculator.hardpoint_forces_and_moments(
@@ -59,20 +62,20 @@ class ForceCalculatorTestCase(unittest.TestCase):
             [-100, 200, -300, 400, -500, 600]
         )
         np.testing.assert_array_equal(
-            forces.xForces, [0, 900] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, 300] + [0] * (M1M3FATable.FATABLE_XFA - 2)
         )
 
         forces = self.calculator.forces_and_moments_forces(
             [-600, -600, 100, -100, -200, -100]
         )
         np.testing.assert_array_equal(
-            forces.xForces, [0, 100] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, -700] + [0] * (M1M3FATable.FATABLE_XFA - 2)
         )
 
     def test_hardpoint_forces(self) -> None:
         forces = self.calculator.hardpoint_forces([100, -100, 200, -200, 300, -300])
         np.testing.assert_array_equal(
-            forces.xForces, [0, 100] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, -700] + [0] * (M1M3FATable.FATABLE_XFA - 2)
         )
 
     def test_acceleration(self) -> None:

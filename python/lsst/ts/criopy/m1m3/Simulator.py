@@ -24,14 +24,14 @@ import typing
 
 from PySide2.QtCore import QObject, Signal
 
-from .ForceCalculator import AppliedForces, ForceCalculator
+from .ForceCalculator import ForceCalculator
 
 
 class SimulatedTopic:
-    def __init__(self, latest: AppliedForces | None = None) -> None:
+    def __init__(self, latest: ForceCalculator.AppliedForces | None = None) -> None:
         self.latest = latest
 
-    def get(self) -> AppliedForces | None:
+    def get(self) -> ForceCalculator.AppliedForces | None:
         return self.latest
 
 
@@ -42,7 +42,7 @@ class M1M3Remote:
     def __getattr__(self, name: str) -> typing.Any:
         return SimulatedTopic()
 
-    def emitted(self, name: str, forces: AppliedForces) -> None:
+    def emitted(self, name: str, forces: ForceCalculator.AppliedForces) -> None:
         setattr(self, name, SimulatedTopic(forces))
 
 
