@@ -31,12 +31,36 @@ from ..M1M3FATable import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, HP_COU
 
 
 def reduce_to_x(forces: list[float]) -> Generator[float, None, None]:
+    """Reduces list of 156 forces used to store parameters into 12 X values.
+
+    Parameters
+    ----------
+    forces : `[float]`
+        156 value vector, with most values 0/ignored.
+
+    Returns
+    -------
+    x_forces : `[float]`
+        12 X forces values.
+    """
     for fa in FATABLE:
         if fa.x_index is not None:
             yield forces[fa.index]
 
 
 def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
+    """Reduces list of 156 forces used to store parameters into 12 X values.
+
+    Parameters
+    ----------
+    forces : `[float]`
+        156 value vector, with some values 0/ignored for Z indices without Y force actuator.
+
+    Returns
+    -------
+    y_forces : `[float]`
+        100 Y forces values.
+    """
     for fa in FATABLE:
         if fa.y_index is not None:
             yield forces[fa.index]
@@ -51,8 +75,10 @@ class ForceCalculator:
     fas: dict[str, Any] | None = None
 
     class AppliedForces:
-        """Class simulating applied forces event. Used as parameter for
+        """Class simulating applied forces event data. Used as parameter for
         simulated force telemetry messages.
+
+        All forces are usually in N, all moments in Nm.
 
         Parameters
         ----------
@@ -64,6 +90,29 @@ class ForceCalculator:
             Vector of Z forces.
         fas: `{str, Any}`, optional
             Force Actuator Settings map. Holds MirrorCenterOfGravity values.
+
+        Attributes
+        ----------
+        xForces : `[float]`
+            Applied X forces. 12 values.
+        yForces : `[float]`
+            Applied Y forces. 100 values.
+        zForces : `[float]`
+            Applied Z forces. 156 values.
+        fx : `float`
+            Total X force, Sum of all X forces.
+        fy : `float`
+            Total Y force. Sum of all Y forces.
+        fz : `float`
+            Total Z force. Sum of all Z forces.
+        mx : `float`
+            Moment along X axis. Calculated from sum of individual contribution.
+        my : `float`
+            Moment along Y axis. Calculated from sum of individual contribution.
+        mz : `float`
+            Moment along Z axis. Calculated from sum of individual contribution.
+        forceMagnitude : `float`
+            Total force. Square root (
         """
 
         def __init__(
@@ -147,11 +196,11 @@ class ForceCalculator:
         Parameters
         ----------
         x_forces: `[float]`
-            Vector of X forces.
+            Vector of X forces. 12, FATABLE_XFA values.
         y_forces: `[float]`
-            Vector of Y forces.
+            Vector of Y forces. 100, FATABLE_YFA values.
         z_forces: `[float]`
-            Vector of Z forces.
+            Vector of Z forces. 156, FATABLE_ZFA values.
 
         Returns
         -------
@@ -169,8 +218,8 @@ class ForceCalculator:
         Parameters
         ----------
         forces: `[[float]]`
-            Mirror forces. Vector of three (XYZ) mirror forces (length equals
-            to FATABLE_ZFA).
+            Mirror forces. Vector of three (XYZ) mirror forces (length of each
+            array equals to FATABLE_ZFA, 156).
         """
         for i in range(3):
             assert len(forces[i]) == FATABLE_ZFA
@@ -181,8 +230,24 @@ class ForceCalculator:
             forces[2],
         )
 
+    def get_applied_forces_from_series(self, forces: pd.Series) -> pd.Series:
+        return self.get_applied_forces(
+            forces[:FATABLE_XFA].values,
+            forces[FATABLE_XFA : FATABLE_XFA + FATABLE_YFA].values,
+            forces[FATABLE_XFA + FATABLE_YFA :].values,
+        )
+
     def load_config(self, config_dir: str | pathlib.Path) -> None:
-        """Load ForceActuator configuration files."""
+        """Load ForceActuator configuration files. A standard MTM1M3
+        configuration file structure, used by the M1M3 SS CSC, is expected. A
+        directory with _init.yaml file, and required tables in its tables
+        subdirectory.
+
+        Parameters
+        ----------
+        config_dir : `str | pathlib.Path`
+            Directory where to look for configuration files.
+        """
         config_dir = pathlib.Path(config_dir)
         config_file = config_dir / "_init.yaml"
 
@@ -285,6 +350,20 @@ class ForceCalculator:
             )
 
     def __load_table(self, filename: str | pathlib.Path, rows: int) -> pd.DataFrame:
+        """Load table from CSV.
+
+        Parameters
+        ----------
+        filename : `str | pathlib.Path`
+            Load table data from that CSV file.
+        rows : `int`
+            Expected number of rows.
+
+        Throws
+        ------
+        RuntimeError
+            When number of rows in table doesn't match rows argument.
+        """
         ret = pd.read_csv(filename)
         if len(ret.index) != rows:
             raise RuntimeError(
@@ -313,8 +392,9 @@ class ForceCalculator:
         Parameters
         ----------
         accelerations: list[float]
-            3D acceleration vector, as provide by TMA (velocity derivation) or
-            accelerometers. In radians per second square.
+            3D (XYZ) angular acceleration vector, as provide by TMA (velocity
+            derivation) or accelerometers. In radians per second square.
+
         Returns
         -------
         accelerations_forces: AppliedForces
@@ -326,12 +406,18 @@ class ForceCalculator:
 
         return self.get_applied_forces_from_mirror(forces)
 
-    # TODO: create object for sets, insteada of DataFrame
     def set_acceleration_and_velocity(self, sets: pd.DataFrame) -> None:
         """Set acceleration and velocities coefficients from fitted dataset.
+        Used to override force calculator inertial model with calculated
+        values. This can be used to check model's fit.
 
         Parameters
         ----------
+        sets : pd.DataFrame
+            New acceleration and velocities coefficients. Set of 8 member
+            vectors (XX, YY, ZZ, XZ and YZ angular velocities coefficients,
+            followed by X, Y and Z angular acceleration values). 12 X, 100 Y
+            and 156 Z vectors in columns, marked X0..11, Y0..99 and Z0..156.
         """
         self.accelerations_tables = []
         self.velocity_tables = []
@@ -369,10 +455,12 @@ class ForceCalculator:
         self.__convert_tables()
 
     def update_acceleration_and_velocity(self, updates: pd.DataFrame) -> None:
-        """Update current acceleration and velocities coefficients.
+        """Update current acceleration and velocities coefficients. Should be
+        used to iteratively update
 
         Parameters
         ----------
+        updates : pd.DataFrame
         """
         for row in FATABLE:
 

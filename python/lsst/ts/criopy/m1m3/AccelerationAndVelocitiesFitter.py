@@ -42,26 +42,36 @@ class AccelerationAndVelocitiesFitter:
 
         D2RAD = np.radians(1)
 
-        V_x = values[f"elevation_{kind}Velocity"].mul(D2RAD)
         V_azimuth = values[f"azimuth_{kind}Velocity"].mul(D2RAD)
-        V_y = V_azimuth.mul(el_cos)
-        V_z = V_azimuth.mul(el_sin)
 
-        A_x = values[f"elevation_{kind}Acceleration"].mul(D2RAD)
+        self.velocities = pd.DataFrame(
+            {
+                "X": values[f"elevation_{kind}Velocity"].mul(D2RAD),
+                "Y": V_azimuth.mul(el_cos),
+                "Z": V_azimuth.mul(el_sin),
+            }
+        )
+
         A_azimuth = values[f"azimuth_{kind}Acceleration"].mul(D2RAD)
-        A_y = A_azimuth.mul(el_cos)
-        A_z = A_azimuth.mul(el_sin)
+
+        self.accelerations = pd.DataFrame(
+            {
+                "X": values[f"elevation_{kind}Acceleration"].mul(D2RAD),
+                "Y": A_azimuth.mul(el_cos),
+                "Z": A_azimuth.mul(el_sin),
+            }
+        )
 
         self.aav = pd.DataFrame(
             {
-                "V_x2": V_x.pow(2),
-                "V_y2": V_y.pow(2),
-                "V_z2": V_z.pow(2),
-                "V_xz": V_x.mul(V_z),
-                "V_yz": V_y.mul(V_z),
-                "A_x": A_x,
-                "A_y": A_y,
-                "A_z": A_z,
+                "V_x2": self.velocities["X"].pow(2),
+                "V_y2": self.velocities["Y"].pow(2),
+                "V_z2": self.velocities["Z"].pow(2),
+                "V_xz": self.velocities["X"].mul(self.velocities["Z"]),
+                "V_yz": self.velocities["Y"].mul(self.velocities["Z"]),
+                "A_x": self.accelerations["X"],
+                "A_y": self.accelerations["Y"],
+                "A_z": self.accelerations["Z"],
             }
         )
 

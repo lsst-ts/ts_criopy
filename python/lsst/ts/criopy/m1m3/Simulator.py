@@ -28,10 +28,25 @@ from .ForceCalculator import ForceCalculator
 
 
 class SimulatedTopic:
+    """Class simulating topic. Provides get method, to simulate salobj
+    read_topic get method.
+
+    Parameters
+    latest: `ForceCalculator.AppliedForces`, optional
+        Latest topic data.
+    """
+
     def __init__(self, latest: ForceCalculator.AppliedForces | None = None) -> None:
         self.latest = latest
 
     def get(self) -> ForceCalculator.AppliedForces | None:
+        """Simulate salobj get method.
+
+        Returns
+        -------
+        topic: `ForceCalculator.AppliedForces`
+            Current topic value.
+        """
         return self.latest
 
 
@@ -47,6 +62,16 @@ class M1M3Remote:
 
 
 class Simulator(QObject):
+    """This is the engine behind simulated control code. This approach is used
+    to faciliate possible integration of additional features (like replay of
+    system reactions from EFD data).
+
+    Parameters
+    ----------
+    calculator: `ForceCalculator`
+        Force calculator doing the hard work - calculating the forces.
+    """
+
     appliedAccelerationForces = Signal(map)
     appliedBalanceForces = Signal(map)
     appliedOffsetForces = Signal(map)
@@ -60,21 +85,56 @@ class Simulator(QObject):
         self.remote = M1M3Remote()
 
     def acceleration(self, accelerations: list[float]) -> None:
+        """Calculate acceleration forces. Forces will be transmitted in
+        appliedAccelerationForces pseudo-SAL signal.
+
+        Parameters
+        ----------
+        acceleration: `[float]`
+            Vector of three (XYZ) angular accelerations, in rad/sec^2.
+        """
         aaf = self.force_calculator.acceleration(accelerations)
         self.remote.emitted("tel_appliedAccelerationForces", aaf)
         self.appliedAccelerationForces.emit(aaf)
 
     def hardpoint_fam(self, fam: list[float]) -> None:
+        """Calculate forces from hardpoint forces and moments. Those will be
+        transmitted in appliedOffsetForces pseudo-SAL signal.
+
+        Parameters
+        ----------
+        fam : `[float]`
+            Vector of 3 (XYZ) forces and moments - fx, fy, fz, mx, my and mz.
+        """
         offsets = self.force_calculator.forces_and_moments_forces(fam)
         self.remote.emitted("evt_appliedOffsetForces", offsets)
         self.appliedOffsetForces.emit(offsets)
 
     def hardpoint_forces(self, hardpoints: list[float]) -> None:
+        """Calculate balance forces from hardpoints input. Simulates balance
+        forces distribution (full conversion from hardpoint forces to per-FA
+        forces). Results are published as appliedBalanceForces pseudo-SAL
+        signal.
+
+        Parameters
+        ----------
+        hardpoints : `[float]`
+            Vector of 6 hardpoint forces, measured on M1M3 in load cells on top
+            of the hardpoints.
+        """
         abf = self.force_calculator.hardpoint_forces(hardpoints)
         self.remote.emitted("tel_appliedBalanceForces", abf)
         self.appliedBalanceForces.emit(abf)
 
     def velocity(self, velocities: list[float]) -> None:
+        """Provide velocity compensation. Results are published in
+        appliedVelocityForces pseudo-SAL signal.
+
+        Parameters
+        ----------
+        velocities : `[float]`
+            Vector of 3 angular velocities (XYZ), in rad/sec.
+        """
         avf = self.force_calculator.velocity(velocities)
         self.remote.emitted("tel_appliedVelocityForces", avf)
         self.appliedVelocityForces.emit(avf)
