@@ -54,7 +54,8 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
     Parameters
     ----------
     forces : `[float]`
-        156 value vector, with some values 0/ignored for Z indices without Y force actuator.
+        156 value vector, with some values 0/ignored for Z indices without Y
+        force actuator.
 
     Returns
     -------
@@ -106,11 +107,14 @@ class ForceCalculator:
         fz : `float`
             Total Z force. Sum of all Z forces.
         mx : `float`
-            Moment along X axis. Calculated from sum of individual contribution.
+            Moment along X axis. Calculated from sum of individual
+            contribution.
         my : `float`
-            Moment along Y axis. Calculated from sum of individual contribution.
+            Moment along Y axis. Calculated from sum of individual
+            contribution.
         mz : `float`
-            Moment along Z axis. Calculated from sum of individual contribution.
+            Moment along Z axis. Calculated from sum of individual
+            contribution.
         forceMagnitude : `float`
             Total force. Square root (
         """

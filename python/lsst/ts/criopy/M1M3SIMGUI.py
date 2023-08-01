@@ -33,9 +33,18 @@ from PySide2.QtWidgets import (
 from .gui.sal import Application
 from .m1m3 import ForceCalculator, Simulator, SimulatorWidget
 from .m1m3.forceactuator import GraphPageWidget
+from .salcomm import warning
 
 
 class ConfigDir(QWidget):
+    """Widget to display and select configuration directory.
+
+    Parameters
+    ----------
+    force_calculator : `ForceCalculator`
+        Calculator instance whose config directory shall be set.
+    """
+
     def __init__(self, force_calculator: ForceCalculator):
         super().__init__()
 
@@ -57,14 +66,23 @@ class ConfigDir(QWidget):
         self.setLayout(layout)
 
     def select_dir(self) -> None:
-        self.path.setText(
-            QFileDialog.getExistingDirectory(
-                self,
-                "Select configuration directory",
-                os.path.dirname(self.path.text()),
-            )
+        """Display dialog to select new configuration directory."""
+        new_dir = QFileDialog.getExistingDirectory(
+            self,
+            "Select configuration directory",
+            os.path.dirname(self.path.text()),
         )
-        self.force_calculator.load_config(self.path.text())
+        if new_dir == "":
+            return
+        try:
+            self.force_calculator.load_config(new_dir)
+            self.path.setText(new_dir)
+        except Exception as ex:
+            warning(
+                self,
+                "Cannot load configuration",
+                f"<center>Cannot load configuration from {new_dir}<p>{ex}</p></center>",
+            )
 
 
 class SIM(QMainWindow):

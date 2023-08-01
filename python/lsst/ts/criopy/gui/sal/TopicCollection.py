@@ -43,10 +43,24 @@ class TopicCollection:
         self.topics = topics
 
     def change_topic(self, topic_index: int | None, slot: Slot, comm: MetaSAL) -> None:
+        """Called when topic is changed.
+
+        Paramaters
+        ----------
+        topic_index : `int`
+            Index of selected topic in topic collection.
+        slot : `slot`
+            Slot which shall recieve data from newly selected topic.
+        comm : `MetaSAL`
+            SAL Communication object containing the topic.
+        """
         if self.__last_index is not None:
             topic = self.topics[self.__last_index].topic
             if topic is not None:
-                getattr(comm, topic).disconnect(slot)
+                try:
+                    getattr(comm, topic).disconnect(slot)
+                except AttributeError:
+                    pass
 
         self.__last_index = topic_index
         if topic_index is None:
@@ -54,4 +68,7 @@ class TopicCollection:
 
         topic = self.topics[topic_index].topic
         if topic is not None:
-            getattr(comm, topic).connect(slot)
+            try:
+                getattr(comm, topic).connect(slot)
+            except AttributeError:
+                raise RuntimeError(f"Topic {topic} doesn't exists")
