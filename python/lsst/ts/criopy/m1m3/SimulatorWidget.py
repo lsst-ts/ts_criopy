@@ -27,6 +27,8 @@ from .Simulator import Simulator
 
 
 class DegreeEntry(QDoubleSpinBox):
+    """Entry for degrees input."""
+
     def __init__(self, unit: str):
         super().__init__()
         self.setDecimals(3)
@@ -37,6 +39,8 @@ class DegreeEntry(QDoubleSpinBox):
 
 
 class HardpointForceEntry(QDoubleSpinBox):
+    """Entry for mirror forces."""
+
     def __init__(self) -> None:
         super().__init__()
         self.setDecimals(1)
@@ -47,12 +51,22 @@ class HardpointForceEntry(QDoubleSpinBox):
 
 
 class HardpointMomentEntry(HardpointForceEntry):
+    """Entry for mirror moments."""
+
     def __init__(self) -> None:
         super().__init__()
         self.setSuffix(" Nm")
 
 
 class SimulatorWidget(QWidget):
+    """Displays fields to enter values for simulator.
+
+    Parameters
+    ----------
+    simulator : Simulator
+        Simulator instance - controller.
+    """
+
     def __init__(self, simulator: Simulator):
         super().__init__()
 
@@ -110,6 +124,7 @@ class SimulatorWidget(QWidget):
         self.setLayout(layout)
 
     def recalculate(self) -> None:
+        """Called when new forces shall be calculated."""
         self.simulator.acceleration(np.radians([a.value() for a in self.accelerations]))
         self.simulator.hardpoint_fam([hp.value() for hp in self.hp_fam])
         self.simulator.hardpoint_forces([hp.value() for hp in self.hardpoints])

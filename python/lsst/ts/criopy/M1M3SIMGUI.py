@@ -19,6 +19,7 @@
 
 import os
 
+from PySide2.QtCore import Signal
 from PySide2.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -43,7 +44,15 @@ class ConfigDir(QWidget):
     ----------
     force_calculator : `ForceCalculator`
         Calculator instance whose config directory shall be set.
+
+    Signals
+    -------
+    configurationChanged : Signal(str)
+        Emitted when new configuration is selected. If configuration cannot be
+        loaded, empty string is passed in the signal parameter.
     """
+
+    configurationChanged = Signal(str)
 
     def __init__(self, force_calculator: ForceCalculator):
         super().__init__()
@@ -77,7 +86,9 @@ class ConfigDir(QWidget):
         try:
             self.force_calculator.load_config(new_dir)
             self.path.setText(new_dir)
+            self.configurationChanged.emit(new_dir)
         except Exception as ex:
+            self.configurationChanged.emit("")
             warning(
                 self,
                 "Cannot load configuration",
@@ -96,21 +107,28 @@ class SIM(QMainWindow):
 
         layout = QVBoxLayout()
 
-        layout.addWidget(ConfigDir(force_calculator))
+        config_dir = ConfigDir(force_calculator)
+        config_dir.configurationChanged.connect(self.__configuration_changed)
+
+        layout.addWidget(config_dir)
 
         self.graph = GraphPageWidget(simulator)
-        simulator_widget = SimulatorWidget(simulator)
+        self.simulator_widget = SimulatorWidget(simulator)
+        self.simulator_widget.setDisabled(True)
 
         central_widget = QWidget()
         data_layout = QHBoxLayout()
         data_layout.addWidget(self.graph)
-        data_layout.addWidget(simulator_widget)
+        data_layout.addWidget(self.simulator_widget)
 
         layout.addLayout(data_layout)
 
         central_widget.setLayout(layout)
 
         self.setCentralWidget(central_widget)
+
+    def __configuration_changed(self, new_config: str) -> None:
+        self.simulator_widget.setDisabled(new_config == "")
 
 
 def run() -> None:
