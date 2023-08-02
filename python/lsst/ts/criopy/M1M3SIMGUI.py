@@ -33,7 +33,7 @@ from PySide2.QtWidgets import (
 
 from .gui.sal import Application
 from .m1m3 import ForceCalculator, Simulator, SimulatorWidget
-from .m1m3.forceactuator import GraphPageWidget
+from .m1m3.force_actuator import GraphPageWidget
 from .salcomm import warning
 
 

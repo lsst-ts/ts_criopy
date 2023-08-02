@@ -42,7 +42,7 @@ from .m1m3 import (
     OverviewPageWidget,
     PIDPageWidget,
     PowerPageWidget,
-    forceactuator,
+    force_actuator,
 )
 from .salcomm import MetaSAL
 
@@ -82,15 +82,15 @@ class EUI(EUIWindow):
         self.add_page("Force Balance System", ForceBalanceSystemPageWidget, self.m1m3)
         self.add_page("Booster Valve", BoosterValveWidget, self.m1m3)
         self.add_page(
-            "Force Actuator Bump Test", forceactuator.BumpTestPageWidget, self.m1m3
+            "Force Actuator Bump Test", force_actuator.BumpTestPageWidget, self.m1m3
         )
         self.add_page("Hardpoint Test", HardpointTestPageWidget, self.m1m3)
-        self.add_page("Enabled Force Actuators", forceactuator.Enabled, self.m1m3)
-        self.add_page("Force Actuator Graph", forceactuator.GraphPageWidget, self.m1m3)
+        self.add_page("Enabled Force Actuators", force_actuator.Enabled, self.m1m3)
+        self.add_page("Force Actuator Graph", force_actuator.GraphPageWidget, self.m1m3)
         self.add_page(
-            "Force Actuator Histogram", forceactuator.HistogramPageWidget, self.m1m3
+            "Force Actuator Histogram", force_actuator.HistogramPageWidget, self.m1m3
         )
-        self.add_page("Force Actuator Value", forceactuator.ValuePageWidget, self.m1m3)
+        self.add_page("Force Actuator Value", force_actuator.ValuePageWidget, self.m1m3)
         self.add_page("Compressor 1", CompressorsPageWidget, self.compressor_1)
         self.add_page("Compressor 2", CompressorsPageWidget, self.compressor_2)
         self.add_page("SAL Log", SALLog.Widget, self.m1m3)

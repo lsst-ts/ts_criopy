@@ -23,7 +23,7 @@ import pandas as pd
 from lsst.ts.criopy.M1M3FATable import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
 
 
-class AccelerationAndVelocitiesFitter:
+class AccelerationAndVelocityFitter:
     """Class handling acceleration and velocities fits.
 
     Parameters
