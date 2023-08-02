@@ -185,7 +185,7 @@ class ForceCalculator:
     def __init__(self, config_dir: None | str | pathlib.Path = None):
         self.forces_to_mirror: list[pd.DataFrame] = []
         self.moments_to_mirror: list[pd.DataFrame] = []
-        self.accelerations_tables: list[pd.DataFrame] = []
+        self.acceleration_tables: list[pd.DataFrame] = []
         self.velocity_tables: list[pd.DataFrame] = []
 
         if config_dir is not None:
@@ -263,7 +263,7 @@ class ForceCalculator:
 
         self.forces_to_mirror = []
         self.moments_to_mirror = []
-        self.accelerations_tables = []
+        self.acceleration_tables = []
         self.velocity_tables = []
 
         tables_path = config_dir / "tables"
@@ -285,7 +285,7 @@ class ForceCalculator:
                     FATABLE_ZFA,
                 ),
             )
-            self.accelerations_tables.append(
+            self.acceleration_tables.append(
                 self.__load_table(
                     tables_path / self.fas[f"Acceleration{axis}TablePath"],
                     FATABLE_ZFA,
@@ -319,7 +319,7 @@ class ForceCalculator:
         assert self.fas is not None
 
         for i, axis in enumerate("XYZ"):
-            self.accelerations_tables[i].to_csv(
+            self.acceleration_tables[i].to_csv(
                 out_dir / self.fas[f"Acceleration{axis}TablePath"],
                 index=False,
             )
@@ -347,7 +347,7 @@ class ForceCalculator:
                 ).T
             )
             self._acceleration_computation.append(
-                pd.DataFrame([(t[axis] / 1000.0) for t in self.accelerations_tables]).T
+                pd.DataFrame([(t[axis] / 1000.0) for t in self.acceleration_tables]).T
             )
             self._velocity_computation.append(
                 pd.DataFrame([(t[axis] / 1000.0) for t in self.velocity_tables]).T
@@ -423,7 +423,7 @@ class ForceCalculator:
             followed by X, Y and Z angular acceleration values). 12 X, 100 Y
             and 156 Z vectors in columns, marked X0..11, Y0..99 and Z0..156.
         """
-        self.accelerations_tables = []
+        self.acceleration_tables = []
         self.velocity_tables = []
 
         def make_zero() -> pd.DataFrame:
@@ -437,7 +437,7 @@ class ForceCalculator:
             )
 
         for tab in range(3):
-            self.accelerations_tables.append(make_zero())
+            self.acceleration_tables.append(make_zero())
 
         for tab in range(5):
             self.velocity_tables.append(make_zero())
@@ -448,7 +448,7 @@ class ForceCalculator:
                 for tab in range(5):
                     self.velocity_tables[tab].loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.accelerations_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, sets[f"X{row.x_index}"])
@@ -472,7 +472,7 @@ class ForceCalculator:
                 for tab in range(5):
                     self.velocity_tables[tab].loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.accelerations_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, updates[f"X{row.x_index}"])
