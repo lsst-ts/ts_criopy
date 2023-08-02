@@ -22,6 +22,7 @@ import typing
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
 from ...M1M3FATable import FATABLE
 from ...salcomm import MetaSAL
+from .. import Simulator
 from .Widget import Widget
 
 
@@ -31,7 +32,7 @@ class GraphPageWidget(Widget):
     callbacks to trigger updates.
     """
 
-    def __init__(self, m1m3: MetaSAL):
+    def __init__(self, m1m3: MetaSAL | Simulator):
         self.mirrorWidget = MirrorWidget()
 
         for row in FATABLE:

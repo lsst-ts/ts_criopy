@@ -109,40 +109,61 @@ class Widget(QSplitter):
 
         addDetails(
             0,
-            "Variable",
-            QLabel("Selected"),
-            QLabel("Near Neighbors"),
-            QLabel("Far Neighbors"),
+            "<b>Variable</b>",
+            QLabel("<b>Selected</b>"),
+            QLabel("<b>Near Neighbors</b>"),
+            QLabel("<b>Far Neighbors</b>"),
         )
         addDetails(
             1,
-            "Id",
+            "<b>Id</b>",
             self.selectedActuatorIdLabel,
             self.nearSelectedIdsLabel,
             self.farSelectedIdsLabel,
         )
         addDetails(
             2,
-            "Value",
+            "<b>Value</b>",
             self.selectedActuatorValueLabel,
             self.nearSelectedValueLabel,
             self.farSelectedValueLabel,
         )
         addDetails(
             3,
-            "Last Updated",
+            "<b>Last Updated</b>",
             self.lastUpdatedLabel,
-            QLabel("Warning"),
+            QLabel("<b>Warning</b>"),
             self.selectedActuatorWarningLabel,
         )
+
+        self.forces_moments = [
+            QLabel("---"),
+            QLabel("---"),
+            QLabel("---"),
+            QLabel("---"),
+            QLabel("---"),
+            QLabel("---"),
+            QLabel("---"),
+        ]
+
+        detailsLayout.addWidget(QLabel("<b>Forces</b>"), 4, 0)
+        detailsLayout.addWidget(self.forces_moments[6], 5, 0)
+        for i, a in enumerate("XYZ"):
+            detailsLayout.addWidget(QLabel(f"<b>{a}</b>"), 4, i + 1)
+            detailsLayout.addWidget(self.forces_moments[i], 5, i + 1)
+
+        detailsLayout.addWidget(QLabel("<b>Moments</b>"), 6, 0)
+        for i, a in enumerate("XYZ"):
+            detailsLayout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
+            detailsLayout.addWidget(self.forces_moments[i + 3], 7, i + 1)
 
         self.editButton = QPushButton("&Modify")
         self.editButton.clicked.connect(self.editValues)
         self.clearButton = QPushButton("&Zero")
         self.clearButton.clicked.connect(self.zeroValues)
 
-        detailsLayout.addWidget(self.editButton, 4, 0, 1, 2)
-        detailsLayout.addWidget(self.clearButton, 4, 2, 1, 2)
+        detailsLayout.addWidget(self.editButton, 8, 0, 1, 2)
+        detailsLayout.addWidget(self.clearButton, 8, 2, 1, 2)
 
         filterLayout.addWidget(QLabel("Topic"), 1, 1)
         filterLayout.addWidget(QLabel("Field"), 1, 2)
@@ -361,3 +382,18 @@ class Widget(QSplitter):
             self.lastUpdatedLabel.setTime(data.timestamp)
         except AttributeError:
             self.lastUpdatedLabel.setTime(data.private_sndStamp)
+
+        for i, axis in enumerate("xyz"):
+            try:
+                d = getattr(data, f"f{axis}")
+                self.forces_moments[i].setText(f"{d:.3f} N")
+            except AttributeError:
+                self.forces_moments[i].setText("-N-")
+
+            try:
+                d = getattr(data, f"m{axis}")
+                self.forces_moments[i + 3].setText(f"{d:.3f} Nm")
+            except AttributeError:
+                self.forces_moments[i + 3].setText("-N-")
+
+        self.forces_moments[6].setText(f"{getattr(data,'forceMagnitude'):.3f} N")

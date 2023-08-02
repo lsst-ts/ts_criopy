@@ -3,7 +3,7 @@ FROM ts-dockerhub.lsst.org/develop-env:develop
 ARG cRIO_PY=develop
 
 RUN source ~/.setup.sh \
-    && mamba install -y pyside2 asyncqt numpy pytest
+    && mamba install -y pyside2 qasync numpy pytest
 
 RUN cd repos && git clone --branch $cRIO_PY https://github.com/lsst-ts/ts_criopy
 

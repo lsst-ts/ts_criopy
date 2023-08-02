@@ -63,6 +63,8 @@ FATABLE_XFA = 12
 FATABLE_YFA = 100
 FATABLE_ZFA = 156
 
+HP_COUNT = 6
+
 
 class ForceActuatorData:
     def __init__(

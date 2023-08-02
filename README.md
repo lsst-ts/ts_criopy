@@ -64,7 +64,7 @@ CLI for VMS logging. Can save VMS data as cvs or, with optional
 * [numpy](https://numpy.org)
 * [astropy](https://astropy.org)
 * [PySide2 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide2)
-* [asyncqt](https://pypi.org/project/asyncqt)
+* [qasync](https://pypi.org/project/qasync/)
 
 For SAL etc:
 
