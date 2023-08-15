@@ -123,6 +123,24 @@ class ForceCalculatorTestCase(unittest.TestCase):
             [0, 12] + [0] * (M1M3FATable.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
         )
 
+    def test_addition(self) -> None:
+        velocity = self.calculator.velocity([1, 2, 3])
+
+        acceleration = self.calculator.acceleration([1, 0, 0])
+
+        forces = velocity + acceleration
+
+        np.testing.assert_array_equal(
+            forces.xForces, [0, 89] + [0] * (M1M3FATable.FATABLE_XFA - 3) + [20]
+        )
+        np.testing.assert_array_equal(
+            forces.yForces, [18] + [0] * (M1M3FATable.FATABLE_YFA - 2) + [15]
+        )
+        np.testing.assert_array_equal(
+            forces.zForces,
+            [0, 12] + [0] * (M1M3FATable.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
