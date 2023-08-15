@@ -6,6 +6,7 @@ from .EUIWindow import EUIWindow
 from .SALErrorCodeWidget import SALErrorCodeWidget
 from .SALStatusBar import SALStatusBar
 from .StateEnabled import (
+    ActiveButton,
     DetailedStateEnabledButton,
     EngineeringButton,
     StateEnabledWidget,

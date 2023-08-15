@@ -34,7 +34,7 @@ from PySide2.QtWidgets import (
 from qasync import asyncSlot
 
 from ..gui import ColoredButton, Colors, StatusBox, StatusWidget
-from ..gui.sal import CSCControlWidget, EngineeringButton
+from ..gui.sal import ActiveButton, CSCControlWidget, EngineeringButton
 from ..salcomm import MetaSAL, command
 
 
@@ -109,8 +109,9 @@ class SlewWidget(QWidget):
                     StatusWidget(
                         "S",
                         "slewFlag",
-                        "SlewFlag - if booster valves are opened",
+                        "SlewFlag - TMA is slewing",
                     ),
+                    None,
                     StatusWidget(
                         "U",
                         "userTriggered",
@@ -131,29 +132,52 @@ class SlewWidget(QWidget):
                 self.m1m3.boosterValveStatus,
             )
         )
-        self.slewFlagOn = EngineeringButton("Slew ON", m1m3)
-        self.slewFlagOff = EngineeringButton("Slew OFF", m1m3)
+
+        self.slewFlagOn = ActiveButton("Slew ON", m1m3)
+        self.slewFlagOff = ActiveButton("Slew OFF", m1m3)
+
         pal = self.slewFlagOn.palette()
         self._defaultColor = pal.color(pal.Button)
 
-        buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(self.slewFlagOn)
-        buttonLayout.addWidget(self.slewFlagOff)
+        self.boosterOpen = EngineeringButton("Booster Open", m1m3)
+        self.boosterClose = EngineeringButton("Booster Close", m1m3)
 
-        slewLayout.addLayout(buttonLayout)
+        boosterLayout = QHBoxLayout()
+        boosterLayout.addWidget(self.boosterOpen)
+        boosterLayout.addWidget(self.boosterClose)
+
+        slewLayout.addLayout(boosterLayout)
+
+        slewControlLayout = QHBoxLayout()
+        slewControlLayout.addWidget(self.slewFlagOn)
+        slewControlLayout.addWidget(self.slewFlagOff)
+
+        slewLayout.addLayout(slewControlLayout)
 
         self.setLayout(slewLayout)
 
         self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
         self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
+
+        self.boosterOpen.clicked.connect(self.issueCommandBoosterOpen)
+        self.boosterClose.clicked.connect(self.issueCommandBoosterClose)
+
         self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self) -> None:
-        await command(self, self.m1m3.remote.cmd_boosterValveOpen)
+        await command(self, self.m1m3.remote.cmd_setSlewFlag)
 
     @asyncSlot()
     async def issueCommandSlewFlagOff(self) -> None:
+        await command(self, self.m1m3.remote.cmd_clearSlewFlag)
+
+    @asyncSlot()
+    async def issueCommandBoosterOpen(self) -> None:
+        await command(self, self.m1m3.remote.cmd_boosterValveOpen)
+
+    @asyncSlot()
+    async def issueCommandBoosterClose(self) -> None:
         await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
