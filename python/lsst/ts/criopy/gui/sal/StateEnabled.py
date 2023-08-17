@@ -28,6 +28,7 @@ from ...salcomm import MetaSAL
 __all__ = [
     "SignalButton",
     "DetailedStateEnabledButton",
+    "ActiveButton",
     "EngineeringButton",
     "StateEnabledWidget",
 ]
@@ -108,6 +109,29 @@ class DetailedStateEnabledButton(SignalButton):
         ],
     ):
         super().__init__(title, m1m3.detailedState, "detailedState", enabledStates)
+
+
+class ActiveButton(DetailedStateEnabledButton):
+    """Push button enabled only in active (automatic or engineering) states.
+
+    Parameters
+    ----------
+    title : `str`
+        Button title. Passed to QPushButton.
+    m1m3 : `MetaSAL`
+        SAL. When detailed state is in one of the engineering states,
+        button is enabled. It is disabled otherwise.
+    """
+
+    def __init__(self, title: str, m1m3: MetaSAL):
+        super().__init__(
+            title,
+            m1m3,
+            [
+                DetailedState.ACTIVE,
+                DetailedState.ACTIVEENGINEERING,
+            ],
+        )
 
 
 class EngineeringButton(DetailedStateEnabledButton):

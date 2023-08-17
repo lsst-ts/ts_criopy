@@ -88,12 +88,12 @@ class StatusBox(QWidget):
     Parameters
     ----------
     items : `[StatusWidget]`
-        StatusWidget to fill inside the box.
+        StatusWidget to fill inside the box. None will insert a spacer.
     signale : Signal
         Signal send when new data are available.
     """
 
-    def __init__(self, items: list[StatusWidget], signal: Signal):
+    def __init__(self, items: list[StatusWidget | None], signal: Signal):
         super().__init__()
         hbox = QHBoxLayout()
         hbox.setSpacing(0)
@@ -101,7 +101,10 @@ class StatusBox(QWidget):
         self.setLayout(hbox)
 
         for i in items:
-            hbox.addWidget(i)
+            if i is None:
+                hbox.addSpacing(5)
+            else:
+                hbox.addWidget(i)
 
         signal.connect(self._data)  # type: ignore
 
