@@ -194,4 +194,4 @@ class PSDWidget(CacheWidget):
             self.callSetupAxes = True
             return
 
-        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)  # type: ignore
+        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)

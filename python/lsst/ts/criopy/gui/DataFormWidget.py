@@ -73,7 +73,7 @@ class DataFormWidget(QWidget):
                 layout.addRow(text, label)
         self.setLayout(layout)
 
-        signal.connect(self._process_signal)  # type: ignore
+        signal.connect(self._process_signal)
 
     def _process_signal(self, data: typing.Any) -> None:
         for e in dir(data):

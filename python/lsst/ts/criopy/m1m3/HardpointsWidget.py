@@ -484,14 +484,18 @@ class HardpointsWidget(QWidget):
                 ):
                     color = Colors.ERROR
 
-                self.grid.get_label("measuredForce", idx).setTextColor(color)  # type: ignore
+                label = self.grid.get_label("measuredForce", idx)
+                assert label is not None
+                label.setTextColor(color)
 
             for idx, e in enumerate(data.encoder):
                 color = self.palette().color(self.palette().WindowText)
                 if e < hs.lowProximityEncoder[idx] or e > hs.highProximityEncoder[idx]:
                     color = Colors.WARNING
 
-                self.grid.get_label("encoder", idx).setTextColor(color)  # type: ignore
+                label = self.grid.get_label("encoder", idx)
+                assert label is not None
+                label.setTextColor(color)
 
         for k, v in self.forces.items():
             getattr(self, k).setValue(getattr(data, k))
@@ -507,6 +511,7 @@ class HardpointsWidget(QWidget):
             HardpointActuatorMotionStates.STEPPING: "Stepping",
             HardpointActuatorMotionStates.QUICKPOSITIONING: "Quick positioning",
             HardpointActuatorMotionStates.FINEPOSITIONING: "Fine positioning",
+            HardpointActuatorMotionStates.WAITINGTENSION: "Wait for support",
         }
 
         def getHpState(state: HardpointActuatorMotionStates) -> str:

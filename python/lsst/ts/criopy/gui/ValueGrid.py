@@ -100,7 +100,7 @@ class ValueGrid(QGroupBox):
             if ch is not None:
                 # child is either UnitLabel or DataLabel, those provide
                 # setValue method
-                ch.setValue(getattr(data, e))  # type: ignore
+                ch.setValue(getattr(data, e))
 
 
 class StatusGrid(ValueGrid):

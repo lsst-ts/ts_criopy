@@ -78,7 +78,7 @@ class TimeChart(AbstractChart):
             a.setTickCount(10)
             a.setTitleText(axis)
             self.addAxis(
-                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft  # type: ignore
+                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft
             )
         self.addSeries(s)
         s.attachAxis(a)
@@ -101,7 +101,7 @@ class TimeChart(AbstractChart):
         self.timeAxis.setTitleText("Time (TAI)")
         self.timeAxis.setGridLineVisible(True)
 
-        self.addAxis(self.timeAxis, Qt.AlignBottom)  # type: ignore
+        self.addAxis(self.timeAxis, Qt.AlignBottom)
 
         for serie in self.series():
             serie.attachAxis(self.timeAxis)
@@ -183,7 +183,7 @@ class TimeChart(AbstractChart):
         if (
             self._next_update < time.monotonic()
             and self.updateTask.done()
-            and self.isVisibleTo(None)  # type: ignore
+            and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 self.updateTask = pool.submit(replot)
@@ -232,16 +232,18 @@ class UserSelectedTimeChart(TimeChart):
                     continue
 
                 if self._signal is not None:
-                    self._signal.disconnect(self._appendData)  # type: ignore
+                    self._signal.disconnect(self._appendData)  # t
 
                 self._createCaches({obj.unit_name: [name]})
                 self._attachSeries()
 
                 self._signal = s
+                assert self._signal is not None
+
                 self._name = name
                 self._index = index
 
-                self._signal.connect(self._appendData)  # type: ignore
+                self._signal.connect(self._appendData)
                 self._next_update = 0
 
                 break

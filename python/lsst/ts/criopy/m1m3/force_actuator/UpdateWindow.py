@@ -202,8 +202,12 @@ class UpdateWindow(QSplitter):
 
         settings = QSettings("LSST.TS", "M1M3Offsets_" + self.command)
         try:
-            self.restoreGeometry(settings.value("geometry"))  # type: ignore
-            self.restoreState(settings.value("windowState"))  # type: ignore
+            geometry = settings.value("geometry")
+            assert geometry is not None
+            self.restoreGeometry(geometry)
+            windowState = settings.value("windowState")
+            assert windowState is not None
+            self.restoreState(windowState)
         except AttributeError:
             self.resize(700, 600)
 
@@ -286,7 +290,9 @@ class UpdateWindow(QSplitter):
             value = None
 
             if data_index is not None:
-                value = self.offsets[axis + "Forces"][data_index]  # type: ignore
+                offset = self.offsets[axis + "Forces"]
+                assert offset is not None
+                value = offset[data_index]
                 if minV is None:
                     minV = value
                     maxV = value

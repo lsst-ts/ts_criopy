@@ -94,7 +94,7 @@ class HistogramPageWidget(Widget):
         data : `object`
             New data structure, passed from SAL handler.
         """
-        if data is None:
+        if data is None or self.field is None:
             return
 
-        self.histogramView.update(self.field.getValue(data))  # type: ignore
+        self.histogramView.update(self.field.getValue(data))

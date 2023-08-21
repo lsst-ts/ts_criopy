@@ -148,7 +148,7 @@ class AbstractColumn(QObject):
         self.items: list[UnitLabel | None] = []
 
         if signal:
-            signal.connect(self.data)  # type: ignore
+            signal.connect(self.data)
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         """
@@ -302,7 +302,7 @@ class ArrayFields(AbstractColumn):
                 continue
 
             d = getattr(data, i.objectName())
-            i.setValue(d)  # type: ignore
+            i.setValue(d)
 
 
 class ArrayLabels(AbstractColumn):
