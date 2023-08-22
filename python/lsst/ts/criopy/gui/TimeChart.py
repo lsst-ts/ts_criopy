@@ -232,7 +232,7 @@ class UserSelectedTimeChart(TimeChart):
                     continue
 
                 if self._signal is not None:
-                    self._signal.disconnect(self._appendData)  # t
+                    self._signal.disconnect(self._appendData)
 
                 self._createCaches({obj.unit_name: [name]})
                 self._attachSeries()
