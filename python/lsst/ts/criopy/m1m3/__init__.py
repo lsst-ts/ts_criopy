@@ -14,6 +14,7 @@ from .HardpointTestPageWidget import HardpointTestPageWidget
 from .IMSPageWidget import IMSPageWidget
 from .InclinometerPageWidget import InclinometerPageWidget
 from .InterlockPageWidget import InterlockPageWidget
+from .LVDTPageWidget import LVDTPageWidget
 from .OffsetsWidget import OffsetsWidget
 from .OverviewPageWidget import OverviewPageWidget
 from .PIDPageWidget import PIDPageWidget

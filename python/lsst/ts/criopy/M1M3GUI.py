@@ -38,6 +38,7 @@ from .m1m3 import (
     IMSPageWidget,
     InclinometerPageWidget,
     InterlockPageWidget,
+    LVDTPageWidget,
     OffsetsWidget,
     OverviewPageWidget,
     PIDPageWidget,
@@ -73,6 +74,7 @@ class EUI(EUIWindow):
         self.add_page("DC Accelerometers", DCAccelerometerPageWidget, self.m1m3)
         self.add_page("Gyro", GyroPageWidget, self.m1m3)
         self.add_page("IMS", IMSPageWidget, self.m1m3)
+        self.add_page("LVDT", LVDTPageWidget, self.m1m3)
         self.add_page("Inclinometer", InclinometerPageWidget, self.m1m3)
         self.add_page("Interlock", InterlockPageWidget, self.m1m3)
         self.add_page("Lights", CellLightPageWidget, self.m1m3)
