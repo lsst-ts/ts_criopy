@@ -148,7 +148,7 @@ class DataLabel(QLabel):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)  # type: ignore
+            signal.connect(self._data)
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
@@ -158,7 +158,8 @@ class DataLabel(QLabel):
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
-        self.setValue(getattr(data, self._field))  # type: ignore
+        assert self._field is not None
+        self.setValue(getattr(data, self._field))
 
     def setValue(self, value: bool) -> None:
         """Sets value.
@@ -203,17 +204,20 @@ class UnitLabel(QLabel):
     ):
         super().__init__("---")
         self.fmt = fmt
-        if type(unit) == str:
+        if isinstance(unit, str):
             unit = u.Unit(unit)
+
+        if unit is not None:
+            assert issubclass(unit.__class__, u.UnitBase)
+
         if convert is not None:
             if unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
-            # safe, as unit is now u (astropy.units)
-            self.scale = unit.to(convert)  # type: ignore
+            self.scale = unit.to(convert)
             self.unit_name = convert.to_string()
         elif unit is not None:
             self.scale = 1
-            self.unit_name = unit.to_string()  # type: ignore
+            self.unit_name = unit.to_string()
         else:
             self.scale = 1
             self.unit_name = ""
@@ -333,7 +337,8 @@ class DataUnitLabel(UnitLabel):
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
-        self.setValue(getattr(data, self._field))  # type: ignore
+        assert self._field is not None
+        self.setValue(getattr(data, self._field))
 
 
 class Force(DataUnitLabel):
@@ -868,7 +873,7 @@ class WarningButton(ColoredButton):
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
-        self.setValue(getattr(data, self._field))  # type: ignore
+        self.setValue(getattr(data, self._field))
 
     def _showWindow(self) -> None:
         if self.window is None:
@@ -913,7 +918,7 @@ class InterlockOffLabel(QLabel):
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
-        self.setValue(getattr(data, self._field))  # type: ignore
+        self.setValue(getattr(data, self._field))
 
     def setValue(self, interlock_off: bool) -> None:
         """Sets formatted value. Color codes WARNING (red)/OK (green).
@@ -1174,5 +1179,5 @@ class DockWindow(QDockWidget):
     @Slot()
     def _topLevelChanged(self, topLevel: bool) -> None:
         if topLevel:
-            self.setWindowFlags(Qt.Window)  # type: ignore
+            self.setWindowFlags(Qt.Window)
         self.show()

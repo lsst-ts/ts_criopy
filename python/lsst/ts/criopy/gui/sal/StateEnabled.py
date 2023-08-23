@@ -65,7 +65,7 @@ class SignalButton(QPushButton):
 
         self.setEnabled()
 
-        signal.connect(self.__update)  # type: ignore
+        signal.connect(self.__update)
 
     def setEnabled(self, enabled: bool = True) -> None:
         self.__askedEnabled = enabled

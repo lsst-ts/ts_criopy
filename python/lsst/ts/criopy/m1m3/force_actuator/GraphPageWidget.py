@@ -87,7 +87,7 @@ class GraphPageWidget(Widget):
             if values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif warningData is not None or data_index is None:
-                state = get_warning(index)  # type: ignore
+                state = get_warning(index)
             else:
                 state = ForceActuatorItem.STATE_ACTIVE
 

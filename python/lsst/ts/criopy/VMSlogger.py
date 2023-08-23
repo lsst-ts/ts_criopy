@@ -261,7 +261,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
 def run() -> None:
     args = parser.parse_args()
     if args.daemon:
-        r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)
+        r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)  # type: ignore
         child = os.fork()
         if child == 0:
             os.close(0)

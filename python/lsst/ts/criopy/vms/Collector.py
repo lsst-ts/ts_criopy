@@ -114,8 +114,9 @@ class Collector:
 
     def __calculate_next_rotate(self, timestamp: float) -> float:
         # calleres qurantee self.rotate is not None
-        (q, r) = divmod(timestamp, self.rotate)  # type: ignore
-        return (q + 1) * self.rotate + self.rotate_offset  # type: ignore
+        assert self.rotate is not None
+        (q, r) = divmod(timestamp, self.rotate)
+        return (q + 1) * self.rotate + self.rotate_offset
 
     def _need_rotate(self, timestamp: float) -> bool:
         if self.rotate is None:

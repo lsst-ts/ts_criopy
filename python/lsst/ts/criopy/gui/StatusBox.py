@@ -106,7 +106,7 @@ class StatusBox(QWidget):
             else:
                 hbox.addWidget(i)
 
-        signal.connect(self._data)  # type: ignore
+        signal.connect(self._data)
 
     @Slot()
     def _data(self, data: typing.Any) -> None:
@@ -115,4 +115,4 @@ class StatusBox(QWidget):
             if item is not None:
                 v = getattr(data, item.objectName())
                 # item is either UnitLabel or DataLabel
-                item.setValue(v)  # type: ignore
+                item.setValue(v)

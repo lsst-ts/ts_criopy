@@ -140,7 +140,7 @@ class CSCPSDWidget(DockWindow):
             self.callSetupAxes = True
             return
 
-        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)  # type: ignore
+        self.chart.axes(Qt.Horizontal)[0].setRange(lowFrequency, highFrequency)
 
     @Slot()
     def psd(self, psd: typing.Any) -> None:
@@ -193,7 +193,7 @@ class CSCPSDWidget(DockWindow):
                 max_psd.append(max_p)
 
         if len(min_psd) > 0:
-            if len(self.chart.axes(Qt.Vertical)) == 0:  # type: ignore
+            if len(self.chart.axes(Qt.Vertical)) == 0:
                 self.callSetupAxes = True
             else:
-                self.chart.axes(Qt.Vertical)[0].setRange(min(min_psd), max(max_psd))  # type: ignore
+                self.chart.axes(Qt.Vertical)[0].setRange(min(min_psd), max(max_psd))

@@ -84,7 +84,7 @@ class TopicStatusLabel(ColoredButton):
         self.fields = fields
 
         self.clicked.connect(self._clicked)
-        signal.connect(self.data)  # type: ignore
+        signal.connect(self.data)
 
     def _clicked(self) -> None:
         if self._window is None:
