@@ -107,11 +107,16 @@ class SlewWidget(QWidget):
             StatusBox(
                 [
                     StatusWidget(
-                        "S",
-                        "slewFlag",
-                        "SlewFlag - TMA is slewing",
+                        "O",
+                        "opened",
+                        "Booster valves are opened",
                     ),
                     None,
+                    StatusWidget(
+                        "S",
+                        "slewTriggered",
+                        "TMA is slewing, booster valve opened",
+                    ),
                     StatusWidget(
                         "U",
                         "userTriggered",
@@ -133,11 +138,11 @@ class SlewWidget(QWidget):
             )
         )
 
-        self.slewFlagOn = ActiveButton("Slew ON", m1m3)
-        self.slewFlagOff = ActiveButton("Slew OFF", m1m3)
+        self.slew_flag_on = ActiveButton("Slew ON", m1m3)
+        self.slew_flag_off = ActiveButton("Slew OFF", m1m3)
 
-        pal = self.slewFlagOn.palette()
-        self._defaultColor = pal.color(pal.Button)
+        pal = self.slew_flag_on.palette()
+        self._default_color = pal.color(pal.Button)
 
         self.boosterOpen = EngineeringButton("Booster Open", m1m3)
         self.boosterClose = EngineeringButton("Booster Close", m1m3)
@@ -149,20 +154,20 @@ class SlewWidget(QWidget):
         slewLayout.addLayout(boosterLayout)
 
         slewControlLayout = QHBoxLayout()
-        slewControlLayout.addWidget(self.slewFlagOn)
-        slewControlLayout.addWidget(self.slewFlagOff)
+        slewControlLayout.addWidget(self.slew_flag_on)
+        slewControlLayout.addWidget(self.slew_flag_off)
 
         slewLayout.addLayout(slewControlLayout)
 
         self.setLayout(slewLayout)
 
-        self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
-        self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
+        self.slew_flag_on.clicked.connect(self.issueCommandSlewFlagOn)
+        self.slew_flag_off.clicked.connect(self.issueCommandSlewFlagOff)
 
         self.boosterOpen.clicked.connect(self.issueCommandBoosterOpen)
         self.boosterClose.clicked.connect(self.issueCommandBoosterClose)
 
-        self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
+        self.m1m3.forceControllerState.connect(self.force_controller_state)
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self) -> None:
@@ -181,17 +186,17 @@ class SlewWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
-    def boosterValveStatus(self, data: typing.Any) -> None:
-        palOn = self.slewFlagOn.palette()
-        palOff = self.slewFlagOff.palette()
+    def force_controller_state(self, data: typing.Any) -> None:
+        pal_on = self.slew_flag_on.palette()
+        pal_off = self.slew_flag_off.palette()
         if data.slewFlag:
-            palOn.setColor(palOn.Button, Colors.WARNING)
-            palOff.setColor(palOff.Button, self._defaultColor)
+            pal_on.setColor(pal_on.Button, Colors.WARNING)
+            pal_off.setColor(pal_off.Button, self._default_color)
         else:
-            palOn.setColor(palOn.Button, self._defaultColor)
-            palOff.setColor(palOff.Button, Colors.OK)
-        self.slewFlagOn.setPalette(palOn)
-        self.slewFlagOff.setPalette(palOff)
+            pal_on.setColor(pal_on.Button, self._default_color)
+            pal_off.setColor(pal_off.Button, Colors.OK)
+        self.slew_flag_on.setPalette(pal_on)
+        self.slew_flag_off.setPalette(pal_off)
 
 
 class M1M3CSCControl(CSCControlWidget):

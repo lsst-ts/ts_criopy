@@ -43,6 +43,7 @@ from .m1m3 import (
     OverviewPageWidget,
     PIDPageWidget,
     PowerPageWidget,
+    SlewControllerPageWidget,
     force_actuator,
 )
 from .salcomm import MetaSAL
@@ -82,6 +83,7 @@ class EUI(EUIWindow):
         self.add_page("Power", PowerPageWidget, self.m1m3)
         self.add_page("PID", PIDPageWidget, self.m1m3)
         self.add_page("Force Balance System", ForceBalanceSystemPageWidget, self.m1m3)
+        self.add_page("Slew Controller", SlewControllerPageWidget, self.m1m3)
         self.add_page("Booster Valve", BoosterValveWidget, self.m1m3)
         self.add_page(
             "Force Actuator Bump Test", force_actuator.BumpTestPageWidget, self.m1m3

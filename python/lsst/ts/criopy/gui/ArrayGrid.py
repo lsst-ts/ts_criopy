@@ -113,6 +113,18 @@ class AbstractColumn(QObject):
     widget : `QWidget`
         QWidgets/UnitLabes used to display array members together with index in
         data field, holding the value.
+
+    Parameters
+    ----------
+    field : `str`
+        Field within data holding the values.
+    label : `str`
+        Label displayed on top of the row.
+    widget : `UnitLabel`, optional
+        Type of widget to be used in the grid to display the array. If signal
+        is provided, widget setValue method is used to set the value.
+    signal : `Signal`, optional
+        Connect to this signal to receive data updates.
     """
 
     def __init__(
@@ -123,22 +135,6 @@ class AbstractColumn(QObject):
         signal: Signal | None = None,
         indices: list[int] | None = None,
     ):
-        """
-        Creates member of grid representing an array.
-
-        Parameters
-        ----------
-        field : `str`
-            Field within data holding the values.
-        label : `str`
-            Label displayed on top of the row.
-        widget : `UnitLabel`, optional
-            Type of widget to be used in the grid to display the array. If
-            signal is provided, widget setValue method is used to set the
-            value.
-        signal : `Signal`, optional
-            Connect to this signal to receive data updates.
-        """
         super().__init__()
         self.setObjectName(field)
         self._label = label
@@ -223,9 +219,10 @@ class ArrayItem(AbstractColumn):
         widget: typing.Callable[[], UnitLabel] = UnitLabel,
         signal: Signal | None = None,
         indices: list[int] | None = None,
+        extra_widgets: list[QWidget | None] | None = None,
     ):
-        """Construct QObject holding widgets for array."""
         super().__init__(field, label, widget, signal, indices)
+        self._extra_widgets = extra_widgets
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         if self._widget is None:
@@ -240,6 +237,13 @@ class ArrayItem(AbstractColumn):
             if i is not None:
                 i.setObjectName(self.objectName() + f"[{c}]")
                 i.setCursor(Qt.PointingHandCursor)
+
+        if self._extra_widgets is not None:
+            base_col = len(self.items) + 1
+            for c, w in enumerate(self._extra_widgets):
+                if w is not None:
+                    parent.add_widget(w, row, c + base_col)
+
         return row + 1
 
 
@@ -271,7 +275,7 @@ class ArrayFields(AbstractColumn):
     ):
         super().__init__("", label, widget, signal)
         self.fields = fields
-        self.extra_widgets = extra_widgets
+        self._extra_widgets = extra_widgets
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         if self._widget is None:
@@ -288,9 +292,9 @@ class ArrayFields(AbstractColumn):
             i.setObjectName(self.fields[c])
             i.setCursor(Qt.PointingHandCursor)
 
-        base_col = len(self.fields) + 1
-        if self.extra_widgets is not None:
-            for c, w in enumerate(self.extra_widgets):
+        if self._extra_widgets is not None:
+            base_col = len(self.fields) + 1
+            for c, w in enumerate(self._extra_widgets):
                 parent.add_widget(w, row, c + base_col)
 
         return row + 1
@@ -423,6 +427,8 @@ class ArrayGrid(QWidget):
     rows : `[str]`
         Labels for array items. Length of the array is number of rows, which
         equals to number of items/variables.
+
+    items : `[AbstractColumn]`
 
     orientation : `Qt.Orientation`
         Grid orientation. Vertical displays in columns indices and in rows

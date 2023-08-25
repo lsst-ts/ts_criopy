@@ -270,7 +270,7 @@ class OverviewPageWidget(QWidget):
         m1m3.heartbeat.connect(self.heartbeatLabel.heartbeat)
 
         m1m3.accelerometerData.connect(self.accelerometerData)
-        m1m3.boosterValveStatus.connect(self.boosterValveStatus)
+        m1m3.forceControllerState.connect(self.force_controller_state)
         m1m3.forceActuatorData.connect(self.forceActuatorData)
         m1m3.gyroData.connect(self.gyroData)
         m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
@@ -326,7 +326,7 @@ class OverviewPageWidget(QWidget):
         self.accelationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
 
     @Slot()
-    def boosterValveStatus(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: typing.Any) -> None:
         self.slewFlag.setText("On" if data.slewFlag else "Off")
 
     @Slot()
