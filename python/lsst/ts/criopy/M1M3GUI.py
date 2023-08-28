@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums import MTM1M3
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtWidgets import QLabel
 
 from .aircompressor import CompressorsPageWidget
@@ -122,28 +122,28 @@ def detailedStateString(detailedState: int) -> str:
     stateString : `str`
         HTML string (usable in Qt) description of detailed state."""
     _map = {
-        MTM1M3.DetailedState.DISABLED: "Disabled",
-        MTM1M3.DetailedState.FAULT: "<font color='red'>Fault</font>",
-        MTM1M3.DetailedState.OFFLINE: "<font color='red'>Offline</font>",
-        MTM1M3.DetailedState.STANDBY: "Standby",
-        MTM1M3.DetailedState.PARKED: "<font color='green'>Parked</font>",
-        MTM1M3.DetailedState.RAISING: "<font color='magenta'>Raising</font>",
-        MTM1M3.DetailedState.ACTIVE: "<font color='blue'>Active</font>",
-        MTM1M3.DetailedState.LOWERING: "<font color='magenta'>Lowering</font>",
-        MTM1M3.DetailedState.PARKEDENGINEERING: (
+        DetailedStates.DISABLED: "Disabled",
+        DetailedStates.FAULT: "<font color='red'>Fault</font>",
+        DetailedStates.OFFLINE: "<font color='red'>Offline</font>",
+        DetailedStates.STANDBY: "Standby",
+        DetailedStates.PARKED: "<font color='green'>Parked</font>",
+        DetailedStates.RAISING: "<font color='magenta'>Raising</font>",
+        DetailedStates.ACTIVE: "<font color='blue'>Active</font>",
+        DetailedStates.LOWERING: "<font color='magenta'>Lowering</font>",
+        DetailedStates.PARKEDENGINEERING: (
             "<font color='green'>Parked Engineering</font>"
         ),
-        MTM1M3.DetailedState.RAISINGENGINEERING: (
+        DetailedStates.RAISINGENGINEERING: (
             "<font color='magenta'>Raising Engineering</font>"
         ),
-        MTM1M3.DetailedState.ACTIVEENGINEERING: (
+        DetailedStates.ACTIVEENGINEERING: (
             "<font color='blue'>Active Engineering</font>"
         ),
-        MTM1M3.DetailedState.LOWERINGENGINEERING: (
+        DetailedStates.LOWERINGENGINEERING: (
             "<font color='magenta'>Lowering Engineering</font>"
         ),
-        MTM1M3.DetailedState.LOWERINGFAULT: ("<font color='red'>Lowering Fault</font>"),
-        MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS: (
+        DetailedStates.LOWERINGFAULT: ("<font color='red'>Lowering Fault</font>"),
+        DetailedStates.PROFILEHARDPOINTCORRECTIONS: (
             "<font color='red'>Profile Hardpoint Corrections</font>"
         ),
     }

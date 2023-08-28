@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums import MTM1M3
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
@@ -63,8 +63,8 @@ class ApplicationStatusWidget(QWidget):
         if detailedData is None:
             return
         if (
-            detailedData.detailedState == MTM1M3.DetailedState.RAISING
-            or detailedData.detailedState == MTM1M3.DetailedState.RAISINGENGINEERING
+            detailedData.detailedState == DetailedStates.RAISING
+            or detailedData.detailedState == DetailedStates.RAISINGENGINEERING
         ):
             if data.weightSupportedPercent >= 100:
                 self.mirrorStateLabel.setText("Raising - positioning hardpoints")
@@ -73,8 +73,8 @@ class ApplicationStatusWidget(QWidget):
                     f"Raising ({data.weightSupportedPercent:.02f}%)"
                 )
         elif (
-            detailedData.detailedState == MTM1M3.DetailedState.LOWERING
-            or detailedData.detailedState == MTM1M3.DetailedState.LOWERINGENGINEERING
+            detailedData.detailedState == DetailedStates.LOWERING
+            or detailedData.detailedState == DetailedStates.LOWERINGENGINEERING
         ):
             if data.weightSupportedPercent <= 0:
                 self.mirrorStateLabel.setText("Lowering - positioning hardpoints")
@@ -82,7 +82,7 @@ class ApplicationStatusWidget(QWidget):
                 self.mirrorStateLabel.setText(
                     f"Lowering ({data.weightSupportedPercent:.02f}%)"
                 )
-        elif detailedData.detailedState == MTM1M3.DetailedState.LOWERINGFAULT:
+        elif detailedData.detailedState == DetailedStates.LOWERINGFAULT:
             self.mirrorStateLabel.setText(
                 f"Lowering (fault, {data.weightSupportedPercent:.02f}%)"
             )
@@ -106,58 +106,58 @@ class ApplicationStatusWidget(QWidget):
     def processEventDetailedState(self, data: typing.Any) -> None:
         modeStateText = "Unknown"
         mirrorStateText = "Unknown"
-        if data.detailedState == MTM1M3.DetailedState.DISABLED:
+        if data.detailedState == DetailedStates.DISABLED:
             modeStateText = "Automatic"
             mirrorStateText = "Parked"
-        elif data.detailedState == MTM1M3.DetailedState.FAULT:
+        elif data.detailedState == DetailedStates.FAULT:
             modeStateText = "Automatic"
             mirrorStateText = "Fault"
-        elif data.detailedState == MTM1M3.DetailedState.OFFLINE:
+        elif data.detailedState == DetailedStates.OFFLINE:
             modeStateText = "Offline"
             mirrorStateText = "Parked"
-        elif data.detailedState == MTM1M3.DetailedState.STANDBY:
+        elif data.detailedState == DetailedStates.STANDBY:
             modeStateText = "Automatic"
             mirrorStateText = "Parked"
-        elif data.detailedState == MTM1M3.DetailedState.PARKED:
+        elif data.detailedState == DetailedStates.PARKED:
             modeStateText = "Automatic"
             mirrorStateText = "Parked"
             self._disconnectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.RAISING:
+        elif data.detailedState == DetailedStates.RAISING:
             modeStateText = "Automatic"
             percent = (
                 self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
             )
             mirrorStateText = f"Raising ({percent:.03f}%)"
             self._connectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.ACTIVE:
+        elif data.detailedState == DetailedStates.ACTIVE:
             modeStateText = "Automatic"
             mirrorStateText = "Active"
             self._disconnectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.LOWERING:
+        elif data.detailedState == DetailedStates.LOWERING:
             modeStateText = "Automatic"
             mirrorStateText = "Lowering"
             self._connectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.PARKEDENGINEERING:
+        elif data.detailedState == DetailedStates.PARKEDENGINEERING:
             modeStateText = "Manual"
             mirrorStateText = "Parked"
             self._disconnectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.RAISINGENGINEERING:
+        elif data.detailedState == DetailedStates.RAISINGENGINEERING:
             modeStateText = "Manual"
             mirrorStateText = "Raising"
             self._connectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.ACTIVEENGINEERING:
+        elif data.detailedState == DetailedStates.ACTIVEENGINEERING:
             modeStateText = "Manual"
             mirrorStateText = "Active"
             self._disconnectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.LOWERINGENGINEERING:
+        elif data.detailedState == DetailedStates.LOWERINGENGINEERING:
             modeStateText = "Manual"
             mirrorStateText = "Lowering"
             self._connectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.LOWERINGFAULT:
+        elif data.detailedState == DetailedStates.LOWERINGFAULT:
             modeStateText = "Automatic"
             mirrorStateText = "Lowering (fault)"
             self._connectRaiseLowering()
-        elif data.detailedState == MTM1M3.DetailedState.PROFILEHARDPOINTCORRECTIONS:
+        elif data.detailedState == DetailedStates.PROFILEHARDPOINTCORRECTIONS:
             modeStateText = "Profile hardpoint corrections"
             mirrorStateText = "Active"
             self._disconnectRaiseLowering()

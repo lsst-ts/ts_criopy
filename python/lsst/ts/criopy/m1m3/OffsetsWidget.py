@@ -20,7 +20,7 @@
 import typing
 
 import astropy.units as u
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QDoubleSpinBox,
@@ -354,7 +354,7 @@ class OffsetsWidget(QWidget):
 
     @Slot()
     def _detailedStateCallback(self, data: typing.Any) -> None:
-        enabled = data.detailedState == DetailedState.ACTIVEENGINEERING
+        enabled = data.detailedState == DetailedStates.ACTIVEENGINEERING
 
         self.moveMirrorButton.setEnabled(enabled)
         self.dir_pad.setEnabled(enabled)

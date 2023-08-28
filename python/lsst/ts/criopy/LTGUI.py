@@ -21,7 +21,7 @@
 import typing
 
 from lsst.ts import salobj
-from lsst.ts.idl.enums import LaserTracker
+from lsst.ts.xml.enums import LaserTracker
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QLabel
 

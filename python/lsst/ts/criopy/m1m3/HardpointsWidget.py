@@ -21,7 +21,7 @@ import typing
 from functools import partial
 
 import astropy.units as u
-from lsst.ts.idl.enums.MTM1M3 import DetailedState, HardpointActuatorMotionStates
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import (
     QApplication,
@@ -304,10 +304,10 @@ class HardpointsWidget(QWidget):
         row += 1
 
         enabledStates = [
-            DetailedState.PARKEDENGINEERING,
-            DetailedState.RAISINGENGINEERING,
-            DetailedState.ACTIVEENGINEERING,
-            DetailedState.LOWERINGENGINEERING,
+            DetailedStates.PARKEDENGINEERING,
+            DetailedStates.RAISINGENGINEERING,
+            DetailedStates.ACTIVEENGINEERING,
+            DetailedStates.LOWERINGENGINEERING,
         ]
 
         self._lastOffsetFocused: int | None = None
@@ -506,15 +506,15 @@ class HardpointsWidget(QWidget):
     @Slot()
     def hardpointActuatorState(self, data: typing.Any) -> None:
         states = {
-            HardpointActuatorMotionStates.STANDBY: "Standby",
-            HardpointActuatorMotionStates.CHASING: "Chasing",
-            HardpointActuatorMotionStates.STEPPING: "Stepping",
-            HardpointActuatorMotionStates.QUICKPOSITIONING: "Quick positioning",
-            HardpointActuatorMotionStates.FINEPOSITIONING: "Fine positioning",
-            HardpointActuatorMotionStates.WAITINGTENSION: "Wait for support",
+            HardpointActuatorMotionState.STANDBY: "Standby",
+            HardpointActuatorMotionState.CHASING: "Chasing",
+            HardpointActuatorMotionState.STEPPING: "Stepping",
+            HardpointActuatorMotionState.QUICKPOSITIONING: "Quick positioning",
+            HardpointActuatorMotionState.FINEPOSITIONING: "Fine positioning",
+            HardpointActuatorMotionState.WAITINGTENSION: "Wait for support",
         }
 
-        def getHpState(state: HardpointActuatorMotionStates) -> str:
+        def getHpState(state: HardpointActuatorMotionState) -> str:
             try:
                 return states[state]
             except KeyError:

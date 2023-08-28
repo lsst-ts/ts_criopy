@@ -20,7 +20,7 @@
 import typing
 from functools import partial
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState, EnableDisableForceComponent
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates, EnableDisableForceComponent
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
@@ -73,7 +73,9 @@ class ForceButton(ColoredButton):
 
     @Slot()
     def detailed_state(self, data: typing.Any) -> None:
-        self.__engineering_state = data.detailedState == DetailedState.ACTIVEENGINEERING
+        self.__engineering_state = (
+            data.detailedState == DetailedStates.ACTIVEENGINEERING
+        )
         if self.__engineering_state:
             force_controller_state = self.m1m3.remote.evt_forceControllerState.get()
             if force_controller_state is not None:

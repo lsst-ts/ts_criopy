@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QWidget
 
@@ -95,7 +95,7 @@ class DetailedStateEnabledButton(SignalButton):
     m1m3 : `MetaSAL`
         SAL. Its detailed state is connected to a handler
         enabling/disabling the button.
-    enabledStates : `[DetailedState.*]`
+    enabledStates : `[DetailedStates.*]`
         States in which button shall be enabled. It will be disabled in all
         other states.
     """
@@ -104,9 +104,9 @@ class DetailedStateEnabledButton(SignalButton):
         self,
         text: str,
         m1m3: MetaSAL,
-        enabledStates: list[DetailedState] = [
-            DetailedState.ACTIVE,
-            DetailedState.ACTIVEENGINEERING,
+        enabledStates: list[DetailedStates] = [
+            DetailedStates.ACTIVE,
+            DetailedStates.ACTIVEENGINEERING,
         ],
     ):
         super().__init__(text, m1m3.detailedState, "detailedState", enabledStates)
@@ -129,8 +129,8 @@ class ActiveButton(DetailedStateEnabledButton):
             text,
             m1m3,
             [
-                DetailedState.ACTIVE,
-                DetailedState.ACTIVEENGINEERING,
+                DetailedStates.ACTIVE,
+                DetailedStates.ACTIVEENGINEERING,
             ],
         )
 
@@ -152,10 +152,10 @@ class EngineeringButton(DetailedStateEnabledButton):
             text,
             m1m3,
             [
-                DetailedState.PARKEDENGINEERING,
-                DetailedState.RAISINGENGINEERING,
-                DetailedState.ACTIVEENGINEERING,
-                DetailedState.LOWERINGENGINEERING,
+                DetailedStates.PARKEDENGINEERING,
+                DetailedStates.RAISINGENGINEERING,
+                DetailedStates.ACTIVEENGINEERING,
+                DetailedStates.LOWERINGENGINEERING,
             ],
         )
 
@@ -176,9 +176,9 @@ class StateEnabledWidget(QWidget):
     def __init__(
         self,
         m1m3: MetaSAL,
-        enabledStates: list[DetailedState] = [
-            DetailedState.ACTIVE,
-            DetailedState.ACTIVEENGINEERING,
+        enabledStates: list[DetailedStates] = [
+            DetailedStates.ACTIVE,
+            DetailedStates.ACTIVEENGINEERING,
         ],
     ) -> None:
         super().__init__()

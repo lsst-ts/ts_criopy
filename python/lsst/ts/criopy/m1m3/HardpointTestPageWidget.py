@@ -19,7 +19,7 @@
 
 from functools import partial
 
-from lsst.ts.idl.enums.MTM1M3 import HardpointTest
+from lsst.ts.xml.enums.MTM1M3 import HardpointTest
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 

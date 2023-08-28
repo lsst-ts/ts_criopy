@@ -20,7 +20,7 @@
 import asyncio
 import typing
 
-from lsst.ts.idl.enums import MTM1M3
+from lsst.ts.xml.enums import MTM1M3
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
@@ -198,7 +198,7 @@ class BumpTestPageWidget(QWidget):
     def _recheckBumpTestButton(self, test_enabled: bool = True) -> None:
         detailedState = self.m1m3.remote.evt_detailedState.get()
         if detailedState is None or detailedState.detailedState not in [
-            MTM1M3.DetailedState.PARKEDENGINEERING
+            MTM1M3.DetailedStates.PARKEDENGINEERING
         ]:
             self.bumpTestButton.setEnabled(False)
         else:
@@ -315,7 +315,7 @@ class BumpTestPageWidget(QWidget):
     def detailedState(self, data: typing.Any) -> None:
         """Called when detailedState event is received. Intercept to
         enable/disable form buttons."""
-        if data.detailedState == MTM1M3.DetailedState.PARKEDENGINEERING:
+        if data.detailedState == MTM1M3.DetailedStates.PARKEDENGINEERING:
             self.bumpTestAllButton.setEnabled(True)
             self.bumpTestButton.setEnabled(
                 self.actuatorsTable.currentItem() is not None
@@ -419,7 +419,7 @@ class BumpTestPageWidget(QWidget):
         # first check that we are still in PARKEDENGINEERING
         detailedState = self.m1m3.remote.evt_detailedState.get()
         if detailedState is None or detailedState.detailedState not in [
-            MTM1M3.DetailedState.PARKEDENGINEERING
+            MTM1M3.DetailedStates.PARKEDENGINEERING
         ]:
             self.bumpTestAllButton.setEnabled(False)
             self.bumpTestButton.setEnabled(False)

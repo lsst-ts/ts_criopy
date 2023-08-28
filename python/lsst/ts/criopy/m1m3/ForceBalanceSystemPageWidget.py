@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from qasync import asyncSlot
@@ -54,7 +54,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.enableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Enable Hardpoint Corrections",
             m1m3,
-            [DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
+            [DetailedStates.ACTIVE, DetailedStates.ACTIVEENGINEERING],
         )
         self.enableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandEnableHardpointCorrections
@@ -63,7 +63,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.disableHardpointCorrectionsButton = DetailedStateEnabledButton(
             "Disable Hardpoint Corrections",
             m1m3,
-            [DetailedState.ACTIVE, DetailedState.ACTIVEENGINEERING],
+            [DetailedStates.ACTIVE, DetailedStates.ACTIVEENGINEERING],
         )
         self.disableHardpointCorrectionsButton.clicked.connect(
             self.issueCommandDisableHardpointCorrections

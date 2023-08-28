@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
@@ -62,7 +62,10 @@ class HPWarnings:
             return
 
         rangeRatio = 0.1
-        if state == DetailedState.RAISING or state == DetailedState.RAISINGENGINEERING:
+        if (
+            state == DetailedStates.RAISING
+            or state == DetailedStates.RAISINGENGINEERING
+        ):
             self.faultLow = self._faultLowRaising
         else:
             self.faultLow = self._faultLow
@@ -266,68 +269,68 @@ class M1M3CSCControl(CSCControlWidget):
 
     def get_state_buttons_map(self, state: int) -> list[str | None]:
         states_map: dict[int, list[str | None]] = {
-            DetailedState.STANDBY: [
+            DetailedStates.STANDBY: [
                 self.TEXT_START,
                 None,
                 None,
                 None,
                 self.TEXT_EXIT_CONTROL,
             ],
-            DetailedState.DISABLED: [
+            DetailedStates.DISABLED: [
                 None,
                 self.TEXT_ENABLE,
                 None,
                 None,
                 self.TEXT_STANDBY,
             ],
-            DetailedState.FAULT: [self.TEXT_STANDBY, None, None, None, None],
-            DetailedState.OFFLINE: [None, None, None, None, None],
-            DetailedState.PARKED: [
+            DetailedStates.FAULT: [self.TEXT_STANDBY, None, None, None, None],
+            DetailedStates.OFFLINE: [None, None, None, None, None],
+            DetailedStates.PARKED: [
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
-            DetailedState.PARKEDENGINEERING: [
+            DetailedStates.PARKEDENGINEERING: [
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedState.RAISING: [
+            DetailedStates.RAISING: [
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
                 None,
                 None,
             ],
-            DetailedState.RAISINGENGINEERING: [
+            DetailedStates.RAISINGENGINEERING: [
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
                 None,
                 None,
             ],
-            DetailedState.ACTIVE: [
+            DetailedStates.ACTIVE: [
                 None,
                 None,
                 self.TEXT_LOWER,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
-            DetailedState.ACTIVEENGINEERING: [
+            DetailedStates.ACTIVEENGINEERING: [
                 None,
                 None,
                 self.TEXT_LOWER,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedState.LOWERING: [None, None, None, None, None],
-            DetailedState.LOWERINGENGINEERING: [None, None, None, None, None],
-            DetailedState.LOWERINGFAULT: [None, None, None, None, None],
-            DetailedState.PROFILEHARDPOINTCORRECTIONS: [
+            DetailedStates.LOWERING: [None, None, None, None, None],
+            DetailedStates.LOWERINGENGINEERING: [None, None, None, None, None],
+            DetailedStates.LOWERINGFAULT: [None, None, None, None, None],
+            DetailedStates.PROFILEHARDPOINTCORRECTIONS: [
                 None,
                 None,
                 None,
@@ -410,15 +413,17 @@ class ApplicationControlWidget(QWidget):
 
     @Slot()
     def detailedState(self, data: typing.Any) -> None:
-        self._panic_button.setEnabled(not (data.detailedState == DetailedState.OFFLINE))
+        self._panic_button.setEnabled(
+            not (data.detailedState == DetailedStates.OFFLINE)
+        )
         self.slewWidget.setEnabled(
             not (
                 data.detailedState
                 in (
-                    DetailedState.OFFLINE,
-                    DetailedState.STANDBY,
-                    DetailedState.DISABLED,
-                    DetailedState.FAULT,
+                    DetailedStates.OFFLINE,
+                    DetailedStates.STANDBY,
+                    DetailedStates.DISABLED,
+                    DetailedStates.FAULT,
                 )
             )
         )
