@@ -21,9 +21,10 @@ import typing
 
 from lsst.ts.idl.enums.MTM1M3 import DetailedState
 from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QPushButton, QWidget
+from PySide2.QtWidgets import QWidget
 
 from ...salcomm import MetaSAL
+from .. import ColoredButton
 
 __all__ = [
     "SignalButton",
@@ -34,13 +35,13 @@ __all__ = [
 ]
 
 
-class SignalButton(QPushButton):
+class SignalButton(ColoredButton):
     """Push button enabled by signal.value in given state.
 
     Parameters
     ----------
-    title : `str`
-        Button title. Passed to QPushButton.
+    text : `str`
+        Button text. Passed to ColoredButton
     signal : `PySide2.QtCore.Signal`
         Signal
     variable : `str`
@@ -52,12 +53,12 @@ class SignalButton(QPushButton):
 
     def __init__(
         self,
-        title: str,
+        text: str,
         signal: Signal,
         variable: str,
         enabledValues: list[str],
     ):
-        super().__init__(title)
+        super().__init__(text)
         self.__correctState = False
         self.__askedEnabled = False
         self._variable = variable
@@ -89,8 +90,8 @@ class DetailedStateEnabledButton(SignalButton):
 
     Parameters
     ----------
-    title : `str`
-        Button title. Passed to QPushButton.
+    text : `str`
+        Button text. Passed to SignalButton.
     m1m3 : `MetaSAL`
         SAL. Its detailed state is connected to a handler
         enabling/disabling the button.
@@ -101,14 +102,14 @@ class DetailedStateEnabledButton(SignalButton):
 
     def __init__(
         self,
-        title: str,
+        text: str,
         m1m3: MetaSAL,
         enabledStates: list[DetailedState] = [
             DetailedState.ACTIVE,
             DetailedState.ACTIVEENGINEERING,
         ],
     ):
-        super().__init__(title, m1m3.detailedState, "detailedState", enabledStates)
+        super().__init__(text, m1m3.detailedState, "detailedState", enabledStates)
 
 
 class ActiveButton(DetailedStateEnabledButton):
@@ -116,16 +117,16 @@ class ActiveButton(DetailedStateEnabledButton):
 
     Parameters
     ----------
-    title : `str`
-        Button title. Passed to QPushButton.
+    text : `str`
+        Button text. Passed to DetailedStateEnabledButton.
     m1m3 : `MetaSAL`
         SAL. When detailed state is in one of the engineering states,
         button is enabled. It is disabled otherwise.
     """
 
-    def __init__(self, title: str, m1m3: MetaSAL):
+    def __init__(self, text: str, m1m3: MetaSAL):
         super().__init__(
-            title,
+            text,
             m1m3,
             [
                 DetailedState.ACTIVE,
@@ -139,16 +140,16 @@ class EngineeringButton(DetailedStateEnabledButton):
 
     Parameters
     ----------
-    title : `str`
-        Button title. Passed to QPushButton.
+    text : `str`
+        Button text. Passed to DetailedStateEnabledButton.
     m1m3 : `MetaSAL`
         SAL. When detailed state is in one of the engineering states,
         button is enabled. It is disabled otherwise.
     """
 
-    def __init__(self, title: str, m1m3: MetaSAL):
+    def __init__(self, text: str, m1m3: MetaSAL):
         super().__init__(
-            title,
+            text,
             m1m3,
             [
                 DetailedState.PARKEDENGINEERING,

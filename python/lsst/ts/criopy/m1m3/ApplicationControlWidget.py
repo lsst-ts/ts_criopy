@@ -144,12 +144,12 @@ class SlewWidget(QWidget):
         pal = self.slew_flag_on.palette()
         self._default_color = pal.color(pal.Button)
 
-        self.boosterOpen = EngineeringButton("Booster Open", m1m3)
-        self.boosterClose = EngineeringButton("Booster Close", m1m3)
+        self.booster_open = EngineeringButton("Booster Open", m1m3)
+        self.booster_close = EngineeringButton("Booster Close", m1m3)
 
         boosterLayout = QHBoxLayout()
-        boosterLayout.addWidget(self.boosterOpen)
-        boosterLayout.addWidget(self.boosterClose)
+        boosterLayout.addWidget(self.booster_open)
+        boosterLayout.addWidget(self.booster_close)
 
         slewLayout.addLayout(boosterLayout)
 
@@ -164,8 +164,10 @@ class SlewWidget(QWidget):
         self.slew_flag_on.clicked.connect(self.issueCommandSlewFlagOn)
         self.slew_flag_off.clicked.connect(self.issueCommandSlewFlagOff)
 
-        self.boosterOpen.clicked.connect(self.issueCommandBoosterOpen)
-        self.boosterClose.clicked.connect(self.issueCommandBoosterClose)
+        self.booster_open.clicked.connect(self.issueCommandBoosterOpen)
+        self.booster_close.clicked.connect(self.issueCommandBoosterClose)
+
+        self.m1m3.boosterValveStatus.connect(self.booster_valve_status)
 
         self.m1m3.forceControllerState.connect(self.force_controller_state)
 
@@ -186,15 +188,38 @@ class SlewWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
+    def booster_valve_status(self, data: typing.Any) -> None:
+        pal_open = self.booster_open.palette()
+        pal_close = self.booster_close.palette()
+        if data.userTriggered:
+            pal_open.setColor(pal_open.Button, Colors.WARNING)
+            pal_close.setColor(pal_close.Button, self._default_color)
+            self.booster_open.setEnabled(False)
+            self.booster_close.setEnabled(True)
+        else:
+            pal_open.setColor(pal_open.Button, self._default_color)
+            pal_close.setColor(pal_close.Button, Colors.OK)
+            self.booster_open.setEnabled(True)
+            self.booster_close.setEnabled(False)
+
+        self.booster_open.setPalette(pal_open)
+        self.booster_close.setPalette(pal_close)
+
+    @Slot()
     def force_controller_state(self, data: typing.Any) -> None:
         pal_on = self.slew_flag_on.palette()
         pal_off = self.slew_flag_off.palette()
         if data.slewFlag:
             pal_on.setColor(pal_on.Button, Colors.WARNING)
             pal_off.setColor(pal_off.Button, self._default_color)
+            self.slew_flag_on.setEnabled(False)
+            self.slew_flag_off.setDisabled(True)
         else:
             pal_on.setColor(pal_on.Button, self._default_color)
             pal_off.setColor(pal_off.Button, Colors.OK)
+            self.slew_flag_on.setEnabled(True)
+            self.slew_flag_off.setDisabled(False)
+
         self.slew_flag_on.setPalette(pal_on)
         self.slew_flag_off.setPalette(pal_off)
 

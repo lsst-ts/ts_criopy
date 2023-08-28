@@ -16,6 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
+
 """Module displaying grid of UnitLabels.
 
 Creates widget utilizing QGridLayout to display multi-indexed variables.
@@ -37,6 +38,9 @@ Usage
 
    # sal holds SAL remote with signal "sig1", "sig2", "sig3" and "sig4"
 
+   b1 = QPushButton("Action &1")
+   b2 = QPushButton("Action &2")
+
    grid = ArrayGrid(
        "<b>Some data</b>",
        [f"<b>{x}</b>" for b in range(1, 7)],
@@ -46,8 +50,8 @@ Usage
                sal.sig2,
                [
                    ArrayItem("fieldA", "A"),
-                   ArrayItem("fieldB", "B"),
-                   ArrayItem("fieldC", "C"),
+                   ArrayItem("fieldB", "B", indices=[5,4,3,2,1]),
+                   ArrayItem("fieldC", "C", extra_widgets=[b1, b2]),
                    ArrayFields(["fX", None, "fZ"], "My forces")
                ]
            ),
@@ -77,6 +81,7 @@ Usage
                sal.sig4,
            ),
        ],
+       Qt.Vertical,
    )
 
    layout = <someLayout>()
@@ -125,6 +130,9 @@ class AbstractColumn(QObject):
         is provided, widget setValue method is used to set the value.
     signal : `Signal`, optional
         Connect to this signal to receive data updates.
+    indices : `[int]`, optional
+        Indices remapping. If specified, label at grid column/row position g
+        will display data from array at position indices[g].
     """
 
     def __init__(
@@ -210,7 +218,28 @@ class AbstractColumn(QObject):
 
 
 class ArrayItem(AbstractColumn):
-    """Variable with values in array."""
+    """Variable with values in array. Display array values to cells in
+    ArrayGrid.
+
+    Parameters
+    ----------
+    field : `str`
+        Signal field - member of the topics, holding the data.
+    label : `str`
+        Label for data, text describing data content and show before the data.
+    widget : UnitLabel, optional
+        Widget used to data display. Defaults to UnitLabel, but can be any
+        child of UnitLabel.
+    signal : `Signal`, optional
+        Signal providing updates. If not provided, upper ArraySignal component
+        takes charge of distributing updates.
+    indices : `[int]`, optional
+        Indices mapping. Key is original index, value is mapped (displayed)
+        index value. If not provided, 1:1 mapping is assumed.
+    extra_widgets : `[QWidget]`
+        Widgets added after data. Can include additional control, such as
+        buttons, related to the data.
+    """
 
     def __init__(
         self,
@@ -310,6 +339,15 @@ class ArrayFields(AbstractColumn):
 
 
 class ArrayLabels(AbstractColumn):
+    """Display fixed labels in a row. Change number of elements expected from
+    subsequent members.
+
+    Parameters
+    ----------
+    *labels : `str`
+        Text to display in the row/column.
+    """
+
     def __init__(self, *labels: str):
         super().__init__("", "")
         self._labels = labels
@@ -418,7 +456,10 @@ class ArrayButton(AbstractColumn):
 
 
 class ArrayGrid(QWidget):
-    """Construct grid of Array-like items.
+    """Construct grid of Array-like items. Provides Grid which orientation can
+    be changed just by changing the orientation parameter. Optimizes signal
+    handling - it's usually enough for this class to receive signal when data
+    changes, as changes are propagated into items displayed in the class.
 
     Shall be used to display arrays associated with some physical hardware.
 
@@ -427,12 +468,15 @@ class ArrayGrid(QWidget):
     rows : `[str]`
         Labels for array items. Length of the array is number of rows, which
         equals to number of items/variables.
-
     items : `[AbstractColumn]`
-
-    orientation : `Qt.Orientation`
+        Items displayed in the grid.
+    orientation : `Qt.Orientation`, optional
         Grid orientation. Vertical displays in columns indices and in rows
-        values. Horizontal swaps rows and columns.
+        values. Horizontal swaps rows and columns. Default to Vertical.
+    chart : TimeChart, optional
+        Optional timechart associated with the grid. If provided, mouseclicks
+        on a data label in the grid will display timeserie of that label in the
+        chart.
     """
 
     def __init__(
