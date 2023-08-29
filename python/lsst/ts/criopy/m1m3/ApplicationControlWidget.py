@@ -62,10 +62,7 @@ class HPWarnings:
             return
 
         rangeRatio = 0.1
-        if (
-            state == DetailedStates.RAISING
-            or state == DetailedStates.RAISINGENGINEERING
-        ):
+        if state in (DetailedStates.RAISING, DetailedStates.RAISINGENGINEERING):
             self.faultLow = self._faultLowRaising
         else:
             self.faultLow = self._faultLow

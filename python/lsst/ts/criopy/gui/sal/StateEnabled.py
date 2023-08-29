@@ -41,7 +41,7 @@ class SignalButton(ColoredButton):
     Parameters
     ----------
     text : `str`
-        Button text. Passed to ColoredButton
+        Button text. Passed to ColoredButton.
     signal : `PySide2.QtCore.Signal`
         Signal
     variable : `str`

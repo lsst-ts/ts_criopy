@@ -34,8 +34,12 @@ class Forces(ArrayFields):
     Parameters
     ----------
     label : `str`
-    signal : Signal
-    extra_widgets : `[QWidget]`
+        Force label. Used for QLabel, inserted as the first item into grid.
+    signal : `Signal`
+        Signal issued when new data ara available.
+    extra_widgets : `[QWidget]`, optional
+        Widgets added to the end of the row/column. Passed to parent
+        ArrayFields.
     """
 
     def __init__(

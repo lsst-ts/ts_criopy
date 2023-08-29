@@ -227,7 +227,7 @@ class ArrayItem(AbstractColumn):
         Signal field - member of the topics, holding the data.
     label : `str`
         Label for data, text describing data content and show before the data.
-    widget : UnitLabel, optional
+    widget : `UnitLabel`, optional
         Widget used to data display. Defaults to UnitLabel, but can be any
         child of UnitLabel.
     signal : `Signal`, optional
@@ -408,20 +408,22 @@ class ArraySignal(AbstractColumn):
 
 
 class ArrayButton(AbstractColumn):
-    """Buttons for actions performed per array member.
+    """Buttons for actions performed per array member. Construct button group,
+    and put a button per row/column in ArrayGrid.
 
     Attributes
     ----------
     action : `func(int)`
-    buttonGroup : `QButtonGroup`
-
+        Async function receiving button index in the group.
+    label : `str`
+        Row/column label.
     """
 
     def __init__(
-        self, action: typing.Callable[[int], typing.Awaitable[typing.Any]], text: str
+        self, action: typing.Callable[[int], typing.Awaitable[typing.Any]], label: str
     ):
         """ """
-        super().__init__("", text)
+        super().__init__("", label)
         self.action = action
         self.buttonGroup = QButtonGroup()
         self.buttonGroup.buttonClicked.connect(self._buttonClicked)
@@ -473,10 +475,10 @@ class ArrayGrid(QWidget):
     orientation : `Qt.Orientation`, optional
         Grid orientation. Vertical displays in columns indices and in rows
         values. Horizontal swaps rows and columns. Default to Vertical.
-    chart : TimeChart, optional
+    chart : `TimeChart`, optional
         Optional timechart associated with the grid. If provided, mouseclicks
-        on a data label in the grid will display timeserie of that label in the
-        chart.
+        on a data label in the grid will display timeseries of that label in
+        the chart.
     """
 
     def __init__(
