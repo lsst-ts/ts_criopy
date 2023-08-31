@@ -4,6 +4,10 @@
 Version History
 ===============
 
+v0.5.0
+------
+* LVDT and Slew Controller pages
+
 v0.4.1
 ------
 * Fix conda recipe.

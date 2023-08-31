@@ -60,7 +60,7 @@ class FollowingErrorTrigger(QWidget):
             Force(m1m3.boosterValveSettings, "followingErrorTriggerClose"),
         )
         operationalLayout.addRow(
-            "Slew Flag", OnOffLabel(m1m3.boosterValveStatus, "slewFlag")
+            "Opened", OnOffLabel(m1m3.boosterValveStatus, "opened")
         )
         operationalLayout.addRow(
             "Following Error Triggered",

@@ -20,14 +20,15 @@
 import typing
 from functools import partial
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState, EnableDisableForceComponent
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates, EnableDisableForceComponent
+from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
-from ..gui import ArrayFields, ArrayGrid, ColoredButton, UnitLabel
+from ..gui import ArrayFields, ColoredButton, UnitLabel
 from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL, command
+from .force_grid import Forces, ForcesGrid, PreclippedForces, PreclippedLabel
 
 
 class ForceButton(ColoredButton):
@@ -72,7 +73,9 @@ class ForceButton(ColoredButton):
 
     @Slot()
     def detailed_state(self, data: typing.Any) -> None:
-        self.__engineering_state = data.detailedState == DetailedState.ACTIVEENGINEERING
+        self.__engineering_state = (
+            data.detailedState == DetailedStates.ACTIVEENGINEERING
+        )
         if self.__engineering_state:
             force_controller_state = self.m1m3.remote.evt_forceControllerState.get()
             if force_controller_state is not None:
@@ -84,46 +87,9 @@ class ForceButton(ColoredButton):
         else:
             self.setDisabled(True)
 
-
-class Forces(ArrayFields):
-    def __init__(
-        self,
-        label: str,
-        signal: Signal,
-        force_component: tuple[str, MetaSAL] | None = None,
-    ):
-        extra_widgets: list[QWidget] = []
-        if force_component is not None:
-            extra_widgets = [
-                ForceButton(True, *force_component),
-                ForceButton(False, *force_component),
-            ]
-
-        super().__init__(
-            ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
-            label,
-            partial(UnitLabel, ".02f"),
-            signal,
-            extra_widgets=extra_widgets,
-        )
-
-
-class PreclippedLabel(UnitLabel):
-    def __init__(self, fmt: str = ".02f"):
-        super().__init__(".02f")
-
-    def setValue(self, value: float) -> None:
-        self.setText(f"<i>{(value * self.scale):{self.fmt}}{self.unit_name}</i>")
-
-
-class PreclippedForces(ArrayFields):
-    def __init__(self, label: str, signal: Signal):
-        super().__init__(
-            ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
-            f"<i>{label}</i>",
-            PreclippedLabel,
-            signal,
-        )
+    @classmethod
+    def create(cls, name: str, m1m3: MetaSAL) -> list["ForceButton"]:
+        return [ForceButton(True, name, m1m3), ForceButton(False, name, m1m3)]
 
 
 class ActuatorOverviewPageWidget(QWidget):
@@ -132,32 +98,21 @@ class ActuatorOverviewPageWidget(QWidget):
         self.m1m3 = m1m3
 
         layout = QVBoxLayout()
-        dataLayout = QGridLayout()
-        dataLayout.addWidget(
-            ArrayGrid(
-                "<b>Forces</b>",
+        layout.addWidget(
+            ForcesGrid(
                 [
-                    "<b>Force X</b> (N)",
-                    "<b>Force Y</b> (N)",
-                    "<b>Force Z</b> (N)",
-                    "<b>Moment X</b> (Nm)",
-                    "<b>Moment Y</b> (Nm)",
-                    "<b>Moment Z</b> (Nm)",
-                    "<b>Magnitude</b> (N)",
-                ],
-                [
-                    PreclippedForces("Pre-clipped", m1m3.preclippedForces),
+                    PreclippedForces("<i>Pre-clipped</i>", m1m3.preclippedForces),
                     Forces("Applied", m1m3.appliedForces),
                     Forces("Measured", m1m3.forceActuatorData),
                     Forces("Hardpoints", m1m3.hardpointActuatorData),
                     PreclippedForces(
-                        "Pre-clipped Acceleration",
+                        "<i>Pre-clipped Acceleration</i>",
                         m1m3.preclippedAccelerationForces,
                     ),
                     Forces(
                         "Applied Acceleration",
                         m1m3.appliedAccelerationForces,
-                        ("acceleration", m1m3),
+                        ForceButton.create("acceleration", m1m3),
                     ),
                     ArrayFields(
                         [None, None, "fz", "mx", "my"],
@@ -170,48 +125,55 @@ class ActuatorOverviewPageWidget(QWidget):
                         "Applied Active Optics",
                         partial(UnitLabel, ".02f"),
                         m1m3.appliedActiveOpticForces,
-                        extra_widgets=[
-                            ForceButton(True, "activeOptic", m1m3),
-                            ForceButton(False, "activeOptic", m1m3),
-                        ],
+                        ForceButton.create("activeOptic", m1m3),
                     ),
                     PreclippedForces(
-                        "Pre-clipped Azimuth", m1m3.preclippedAzimuthForces
+                        "<i>Pre-clipped Azimuth</i>", m1m3.preclippedAzimuthForces
                     ),
                     Forces(
-                        "Applied Azimuth", m1m3.appliedAzimuthForces, ("azimuth", m1m3)
+                        "Applied Azimuth",
+                        m1m3.appliedAzimuthForces,
+                        ForceButton.create("azimuth", m1m3),
                     ),
                     PreclippedForces(
-                        "Pre-clipped Balance", m1m3.preclippedBalanceForces
+                        "<i>Pre-clipped Balance</i>", m1m3.preclippedBalanceForces
                     ),
                     Forces(
-                        "Applied Balance", m1m3.appliedBalanceForces, ("balance", m1m3)
+                        "Applied Balance",
+                        m1m3.appliedBalanceForces,
+                        ForceButton.create("balance", m1m3),
                     ),
                     PreclippedForces(
-                        "Pre-clipped Elevation", m1m3.preclippedElevationForces
+                        "<i>Pre-clipped Elevation</i>", m1m3.preclippedElevationForces
                     ),
                     Forces("Applied Elevation", m1m3.appliedElevationForces),
                     PreclippedForces("Pre-clipped Offset", m1m3.preclippedOffsetForces),
                     Forces(
-                        "Applied Offset", m1m3.appliedOffsetForces, ("offset", m1m3)
+                        "Applied Offset",
+                        m1m3.appliedOffsetForces,
+                        ForceButton.create("offset", m1m3),
                     ),
                     PreclippedForces("Pre-clipped Static", m1m3.preclippedStaticForces),
                     Forces(
-                        "Applied Static", m1m3.appliedStaticForces, ("static", m1m3)
+                        "Applied Static",
+                        m1m3.appliedStaticForces,
+                        ForceButton.create("static", m1m3),
                     ),
                     PreclippedForces(
-                        "Pre-clipped Thermal", m1m3.preclippedThermalForces
+                        "<i>Pre-clipped Thermal</i>", m1m3.preclippedThermalForces
                     ),
                     Forces(
-                        "Applied Thermal", m1m3.appliedThermalForces, ("thermal", m1m3)
+                        "Applied Thermal",
+                        m1m3.appliedThermalForces,
+                        ForceButton.create("thermal", m1m3),
                     ),
                     PreclippedForces(
-                        "Pre-clipped Velocity", m1m3.preclippedVelocityForces
+                        "<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces
                     ),
                     Forces(
                         "Applied Velocity",
                         m1m3.appliedVelocityForces,
-                        ("velocity", m1m3),
+                        ForceButton.create("velocity", m1m3),
                     ),
                 ],
                 Qt.Horizontal,
@@ -220,7 +182,6 @@ class ActuatorOverviewPageWidget(QWidget):
 
         plotLayout = QVBoxLayout()
 
-        layout.addLayout(dataLayout)
         layout.addLayout(plotLayout)
 
         chartForces = ChartWidget(

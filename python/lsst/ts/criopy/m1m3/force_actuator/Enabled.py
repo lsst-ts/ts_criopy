@@ -20,7 +20,7 @@
 
 import typing
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
@@ -48,10 +48,10 @@ class Enabled(StateEnabledWidget):
         super().__init__(
             m1m3,
             [
-                DetailedState.PARKEDENGINEERING,
-                DetailedState.RAISINGENGINEERING,
-                DetailedState.ACTIVEENGINEERING,
-                DetailedState.LOWERINGENGINEERING,
+                DetailedStates.PARKEDENGINEERING,
+                DetailedStates.RAISINGENGINEERING,
+                DetailedStates.ACTIVEENGINEERING,
+                DetailedStates.LOWERINGENGINEERING,
             ],
         )
         self.m1m3 = m1m3

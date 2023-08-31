@@ -6,6 +6,7 @@ from .BoosterValveWidget import BoosterValveWidget
 from .CellLightPageWidget import CellLightPageWidget
 from .DCAccelerometerPageWidget import DCAccelerometerPageWidget
 from .DirectionPadWidget import DirectionPadWidget
+from .force_grid import Forces, ForcesGrid, PreclippedForces
 from .ForceBalanceSystemPageWidget import ForceBalanceSystemPageWidget
 from .ForceCalculator import ForceCalculator
 from .GyroPageWidget import GyroPageWidget
@@ -21,3 +22,4 @@ from .PIDPageWidget import PIDPageWidget
 from .PowerPageWidget import PowerPageWidget
 from .Simulator import Simulator
 from .SimulatorWidget import SimulatorWidget
+from .SlewControllerPageWidget import SlewControllerPageWidget

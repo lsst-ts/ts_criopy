@@ -19,7 +19,7 @@
 
 import typing
 
-from lsst.ts.idl.enums.MTM1M3 import DetailedState
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
@@ -62,7 +62,7 @@ class HPWarnings:
             return
 
         rangeRatio = 0.1
-        if state == DetailedState.RAISING or state == DetailedState.RAISINGENGINEERING:
+        if state in (DetailedStates.RAISING, DetailedStates.RAISINGENGINEERING):
             self.faultLow = self._faultLowRaising
         else:
             self.faultLow = self._faultLow
@@ -107,11 +107,16 @@ class SlewWidget(QWidget):
             StatusBox(
                 [
                     StatusWidget(
-                        "S",
-                        "slewFlag",
-                        "SlewFlag - TMA is slewing",
+                        "O",
+                        "opened",
+                        "Booster valves are opened",
                     ),
                     None,
+                    StatusWidget(
+                        "S",
+                        "slewTriggered",
+                        "TMA is slewing, booster valve opened",
+                    ),
                     StatusWidget(
                         "U",
                         "userTriggered",
@@ -133,36 +138,38 @@ class SlewWidget(QWidget):
             )
         )
 
-        self.slewFlagOn = ActiveButton("Slew ON", m1m3)
-        self.slewFlagOff = ActiveButton("Slew OFF", m1m3)
+        self.slew_flag_on = ActiveButton("Slew ON", m1m3)
+        self.slew_flag_off = ActiveButton("Slew OFF", m1m3)
 
-        pal = self.slewFlagOn.palette()
-        self._defaultColor = pal.color(pal.Button)
+        pal = self.slew_flag_on.palette()
+        self._default_color = pal.color(pal.Button)
 
-        self.boosterOpen = EngineeringButton("Booster Open", m1m3)
-        self.boosterClose = EngineeringButton("Booster Close", m1m3)
+        self.booster_open = EngineeringButton("Booster Open", m1m3)
+        self.booster_close = EngineeringButton("Booster Close", m1m3)
 
         boosterLayout = QHBoxLayout()
-        boosterLayout.addWidget(self.boosterOpen)
-        boosterLayout.addWidget(self.boosterClose)
+        boosterLayout.addWidget(self.booster_open)
+        boosterLayout.addWidget(self.booster_close)
 
         slewLayout.addLayout(boosterLayout)
 
         slewControlLayout = QHBoxLayout()
-        slewControlLayout.addWidget(self.slewFlagOn)
-        slewControlLayout.addWidget(self.slewFlagOff)
+        slewControlLayout.addWidget(self.slew_flag_on)
+        slewControlLayout.addWidget(self.slew_flag_off)
 
         slewLayout.addLayout(slewControlLayout)
 
         self.setLayout(slewLayout)
 
-        self.slewFlagOn.clicked.connect(self.issueCommandSlewFlagOn)
-        self.slewFlagOff.clicked.connect(self.issueCommandSlewFlagOff)
+        self.slew_flag_on.clicked.connect(self.issueCommandSlewFlagOn)
+        self.slew_flag_off.clicked.connect(self.issueCommandSlewFlagOff)
 
-        self.boosterOpen.clicked.connect(self.issueCommandBoosterOpen)
-        self.boosterClose.clicked.connect(self.issueCommandBoosterClose)
+        self.booster_open.clicked.connect(self.issueCommandBoosterOpen)
+        self.booster_close.clicked.connect(self.issueCommandBoosterClose)
 
-        self.m1m3.boosterValveStatus.connect(self.boosterValveStatus)
+        self.m1m3.boosterValveStatus.connect(self.booster_valve_status)
+
+        self.m1m3.forceControllerState.connect(self.force_controller_state)
 
     @asyncSlot()
     async def issueCommandSlewFlagOn(self) -> None:
@@ -181,17 +188,40 @@ class SlewWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
-    def boosterValveStatus(self, data: typing.Any) -> None:
-        palOn = self.slewFlagOn.palette()
-        palOff = self.slewFlagOff.palette()
-        if data.slewFlag:
-            palOn.setColor(palOn.Button, Colors.WARNING)
-            palOff.setColor(palOff.Button, self._defaultColor)
+    def booster_valve_status(self, data: typing.Any) -> None:
+        pal_open = self.booster_open.palette()
+        pal_close = self.booster_close.palette()
+        if data.userTriggered:
+            pal_open.setColor(pal_open.Button, Colors.WARNING)
+            pal_close.setColor(pal_close.Button, self._default_color)
+            self.booster_open.setEnabled(False)
+            self.booster_close.setEnabled(True)
         else:
-            palOn.setColor(palOn.Button, self._defaultColor)
-            palOff.setColor(palOff.Button, Colors.OK)
-        self.slewFlagOn.setPalette(palOn)
-        self.slewFlagOff.setPalette(palOff)
+            pal_open.setColor(pal_open.Button, self._default_color)
+            pal_close.setColor(pal_close.Button, Colors.OK)
+            self.booster_open.setEnabled(True)
+            self.booster_close.setEnabled(False)
+
+        self.booster_open.setPalette(pal_open)
+        self.booster_close.setPalette(pal_close)
+
+    @Slot()
+    def force_controller_state(self, data: typing.Any) -> None:
+        pal_on = self.slew_flag_on.palette()
+        pal_off = self.slew_flag_off.palette()
+        if data.slewFlag:
+            pal_on.setColor(pal_on.Button, Colors.WARNING)
+            pal_off.setColor(pal_off.Button, self._default_color)
+            self.slew_flag_on.setEnabled(False)
+            self.slew_flag_off.setDisabled(True)
+        else:
+            pal_on.setColor(pal_on.Button, self._default_color)
+            pal_off.setColor(pal_off.Button, Colors.OK)
+            self.slew_flag_on.setEnabled(True)
+            self.slew_flag_off.setDisabled(False)
+
+        self.slew_flag_on.setPalette(pal_on)
+        self.slew_flag_off.setPalette(pal_off)
 
 
 class M1M3CSCControl(CSCControlWidget):
@@ -236,68 +266,68 @@ class M1M3CSCControl(CSCControlWidget):
 
     def get_state_buttons_map(self, state: int) -> list[str | None]:
         states_map: dict[int, list[str | None]] = {
-            DetailedState.STANDBY: [
+            DetailedStates.STANDBY: [
                 self.TEXT_START,
                 None,
                 None,
                 None,
                 self.TEXT_EXIT_CONTROL,
             ],
-            DetailedState.DISABLED: [
+            DetailedStates.DISABLED: [
                 None,
                 self.TEXT_ENABLE,
                 None,
                 None,
                 self.TEXT_STANDBY,
             ],
-            DetailedState.FAULT: [self.TEXT_STANDBY, None, None, None, None],
-            DetailedState.OFFLINE: [None, None, None, None, None],
-            DetailedState.PARKED: [
+            DetailedStates.FAULT: [self.TEXT_STANDBY, None, None, None, None],
+            DetailedStates.OFFLINE: [None, None, None, None, None],
+            DetailedStates.PARKED: [
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
-            DetailedState.PARKEDENGINEERING: [
+            DetailedStates.PARKEDENGINEERING: [
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedState.RAISING: [
+            DetailedStates.RAISING: [
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
                 None,
                 None,
             ],
-            DetailedState.RAISINGENGINEERING: [
+            DetailedStates.RAISINGENGINEERING: [
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
                 None,
                 None,
             ],
-            DetailedState.ACTIVE: [
+            DetailedStates.ACTIVE: [
                 None,
                 None,
                 self.TEXT_LOWER,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
-            DetailedState.ACTIVEENGINEERING: [
+            DetailedStates.ACTIVEENGINEERING: [
                 None,
                 None,
                 self.TEXT_LOWER,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedState.LOWERING: [None, None, None, None, None],
-            DetailedState.LOWERINGENGINEERING: [None, None, None, None, None],
-            DetailedState.LOWERINGFAULT: [None, None, None, None, None],
-            DetailedState.PROFILEHARDPOINTCORRECTIONS: [
+            DetailedStates.LOWERING: [None, None, None, None, None],
+            DetailedStates.LOWERINGENGINEERING: [None, None, None, None, None],
+            DetailedStates.LOWERINGFAULT: [None, None, None, None, None],
+            DetailedStates.PROFILEHARDPOINTCORRECTIONS: [
                 None,
                 None,
                 None,
@@ -380,15 +410,17 @@ class ApplicationControlWidget(QWidget):
 
     @Slot()
     def detailedState(self, data: typing.Any) -> None:
-        self._panic_button.setEnabled(not (data.detailedState == DetailedState.OFFLINE))
+        self._panic_button.setEnabled(
+            not (data.detailedState == DetailedStates.OFFLINE)
+        )
         self.slewWidget.setEnabled(
             not (
                 data.detailedState
                 in (
-                    DetailedState.OFFLINE,
-                    DetailedState.STANDBY,
-                    DetailedState.DISABLED,
-                    DetailedState.FAULT,
+                    DetailedStates.OFFLINE,
+                    DetailedStates.STANDBY,
+                    DetailedStates.DISABLED,
+                    DetailedStates.FAULT,
                 )
             )
         )
