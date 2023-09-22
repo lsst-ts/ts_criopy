@@ -34,21 +34,21 @@ from ..gui import (
     Ampere,
     Colors,
     DataFormWidget,
-    DockWindow,
+    DataLabel,
     FieldButton,
     Hz,
+    Liter,
+    LiterMinute,
     TopicStatusLabel,
     Volt,
 )
 from ..salcomm import MetaSAL, command
+from .GlycolLoopTemperatureWidget import GlycolLoopTemperatureWidget
 
 
-class CoolantPumpWidget(DockWindow):
-    """Display Glycol coolant re-circulation pump telemetry, allows motor
-    commanding."""
-
+class CoolantPumpWidget(QWidget):
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__("Glycol coolant re-circulation pump")
+        super().__init__()
         self.m1m3ts = m1m3ts
 
         layout = QHBoxLayout()
@@ -90,8 +90,6 @@ class CoolantPumpWidget(DockWindow):
         freqlayout.addWidget(setButton)
 
         cmdlayout.addLayout(freqlayout)
-
-        cmdlayout.addStretch()
 
         tellayout = QVBoxLayout()
         tellayout.addWidget(
@@ -165,16 +163,13 @@ class CoolantPumpWidget(DockWindow):
                 ],
             )
         )
-        tellayout.addStretch()
 
         layout.addLayout(cmdlayout)
         layout.addLayout(tellayout)
+
         layout.addStretch()
 
-        widget = QWidget()
-        widget.setLayout(layout)
-
-        self.setWidget(widget)
+        self.setLayout(layout)
 
         self.m1m3ts.engineeringMode.connect(self.engineeringMode)
 
@@ -215,3 +210,43 @@ class CoolantPumpWidget(DockWindow):
             self.m1m3ts.remote.cmd_coolantPumpFrequency,
             targetFrequency=self.frequency.value(),
         )
+
+
+class FlowMeterWidget(QWidget):
+    def __init__(self, m1m3ts: MetaSAL):
+        super().__init__()
+
+        layout = QVBoxLayout()
+
+        layout.addWidget(
+            DataFormWidget(
+                m1m3ts.flowMeter,
+                [
+                    ("Signal Strength", DataLabel(field="signalStrength")),
+                    ("Flow Rate", LiterMinute(field="flowRate")),
+                    ("Net Total", Liter(field="netTotalizer")),
+                    ("Positive Total", Liter(field="positiveTotalizer")),
+                    ("Negative Total", Liter(field="negativeTotalizer")),
+                ],
+            )
+        )
+
+        self.setLayout(layout)
+
+
+class CoolantCirculationWidget(QWidget):
+    """Display Glycol coolant re-circulation pump telemetry, allows motor
+    commanding."""
+
+    def __init__(self, m1m3ts: MetaSAL):
+        super().__init__()
+
+        layout = QVBoxLayout()
+
+        layout.addWidget(CoolantPumpWidget(m1m3ts))
+        layout.addWidget(FlowMeterWidget(m1m3ts))
+        layout.addWidget(GlycolLoopTemperatureWidget(m1m3ts))
+
+        layout.addStretch()
+
+        self.setLayout(layout)

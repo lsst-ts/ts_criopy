@@ -1,5 +1,4 @@
-from .CoolantPumpWidget import CoolantPumpWidget
-from .FlowMeterWidget import FlowMeterWidget
+from .CoolantCirculationWidget import CoolantCirculationWidget
 from .GlycolLoopTemperatureWidget import GlycolLoopTemperatureWidget
 from .MixingValveWidget import MixingValveWidget
 from .ThermalValuePageWidget import ThermalValuePageWidget

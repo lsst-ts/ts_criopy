@@ -97,7 +97,7 @@ class Mirror(QGraphicsScene):
         """
         for item in self.items():
             if (
-                type(item) == ForceActuatorItem
+                isinstance(item, ForceActuatorItem)
                 and item.actuator.actuator_id == actuator_id
             ):
                 return item
