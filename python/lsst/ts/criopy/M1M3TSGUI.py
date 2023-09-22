@@ -22,13 +22,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .gui.sal import Application, EUIWindow, SALErrorCodeWidget, SALLog, SALStatusBar
-from .m1m3ts import CoolantCirculationWidget, MixingValveWidget, ThermalValuePageWidget
+from .m1m3ts import (
+    CoolantCirculationWidget,
+    M1M3TSCSCControlWidget,
+    MixingValveWidget,
+    ThermalValuePageWidget,
+)
 from .salcomm import MetaSAL
 
 
 class EUI(EUIWindow):
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__("M1M3TSGUI", [m1m3ts], (700, 400))
+        super().__init__(
+            "M1M3TSGUI", [m1m3ts], (700, 400), M1M3TSCSCControlWidget(m1m3ts)
+        )
 
         self.m1m3ts = m1m3ts
 

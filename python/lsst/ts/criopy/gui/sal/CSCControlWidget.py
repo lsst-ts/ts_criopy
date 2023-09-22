@@ -120,6 +120,19 @@ class CSCControlWidget(QWidget):
             self.buttons_commands[text] = command
         return button
 
+    def insert_widget(self, widget: QWidget, index: int = -1) -> None:
+        """Inserts a widget into control buttons.
+
+        Parameters
+        ----------
+        widget: QWidget
+            Widget to be inserted at given index.
+        index: `int`, optional
+            Index to insert the widget. Defaults to -1, end of current button
+            layout.
+        """
+        self.layout().insertWidget(index, widget)
+
     def disable_all_buttons(self) -> None:
         if self.__last_enabled is None:
             self.__last_enabled = []

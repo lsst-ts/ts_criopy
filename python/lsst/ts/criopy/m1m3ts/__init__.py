@@ -1,4 +1,5 @@
 from .CoolantCirculationWidget import CoolantCirculationWidget
 from .GlycolLoopTemperatureWidget import GlycolLoopTemperatureWidget
+from .M1M3TSCSCControlWidget import M1M3TSCSCControlWidget
 from .MixingValveWidget import MixingValveWidget
 from .ThermalValuePageWidget import ThermalValuePageWidget
