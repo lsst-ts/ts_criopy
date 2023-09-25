@@ -242,6 +242,7 @@ class M1M3CSCControl(CSCControlWidget):
     TEXT_LOWER = "&Lower M1M3"
     TEXT_ENTER_ENGINEERING = "&Enter Engineering"
     TEXT_EXIT_ENGINEERING = "&Exit Engineering"
+    TEXT_PANIC = "&Panic!"
 
     def __init__(self, m1m3: MetaSAL):
         super().__init__(
@@ -263,6 +264,16 @@ class M1M3CSCControl(CSCControlWidget):
             "detailedState",
             "detailedState",
         )
+        self.m1m3 = m1m3
+
+        self._panic_button = ColoredButton(self.TEXT_PANIC)
+        self._panic_button.setColor(Qt.red)
+        self._panic_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._panic_button.clicked.connect(self._panic)
+
+        self.insert_widget(self._panic_button, 0)
+
+        self.m1m3.detailedState.connect(self.detailed_state)
 
     def get_state_buttons_map(self, state: int) -> list[str | None]:
         states_map: dict[int, list[str | None]] = {
@@ -338,6 +349,16 @@ class M1M3CSCControl(CSCControlWidget):
 
         return states_map[state]
 
+    @asyncSlot()
+    async def _panic(self, checked: bool = False) -> None:
+        await command(self, self.m1m3.remote.cmd_panic)
+
+    @Slot()
+    def detailed_state(self, data: typing.Any) -> None:
+        self._panic_button.setEnabled(
+            not (data.detailedState == DetailedStates.OFFLINE)
+        )
+
 
 class ApplicationControlWidget(QWidget):
     """Widget with control buttons for M1M3 operations.
@@ -345,8 +366,6 @@ class ApplicationControlWidget(QWidget):
     Buttons are disabled/enabled and reasonable defaults sets on DetailedState
     changes.
     """
-
-    TEXT_PANIC = "&Panic!"
 
     def __init__(self, m1m3: MetaSAL):
         super().__init__()
@@ -356,12 +375,6 @@ class ApplicationControlWidget(QWidget):
 
         command_layout = QVBoxLayout()
 
-        self._panic_button = ColoredButton(self.TEXT_PANIC)
-        self._panic_button.setColor(Qt.red)
-        self._panic_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self._panic_button.clicked.connect(self._panic)
-
-        command_layout.addWidget(self._panic_button)
         command_layout.addWidget(M1M3CSCControl(m1m3))
 
         self.supportedNumber = QLCDNumber(6)
@@ -404,15 +417,8 @@ class ApplicationControlWidget(QWidget):
         self.m1m3.hardpointMonitorData.connect(self.hardpointMonitorData)
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
-    @asyncSlot()
-    async def _panic(self, checked: bool = False) -> None:
-        await command(self, self.m1m3.remote.cmd_panic)
-
     @Slot()
     def detailedState(self, data: typing.Any) -> None:
-        self._panic_button.setEnabled(
-            not (data.detailedState == DetailedStates.OFFLINE)
-        )
         self.slewWidget.setEnabled(
             not (
                 data.detailedState
