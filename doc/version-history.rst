@@ -9,7 +9,7 @@ v0.6.0
 
 * M1M3 Thermal System GUI (M1M3TSGUI) changed to use M1M3 SS look & feel
 * Commands to pause and resume mirror raising or lowering
-* Fix M1M3 tests
+* Fix M1M3 tests, remove bin scripts
 * FATable moved to ts_xml
 
 v0.5.0

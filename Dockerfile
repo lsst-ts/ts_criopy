@@ -16,7 +16,7 @@ export LSST_DDS_PARTITION_PREFIX="summit" \\n\
 setup ts_salobj -t current \\n\
 ospl start
 
-RUN source ~/.criopy_setup.sh && python3.10 -m pip install PyOpenSSL --upgrade
+RUN source ~/.criopy_setup.sh && cd repos && pip install ts_criopy
 
 COPY startup.sh .
 
