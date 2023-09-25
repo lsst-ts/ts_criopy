@@ -23,12 +23,12 @@ __all__ = ["GlycolLoopTemperatureWidget"]
 
 from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QVBoxLayout, QWidget
 
-from ..gui import DataDegC, DockWindow
+from ..gui import DataDegC
 from ..salcomm import MetaSAL
 
 
-class GlycolLoopTemperatureWidget(DockWindow):
-    """DockWindow showing M1M3 Thermal Values.
+class GlycolLoopTemperatureWidget(QWidget):
+    """Widget showing M1M3 Thermal Values.
 
     Parameters
     ----------
@@ -37,7 +37,7 @@ class GlycolLoopTemperatureWidget(DockWindow):
     """
 
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__("Glycol Loop Temperature")
+        super().__init__()
 
         outside = QFormLayout()
         outside.addRow(
@@ -93,7 +93,4 @@ class GlycolLoopTemperatureWidget(DockWindow):
         layout.addLayout(left)
         layout.addWidget(right)
 
-        widget = QWidget()
-        widget.setLayout(layout)
-
-        self.setWidget(widget)
+        self.setLayout(layout)

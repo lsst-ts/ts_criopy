@@ -276,7 +276,7 @@ class Widget(QSplitter):
         if self._topic is None:
             raise RuntimeError("Topic is None in Widget._get_data")
         topic = self._topic.getTopic()
-        if type(topic) == str:
+        if isinstance(topic, str):
             return getattr(self.m1m3.remote, topic).get()
         return topic
 

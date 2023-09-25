@@ -30,15 +30,15 @@ from PySide2.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..gui import DataFormWidget, DockWindow, Percent, TimeChart, TimeChartView, Volt
+from ..gui import DataFormWidget, Percent, TimeChart, TimeChartView, Volt
 from ..salcomm import MetaSAL, command
 
 
-class MixingValveWidget(DockWindow):
+class MixingValveWidget(QWidget):
     """Displays Mixing Valve data."""
 
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__("Mixing valve")
+        super().__init__()
         self.m1m3ts = m1m3ts
 
         commandLayout = QFormLayout()
@@ -80,10 +80,7 @@ class MixingValveWidget(DockWindow):
 
         hlayout.addWidget(TimeChartView(self.mixingValveChart))
 
-        widget = QWidget()
-        widget.setLayout(hlayout)
-
-        self.setWidget(widget)
+        self.setLayout(hlayout)
 
         self.m1m3ts.mixingValve.connect(self.mixingValve)
 

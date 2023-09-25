@@ -185,5 +185,5 @@ class MirrorView(QGraphicsView):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         item = self.itemAt(event.pos())
-        if type(item) == ForceActuatorItem:
+        if isinstance(item, ForceActuatorItem):
             self.set_selected(item)
