@@ -241,8 +241,12 @@ class M1M3CSCControl(CSCControlWidget):
     TEXT_ABORT_RAISE = "&Abort M1M3 Raise"
     TEXT_LOWER = "&Lower M1M3"
     TEXT_ENTER_ENGINEERING = "&Enter Engineering"
-    TEXT_EXIT_ENGINEERING = "&Exit Engineering"
+    TEXT_EXIT_ENGINEERING = "E&xit Engineering"
     TEXT_PANIC = "&Panic!"
+    TEXT_PAUSE_RAISING = "Pause raising"
+    TEXT_RESUME_RAISING = "Resume raising"
+    TEXT_PAUSE_LOWERING = "Pause lowering"
+    TEXT_RESUME_LOWERING = "Resume lowering"
 
     def __init__(self, m1m3: MetaSAL):
         super().__init__(
@@ -251,13 +255,18 @@ class M1M3CSCControl(CSCControlWidget):
                 self.TEXT_START,
                 self.TEXT_ENABLE,
                 self.TEXT_RAISE,
+                self.TEXT_PAUSE_RAISING,
                 self.TEXT_ENTER_ENGINEERING,
                 self.TEXT_STANDBY,
             ],
             {
                 self.TEXT_RAISE: "raiseM1M3",
+                self.TEXT_PAUSE_RAISING: "pauseM1M3RaisingLowering",
+                self.TEXT_RESUME_RAISING: "resumeM1M3RaisingLowering",
                 self.TEXT_ABORT_RAISE: "abortRaiseM1M3",
                 self.TEXT_LOWER: "lowerM1M3",
+                self.TEXT_PAUSE_LOWERING: "pauseM1M3RaisingLowering",
+                self.TEXT_RESUME_LOWERING: "resumeM1M3RaisingLowering",
                 self.TEXT_ENTER_ENGINEERING: "enterEngineering",
                 self.TEXT_EXIT_ENGINEERING: "exitEngineering",
             },
@@ -269,6 +278,7 @@ class M1M3CSCControl(CSCControlWidget):
         self._panic_button = ColoredButton(self.TEXT_PANIC)
         self._panic_button.setColor(Qt.red)
         self._panic_button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._panic_button.setMinimumHeight(50)
         self._panic_button.clicked.connect(self._panic)
 
         self.insert_widget(self._panic_button, 0)
@@ -282,6 +292,7 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 None,
                 None,
+                None,
                 self.TEXT_EXIT_CONTROL,
             ],
             DetailedStates.DISABLED: [
@@ -289,14 +300,16 @@ class M1M3CSCControl(CSCControlWidget):
                 self.TEXT_ENABLE,
                 None,
                 None,
+                None,
                 self.TEXT_STANDBY,
             ],
-            DetailedStates.FAULT: [self.TEXT_STANDBY, None, None, None, None],
-            DetailedStates.OFFLINE: [None, None, None, None, None],
+            DetailedStates.FAULT: [self.TEXT_STANDBY, None, None, None, None, None],
+            DetailedStates.OFFLINE: [None, None, None, None, None, None],
             DetailedStates.PARKED: [
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
+                None,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
@@ -304,6 +317,7 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 self.TEXT_DISABLE,
                 self.TEXT_RAISE,
+                None,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
@@ -311,6 +325,7 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
+                self.TEXT_PAUSE_RAISING,
                 None,
                 None,
             ],
@@ -318,6 +333,7 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 self.TEXT_ABORT_RAISE,
                 None,
+                self.TEXT_PAUSE_RAISING,
                 None,
                 None,
             ],
@@ -325,6 +341,7 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 None,
                 self.TEXT_LOWER,
+                None,
                 self.TEXT_ENTER_ENGINEERING,
                 None,
             ],
@@ -332,15 +349,63 @@ class M1M3CSCControl(CSCControlWidget):
                 None,
                 None,
                 self.TEXT_LOWER,
+                None,
                 self.TEXT_EXIT_ENGINEERING,
                 None,
             ],
-            DetailedStates.LOWERING: [None, None, None, None, None],
-            DetailedStates.LOWERINGENGINEERING: [None, None, None, None, None],
-            DetailedStates.LOWERINGFAULT: [None, None, None, None, None],
+            DetailedStates.LOWERING: [
+                None,
+                None,
+                None,
+                self.TEXT_PAUSE_LOWERING,
+                None,
+                None,
+            ],
+            DetailedStates.LOWERINGENGINEERING: [
+                None,
+                None,
+                None,
+                self.TEXT_PAUSE_LOWERING,
+                None,
+                None,
+            ],
+            DetailedStates.LOWERINGFAULT: [None, None, None, None, None, None],
             DetailedStates.PROFILEHARDPOINTCORRECTIONS: [
                 None,
                 None,
+                None,
+                None,
+                None,
+                None,
+            ],
+            DetailedStates.PAUSEDRAISING: [
+                None,
+                None,
+                self.TEXT_RESUME_RAISING,
+                None,
+                None,
+                None,
+            ],
+            DetailedStates.PAUSEDRAISINGENGINEERING: [
+                None,
+                None,
+                self.TEXT_RESUME_RAISING,
+                None,
+                None,
+                None,
+            ],
+            DetailedStates.PAUSEDLOWERING: [
+                None,
+                None,
+                self.TEXT_RESUME_LOWERING,
+                None,
+                None,
+                None,
+            ],
+            DetailedStates.PAUSEDLOWERINGENGINEERING: [
+                None,
+                None,
+                self.TEXT_RESUME_LOWERING,
                 None,
                 None,
                 None,
@@ -396,8 +461,6 @@ class ApplicationControlWidget(QWidget):
         self.slewWidget = SlewWidget(m1m3)
         self.slewWidget.setEnabled(False)
         command_layout.addWidget(self.slewWidget)
-
-        command_layout.addStretch()
 
         self.weightSupportedPercent = QProgressBar()
         self.weightSupportedPercent.setOrientation(Qt.Vertical)

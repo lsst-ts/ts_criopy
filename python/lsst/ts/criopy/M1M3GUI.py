@@ -146,6 +146,10 @@ def detailedStateString(detailedState: int) -> str:
         DetailedStates.PROFILEHARDPOINTCORRECTIONS: (
             "<font color='red'>Profile Hardpoint Corrections</font>"
         ),
+        DetailedStates.PAUSEDRAISING: "<font color='pink'>Paused Rasing</font>",
+        DetailedStates.PAUSEDRAISINGENGINEERING: "<font color='pink'>Paused Rasing Engineering</font>",
+        DetailedStates.PAUSEDLOWERING: "<font color='pink'>Paused Lowering</font>",
+        DetailedStates.PAUSEDLOWERINGENGINEERING: "<font color='pink'>Paused Lowering Engineering</font>",
     }
     try:
         return _map[detailedState]
