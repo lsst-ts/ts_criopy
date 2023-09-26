@@ -23,7 +23,7 @@ from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QWidget
 
 from ..gui import UnitLabel
-from ..gui.ArrayGrid import AbstractColumn, ArrayFields, ArrayGrid
+from ..gui.array_grid import AbstractColumn, ArrayFields, ArrayGrid
 
 __all__ = ["Forces", "ForcesGrid", "PreclippedForces"]
 

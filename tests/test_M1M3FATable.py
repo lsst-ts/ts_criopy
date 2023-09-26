@@ -22,7 +22,7 @@
 import typing
 import unittest
 
-from lsst.ts.criopy.M1M3FATable import FATABLE, FAIndex
+from lsst.ts.criopy.m1m3_fa_table import FATABLE, FAIndex
 
 
 class M1M3FATableTestCase(unittest.TestCase):
