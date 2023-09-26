@@ -4,6 +4,12 @@
 Version History
 ===============
 
+v0.6.0
+------
+
+* M1M3 Thermal System GUI (M1M3TSGUI) changed to use M1M3 SS look & feel
+* Commands to pause and resume mirror raising or lowering
+
 v0.5.0
 ------
 * LVDT and Slew Controller pages

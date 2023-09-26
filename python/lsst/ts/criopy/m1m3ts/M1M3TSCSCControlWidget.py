@@ -39,7 +39,7 @@ class EnterExitEngineeringButton(QPushButton):
         self.clicked.connect(self._clicked)
 
     @asyncSlot()
-    async def _clicked(self):
+    async def _clicked(self) -> None:
         await command(
             self,
             self.m1m3ts.remote.cmd_setEngineeringMode,
