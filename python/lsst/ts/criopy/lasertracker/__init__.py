@@ -1,1 +1,1 @@
-from .OverviewPageWidget import OverviewPageWidget
+from .overview_page_widget import OverviewPageWidget

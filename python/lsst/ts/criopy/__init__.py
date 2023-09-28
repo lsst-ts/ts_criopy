@@ -32,5 +32,5 @@ else:
     except ImportError:
         __version__ = "?"
 
-from .DurationParser import parseDuration
-from .TimeCache import TimeCache
+from .duration_parser import parseDuration
+from .time_cache import TimeCache

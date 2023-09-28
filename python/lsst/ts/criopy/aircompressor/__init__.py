@@ -1,1 +1,1 @@
-from .CompressorsPageWidget import CompressorsPageWidget
+from .compressor_page_widget import CompressorPageWidget

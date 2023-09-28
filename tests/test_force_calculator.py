@@ -24,8 +24,8 @@ import pathlib
 import unittest
 
 import numpy as np
-from lsst.ts.criopy import M1M3FATable
-from lsst.ts.criopy.m1m3.ForceCalculator import ForceCalculator
+from lsst.ts.criopy import m1m3_fa_table
+from lsst.ts.criopy.m1m3 import ForceCalculator
 
 
 class ForceCalculatorTestCase(unittest.TestCase):
@@ -38,9 +38,9 @@ class ForceCalculatorTestCase(unittest.TestCase):
 
     def test_appliedForces(self) -> None:
         a = self.calculator.get_applied_forces(
-            [1] * M1M3FATable.FATABLE_XFA,
-            [2] * M1M3FATable.FATABLE_YFA,
-            [3] * M1M3FATable.FATABLE_ZFA,
+            [1] * m1m3_fa_table.FATABLE_XFA,
+            [2] * m1m3_fa_table.FATABLE_YFA,
+            [3] * m1m3_fa_table.FATABLE_ZFA,
         )
         self.assertEqual(a.fx, 12)
         self.assertEqual(a.fy, 200)
@@ -62,65 +62,65 @@ class ForceCalculatorTestCase(unittest.TestCase):
             [-100, 200, -300, 400, -500, 600]
         )
         np.testing.assert_array_equal(
-            forces.xForces, [0, 300] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, 300] + [0] * (m1m3_fa_table.FATABLE_XFA - 2)
         )
 
         forces = self.calculator.forces_and_moments_forces(
             [-600, -600, 100, -100, -200, -100]
         )
         np.testing.assert_array_equal(
-            forces.xForces, [0, -700] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, -700] + [0] * (m1m3_fa_table.FATABLE_XFA - 2)
         )
 
     def test_hardpoint_forces(self) -> None:
         forces = self.calculator.hardpoint_forces([100, -100, 200, -200, 300, -300])
         np.testing.assert_array_equal(
-            forces.xForces, [0, -700] + [0] * (M1M3FATable.FATABLE_XFA - 2)
+            forces.xForces, [0, -700] + [0] * (m1m3_fa_table.FATABLE_XFA - 2)
         )
 
     def test_acceleration(self) -> None:
         acceleration = self.calculator.acceleration([0, 0, 0])
 
         np.testing.assert_array_equal(
-            acceleration.xForces, [0] * M1M3FATable.FATABLE_XFA
+            acceleration.xForces, [0] * m1m3_fa_table.FATABLE_XFA
         )
         np.testing.assert_array_equal(
-            acceleration.yForces, [0] * M1M3FATable.FATABLE_YFA
+            acceleration.yForces, [0] * m1m3_fa_table.FATABLE_YFA
         )
         np.testing.assert_array_equal(
-            acceleration.zForces, [0] * M1M3FATable.FATABLE_ZFA
+            acceleration.zForces, [0] * m1m3_fa_table.FATABLE_ZFA
         )
 
         acceleration = self.calculator.acceleration([1, 0, 0])
 
         np.testing.assert_array_equal(
-            acceleration.xForces, [0, 1] + [0] * (M1M3FATable.FATABLE_XFA - 3) + [2]
+            acceleration.xForces, [0, 1] + [0] * (m1m3_fa_table.FATABLE_XFA - 3) + [2]
         )
         np.testing.assert_array_equal(
-            acceleration.yForces, [0] * M1M3FATable.FATABLE_YFA
+            acceleration.yForces, [0] * m1m3_fa_table.FATABLE_YFA
         )
         np.testing.assert_array_equal(
-            acceleration.zForces, [0] * M1M3FATable.FATABLE_ZFA
+            acceleration.zForces, [0] * m1m3_fa_table.FATABLE_ZFA
         )
 
     def test_velocity(self) -> None:
         velocity = self.calculator.velocity([0, 0, 0])
 
-        np.testing.assert_array_equal(velocity.xForces, [0] * M1M3FATable.FATABLE_XFA)
-        np.testing.assert_array_equal(velocity.yForces, [0] * M1M3FATable.FATABLE_YFA)
-        np.testing.assert_array_equal(velocity.zForces, [0] * M1M3FATable.FATABLE_ZFA)
+        np.testing.assert_array_equal(velocity.xForces, [0] * m1m3_fa_table.FATABLE_XFA)
+        np.testing.assert_array_equal(velocity.yForces, [0] * m1m3_fa_table.FATABLE_YFA)
+        np.testing.assert_array_equal(velocity.zForces, [0] * m1m3_fa_table.FATABLE_ZFA)
 
         velocity = self.calculator.velocity([1, 2, 3])
 
         np.testing.assert_array_equal(
-            velocity.xForces, [0, 88] + [0] * (M1M3FATable.FATABLE_XFA - 3) + [18]
+            velocity.xForces, [0, 88] + [0] * (m1m3_fa_table.FATABLE_XFA - 3) + [18]
         )
         np.testing.assert_array_equal(
-            velocity.yForces, [18] + [0] * (M1M3FATable.FATABLE_YFA - 2) + [15]
+            velocity.yForces, [18] + [0] * (m1m3_fa_table.FATABLE_YFA - 2) + [15]
         )
         np.testing.assert_array_equal(
             velocity.zForces,
-            [0, 12] + [0] * (M1M3FATable.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
+            [0, 12] + [0] * (m1m3_fa_table.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
         )
 
     def test_addition(self) -> None:
@@ -131,14 +131,14 @@ class ForceCalculatorTestCase(unittest.TestCase):
         forces = velocity + acceleration
 
         np.testing.assert_array_equal(
-            forces.xForces, [0, 89] + [0] * (M1M3FATable.FATABLE_XFA - 3) + [20]
+            forces.xForces, [0, 89] + [0] * (m1m3_fa_table.FATABLE_XFA - 3) + [20]
         )
         np.testing.assert_array_equal(
-            forces.yForces, [18] + [0] * (M1M3FATable.FATABLE_YFA - 2) + [15]
+            forces.yForces, [18] + [0] * (m1m3_fa_table.FATABLE_YFA - 2) + [15]
         )
         np.testing.assert_array_equal(
             forces.zForces,
-            [0, 12] + [0] * (M1M3FATable.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
+            [0, 12] + [0] * (m1m3_fa_table.FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
         )
 
 
