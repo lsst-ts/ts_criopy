@@ -17,9 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.ts.xml.tables.m1m3 import FATable
 from PySide2.QtWidgets import QComboBox
-
-from ...m1m3_fa_table import FATABLE
 
 __all__ = ["ComboBox"]
 
@@ -32,5 +31,5 @@ class ComboBox(QComboBox):
         super().__init__()
         self.setEditable(True)
         self.lineEdit().setInputMask("999")
-        for row in FATABLE:
+        for row in FATable:
             self.addItem(str(row.actuator_id))

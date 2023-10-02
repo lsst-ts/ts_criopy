@@ -19,8 +19,9 @@
 
 import typing
 
+from lsst.ts.xml.tables.m1m3 import FATable
+
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
-from ...m1m3_fa_table import FATABLE
 from ...salcomm import MetaSAL
 from .. import Simulator
 from .widget import Widget
@@ -35,7 +36,7 @@ class GraphPageWidget(Widget):
     def __init__(self, m1m3: MetaSAL | Simulator):
         self.mirrorWidget = MirrorWidget()
 
-        for row in FATABLE:
+        for row in FATable:
             self.mirrorWidget.mirrorView.addForceActuator(
                 row,
                 None,
@@ -81,7 +82,7 @@ class GraphPageWidget(Widget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
-        for row in FATABLE:
+        for row in FATable:
             index = row.index
             data_index = row.get_index(self.field.valueIndex)
             if values is None or data_index is None:

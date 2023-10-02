@@ -22,6 +22,7 @@
 import typing
 
 import numpy
+from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QGridLayout,
@@ -37,7 +38,6 @@ from qasync import asyncSlot
 from ...gui import WarningLabel
 from ...gui.actuatorsdisplay import ForceActuatorItem
 from ...gui.sal import TimeDeltaLabel, TopicData
-from ...m1m3_fa_table import FATABLE, FAIndex
 from ...salcomm import MetaSAL, command
 from .topics import Topics
 from .update_window import UpdateWindow
@@ -310,7 +310,7 @@ class Widget(QSplitter):
         data = self.field.getValue(self._get_data())
 
         # near neighbour
-        nearIDs = FATABLE[selected_actuator.actuator.index].near_neighbors
+        nearIDs = FATable[selected_actuator.actuator.index].near_neighbors
         nearIndices = list(
             selected_actuator.actuator.near_neighbors_indices(self.field.valueIndex)
         )
@@ -326,7 +326,7 @@ class Widget(QSplitter):
 
         farIDs = filter(
             lambda f: f not in nearIDs,
-            FATABLE[selected_actuator.actuator.index].far_neighbors,
+            FATable[selected_actuator.actuator.index].far_neighbors,
         )
         farIndices = list(
             selected_actuator.actuator.only_far_neighbors_indices(self.field.valueIndex)

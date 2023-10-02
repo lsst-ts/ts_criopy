@@ -21,9 +21,9 @@
 
 import typing
 
+from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
-from ...m1m3_fa_table import FATABLE, FATABLE_ZFA
 from ...salcomm import MetaSAL
 from .widget import Widget
 
@@ -177,7 +177,7 @@ class ValuePageWidget(Widget):
 
         i = -1
         values = self.field.getValue(data)
-        for row in FATABLE:
+        for row in FATable:
             i += 1
             index = row.get_index(self.field.valueIndex)
             if index is None:

@@ -21,9 +21,9 @@
 
 import typing
 
+from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide2.QtWidgets import QGraphicsScene
 
-from ...m1m3_fa_table import ForceActuatorData
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 

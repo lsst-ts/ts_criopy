@@ -20,7 +20,7 @@
 
 import numpy as np
 import pandas as pd
-from lsst.ts.criopy.m1m3_fa_table import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
+from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
 
 
 class AccelerationAndVelocityFitter:
