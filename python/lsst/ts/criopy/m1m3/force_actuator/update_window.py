@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
 from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import (
@@ -35,7 +36,6 @@ from qasync import asyncSlot
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
 from ...gui.sal import EngineeringButton
-from ...m1m3_fa_table import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
 from ...salcomm import MetaSAL, command
 
 ALL_AXIS = "xyz"
@@ -238,7 +238,7 @@ class UpdateWindow(QSplitter):
 
         for key, value in self.offsets.items():
             axis = key[0]
-            row = FATABLE[selected.index]
+            row = FATable[selected.index]
             actIndex = None
             if axis == "x":
                 actIndex = row.x_index
@@ -279,7 +279,7 @@ class UpdateWindow(QSplitter):
         self.mirror_widget.clear()
         minV = None
         maxV = None
-        for row in FATABLE:
+        for row in FATable:
             if axis == "x":
                 data_index = row.x_index
             elif axis == "y":
@@ -321,7 +321,7 @@ class UpdateWindow(QSplitter):
     def valueChanged(self) -> None:
         if self.__last_selected is None:
             return
-        lastRow = FATABLE[self.__last_selected.index]
+        lastRow = FATable[self.__last_selected.index]
         values = self.edit_widget.getXYZ()
 
         for key, value in self.offsets.items():

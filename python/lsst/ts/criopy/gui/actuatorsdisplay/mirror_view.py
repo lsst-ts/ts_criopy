@@ -21,11 +21,11 @@
 
 import typing
 
+from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData
 from PySide2.QtCore import QEvent, Signal
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QGraphicsView
 
-from ...m1m3_fa_table import FATABLE, ForceActuatorData
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 from .mirror import Mirror
@@ -74,9 +74,9 @@ class MirrorView(QGraphicsView):
                 i.setEnabled(self.isEnabled())
 
     def _setNeighbour(self, index: int, activate: bool) -> None:
-        for fids in FATABLE[index].far_neighbors:
+        for fids in FATable[index].far_neighbors:
             if activate:
-                if fids in FATABLE[index].near_neighbors:
+                if fids in FATable[index].near_neighbors:
                     self.getForceActuator(fids).setKind(FASelection.NEAR_NEIGHBOR)
                 else:
                     self.getForceActuator(fids).setKind(FASelection.FAR_NEIGHBOR)

@@ -21,6 +21,7 @@ import asyncio
 import typing
 
 from lsst.ts.xml.enums import MTM1M3
+from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable, actuator_id_to_index
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (
@@ -42,7 +43,6 @@ from qasync import asyncSlot
 
 from ...gui import Colors, TimeChart, TimeChartView
 from ...gui.sal import LogWidget
-from ...m1m3_fa_table import FATABLE, FATABLE_ZFA, actuator_id_to_index
 from ...salcomm import MetaSAL, command
 
 
@@ -72,7 +72,7 @@ class BumpTestPageWidget(QWidget):
 
         actuatorBox = QGroupBox("Actuator")
         self.actuatorsTable = QTableWidget(
-            int(max([row.actuator_id for row in FATABLE])) % 100, 12
+            int(max([row.actuator_id for row in FATable])) % 100, 12
         )
         self.actuatorsTable.setShowGrid(False)
 
@@ -86,7 +86,7 @@ class BumpTestPageWidget(QWidget):
                 min(
                     [
                         row.actuator_id
-                        for row in FATABLE
+                        for row in FATable
                         if row.actuator_id > (100 + 100 * i)
                     ]
                 )
@@ -95,8 +95,8 @@ class BumpTestPageWidget(QWidget):
                 for c in range(i * 3, (i * 3) + 2):
                     set_none(r, c)
 
-        for tr in range(len(FATABLE)):
-            actuatorId = FATABLE[tr].actuator_id
+        for tr in range(len(FATable)):
+            actuatorId = FATable[tr].actuator_id
             row = (actuatorId % 100) - 1
             colOffset = 3 * (int(actuatorId / 100) - 1)
 
@@ -107,13 +107,13 @@ class BumpTestPageWidget(QWidget):
 
             self.actuatorsTable.setItem(row, 0 + colOffset, get_item(str(actuatorId)))
             self.actuatorsTable.setItem(row, 1 + colOffset, get_item("P"))
-            if FATABLE[tr].s_index is None:
+            if FATable[tr].s_index is None:
                 set_none(row, 2 + colOffset)
             else:
                 self.actuatorsTable.setItem(
                     row,
                     2 + colOffset,
-                    get_item("Y" if (FATABLE[tr].x_index is None) else "X"),
+                    get_item("Y" if (FATable[tr].x_index is None) else "X"),
                 )
 
         self.actuatorsTable.horizontalHeader().hide()
@@ -260,7 +260,7 @@ class BumpTestPageWidget(QWidget):
         if index is None:
             return
 
-        fa = FATABLE[index]
+        fa = FATable[index]
         self.z_index = fa.z_index
         self.x_index = fa.x_index
         self.y_index = fa.y_index
@@ -389,7 +389,7 @@ class BumpTestPageWidget(QWidget):
 
         # list display
         for index in range(FATABLE_ZFA):
-            actuatorId = FATABLE[index].actuator_id
+            actuatorId = FATable[index].actuator_id
             row = (actuatorId % 100) - 1
             colOffset = 3 * (int(actuatorId / 100) - 1)
 
@@ -405,7 +405,7 @@ class BumpTestPageWidget(QWidget):
             pColor = getColor(data.primaryTest[index])
 
             self.actuatorsTable.item(row, colOffset + 1).setBackground(pColor)
-            s_index = FATABLE[index].s_index
+            s_index = FATable[index].s_index
             if s_index is not None:
                 sColor = getColor(data.secondaryTest[s_index])
                 self.actuatorsTable.item(row, colOffset + 2).setBackground(sColor)

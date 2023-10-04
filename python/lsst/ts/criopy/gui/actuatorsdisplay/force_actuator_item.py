@@ -21,12 +21,12 @@
 import enum
 import typing
 
+from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide2.QtCore import QPointF, QRect, Qt
 from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
 from PySide2.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
 from ...gui import Colors
-from ...m1m3_fa_table import ForceActuatorData
 from .gauge_scale import GaugeScale
 
 

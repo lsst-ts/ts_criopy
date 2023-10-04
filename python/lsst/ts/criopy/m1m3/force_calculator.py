@@ -26,8 +26,13 @@ from typing import Any, Generator
 import numpy as np
 import pandas as pd
 import yaml
-
-from ..m1m3_fa_table import FATABLE, FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, HP_COUNT
+from lsst.ts.xml.tables.m1m3 import (
+    FATABLE_XFA,
+    FATABLE_YFA,
+    FATABLE_ZFA,
+    HP_COUNT,
+    FATable,
+)
 
 
 def reduce_to_x(forces: list[float]) -> Generator[float, None, None]:
@@ -43,7 +48,7 @@ def reduce_to_x(forces: list[float]) -> Generator[float, None, None]:
     x_forces : `[float]`
         12 X forces values.
     """
-    for fa in FATABLE:
+    for fa in FATable:
         if fa.x_index is not None:
             yield forces[fa.index]
 
@@ -62,7 +67,7 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
     y_forces : `[float]`
         100 Y forces values.
     """
-    for fa in FATABLE:
+    for fa in FATable:
         if fa.y_index is not None:
             yield forces[fa.index]
 
@@ -149,7 +154,7 @@ class ForceCalculator:
             self.my = 0.0
             self.mz = 0.0
 
-            for row in FATABLE:
+            for row in FATable:
                 fa_fx = 0.0 if row.x_index is None else self.xForces[row.x_index]
                 fa_fy = 0.0 if row.y_index is None else self.yForces[row.y_index]
                 fa_fz = self.zForces[row.z_index]
@@ -429,7 +434,7 @@ class ForceCalculator:
         def make_zero() -> pd.DataFrame:
             return pd.DataFrame(
                 {
-                    "ID": [fa.index for fa in FATABLE],
+                    "ID": [fa.index for fa in FATable],
                     "X": [0] * FATABLE_ZFA,
                     "Y": [0] * FATABLE_ZFA,
                     "Z": [0] * FATABLE_ZFA,
@@ -442,7 +447,7 @@ class ForceCalculator:
         for tab in range(5):
             self.velocity_tables.append(make_zero())
 
-        for row in FATABLE:
+        for row in FATable:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):
@@ -466,7 +471,7 @@ class ForceCalculator:
         ----------
         updates : pd.DataFrame
         """
-        for row in FATABLE:
+        for row in FATable:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):

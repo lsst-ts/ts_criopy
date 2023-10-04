@@ -21,13 +21,13 @@
 import typing
 
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget, Scales
 from ...gui.sal import StateEnabledWidget
-from ...m1m3_fa_table import FATABLE, actuator_id_to_index
 from ...salcomm import MetaSAL, command
 from .combo_box import ComboBox
 
@@ -173,7 +173,7 @@ class Enabled(StateEnabledWidget):
         else:
             new = False
 
-        for row in FATABLE:
+        for row in FATable:
             index = row.z_index
             actuator_id = row.actuator_id
             value = None if data is None else data.forceActuatorEnabled[index]

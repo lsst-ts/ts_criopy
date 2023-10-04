@@ -19,6 +19,8 @@
 
 import typing
 
+from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
+
 from ...gui.actuatorsdisplay import Scales
 from ...gui.sal import (
     EnabledDisabledField,
@@ -28,7 +30,6 @@ from ...gui.sal import (
     WaitingField,
     WarningField,
 )
-from ...m1m3_fa_table import FATABLE, FAIndex
 
 __all__ = ["Topics"]
 
@@ -70,11 +71,11 @@ class FAIndicesData(TopicData):
             None,
         )
 
-        self.xIndices = [row.x_index for row in FATABLE if row.x_index is not None]
-        self.yIndices = [row.y_index for row in FATABLE if row.y_index is not None]
-        self.zIndices = [row.z_index for row in FATABLE]
-        self.pIndices = [row.index for row in FATABLE]
-        self.sIndices = [row.s_index for row in FATABLE if row.s_index is not None]
+        self.xIndices = [row.x_index for row in FATable if row.x_index is not None]
+        self.yIndices = [row.y_index for row in FATable if row.y_index is not None]
+        self.zIndices = [row.z_index for row in FATable]
+        self.pIndices = [row.index for row in FATable]
+        self.sIndices = [row.s_index for row in FATable if row.s_index is not None]
         self.timestamp = None
 
     def getTopic(self) -> typing.Any:
