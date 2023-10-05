@@ -21,7 +21,7 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData
+from lsst.ts.xml.tables.m1m3 import FATable, FCUData, ForceActuatorData
 from PySide6.QtCore import QEvent, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView
@@ -123,14 +123,14 @@ class MirrorView(QGraphicsView):
         s = min(self.width() / 8600, self.height() / 8600)
         self.scale(s, s)
 
-    def addForceActuator(
+    def add_force_actuator(
         self,
         actuator: ForceActuatorData,
         data: BaseMsgType,
-        dataIndex: int | None,
+        data_index: int | None,
         state: int,
     ) -> None:
-        """Adds actuator.
+        """Adds force actuator.
 
         Parameters
         ----------
@@ -138,16 +138,16 @@ class MirrorView(QGraphicsView):
             Force Actuator data.
         data : `Any`
             Force Actuator value.
-        dataIndex : `int`
+        data_index : `int`
             Force Actuator value index.
         state : `int`
             Force Actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID or ForceActuatorItem.STATE_WARNING.
         """
-        self._mirror.addForceActuator(
+        self._mirror.add_force_actuator(
             actuator,
             data,
-            dataIndex,
+            data_index,
             state,
             (
                 FASelection.SELECTED
@@ -156,6 +156,9 @@ class MirrorView(QGraphicsView):
                 else FASelection.NORMAL
             ),
         )
+
+    def add_fcu(self, fcu: FCUData) -> None:
+        pass
 
     def update_force_actuator(
         self, actuator_id: int, data: BaseMsgType, state: int

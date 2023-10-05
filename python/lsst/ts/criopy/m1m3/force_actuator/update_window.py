@@ -302,7 +302,7 @@ class UpdateWindow(QSplitter):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
-            self.mirror_widget.mirror_view.addForceActuator(
+            self.mirror_widget.mirror_view.add_force_actuator(
                 row,
                 value,
                 data_index,

@@ -32,9 +32,9 @@ class Mirror(QGraphicsScene):
     """Graphics scene containing plot of the mirror surface with actuators.
 
     Actuator list is cleared with clear() method (inherited from
-    QGraphicsScene). Force Actuators are added with addForceActuator() method.
-    Force Actuator data should be updated with update_force_actuator() call.
-    """
+    QGraphicsScene). Force Actuators are added with add_force_actuator()
+    method. Force Actuator data should be updated with update_force_actuator()
+    call."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -51,7 +51,7 @@ class Mirror(QGraphicsScene):
         for a in self.items():
             a.set_color_scale(scale)
 
-    def addForceActuator(
+    def add_force_actuator(
         self,
         actuator: ForceActuatorData,
         data: BaseMsgType,
