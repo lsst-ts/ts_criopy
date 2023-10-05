@@ -34,13 +34,13 @@ from PySide2.QtWidgets import (
 
 from ...salcomm import MetaSAL
 from ..actuatorsdisplay import ForceActuatorItem
-from ..custom_labels import DockWindow, WarningLabel
+from ..custom_labels import WarningLabel
 from .time_delta_label import TimeDeltaLabel
 from .topic_collection import TopicCollection
 from .topic_data import TopicField
 
 
-class TopicWindow(DockWindow):
+class TopicWindow(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
     Children classes must implement updateValues(data) method.
@@ -48,15 +48,16 @@ class TopicWindow(DockWindow):
     Parameters
     ----------
 
-    title : `str`
-        Dock title and name.
     comm : `MetaSAL`
         SAL instance to communicate with SAL.
     collection : `TopicCollection`
         Collections of data associated with widget.
-    userWidget : `QWidget`
+    user_widget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
         be update in updateValues(data) method.
+    detail_widget : `QWidget`, optional
+        Widget displaying details of selected actuator. If not provided, basic
+        selected actuator data will be displayed.
 
     Methods
     -------
@@ -69,44 +70,55 @@ class TopicWindow(DockWindow):
 
     def __init__(
         self,
-        title: str,
         comm: MetaSAL,
         collection: TopicCollection,
-        userWidget: QWidget,
+        user_widget: QWidget,
+        detail_widget: QWidget | None = None,
     ):
-        super().__init__(title)
+        super().__init__()
 
         self.comm = comm
         self.collection = collection
 
-        splitter = QSplitter()
-
         self.field: TopicField | None = None
 
-        plotLayout = QVBoxLayout()
-        selectionLayout = QVBoxLayout()
-        detailsLayout = QFormLayout()
+        plot_layout = QVBoxLayout()
+        selection_layout = QVBoxLayout()
         filterLayout = QHBoxLayout()
 
         w_left = QWidget()
-        w_left.setLayout(plotLayout)
-        splitter.addWidget(w_left)
+        w_left.setLayout(plot_layout)
+        self.addWidget(w_left)
         w_right = QWidget()
-        w_right.setLayout(selectionLayout)
-        splitter.addWidget(w_right)
+        w_right.setLayout(selection_layout)
+        self.addWidget(w_right)
 
-        splitter.setCollapsible(0, False)
-        splitter.setStretchFactor(0, 10)
-        splitter.setStretchFactor(1, 0)
+        self.setCollapsible(0, False)
+        self.setStretchFactor(0, 10)
+        self.setStretchFactor(1, 0)
 
-        selectionLayout.addLayout(detailsLayout)
-        selectionLayout.addWidget(QLabel("Filter Data"))
-        selectionLayout.addLayout(filterLayout)
+        if detail_widget is not None:
+            selection_layout.addWidget(detail_widget)
+        else:
+            self.selectedActuatorIdLabel = QLabel()
+            self.selectedActuatorValueLabel = QLabel()
+            self.selectedActuatorWarningLabel = WarningLabel()
+            self.lastUpdatedLabel = TimeDeltaLabel()
 
-        self.selectedActuatorIdLabel = QLabel()
-        self.selectedActuatorValueLabel = QLabel()
-        self.selectedActuatorWarningLabel = WarningLabel()
-        self.lastUpdatedLabel = TimeDeltaLabel()
+            details_layout = QFormLayout()
+            details_layout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
+            details_layout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
+            details_layout.addRow(
+                QLabel("Actuator Value"), self.selectedActuatorValueLabel
+            )
+            details_layout.addRow(
+                QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
+            )
+            details_layout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+            selection_layout.addLayout(details_layout)
+
+        selection_layout.addWidget(QLabel("Filter Data"))
+        selection_layout.addLayout(filterLayout)
 
         self.topicList = QListWidget()
         self.topicList.currentRowChanged.connect(self.currentTopicChanged)
@@ -115,22 +127,12 @@ class TopicWindow(DockWindow):
         self.fieldList = QListWidget()
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
 
-        plotLayout.addWidget(userWidget)
-
-        detailsLayout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-        detailsLayout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
-        detailsLayout.addRow(QLabel("Actuator Value"), self.selectedActuatorValueLabel)
-        detailsLayout.addRow(
-            QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
-        )
-        detailsLayout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+        plot_layout.addWidget(user_widget)
 
         filterLayout.addWidget(self.topicList)
         filterLayout.addWidget(self.fieldList)
 
         self.topicList.setCurrentRow(0)
-
-        self.setWidget(splitter)
 
     @Slot()
     def currentTopicChanged(self, topic_index: int) -> None:

@@ -255,7 +255,7 @@ class ThermalValuePageWidget(TopicWindow):
     def __init__(self, m1m3ts: MetaSAL):
         self.commandWidget = CommandWidget(m1m3ts)
 
-        super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
+        super().__init__(m1m3ts, Thermals(), self.commandWidget)
 
     def updateValues(self, data: typing.Any) -> None:
         if data is None or self.field is None:
