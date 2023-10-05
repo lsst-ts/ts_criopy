@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This file is part of M1M3 TS GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
@@ -24,6 +22,7 @@
 from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar
 from .m1m3ts import (
     CoolantCirculationWidget,
+    FCUDisplayWidget,
     M1M3TSCSCControlWidget,
     MixingValveWidget,
     PowerPageWidget,
@@ -41,6 +40,7 @@ class EUI(EUIWindow):
         self.m1m3ts = m1m3ts
 
         self.add_page("Power status", PowerPageWidget, self.m1m3ts)
+        self.add_page("FCU display", FCUDisplayWidget, self.m1m3ts)
         self.add_page("Thermal values", ThermalValuePageWidget, self.m1m3ts)
         self.add_page("Mixing valve", MixingValveWidget, self.m1m3ts)
         self.add_page("Coolant circulations", CoolantCirculationWidget, self.m1m3ts)

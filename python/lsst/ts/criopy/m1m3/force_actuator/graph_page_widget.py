@@ -37,7 +37,7 @@ class GraphPageWidget(Widget):
         self.mirrorWidget = MirrorWidget()
 
         for row in FATable:
-            self.mirrorWidget.mirrorView.addForceActuator(
+            self.mirrorWidget.mirrorView.add_force_actuator(
                 row,
                 None,
                 None,

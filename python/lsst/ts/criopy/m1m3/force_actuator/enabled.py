@@ -184,7 +184,7 @@ class Enabled(StateEnabledWidget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
             if new:
-                self.mirrorWidget.mirrorView.addForceActuator(
+                self.mirrorWidget.mirrorView.add_force_actuator(
                     row,
                     value,
                     index,
