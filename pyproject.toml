@@ -17,6 +17,7 @@ M1M3SIMGUI = "lsst.ts.criopy.m1m3simgui:run"
 M1M3TSGUI = "lsst.ts.criopy.m1m3tsgui:run"
 VMSGUI = "lsst.ts.criopy.vmsgui:run"
 VMSlogger = "lsst.ts.criopy.vmslogger:run"
+vms5plot = "lsst.ts.criopy.vms5plot:run"
 
 [tool.setuptools.dynamic]
 version = { attr = "setuptools_scm.get_version" }
