@@ -11,10 +11,11 @@ build:
   noarch: python
   script: {{PYTHON}} -m pip install --no-deps --ignore-installed .
   entry_points:
-    - M1M3GUI = lsst.ts.criopy.M1M3GUI:run
-    - M1M3TSGUI = lsst.ts.criopy.M1M3TSGUI:run
-    - VMSGUI = lsst.ts.criopy.VMSGUI:run
-    - VMSlogger = lsst.ts.criopy.VMSlogger:run
+    - M1M3GUI = lsst.ts.criopy.m1m3gui:run
+    - M1M3SIMGUI = lsst.ts.criopy.m1m3simgui:run
+    - M1M3TSGUI = lsst.ts.criopy.m1m3tsgui:run
+    - VMSGUI = lsst.ts.criopy.vmsgui:run
+    - VMSlogger = lsst.ts.criopy.Vmslogger:run
 
 test:
   requires:
@@ -31,7 +32,6 @@ test:
     - pyyaml
   source_files:
     - python
-    - bin
     - tests
   commands:
     - pytest

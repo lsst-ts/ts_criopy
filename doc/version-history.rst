@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.6.1
+------
+
+* fix conda package build
+
 v0.6.0
 ------
 
