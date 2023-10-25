@@ -1,5 +1,5 @@
-from .AbstractChart import AbstractChart
-from .ArrayGrid import (
+from .abstract_chart import AbstractChart
+from .array_grid import (
     ArrayButton,
     ArrayFields,
     ArrayGrid,
@@ -7,7 +7,8 @@ from .ArrayGrid import (
     ArrayLabels,
     ArraySignal,
 )
-from .CustomLabels import (
+from .colors import Colors
+from .custom_labels import (
     DMS,
     RPM,
     Ampere,
@@ -50,13 +51,13 @@ from .CustomLabels import (
     WarningButton,
     WarningLabel,
 )
-from .DataFormWidget import DataFormButton, DataFormWidget
-from .Histogram import Histogram
-from .SplashScreen import SplashScreen
-from .StatusBox import StatusBox, StatusWidget
-from .TimeChart import TimeChart, TimeChartView, UserSelectedTimeChart
-from .TopicStatusLabel import FieldButton, TopicStatusLabel
-from .ValueGrid import (
+from .data_form_widget import DataFormButton, DataFormWidget
+from .histogram import Histogram
+from .splash_screen import SplashScreen
+from .status_box import StatusBox, StatusWidget
+from .time_chart import TimeChart, TimeChartView, UserSelectedTimeChart
+from .topic_status_label import FieldButton, TopicStatusLabel
+from .value_grid import (
     InterlockOffGrid,
     OnOffGrid,
     PowerOnOffGrid,

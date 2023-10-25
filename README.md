@@ -7,15 +7,15 @@ classes as well as SALobj specific classes.
 
 Under python/lsst/ts/criopy, the directories are:
 
-* __AirCompressor__ widget for M1M3-ComCam air compressor
-* __GUI__ Generic GUI widgets
-  * __ActuatorsDisplay__ contains widgets to plot actuators
-  * __CustomLabels__ contains plenty of QLabel childs to be used building up user interface
-  * __SAL__ contains SAL bindend Labels. Please see __SALComm__ for details
-  * __TimeChart__ contains QtCharts.QChart subclasses to build up real-time graphs
-* __M1M3__ widgets for M1M3 support system
-* __M1M3TS__ widgets for M1M3 thermal system
-* __VMS__ graphs for [ts_VMS](https://github.com/lsst-ts/ts_VMS)
+* __aircompressor__ widget for M1M3-ComCam air compressor
+* __gui__ generic GUI widgets
+  * __actuatorsdisplay__ contains widgets to plot actuators
+  * __custom_labels__ contains plenty of QLabel childs to be used building up user interface
+  * __sal__ contains SAL bindend Labels. Please see __SALComm__ for details
+  * __timechart__ contains QtCharts.QChart subclasses to build up real-time graphs
+* __m1m3__ widgets for M1M3 support system
+* __m1m3ts__ widgets for M1M3 thermal system
+* __vms__ graphs for [ts_VMS](https://github.com/lsst-ts/ts_VMS)
 
 ## Applications
 
@@ -64,7 +64,7 @@ CLI for VMS logging. Can save VMS data as cvs or, with optional
 * [numpy](https://numpy.org)
 * [astropy](https://astropy.org)
 * [PySide2 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide2)
-* [asyncqt](https://pypi.org/project/asyncqt)
+* [qasync](https://pypi.org/project/qasync/)
 
 For SAL etc:
 

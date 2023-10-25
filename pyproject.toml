@@ -9,13 +9,15 @@ license = { text = "GPL" }
 classifiers = [ "Programming Language :: Python :: 3" ]
 urls = { documentation = "https://ts-criopy.lsst.io", repository = "https://github.com/lsst-ts/ts_criopy" }
 dynamic = [ "version" ]
-dependencies = [ "pyside2", "qasync", "numpy", "astropy" ]
+dependencies = [ "astropy", "numpy", "pandas", "pyside2", "pyyaml", "qasync" ]
 
 [project.scripts]
-M1M3GUI = "lsst.ts.criopy.M1M3GUI:run"
-M1M3TSGUI = "lsst.ts.criopy.M1M3TSGUI:run"
-VMSGUI = "lsst.ts.criopy.VMSGUI:run"
-VMSlogger = "lsst.ts.criopy.VMSlogger:run"
+M1M3GUI = "lsst.ts.criopy.m1m3gui:run"
+M1M3SIMGUI = "lsst.ts.criopy.m1m3simgui:run"
+M1M3TSGUI = "lsst.ts.criopy.m1m3tsgui:run"
+VMSGUI = "lsst.ts.criopy.vmsgui:run"
+VMSlogger = "lsst.ts.criopy.vmslogger:run"
+vms5plot = "lsst.ts.criopy.vms5plot:run"
 
 [tool.setuptools.dynamic]
 version = { attr = "setuptools_scm.get_version" }

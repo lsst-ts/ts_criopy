@@ -3,7 +3,7 @@ FROM ts-dockerhub.lsst.org/develop-env:develop
 ARG cRIO_PY=develop
 
 RUN source ~/.setup.sh \
-    && mamba install -y pyside2 asyncqt numpy pytest
+    && mamba install -y pyside2 qasync numpy pytest
 
 RUN cd repos && git clone --branch $cRIO_PY https://github.com/lsst-ts/ts_criopy
 
@@ -16,7 +16,7 @@ export LSST_DDS_PARTITION_PREFIX="summit" \\n\
 setup ts_salobj -t current \\n\
 ospl start
 
-RUN source ~/.criopy_setup.sh && python3.10 -m pip install PyOpenSSL --upgrade
+RUN source ~/.criopy_setup.sh && cd repos && pip install ts_criopy
 
 COPY startup.sh .
 

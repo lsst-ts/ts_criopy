@@ -1,10 +1,10 @@
-from .BumpTestScale import BumpTestScale
-from .EnabledDisabledScale import EnabledDisabledScale
-from .ForceActuatorItem import FASelection, ForceActuatorItem
-from .GaugeScale import GaugeScale
-from .Mirror import Mirror
-from .MirrorView import MirrorView
-from .MirrorWidget import MirrorWidget
-from .OnOffScale import OnOffScale
-from .Scales import Scales
-from .WarningScale import WarningScale
+from .bump_test_scale import BumpTestScale
+from .enabled_disabled_scale import EnabledDisabledScale
+from .force_actuator_item import FASelection, ForceActuatorItem
+from .gauge_scale import GaugeScale
+from .mirror import Mirror
+from .mirror_view import MirrorView
+from .mirror_widget import MirrorWidget
+from .on_off_scale import OnOffScale
+from .scales import Scales
+from .warning_scale import WarningScale
