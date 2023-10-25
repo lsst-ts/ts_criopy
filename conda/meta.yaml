@@ -32,7 +32,6 @@ test:
     - pyyaml
   source_files:
     - python
-    - bin
     - tests
   commands:
     - pytest
