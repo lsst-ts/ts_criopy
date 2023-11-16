@@ -28,6 +28,8 @@ from ..gui import (
     ArraySignal,
     DegS2,
     MSec2,
+    TimeChartView,
+    UserSelectedTimeChart,
     ValueGrid,
     Volt,
     WarningGrid,
@@ -41,6 +43,10 @@ class DCAccelerometerPageWidget(QWidget):
         super().__init__()
 
         layout = QVBoxLayout()
+
+        user_time_chart = UserSelectedTimeChart(
+            {m1m3.remote.tel_accelerometerData: m1m3.accelerometerData}
+        )
 
         layout.addWidget(
             ValueGrid(
@@ -78,6 +84,7 @@ class DCAccelerometerPageWidget(QWidget):
                     )
                 ],
                 Qt.Horizontal,
+                user_time_chart,
             )
         )
 
@@ -101,6 +108,6 @@ class DCAccelerometerPageWidget(QWidget):
             }
         )
 
-        layout.addWidget(ChartWidget(axis))
+        layout.addWidget(TimeChartView(user_time_chart))
 
         self.setLayout(layout)
