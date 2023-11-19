@@ -127,6 +127,13 @@ class ForceCalculator:
         xForces = [0.0] * FATABLE_XFA
         yForces = [0.0] * FATABLE_YFA
         zForces = [0.0] * FATABLE_ZFA
+        fx = 0.0
+        fy = 0.0
+        fz = 0.0
+        mx = 0.0
+        my = 0.0
+        mz = 0.0
+        forceMagnitude = 0.0
 
         def __init__(
             self,
@@ -158,6 +165,19 @@ class ForceCalculator:
             self.__calculate_forces_and_moments()
 
         def clear_quadrants(self, *quadrants: int) -> "ForceCalculator.AppliedForces":
+            """Clear (null) values from given quadrant(s).
+
+            Parameters
+            ----------
+            quadrants : `int...`
+                Quadrant(s) to be cleared.
+
+            Returns
+            -------
+            forces : `AppliedForces`
+                AppliedForces class with forces values for actuators in
+                quadrant(s) provided set to 0.  `
+            """
             ret = type(self)(self.xForces, self.yForces, self.zForces, self.fas)
             for fa in FATable:
                 if fa.quadrant in quadrants:
