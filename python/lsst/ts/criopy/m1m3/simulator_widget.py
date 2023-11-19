@@ -32,6 +32,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 
+from .force_calculator import ForceCalculator
 from .simulator import Simulator
 
 
@@ -75,9 +76,43 @@ class ForceStatistics(QWidget):
 
         for row in range(7):
             for col in range(7):
-                layout.addWidget(self.labels[row][col], row, col)
+                layout.addWidget(self.labels[row][col], row + 1, col + 1)
 
         self.setLayout(layout)
+
+    def set_forces(self, forces: ForceCalculator.AppliedForces) -> None:
+        def populate_row(row: int, f: ForceCalculator.AppliedForces) -> None:
+            for col, field in enumerate(
+                ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]
+            ):
+                self.labels[row][col].setText(f"{getattr(f,field):.2f}")
+
+        for quadrant in range(1, 5):
+            populate_row(
+                quadrant - 1,
+                forces.clear_quadrants(*[q for q in range(1, 5) if q != quadrant]),
+            )
+
+        populate_row(
+            4,
+            ForceCalculator.AppliedForces(
+                y_forces=forces.yForces, z_forces=forces.zForces
+            ),
+        )
+
+        populate_row(
+            5,
+            ForceCalculator.AppliedForces(
+                x_forces=forces.xForces, z_forces=forces.zForces
+            ),
+        )
+
+        populate_row(
+            6,
+            ForceCalculator.AppliedForces(
+                x_forces=forces.xForces, y_forces=forces.yForces
+            ),
+        )
 
 
 class HardpointForceEntry(QDoubleSpinBox):
@@ -184,3 +219,5 @@ class SimulatorWidget(QWidget):
         self.simulator.hardpoint_forces([hp.value() for hp in self.hardpoints])
         self.simulator.velocity(np.radians([v.value() for v in self.velocities]))
         self.simulator.applied_forces()
+
+        self._force_statistics.set_forces(self.simulator.all_forces)

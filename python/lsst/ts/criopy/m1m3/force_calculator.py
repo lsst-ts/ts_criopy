@@ -124,6 +124,10 @@ class ForceCalculator:
             Total force. Square root (
         """
 
+        xForces = [0.0] * FATABLE_XFA
+        yForces = [0.0] * FATABLE_YFA
+        zForces = [0.0] * FATABLE_ZFA
+
         def __init__(
             self,
             x_forces: list[float] | None = None,
@@ -132,11 +136,11 @@ class ForceCalculator:
             fas: dict[str, Any] | None = None,
         ):
             if x_forces is None:
-                x_forces = [0] * FATABLE_XFA
+                x_forces = [0.0] * FATABLE_XFA
             if y_forces is None:
-                y_forces = [0] * FATABLE_YFA
+                y_forces = [0.0] * FATABLE_YFA
             if z_forces is None:
-                z_forces = [0] * FATABLE_ZFA
+                z_forces = [0.0] * FATABLE_ZFA
 
             assert len(x_forces) == FATABLE_XFA
             assert len(y_forces) == FATABLE_YFA
@@ -145,13 +149,26 @@ class ForceCalculator:
             self.timestamp = 0
             # those values need to have same name as in SAL/DDS (including
             # capitalization style)
-            self.xForces = x_forces
-            self.yForces = y_forces
-            self.zForces = z_forces
+            self.xForces = x_forces.copy()
+            self.yForces = y_forces.copy()
+            self.zForces = z_forces.copy()
 
             self.fas = fas
 
             self.__calculate_forces_and_moments()
+
+        def clear_quadrants(self, *quadrants: int) -> "ForceCalculator.AppliedForces":
+            ret = type(self)(self.xForces, self.yForces, self.zForces, self.fas)
+            for fa in FATable:
+                if fa.quadrant in quadrants:
+                    if fa.x_index is not None:
+                        ret.xForces[fa.x_index] = 0
+                    if fa.y_index is not None:
+                        ret.yForces[fa.y_index] = 0
+                    ret.zForces[fa.index] = 0
+
+            ret.__calculate_forces_and_moments()
+            return ret
 
         def __calculate_forces_and_moments(self) -> None:
             self.fx = 0.0
@@ -185,8 +202,8 @@ class ForceCalculator:
             self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
 
         def __add__(self, obj2: Any) -> "ForceCalculator.AppliedForces":
-            if isinstance(obj2, ForceCalculator.AppliedForces):
-                return ForceCalculator.AppliedForces(
+            if isinstance(obj2, type(self)):
+                return type(self)(
                     np.array(self.xForces) + np.array(obj2.xForces),
                     np.array(self.yForces) + np.array(obj2.yForces),
                     np.array(self.zForces) + np.array(obj2.zForces),

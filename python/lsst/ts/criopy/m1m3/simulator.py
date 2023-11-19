@@ -105,11 +105,11 @@ class Simulator(QObject):
         self.appliedAccelerationForces.emit(self.aaf)
 
     def applied_forces(self) -> None:
-        """Calculate and distyribute appliedForces, sum of all applied forces."""
-        self.all_forces = self.aaf  + self.abf + self.avf + self.offsets
+        """Calculate and distyribute appliedForces, sum of all applied
+        forces."""
+        self.all_forces = self.aaf + self.abf + self.avf + self.offsets
         self.remote.emitted("tel_appliedForces", self.all_forces)
         self.appliedForces.emit(self.all_forces)
-
 
     def hardpoint_fam(self, fam: list[float]) -> None:
         """Calculate forces from hardpoint forces and moments. Those will be
