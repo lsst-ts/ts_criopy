@@ -74,6 +74,7 @@ class Simulator(QObject):
 
     appliedAccelerationForces = Signal(map)
     appliedBalanceForces = Signal(map)
+    appliedForces = Signal(map)
     appliedOffsetForces = Signal(map)
     appliedVelocityForces = Signal(map)
 
@@ -81,6 +82,12 @@ class Simulator(QObject):
         super().__init__()
 
         self.force_calculator = calculator
+
+        self.aaf = ForceCalculator.AppliedForces()
+        self.abf = ForceCalculator.AppliedForces()
+        self.avf = ForceCalculator.AppliedForces()
+        self.all_forces = ForceCalculator.AppliedForces()
+        self.offsets = ForceCalculator.AppliedForces()
 
         self.remote = M1M3Remote()
 
@@ -93,9 +100,16 @@ class Simulator(QObject):
         acceleration: `[float]`
             Vector of three (XYZ) angular accelerations, in rad/sec^2.
         """
-        aaf = self.force_calculator.acceleration(accelerations)
-        self.remote.emitted("tel_appliedAccelerationForces", aaf)
-        self.appliedAccelerationForces.emit(aaf)
+        self.aaf = self.force_calculator.acceleration(accelerations)
+        self.remote.emitted("tel_appliedAccelerationForces", self.aaf)
+        self.appliedAccelerationForces.emit(self.aaf)
+
+    def applied_forces(self) -> None:
+        """Calculate and distyribute appliedForces, sum of all applied forces."""
+        self.all_forces = self.aaf  + self.abf + self.avf + self.offsets
+        self.remote.emitted("tel_appliedForces", self.all_forces)
+        self.appliedForces.emit(self.all_forces)
+
 
     def hardpoint_fam(self, fam: list[float]) -> None:
         """Calculate forces from hardpoint forces and moments. Those will be
@@ -106,9 +120,9 @@ class Simulator(QObject):
         fam : `[float]`
             Vector of 3 (XYZ) forces and moments - fx, fy, fz, mx, my and mz.
         """
-        offsets = self.force_calculator.forces_and_moments_forces(fam)
-        self.remote.emitted("evt_appliedOffsetForces", offsets)
-        self.appliedOffsetForces.emit(offsets)
+        self.offsets = self.force_calculator.forces_and_moments_forces(fam)
+        self.remote.emitted("evt_appliedOffsetForces", self.offsets)
+        self.appliedOffsetForces.emit(self.offsets)
 
     def hardpoint_forces(self, hardpoints: list[float]) -> None:
         """Calculate balance forces from hardpoints input. Simulates balance
@@ -122,9 +136,9 @@ class Simulator(QObject):
             Vector of 6 hardpoint forces, measured on M1M3 in load cells on top
             of the hardpoints.
         """
-        abf = self.force_calculator.hardpoint_forces(hardpoints)
-        self.remote.emitted("tel_appliedBalanceForces", abf)
-        self.appliedBalanceForces.emit(abf)
+        self.abf = self.force_calculator.hardpoint_forces(hardpoints)
+        self.remote.emitted("tel_appliedBalanceForces", self.abf)
+        self.appliedBalanceForces.emit(self.abf)
 
     def velocity(self, velocities: list[float]) -> None:
         """Provide velocity compensation. Results are published in
@@ -135,6 +149,6 @@ class Simulator(QObject):
         velocities : `[float]`
             Vector of 3 angular velocities (XYZ), in rad/sec.
         """
-        avf = self.force_calculator.velocity(velocities)
-        self.remote.emitted("tel_appliedVelocityForces", avf)
-        self.appliedVelocityForces.emit(avf)
+        self.avf = self.force_calculator.velocity(velocities)
+        self.remote.emitted("tel_appliedVelocityForces", self.avf)
+        self.appliedVelocityForces.emit(self.avf)

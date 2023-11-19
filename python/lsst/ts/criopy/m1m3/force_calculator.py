@@ -88,12 +88,12 @@ class ForceCalculator:
 
         Parameters
         ----------
-        x_forces: `[float]`
-            Vector of X forces.
-        y_forces: `[float]`
-            Vector of Y forces.
-        z_forces: `[float]`
-            Vector of Z forces.
+        x_forces: `[float]`, optional
+            Vector of X forces. Defaults to 0.
+        y_forces: `[float]`, optional
+            Vector of Y forces. Defaults to 0.
+        z_forces: `[float]`, optional
+            Vector of Z forces. Defautls to 0.
         fas: `{str, Any}`, optional
             Force Actuator Settings map. Holds MirrorCenterOfGravity values.
 
@@ -126,11 +126,18 @@ class ForceCalculator:
 
         def __init__(
             self,
-            x_forces: list[float],
-            y_forces: list[float],
-            z_forces: list[float],
+            x_forces: list[float] | None = None,
+            y_forces: list[float] | None = None,
+            z_forces: list[float] | None = None,
             fas: dict[str, Any] | None = None,
         ):
+            if x_forces is None:
+                x_forces = [0] * FATABLE_XFA
+            if y_forces is None:
+                y_forces = [0] * FATABLE_YFA
+            if z_forces is None:
+                z_forces = [0] * FATABLE_ZFA
+
             assert len(x_forces) == FATABLE_XFA
             assert len(y_forces) == FATABLE_YFA
             assert len(z_forces) == FATABLE_ZFA
