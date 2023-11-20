@@ -25,3 +25,4 @@ pytest_session.txt
 *.egg-info
 .clang-format
 .ruff.toml
+towncrier.toml

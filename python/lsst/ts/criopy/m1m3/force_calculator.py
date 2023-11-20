@@ -21,7 +21,7 @@
 __all__ = ["ForceCalculator"]
 
 import pathlib
-from typing import Any, Generator
+from typing import Any, Generator, Self
 
 import numpy as np
 import pandas as pd
@@ -164,19 +164,19 @@ class ForceCalculator:
 
             self.__calculate_forces_and_moments()
 
-        def clear_quadrants(self, *quadrants: int) -> "ForceCalculator.AppliedForces":
+        def clear_quadrants(self, *quadrants: int) -> Self:
             """Clear (null) values from given quadrant(s).
 
             Parameters
             ----------
-            quadrants : `int...`
+            *quadrants : `int`
                 Quadrant(s) to be cleared.
 
             Returns
             -------
-            forces : `AppliedForces`
+            forces : `ForceCalculator.AppliedForces`
                 AppliedForces class with forces values for actuators in
-                quadrant(s) provided set to 0.  `
+                quadrant(s) provided set to 0.
             """
             ret = type(self)(self.xForces, self.yForces, self.zForces, self.fas)
             for fa in FATable:
@@ -221,7 +221,14 @@ class ForceCalculator:
 
             self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
 
-        def __add__(self, obj2: Any) -> "ForceCalculator.AppliedForces":
+        def __add__(self, obj2: Any) -> Self:
+            """Adds applied forces together.
+
+            Parameters
+            ----------
+            obj2 : `ForceCalculator.AppliedForces`
+                Second force set to add.
+            """
             if isinstance(obj2, type(self)):
                 return type(self)(
                     np.array(self.xForces) + np.array(obj2.xForces),
