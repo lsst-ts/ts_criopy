@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.6.2
+------
+
+* show forces distribution per quadrant and with XYZ forces off
+
 v0.6.1
 ------
 

@@ -25,7 +25,7 @@ import unittest
 
 import numpy as np
 from lsst.ts.criopy.m1m3 import ForceCalculator
-from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA
+from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
 
 
 class ForceCalculatorTestCase(unittest.TestCase):
@@ -130,6 +130,19 @@ class ForceCalculatorTestCase(unittest.TestCase):
             forces.zForces,
             [0, 12] + [0] * (FATABLE_ZFA - 8) + [9, 0, 0, 0, 0, 21],
         )
+
+    def test_clear_quadrants(self) -> None:
+        velocity = self.calculator.velocity([-1, -2, -3])
+
+        f = velocity.clear_quadrants(1, 2)
+
+        for fa in FATable:
+            if fa.quadrant in [1, 2]:
+                if fa.x_index is not None:
+                    self.assertEqual(f.xForces[fa.x_index], 0)
+                if fa.y_index is not None:
+                    self.assertEqual(f.yForces[fa.y_index], 0)
+                self.assertEqual(f.zForces[fa.index], 0)
 
 
 if __name__ == "__main__":

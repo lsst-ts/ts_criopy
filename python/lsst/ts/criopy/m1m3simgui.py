@@ -19,7 +19,7 @@
 
 import os
 
-from PySide2.QtCore import Signal
+from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -54,6 +54,8 @@ class ConfigDir(QWidget):
 
     configurationChanged = Signal(str)
 
+    config_dir: str = ""
+
     def __init__(self, force_calculator: ForceCalculator):
         super().__init__()
 
@@ -67,6 +69,12 @@ class ConfigDir(QWidget):
         self.path.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         layout.addWidget(self.path)
 
+        self.reload = QPushButton("&Reload")
+        self.reload.clicked.connect(self.reload_config)
+
+        layout.addWidget(self.reload)
+        self.reload.setDisabled(True)
+
         select = QPushButton("...")
         select.clicked.connect(self.select_dir)
 
@@ -74,25 +82,31 @@ class ConfigDir(QWidget):
 
         self.setLayout(layout)
 
+    @Slot()
+    def reload_config(self) -> None:
+        self.force_calculator.load_config(self.config_dir)
+        self.configurationChanged.emit(self.config_dir)
+
+    @Slot()
     def select_dir(self) -> None:
         """Display dialog to select new configuration directory."""
-        new_dir = QFileDialog.getExistingDirectory(
+        self.config_dir = QFileDialog.getExistingDirectory(
             self,
             "Select configuration directory",
             os.path.dirname(self.path.text()),
         )
-        if new_dir == "":
+        if self.config_dir == "":
             return
         try:
-            self.force_calculator.load_config(new_dir)
-            self.path.setText(new_dir)
-            self.configurationChanged.emit(new_dir)
+            self.reload_config()
+            self.path.setText(self.config_dir)
+            self.reload.setDisabled(False)
         except Exception as ex:
             self.configurationChanged.emit("")
             warning(
                 self,
                 "Cannot load configuration",
-                f"<center>Cannot load configuration from {new_dir}<p>{ex}</p></center>",
+                f"<center>Cannot load configuration from {self.config_dir}<p>{ex}</p></center>",
             )
 
 
@@ -129,6 +143,7 @@ class SIM(QMainWindow):
 
     def __configuration_changed(self, new_config: str) -> None:
         self.simulator_widget.setDisabled(new_config == "")
+        self.simulator_widget.recalculate()
 
 
 def run() -> None:
