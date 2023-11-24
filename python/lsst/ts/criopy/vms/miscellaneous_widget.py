@@ -19,7 +19,7 @@
 
 from PySide2.QtWidgets import QFormLayout, QWidget
 
-from ..gui import DataDegC, DataLabel, DockWindow, OnOffLabel, WarningLabel
+from ..gui import DataDegC, DataLabel, DockWindow, Heartbeat, OnOffLabel, WarningLabel
 from ..salcomm import MetaSAL
 
 
@@ -29,6 +29,9 @@ class MiscellaneousWidget(DockWindow):
     def __init__(self, title: str, vms: MetaSAL):
         super().__init__(title)
         widget = QWidget()
+
+        heartbeat_label = Heartbeat()
+
         layout = QFormLayout()
         layout.addRow(
             "Chassis temperature",
@@ -39,5 +42,9 @@ class MiscellaneousWidget(DockWindow):
         layout.addRow("Timeouted", WarningLabel(vms.fpgaState, "timeouted"))
         layout.addRow("Stopped", WarningLabel(vms.fpgaState, "stopped"))
         layout.addRow("FIFO full", WarningLabel(vms.fpgaState, "fifoFull"))
+        layout.addRow("Heartbeat", heartbeat_label)
+
+        vms.heartbeat.connect(heartbeat_label.heartbeat)
+
         widget.setLayout(layout)
         self.setWidget(widget)
