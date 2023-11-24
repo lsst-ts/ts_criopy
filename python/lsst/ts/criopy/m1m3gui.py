@@ -160,8 +160,8 @@ def detailedStateString(detailedState: int) -> str:
 def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
-    app.addComm("MTM1M3")
-    app.addComm(
+    app.add_comm("MTM1M3")
+    app.add_comm(
         "MTMount",
         include=[
             "azimuth",
@@ -171,7 +171,7 @@ def run() -> None:
             "softwareVersions",
         ],
     )
-    app.addComm("MTAirCompressor", index=1)
-    app.addComm("MTAirCompressor", index=2)
+    app.add_comm("MTAirCompressor", index=1)
+    app.add_comm("MTAirCompressor", index=2)
 
     app.run()

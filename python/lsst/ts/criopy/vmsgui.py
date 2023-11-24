@@ -219,5 +219,5 @@ def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
     for index in range(1, 4):
-        app.addComm("MTVMS", index=index, manual={"data": {"queue_len": 400}})
+        app.add_comm("MTVMS", index=index, manual={"data": {"queue_len": 400}})
     app.run()

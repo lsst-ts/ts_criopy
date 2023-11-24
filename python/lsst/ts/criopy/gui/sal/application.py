@@ -27,8 +27,8 @@ from PySide2.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
 from ... import __version__
-from ...salcomm import MetaSAL, create
-from ..splash_screen import SplashScreen
+from ...salcomm import MetaSAL
+from .splash_screen import SplashScreen
 
 
 class Application:
@@ -41,7 +41,7 @@ class Application:
     eui_class : `class`
         Class, ideally child of QMainWindow, which will be instantiated after
         wait for SAL/DDS initialization. It's parameters are SAL created
-        with addComm method.
+        with add_comm method.
 
     Usage
     -----
@@ -54,9 +54,9 @@ class Application:
 
        if __name__ == "__main__":
            app = Application(EUI)
-           app.addComm("MTM1M3")
-           app.addComm("MTMount", include=["azimuth", "elevation"])
-           app.addComm("MTAirCompressor", index=2)
+           app.add_comm("MTM1M3")
+           app.add_comm("MTMount", include=["azimuth", "elevation"])
+           app.add_comm("MTAirCompressor", index=2)
            app.run()
     """
 
@@ -84,11 +84,12 @@ class Application:
         asyncio.set_event_loop(self._loop)
 
         self._comms: list[MetaSAL] = []
-        self._salInfo = parser.isSet(salInfo)
+        self._comms_args: list[SplashScreen.CommArgs] = []
+        self._sal_info = parser.isSet(salInfo)
         self._splash = not (parser.isSet(noSplash))
         self._eui: typing.Any | None = None
 
-    def addComm(
+    def add_comm(
         self,
         name: str,
         manual: dict[str, typing.Any] | None = None,
@@ -107,14 +108,14 @@ class Application:
         **kwargs : `dict`
             Optional parameters passed to remote.
         """
-        self._comms.append(create(name, manual=manual, **kwargs))
+        self._comms_args.append(SplashScreen.CommArgs(name, manual, kwargs))
 
     def run(self) -> None:
         """Runs the application. Creates splash screen, display it if
         requested. Creates and display main window after SAL/DDS is
         initialized."""
 
-        if self._salInfo:
+        if self._sal_info:
             for c in self._comms:
                 for m in dir(c.remote):
                     if (
@@ -132,10 +133,10 @@ class Application:
                 eui.show()
                 self._eui = eui
                 # re-emit signals from history
-                for c in self._comms:
+                for c in comms:
                     c.reemit_remote()
 
-        splash = AppSplashScreen(*self._comms, show=self._splash)
+        splash = AppSplashScreen(*self._comms_args, show=self._splash)
         if self._splash:
             splash.show()
 
