@@ -50,5 +50,5 @@ class EUI(EUIWindow):
 
 def run() -> None:
     app = Application(EUI)
-    app.addComm("MTM1M3TS")
+    app.add_comm("MTM1M3TS")
     app.run()

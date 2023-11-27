@@ -70,6 +70,6 @@ class LTEUI(EUIWindow):
 def run() -> None:
     # Create the Qt Application
     app = Application(LTEUI)
-    app.addComm("LaserTracker", index=1)
+    app.add_comm("LaserTracker", index=1)
 
     app.run()

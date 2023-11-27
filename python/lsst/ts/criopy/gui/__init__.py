@@ -53,7 +53,6 @@ from .custom_labels import (
 )
 from .data_form_widget import DataFormButton, DataFormWidget
 from .histogram import Histogram
-from .splash_screen import SplashScreen
 from .status_box import StatusBox, StatusWidget
 from .time_chart import TimeChart, TimeChartView, UserSelectedTimeChart
 from .topic_status_label import FieldButton, TopicStatusLabel
