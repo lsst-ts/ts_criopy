@@ -52,7 +52,7 @@ class OverviewPageWidget(QWidget):
         self.mirrorStateLabel = QLabel("UNKNOWN")
         self.modeStateLabel = QLabel("UNKNOWN")
         self.errorCodeLabel = QLabel("---")
-        self.heartbeatLabel = Heartbeat()
+        heartbeat_label = Heartbeat()
 
         def createForcesAndMoments() -> dict[str, QLabel]:
             return {
@@ -174,7 +174,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(WarningButton(m1m3, "cellLightWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Heartbeat"), row, col)
-        dataLayout.addWidget(self.heartbeatLabel, row, col + 1)
+        dataLayout.addWidget(heartbeat_label, row, col + 1)
 
         row = 0
         col = 2
@@ -267,7 +267,7 @@ class OverviewPageWidget(QWidget):
         m1m3.appliedForces.connect(self.appliedForces)
         m1m3.detailedState.connect(self.detailedState)
         m1m3.errorCode.connect(self.errorCode)
-        m1m3.heartbeat.connect(self.heartbeatLabel.heartbeat)
+        m1m3.heartbeat.connect(heartbeat_label.heartbeat)
 
         m1m3.accelerometerData.connect(self.accelerometerData)
         m1m3.forceControllerState.connect(self.force_controller_state)

@@ -9,6 +9,7 @@ v0.6.2
 
 * show forces distribution per quadrant and with XYZ forces off
 * fix for new qasync library
+* shows heartbeats in VMSGUI
 
 v0.6.1
 ------
