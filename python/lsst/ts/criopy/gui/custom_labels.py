@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import re
 import typing
 from datetime import datetime
 
@@ -232,6 +233,8 @@ class UnitLabel(QLabel):
             self.unit_name = aliases[self.unit_name]
         except KeyError:
             pass
+
+        self.unit_name = re.sub(r"\bdeg[^;]", "°", self.unit_name)
 
         # s2, s3 using sup
         self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
