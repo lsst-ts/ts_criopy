@@ -27,7 +27,7 @@ import logging
 
 from astropy.time import Time, TimeDelta
 from lsst.ts.criopy.m1m3 import BumpTestTimes
-from lsst.ts.xml.tables import force_actuator_from_id
+from lsst.ts.xml.tables.m1m3 import force_actuator_from_id
 from lsst_efd_client import EfdClient
 
 
@@ -52,8 +52,8 @@ def parse_arguments() -> argparse.Namespace:
         help="End time in a valid format: 'YYYY-MM-DD HH:MM:SSZ'",
     )
     parser.add_argument(
-        "actuator",
-        default="None",
+        "actuators",
+        default=[],
         action="append",
         help="Actuators to query. If empty, list all actuators.",
     )
@@ -84,10 +84,10 @@ async def run_loop() -> None:
 
     btt = BumpTestTimes(EfdClient(args.efd))
 
-    for aid in args.actuators:
+    for aid in [int(a) for a in args.actuators]:
         actuator = force_actuator_from_id(aid)
-        primary, secondary = btt.find_times(aid, args.start_time, args.end_time)
-        print(f"** Actuator {aid} type: {actuator.type}")
+        print(f"** Actuator {aid} type: {actuator.actuator_type}")
+        primary, secondary = await btt.find_times(aid, args.start_time, args.end_time)
         print(primary)
         print(secondary)
 
