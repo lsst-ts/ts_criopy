@@ -50,63 +50,63 @@ class BumpTestTimes:
             Force Actuator identification number. Starting with 101, the first
             number identified segment (1-4). The value ranges up to 443.
 
-        start: 'Time'
-            Astropy Time of search start.
+        start: 'Time', optional
+            Astropy Time of search start. Defaults to week ago.
 
         end: Time
-            Astropy Time of search end.
+            Astropy Time of search end. Defaults to current time.
 
         returns: Two nested list of ints, one for the primary bump and one for
             the secondary bump [start,end], [start, end]...]
             These times will be in unix_tai format
         """
         fa = force_actuator_from_id(actuator_id)
-        manyBumps = await self.client.select_time_series(
+        many_bumps = await self.client.select_time_series(
             "lsst.sal.MTM1M3.logevent_forceActuatorBumpTestStatus", "*", start, end
         )
 
-        theseBumps = manyBumps[manyBumps["actuatorId"] == actuator_id]
+        these_bumps = many_bumps[many_bumps["actuatorId"] == actuator_id]
         # Find the test names
-        primaryBump = f"primaryTest{fa.index}"
+        primary_bump = f"primaryTest{fa.index}"
         if fa.actuator_type == FAType.DAA:
-            secondaryBump = f"secondaryTest{fa.s_index}"
+            secondary_bump = f"secondaryTest{fa.s_index}"
         else:
-            secondaryBump = None
+            secondary_bump = None
         # Now find the separate tests
-        times = theseBumps["timestamp"].values
-        startTimes = []
-        endTimes = []
+        times = these_bumps["timestamp"].values
+        start_times = []
+        end_times = []
         for i, time in enumerate(times):
             if i == 0:
-                startTimes.append(time)
+                start_times.append(time)
                 continue
             if (time - times[i - 1]) > 60.0:
-                startTimes.append(time)
-                endTimes.append(times[i - 1])
-        endTimes.append(times[-1])
+                start_times.append(time)
+                end_times.append(times[i - 1])
+        end_times.append(times[-1])
         # Now use these to find the bump test start and end times
-        primaryTimes: list[tuple[float, float]] = []
-        secondaryTimes: list[tuple[float | None, float | None]] = []
-        for startTime, endTime in zip(startTimes, endTimes):
-            thisBump = theseBumps[
-                (theseBumps["timestamp"] >= startTime)
-                & (theseBumps["timestamp"] <= endTime)
+        primary_times: list[tuple[float, float]] = []
+        secondary_times: list[tuple[float | None, float | None]] = []
+        for start_time, end_time in zip(start_times, end_times):
+            this_bump = these_bumps[
+                (these_bumps["timestamp"] >= start_time)
+                & (these_bumps["timestamp"] <= end_time)
             ]
             try:
-                plotStart = (
-                    thisBump[thisBump[primaryBump] == 2]["timestamp"].values[0] - 1.0
+                plot_start = (
+                    this_bump[this_bump[primary_bump] == 2]["timestamp"].values[0] - 1.0
                 )
-                plotEnd = plotStart + 14.0
-                primaryTimes.append((plotStart, plotEnd))
-                if secondaryBump is not None:
-                    plotStart = (
-                        thisBump[thisBump[secondaryBump] == 2]["timestamp"].values[0]
+                plot_end = plot_start + 14.0
+                primary_times.append((plot_start, plot_end))
+                if secondary_bump is not None:
+                    plot_start = (
+                        this_bump[this_bump[secondary_bump] == 2]["timestamp"].values[0]
                         - 1.0
                     )
-                    plotEnd = plotStart + 14.0
-                    secondaryTimes.append((plotStart, plotEnd))
+                    plot_end = plot_start + 14.0
+                    secondary_times.append((plot_start, plot_end))
                 else:
-                    secondaryTimes.append((None, None))
+                    secondary_times.append((None, None))
             except IndexError:
                 continue
-        return primaryTimes, secondaryTimes
+        return primary_times, secondary_times
