@@ -26,6 +26,7 @@ from .m1m3ts import (
     CoolantCirculationWidget,
     M1M3TSCSCControlWidget,
     MixingValveWidget,
+    PowerPageWidget,
     ThermalValuePageWidget,
 )
 from .salcomm import MetaSAL
@@ -39,6 +40,7 @@ class EUI(EUIWindow):
 
         self.m1m3ts = m1m3ts
 
+        self.add_page("Power status", PowerPageWidget, self.m1m3ts)
         self.add_page("Thermal values", ThermalValuePageWidget, self.m1m3ts)
         self.add_page("Mixing valve", MixingValveWidget, self.m1m3ts)
         self.add_page("Coolant circulations", CoolantCirculationWidget, self.m1m3ts)
