@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst.ts.xml.tables.m1m3 import FAType, force_actuator_from_id
 from lsst_efd_client import EfdClient
