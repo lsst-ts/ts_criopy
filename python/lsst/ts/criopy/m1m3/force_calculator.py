@@ -22,7 +22,7 @@ __all__ = ["ForceCalculator"]
 
 import logging
 import pathlib
-from typing import Any, Generator, Self
+from typing import Any, Generator
 
 import numpy as np
 import pandas as pd
@@ -249,7 +249,7 @@ class ForceCalculator:
 
             self.__calculate_forces_and_moments()
 
-        def clear_quadrants(self, *quadrants: int) -> Self:
+        def clear_quadrants(self, *quadrants: int):
             """Clear (null) values from given quadrant(s).
 
             Parameters
@@ -306,7 +306,7 @@ class ForceCalculator:
 
             self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
 
-        def __add__(self, obj2: Any) -> Self:
+        def __add__(self, obj2: Any): # -> Self:
             """Adds applied forces together.
 
             Parameters
