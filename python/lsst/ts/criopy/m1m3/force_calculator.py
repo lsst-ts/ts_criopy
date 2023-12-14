@@ -20,6 +20,7 @@
 
 __all__ = ["ForceCalculator"]
 
+import logging
 import pathlib
 from typing import Any, Generator, Self
 
@@ -70,6 +71,87 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
     for fa in FATable:
         if fa.y_index is not None:
             yield forces[fa.index]
+
+
+class ForceTable:
+    """
+    Combines table with comments stored in CSC file. Export methods allowing
+    loading and saving table/comments pair, and resetting and appending
+    comments.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        self.data = pd.DataFrame(*args, **kwargs)
+        self.comments: list[str] = []
+
+    def drop(self, *args: Any, **kwargs: Any) -> None:
+        return self.data.drop(*args, **kwargs)
+
+    def reset_comments(self) -> None:
+        self.comments = []
+
+    def load(self, filename: str | pathlib.Path, rows: int) -> Self:
+        """Load table from CSV.
+
+        Parameters
+        ----------
+        filename : `str | pathlib.Path`
+            Load table data from that CSV file.
+        rows : `int`
+            Expected number of rows.
+
+        Returns
+        -------
+        self : `ForceTable`
+            Reference to self. So the load can be used after constructing the
+            table.
+
+        Throws
+        ------
+        RuntimeError
+            When number of rows in table doesn't match rows argument.
+        """
+        self.data = pd.read_csv(filename, comment="#")
+        if len(self.data.index) != rows:
+            raise RuntimeError(
+                f"Expected {rows} in {filename}, found {len(self.data.index)}."
+            )
+
+        self.comments = []
+        with open(filename, "r") as f:
+            for line in f.readlines():
+                line = line.strip()
+                if line[0] == "#":
+                    self.comments.append(line)
+
+        logging.info(f"Loaded {filename}; rows {len(self.data.index)}")
+
+        return self
+
+    def save(
+        self, csv: pathlib.Path, comments: list[str], reset_comments: bool
+    ) -> None:
+        """Save comments and data to CSV file.
+
+        Parameters
+        ----------
+        csv : `pathlib.Path`
+            Path of the saved data and comments.
+        comments : `[str]`
+            Append this comments before saving.
+        reset_comments : `bool`, optional
+            If True, reset comments. Only comments specified in argument will
+            be written to the new file.
+        """
+        logging.info(f"Saving {csv}")
+        if reset_comments:
+            self.reset_comments()
+
+        self.comments += comments
+        with open(csv, "w") as f:
+            for c in self.comments:
+                f.write("# " + c + "\n")
+            self.data.to_csv(f, index=False)
 
 
 class ForceCalculator:
@@ -219,7 +301,7 @@ class ForceCalculator:
                 self.my += (fa_fx * rz) - (fa_fz * rx)
                 self.mz += (fa_fy * rx) - (fa_fx * ry)
 
-            self.forceMagnitude = np.sqrt(self.fx ** 2 + self.fy ** 2 + self.fz ** 2)
+            self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
 
         def __add__(self, obj2: Any) -> Self:
             """Adds applied forces together.
@@ -239,10 +321,11 @@ class ForceCalculator:
             return NotImplemented
 
     def __init__(self, config_dir: None | str | pathlib.Path = None):
-        self.forces_to_mirror: list[pd.DataFrame] = []
-        self.moments_to_mirror: list[pd.DataFrame] = []
-        self.acceleration_tables: list[pd.DataFrame] = []
-        self.velocity_tables: list[pd.DataFrame] = []
+        self.hardpoint_to_forces_moments = ForceTable()
+        self.forces_to_mirror: list[ForceTable] = []
+        self.moments_to_mirror: list[ForceTable] = []
+        self.acceleration_tables: list[ForceTable] = []
+        self.velocity_tables: list[ForceTable] = []
 
         if config_dir is not None:
             self.load_config(config_dir)
@@ -324,31 +407,32 @@ class ForceCalculator:
 
         tables_path = config_dir / "tables"
 
-        self.hardpoint_to_forces_moments = self.__load_table(
+        self.hardpoint_to_forces_moments.load(
             tables_path / self.fas["HardpointForceMomentTablePath"], HP_COUNT
-        ).drop(columns="ID")
+        )
+        self.hardpoint_to_forces_moments.drop(columns="ID", inplace=True)
 
         for axis in "XYZ":
             self.forces_to_mirror.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"ForceDistribution{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.moments_to_mirror.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"MomentDistribution{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.acceleration_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Acceleration{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.velocity_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Velocity{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
@@ -356,7 +440,7 @@ class ForceCalculator:
 
         for axis in "XY":
             self.velocity_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Velocity{axis}ZTablePath"],
                     FATABLE_ZFA,
                 ),
@@ -364,30 +448,46 @@ class ForceCalculator:
 
         self.__convert_tables()
 
-    def save(self, out_dir: pathlib.Path) -> None:
+    def save(
+        self,
+        out_dir: pathlib.Path,
+        comments: str | list[str],
+        reset_comments: bool = False,
+    ) -> None:
         """Save modified tables to out_dir.
 
         Parameters
         ----------
         out_dir: `pathlib.Path`
             Path where table shall be saved.
+        comments: `str | list[str]`
+            Added or set comments. If reset_comments is True, comments in files
+            are cleared.
+        reset_comments: `bool`, optional
+            If True, reset comments in saved files. Defaults to False.
         """
         assert self.fas is not None
 
+        if isinstance(comments, str):
+            comments = [comments]
+
         for i, axis in enumerate("XYZ"):
-            self.acceleration_tables[i].to_csv(
+            self.acceleration_tables[i].save(
                 out_dir / self.fas[f"Acceleration{axis}TablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
-            self.velocity_tables[i].to_csv(
+            self.velocity_tables[i].save(
                 out_dir / self.fas[f"Velocity{axis}TablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
 
         for i, axis in enumerate("XY"):
-            self.velocity_tables[i + 3].to_csv(
+            self.velocity_tables[i + 3].save(
                 out_dir / self.fas[f"Velocity{axis}ZTablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
 
     def __convert_tables(self) -> None:
@@ -398,15 +498,17 @@ class ForceCalculator:
         for axis in "XYZ":
             self._fam_computation.append(
                 pd.DataFrame(
-                    [t[axis] for t in self.forces_to_mirror]
-                    + [t[axis] for t in self.moments_to_mirror]
+                    [t.data[axis] for t in self.forces_to_mirror]
+                    + [t.data[axis] for t in self.moments_to_mirror]
                 ).T
             )
             self._acceleration_computation.append(
-                pd.DataFrame([(t[axis] / 1000.0) for t in self.acceleration_tables]).T
+                pd.DataFrame(
+                    [(t.data[axis] / 1000.0) for t in self.acceleration_tables]
+                ).T
             )
             self._velocity_computation.append(
-                pd.DataFrame([(t[axis] / 1000.0) for t in self.velocity_tables]).T
+                pd.DataFrame([(t.data[axis] / 1000.0) for t in self.velocity_tables]).T
             )
 
     def __load_table(self, filename: str | pathlib.Path, rows: int) -> pd.DataFrame:
@@ -435,7 +537,7 @@ class ForceCalculator:
         return ret
 
     def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:
-        return self.hardpoint_to_forces_moments @ hardpoints
+        return self.hardpoint_to_forces_moments.data @ hardpoints
 
     def forces_and_moments_forces(self, fam: list[float]) -> AppliedForces:
         forces = []
@@ -485,8 +587,8 @@ class ForceCalculator:
         self.acceleration_tables = []
         self.velocity_tables = []
 
-        def make_zero() -> pd.DataFrame:
-            return pd.DataFrame(
+        def make_zero() -> ForceTable:
+            return ForceTable(
                 {
                     "ID": [fa.index for fa in FATable],
                     "X": [0] * FATABLE_ZFA,
@@ -505,9 +607,9 @@ class ForceCalculator:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):
-                    self.velocity_tables[tab].loc[idx, a] += coeff[tab]
+                    self.velocity_tables[tab].data.loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].data.loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, sets[f"X{row.x_index}"])
@@ -529,9 +631,9 @@ class ForceCalculator:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):
-                    self.velocity_tables[tab].loc[idx, a] += coeff[tab]
+                    self.velocity_tables[tab].data.loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].data.loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, updates[f"X{row.x_index}"])

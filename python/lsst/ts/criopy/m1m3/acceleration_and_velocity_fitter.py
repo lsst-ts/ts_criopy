@@ -59,9 +59,9 @@ class AccelerationAndVelocityFitter:
         if acceleration_kind == "meters":
             self.accelerations = pd.DataFrame(
                 {
-                    "X": values[f"accelerometers_angularAccelerationX"].mul(D2RAD),
-                    "Y": values[f"accelerometers_angularAccelerationY"].mul(D2RAD),
-                    "Z": values[f"accelerometers_angularAccelerationZ"].mul(D2RAD),
+                    "X": values["accelerometers_angularAccelerationX"].mul(D2RAD),
+                    "Y": values["accelerometers_angularAccelerationY"].mul(D2RAD),
+                    "Z": values["accelerometers_angularAccelerationZ"].mul(D2RAD),
                 }
             )
         else:
