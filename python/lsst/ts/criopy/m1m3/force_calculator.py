@@ -219,7 +219,7 @@ class ForceCalculator:
                 self.my += (fa_fx * rz) - (fa_fz * rx)
                 self.mz += (fa_fy * rx) - (fa_fx * ry)
 
-            self.forceMagnitude = np.sqrt(self.fx**2 + self.fy**2 + self.fz**2)
+            self.forceMagnitude = np.sqrt(self.fx ** 2 + self.fy ** 2 + self.fz ** 2)
 
         def __add__(self, obj2: Any) -> Self:
             """Adds applied forces together.
