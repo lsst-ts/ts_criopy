@@ -124,7 +124,7 @@ class ForceTable:
                 if line[0] == "#":
                     self.comments.append(line)
 
-        logging.info(f"Loaded {filename}; rows {len(self.data.index)}")
+        logging.debug(f"Loaded {filename}; rows {len(self.data.index)}")
 
         return self
 
@@ -143,7 +143,7 @@ class ForceTable:
             If True, reset comments. Only comments specified in argument will
             be written to the new file.
         """
-        logging.info(f"Saving {csv}")
+        logging.debug(f"Saving {csv}")
         if reset_comments:
             self.reset_comments()
 
@@ -591,9 +591,9 @@ class ForceCalculator:
             return ForceTable(
                 {
                     "ID": [fa.index for fa in FATable],
-                    "X": [0] * FATABLE_ZFA,
-                    "Y": [0] * FATABLE_ZFA,
-                    "Z": [0] * FATABLE_ZFA,
+                    "X": [0.0] * FATABLE_ZFA,
+                    "Y": [0.0] * FATABLE_ZFA,
+                    "Z": [0.0] * FATABLE_ZFA,
                 }
             )
 
