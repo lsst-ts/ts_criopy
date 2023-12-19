@@ -1,4 +1,5 @@
 from .acceleration_and_velocity_fitter import AccelerationAndVelocityFitter
+from .acceleration_transformer import AccelerationTransformer
 from .actuator_overview_page_widget import ActuatorOverviewPageWidget
 from .air_page_widget import AirPageWidget
 from .application_control_widget import ApplicationControlWidget
