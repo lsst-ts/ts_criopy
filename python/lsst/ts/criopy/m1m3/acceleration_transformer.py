@@ -26,6 +26,9 @@ from typing import Any
 import pandas as pd
 import yaml
 
+# there are 4 2 axis accelerometers, totalling 8 channels
+N_ACCELEROMETERS = 8
+
 
 class AccelerationTransformer:
     """
@@ -73,7 +76,7 @@ class AccelerationTransformer:
 
         self.accelerometeres = []
 
-        for accelerometer in range(8):
+        for accelerometer in range(N_ACCELEROMETERS):
             self.accelerometeres.append(
                 self.Accelerometer(ac[f"Accelerometer{accelerometer + 1}"])
             )
@@ -86,8 +89,7 @@ class AccelerationTransformer:
 
     def calibrated(self, raw: pd.DataFrame) -> pd.DataFrame:
         ret = pd.DataFrame()
-        print(raw)
-        for acc in range(8):
+        for acc in range(N_ACCELEROMETERS):
             ret[f"accelerometer{acc}"] = (
                 self.accelerometeres[acc] @ raw[f"rawAccelerometer{acc}"]
             )
@@ -95,9 +97,12 @@ class AccelerationTransformer:
         return ret
 
     def xyz(self, calibrated: pd.DataFrame) -> pd.DataFrame:
+        # calculating an angular acceleration from the difference of two linear
+        # acceleration measured at two locations with different radial distance
+        # to the center of rotation.
         return pd.DataFrame(
             {
-                "accelerationX": (calibrated.accelerometer7 - calibrated.accelerometer5)
+                "accelerationX": (calibrated.accelerometer5 - calibrated.accelerometer7)
                 / self.distances[0],
                 "accelerationY": (calibrated.accelerometer2 - calibrated.accelerometer0)
                 / self.distances[1],
