@@ -214,7 +214,8 @@ class ForceActuatorItem(QGraphicsItem):
         if not self.isEnabled():
             palette.setCurrentColorGroup(palette.Inactive)
 
-        painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
         # paint grayed circle for actuators not providing the selected value
         if self._state == self.STATE_INACTIVE:
             painter.setPen(QPen(Qt.gray, self._scale_factor, Qt.DotLine))
@@ -268,7 +269,7 @@ class ForceActuatorItem(QGraphicsItem):
             self._center.y() - 10 * self._scale_factor,
             20 * self._scale_factor,
             10 * self._scale_factor,
-            Qt.AlignBottom | Qt.AlignHCenter,
+            int(Qt.AlignBottom) | int(Qt.AlignHCenter),
             str(self.actuator.actuator_id),
         )
 
@@ -287,6 +288,6 @@ class ForceActuatorItem(QGraphicsItem):
             self._center.y(),
             20 * self._scale_factor,
             10 * self._scale_factor,
-            Qt.AlignTop | Qt.AlignHCenter,
+            int(Qt.AlignTop) | int(Qt.AlignHCenter),
             vstr,
         )
