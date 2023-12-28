@@ -10,7 +10,8 @@ v0.6.2
 * show forces distribution per quadrant and with XYZ forces off
 * fix for new qasync library
 * shows heartbeats in VMSGUI
-# Tools for DC accelerometers transformations
+* Tools for DC accelerometers transformations
+* improved acceleration - forces fits
 * improved unit displays
 * improved command line processing
 

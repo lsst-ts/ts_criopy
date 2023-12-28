@@ -20,6 +20,7 @@
 
 __all__ = ["ForceCalculator"]
 
+import logging
 import pathlib
 from typing import Any, Generator, Self
 
@@ -40,12 +41,12 @@ def reduce_to_x(forces: list[float]) -> Generator[float, None, None]:
 
     Parameters
     ----------
-    forces : `[float]`
+    forces : list of float
         156 value vector, with most values 0/ignored.
 
     Returns
     -------
-    x_forces : `[float]`
+    x_forces : list of float
         12 X forces values.
     """
     for fa in FATable:
@@ -58,7 +59,7 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
 
     Parameters
     ----------
-    forces : `[float]`
+    forces : list of float
         156 value vector, with some values 0/ignored for Z indices without Y
         force actuator.
 
@@ -70,6 +71,90 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
     for fa in FATable:
         if fa.y_index is not None:
             yield forces[fa.index]
+
+
+class ForceTable:
+    """
+    Combines table with comments stored in CSV file. Export methods allowing
+    loading and saving table/comments pair, and resetting and appending
+    comments.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        self.data = pd.DataFrame(*args, **kwargs)
+        self.comments: list[str] = []
+
+    def drop(self, *args: Any, **kwargs: Any) -> None:
+        return self.data.drop(*args, **kwargs)
+
+    def reset_comments(self) -> None:
+        self.comments = []
+
+    def load(self, filename: str | pathlib.Path, rows: int) -> Self:
+        """Load table from CSV.
+
+        Parameters
+        ----------
+        filename : str or pathlib.Path
+            Load table data from that CSV file.
+        rows : int
+            Expected number of rows.
+
+        Returns
+        -------
+        self : `ForceTable`
+            Reference to self. So the load can be used after constructing the
+            table.
+
+        Throws
+        ------
+        RuntimeError
+            When number of rows in table doesn't match rows argument.
+        """
+        try:
+            self.data = pd.read_csv(filename, comment="#")
+            if len(self.data.index) != rows:
+                raise RuntimeError(
+                    f"Expected {rows} in {filename}, found {len(self.data.index)}."
+                )
+
+            self.comments = []
+            with open(filename, "r") as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if line[0] == "#":
+                        self.comments.append(line)
+
+            logging.debug(f"Loaded {filename}; rows {len(self.data.index)}")
+        except pd.errors.ParserError as er:
+            raise RuntimeError(f"Cannot parse {filename}: {er}")
+
+        return self
+
+    def save(
+        self, csv: pathlib.Path, comments: list[str], reset_comments: bool
+    ) -> None:
+        """Save comments and data to CSV file.
+
+        Parameters
+        ----------
+        csv : pathlib.Path
+            Path of the saved data and comments.
+        comments : list of str
+            Append this comments before saving.
+        reset_comments : bool, optional
+            If True, reset comments. Only comments specified in argument will
+            be written to the new file.
+        """
+        logging.debug(f"Saving {csv}")
+        if reset_comments:
+            self.reset_comments()
+
+        self.comments += comments
+        with open(csv, "w") as f:
+            for c in self.comments:
+                f.write("# " + c + "\n")
+            self.data.to_csv(f, index=False)
 
 
 class ForceCalculator:
@@ -88,39 +173,39 @@ class ForceCalculator:
 
         Parameters
         ----------
-        x_forces: `[float]`, optional
+        x_forces: list of float, optional
             Vector of X forces. Defaults to 0.
-        y_forces: `[float]`, optional
+        y_forces: list of float, optional
             Vector of Y forces. Defaults to 0.
-        z_forces: `[float]`, optional
+        z_forces: list of float, optional
             Vector of Z forces. Defautls to 0.
-        fas: `{str, Any}`, optional
+        fas: dict of str to Any, optional
             Force Actuator Settings map. Holds MirrorCenterOfGravity values.
 
         Attributes
         ----------
-        xForces : `[float]`
+        xForces : list of float
             Applied X forces. 12 values.
-        yForces : `[float]`
+        yForces : list of float
             Applied Y forces. 100 values.
-        zForces : `[float]`
+        zForces : list of float
             Applied Z forces. 156 values.
-        fx : `float`
+        fx : float
             Total X force, Sum of all X forces.
-        fy : `float`
+        fy : float
             Total Y force. Sum of all Y forces.
-        fz : `float`
+        fz : float
             Total Z force. Sum of all Z forces.
-        mx : `float`
+        mx : float
             Moment along X axis. Calculated from sum of individual
             contribution.
-        my : `float`
+        my : float
             Moment along Y axis. Calculated from sum of individual
             contribution.
-        mz : `float`
+        mz : float
             Moment along Z axis. Calculated from sum of individual
             contribution.
-        forceMagnitude : `float`
+        forceMagnitude : float
             Total force. Square root (
         """
 
@@ -169,12 +254,12 @@ class ForceCalculator:
 
             Parameters
             ----------
-            *quadrants : `int`
+            *quadrants : int
                 Quadrant(s) to be cleared.
 
             Returns
             -------
-            forces : `ForceCalculator.AppliedForces`
+            forces : ForceCalculator.AppliedForces
                 AppliedForces class with forces values for actuators in
                 quadrant(s) provided set to 0.
             """
@@ -226,7 +311,7 @@ class ForceCalculator:
 
             Parameters
             ----------
-            obj2 : `ForceCalculator.AppliedForces`
+            obj2 : ForceCalculator.AppliedForces
                 Second force set to add.
             """
             if isinstance(obj2, type(self)):
@@ -239,10 +324,11 @@ class ForceCalculator:
             return NotImplemented
 
     def __init__(self, config_dir: None | str | pathlib.Path = None):
-        self.forces_to_mirror: list[pd.DataFrame] = []
-        self.moments_to_mirror: list[pd.DataFrame] = []
-        self.acceleration_tables: list[pd.DataFrame] = []
-        self.velocity_tables: list[pd.DataFrame] = []
+        self.hardpoint_to_forces_moments = ForceTable()
+        self.forces_to_mirror: list[ForceTable] = []
+        self.moments_to_mirror: list[ForceTable] = []
+        self.acceleration_tables: list[ForceTable] = []
+        self.velocity_tables: list[ForceTable] = []
 
         if config_dir is not None:
             self.load_config(config_dir)
@@ -255,16 +341,16 @@ class ForceCalculator:
 
         Parameters
         ----------
-        x_forces: `[float]`
+        x_forces: list of float
             Vector of X forces. 12, FATABLE_XFA values.
-        y_forces: `[float]`
+        y_forces: list of float
             Vector of Y forces. 100, FATABLE_YFA values.
-        z_forces: `[float]`
+        z_forces: list of float
             Vector of Z forces. 156, FATABLE_ZFA values.
 
         Returns
         -------
-        applied_forces : `AppliedForces`
+        applied_forces : AppliedForces
             AppliedForces class holding forces details.
         """
         return ForceCalculator.AppliedForces(x_forces, y_forces, z_forces, self.fas)
@@ -277,7 +363,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        forces: `[[float]]`
+        forces: list of list of float
             Mirror forces. Vector of three (XYZ) mirror forces (length of each
             array equals to FATABLE_ZFA, 156).
         """
@@ -305,7 +391,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        config_dir : `str | pathlib.Path`
+        config_dir : str or pathlib.Path
             Directory where to look for configuration files.
         """
         config_dir = pathlib.Path(config_dir)
@@ -324,31 +410,32 @@ class ForceCalculator:
 
         tables_path = config_dir / "tables"
 
-        self.hardpoint_to_forces_moments = self.__load_table(
+        self.hardpoint_to_forces_moments.load(
             tables_path / self.fas["HardpointForceMomentTablePath"], HP_COUNT
-        ).drop(columns="ID")
+        )
+        self.hardpoint_to_forces_moments.drop(columns="ID", inplace=True)
 
         for axis in "XYZ":
             self.forces_to_mirror.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"ForceDistribution{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.moments_to_mirror.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"MomentDistribution{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.acceleration_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Acceleration{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
             self.velocity_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Velocity{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
@@ -356,7 +443,7 @@ class ForceCalculator:
 
         for axis in "XY":
             self.velocity_tables.append(
-                self.__load_table(
+                ForceTable().load(
                     tables_path / self.fas[f"Velocity{axis}ZTablePath"],
                     FATABLE_ZFA,
                 ),
@@ -364,30 +451,46 @@ class ForceCalculator:
 
         self.__convert_tables()
 
-    def save(self, out_dir: pathlib.Path) -> None:
+    def save(
+        self,
+        out_dir: pathlib.Path,
+        comments: str | list[str],
+        reset_comments: bool = False,
+    ) -> None:
         """Save modified tables to out_dir.
 
         Parameters
         ----------
-        out_dir: `pathlib.Path`
+        out_dir: pathlib.Path
             Path where table shall be saved.
+        comments: str or list of str
+            Added or set comments. If reset_comments is True, comments in files
+            are cleared.
+        reset_comments: bool, optional
+            If True, reset comments in saved files. Defaults to False.
         """
         assert self.fas is not None
 
+        if isinstance(comments, str):
+            comments = [comments]
+
         for i, axis in enumerate("XYZ"):
-            self.acceleration_tables[i].to_csv(
+            self.acceleration_tables[i].save(
                 out_dir / self.fas[f"Acceleration{axis}TablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
-            self.velocity_tables[i].to_csv(
+            self.velocity_tables[i].save(
                 out_dir / self.fas[f"Velocity{axis}TablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
 
         for i, axis in enumerate("XY"):
-            self.velocity_tables[i + 3].to_csv(
+            self.velocity_tables[i + 3].save(
                 out_dir / self.fas[f"Velocity{axis}ZTablePath"],
-                index=False,
+                comments,
+                reset_comments,
             )
 
     def __convert_tables(self) -> None:
@@ -398,44 +501,21 @@ class ForceCalculator:
         for axis in "XYZ":
             self._fam_computation.append(
                 pd.DataFrame(
-                    [t[axis] for t in self.forces_to_mirror]
-                    + [t[axis] for t in self.moments_to_mirror]
+                    [t.data[axis] for t in self.forces_to_mirror]
+                    + [t.data[axis] for t in self.moments_to_mirror]
                 ).T
             )
             self._acceleration_computation.append(
-                pd.DataFrame([(t[axis] / 1000.0) for t in self.acceleration_tables]).T
+                pd.DataFrame(
+                    [(t.data[axis] / 1000.0) for t in self.acceleration_tables]
+                ).T
             )
             self._velocity_computation.append(
-                pd.DataFrame([(t[axis] / 1000.0) for t in self.velocity_tables]).T
+                pd.DataFrame([(t.data[axis] / 1000.0) for t in self.velocity_tables]).T
             )
 
-    def __load_table(self, filename: str | pathlib.Path, rows: int) -> pd.DataFrame:
-        """Load table from CSV.
-
-        Parameters
-        ----------
-        filename : `str | pathlib.Path`
-            Load table data from that CSV file.
-        rows : `int`
-            Expected number of rows.
-
-        Throws
-        ------
-        RuntimeError
-            When number of rows in table doesn't match rows argument.
-        """
-        try:
-            ret = pd.read_csv(filename, comment="#")
-            if len(ret.index) != rows:
-                raise RuntimeError(
-                    f"Expected {rows} in {filename}, found {len(ret.index)}."
-                )
-        except pd.errors.ParserError as er:
-            raise RuntimeError(f"Cannot parse {filename}: {er}")
-        return ret
-
     def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:
-        return self.hardpoint_to_forces_moments @ hardpoints
+        return self.hardpoint_to_forces_moments.data @ hardpoints
 
     def forces_and_moments_forces(self, fam: list[float]) -> AppliedForces:
         forces = []
@@ -454,7 +534,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        accelerations: list[float]
+        accelerations: list of float
             3D (XYZ) angular acceleration vector, as provide by TMA (velocity
             derivation) or accelerometers. In radians per second square.
 
@@ -485,13 +565,13 @@ class ForceCalculator:
         self.acceleration_tables = []
         self.velocity_tables = []
 
-        def make_zero() -> pd.DataFrame:
-            return pd.DataFrame(
+        def make_zero() -> ForceTable:
+            return ForceTable(
                 {
                     "ID": [fa.index for fa in FATable],
-                    "X": [0] * FATABLE_ZFA,
-                    "Y": [0] * FATABLE_ZFA,
-                    "Z": [0] * FATABLE_ZFA,
+                    "X": [0.0] * FATABLE_ZFA,
+                    "Y": [0.0] * FATABLE_ZFA,
+                    "Z": [0.0] * FATABLE_ZFA,
                 }
             )
 
@@ -505,9 +585,9 @@ class ForceCalculator:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):
-                    self.velocity_tables[tab].loc[idx, a] += coeff[tab]
+                    self.velocity_tables[tab].data.loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].data.loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, sets[f"X{row.x_index}"])
@@ -524,14 +604,15 @@ class ForceCalculator:
         Parameters
         ----------
         updates : pd.DataFrame
+            New acceleration (3) and velocity (3+2) coefficients matrices
         """
         for row in FATable:
 
             def do_update(a: str, idx: int, coeff: pd.Series) -> None:
                 for tab in range(5):
-                    self.velocity_tables[tab].loc[idx, a] += coeff[tab]
+                    self.velocity_tables[tab].data.loc[idx, a] += coeff[tab]
                 for tab in range(3):
-                    self.acceleration_tables[tab].loc[idx, a] += coeff[tab + 5]
+                    self.acceleration_tables[tab].data.loc[idx, a] += coeff[tab + 5]
 
             if row.x_index is not None:
                 do_update("X", row.index, updates[f"X{row.x_index}"])
@@ -546,12 +627,12 @@ class ForceCalculator:
 
         Parameters
         ----------
-        velocities: `[float]`
+        velocities: list of float
             3D angular velocity vector (XYZ). In radians per seccond.
 
         Returns
         -------
-        velocity_forces: `AppliedForces`
+        velocity_forces: AppliedForces
             Applied velocity forces.
         """
         vector = np.hstack(

@@ -30,13 +30,17 @@ class AccelerationAndVelocityFitter:
     ----------
     values: `pd.DataFrame`
         Value frame. Shall contain
-        "[elevation|azimuth]_{kind}[Position|Velocity|Acceleration]" fields.
+        "[elevation|azimuth]_{kind}[Position|Velocity|Acceleration]" and
+        "accelerometers_angularAcceleration[XYZ]" fields.
     kind: `str`
-        Velocities and accelerations kind. Expected either actual, or demand,
-        with actual preferred.
+        Velocities kind. Expected either actual or demand for TMA values.
+        Actual are preferred.
+    acceleration_kind: `str`
+        Velocities and accelerations kind. Expected either meters for DC
+        accelerometer, or actual or demand for TMA. Meters are preferred.
     """
 
-    def __init__(self, values: pd.DataFrame, kind: str):
+    def __init__(self, values: pd.DataFrame, kind: str, acceleration_kind: str):
         el_sin = np.sin(np.radians(values[f"elevation_{kind}Position"]))
         el_cos = np.cos(np.radians(values[f"elevation_{kind}Position"]))
 
@@ -52,15 +56,24 @@ class AccelerationAndVelocityFitter:
             }
         )
 
-        A_azimuth = values[f"azimuth_{kind}Acceleration"].mul(D2RAD)
+        if acceleration_kind == "meters":
+            self.accelerations = pd.DataFrame(
+                {
+                    "X": values["accelerometers_angularAccelerationX"].mul(D2RAD),
+                    "Y": values["accelerometers_angularAccelerationY"].mul(D2RAD),
+                    "Z": values["accelerometers_angularAccelerationZ"].mul(D2RAD),
+                }
+            )
+        else:
+            A_azimuth = values[f"azimuth_{kind}Acceleration"].mul(D2RAD)
 
-        self.accelerations = pd.DataFrame(
-            {
-                "X": values[f"elevation_{kind}Acceleration"].mul(D2RAD),
-                "Y": A_azimuth.mul(el_cos),
-                "Z": A_azimuth.mul(el_sin),
-            }
-        )
+            self.accelerations = pd.DataFrame(
+                {
+                    "X": values[f"elevation_{kind}Acceleration"].mul(D2RAD),
+                    "Y": A_azimuth.mul(el_cos),
+                    "Z": A_azimuth.mul(el_sin),
+                }
+            )
 
         self.aav = pd.DataFrame(
             {

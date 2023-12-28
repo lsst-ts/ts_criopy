@@ -213,12 +213,12 @@ class SlewWidget(QWidget):
             pal_on.setColor(pal_on.Button, Colors.WARNING)
             pal_off.setColor(pal_off.Button, self._default_color)
             self.slew_flag_on.setEnabled(False)
-            self.slew_flag_off.setDisabled(True)
+            self.slew_flag_off.setEnabled(True)
         else:
             pal_on.setColor(pal_on.Button, self._default_color)
             pal_off.setColor(pal_off.Button, Colors.OK)
             self.slew_flag_on.setEnabled(True)
-            self.slew_flag_off.setDisabled(False)
+            self.slew_flag_off.setEnabled(False)
 
         self.slew_flag_on.setPalette(pal_on)
         self.slew_flag_off.setPalette(pal_off)

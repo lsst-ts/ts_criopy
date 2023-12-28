@@ -135,10 +135,12 @@ class SIM(QMainWindow):
 
         layout = QVBoxLayout()
 
-        config_dir = ConfigDir(self.force_calculator)
-        config_dir.configurationChanged.connect(self.__configuration_changed)
+        self.config_dir_widget = ConfigDir(self.force_calculator)
+        self.config_dir_widget.configurationChanged.connect(
+            self.__configuration_changed
+        )
 
-        layout.addWidget(config_dir)
+        layout.addWidget(self.config_dir_widget)
 
         self.graph = GraphPageWidget(simulator)
         self.simulator_widget = SimulatorWidget(simulator)
@@ -167,7 +169,7 @@ class SIM(QMainWindow):
         config_dir : `str`
             New configuration directory.
         """
-        self.force_calculator.load_config(config_dir)
+        self.config_dir_widget.load_config(config_dir)
         self.__configuration_changed(config_dir)
 
 
