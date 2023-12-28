@@ -41,12 +41,12 @@ def reduce_to_x(forces: list[float]) -> Generator[float, None, None]:
 
     Parameters
     ----------
-    forces : `[float]`
+    forces : list of float
         156 value vector, with most values 0/ignored.
 
     Returns
     -------
-    x_forces : `[float]`
+    x_forces : list of float
         12 X forces values.
     """
     for fa in FATable:
@@ -59,7 +59,7 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
 
     Parameters
     ----------
-    forces : `[float]`
+    forces : list of float
         156 value vector, with some values 0/ignored for Z indices without Y
         force actuator.
 
@@ -75,7 +75,7 @@ def reduce_to_y(forces: list[float]) -> Generator[float, None, None]:
 
 class ForceTable:
     """
-    Combines table with comments stored in CSC file. Export methods allowing
+    Combines table with comments stored in CSV file. Export methods allowing
     loading and saving table/comments pair, and resetting and appending
     comments.
     """
@@ -95,9 +95,9 @@ class ForceTable:
 
         Parameters
         ----------
-        filename : `str | pathlib.Path`
+        filename : str or pathlib.Path
             Load table data from that CSV file.
-        rows : `int`
+        rows : int
             Expected number of rows.
 
         Returns
@@ -135,11 +135,11 @@ class ForceTable:
 
         Parameters
         ----------
-        csv : `pathlib.Path`
+        csv : pathlib.Path
             Path of the saved data and comments.
-        comments : `[str]`
+        comments : list of str
             Append this comments before saving.
-        reset_comments : `bool`, optional
+        reset_comments : bool, optional
             If True, reset comments. Only comments specified in argument will
             be written to the new file.
         """
@@ -170,39 +170,39 @@ class ForceCalculator:
 
         Parameters
         ----------
-        x_forces: `[float]`, optional
+        x_forces: list of float, optional
             Vector of X forces. Defaults to 0.
-        y_forces: `[float]`, optional
+        y_forces: list of float, optional
             Vector of Y forces. Defaults to 0.
-        z_forces: `[float]`, optional
+        z_forces: list of float, optional
             Vector of Z forces. Defautls to 0.
-        fas: `{str, Any}`, optional
+        fas: dict of str to Any, optional
             Force Actuator Settings map. Holds MirrorCenterOfGravity values.
 
         Attributes
         ----------
-        xForces : `[float]`
+        xForces : list of float
             Applied X forces. 12 values.
-        yForces : `[float]`
+        yForces : list of float
             Applied Y forces. 100 values.
-        zForces : `[float]`
+        zForces : list of float
             Applied Z forces. 156 values.
-        fx : `float`
+        fx : float
             Total X force, Sum of all X forces.
-        fy : `float`
+        fy : float
             Total Y force. Sum of all Y forces.
-        fz : `float`
+        fz : float
             Total Z force. Sum of all Z forces.
-        mx : `float`
+        mx : float
             Moment along X axis. Calculated from sum of individual
             contribution.
-        my : `float`
+        my : float
             Moment along Y axis. Calculated from sum of individual
             contribution.
-        mz : `float`
+        mz : float
             Moment along Z axis. Calculated from sum of individual
             contribution.
-        forceMagnitude : `float`
+        forceMagnitude : float
             Total force. Square root (
         """
 
@@ -251,12 +251,12 @@ class ForceCalculator:
 
             Parameters
             ----------
-            *quadrants : `int`
+            *quadrants : int
                 Quadrant(s) to be cleared.
 
             Returns
             -------
-            forces : `ForceCalculator.AppliedForces`
+            forces : ForceCalculator.AppliedForces
                 AppliedForces class with forces values for actuators in
                 quadrant(s) provided set to 0.
             """
@@ -308,7 +308,7 @@ class ForceCalculator:
 
             Parameters
             ----------
-            obj2 : `ForceCalculator.AppliedForces`
+            obj2 : ForceCalculator.AppliedForces
                 Second force set to add.
             """
             if isinstance(obj2, type(self)):
@@ -338,16 +338,16 @@ class ForceCalculator:
 
         Parameters
         ----------
-        x_forces: `[float]`
+        x_forces: list of float
             Vector of X forces. 12, FATABLE_XFA values.
-        y_forces: `[float]`
+        y_forces: list of float
             Vector of Y forces. 100, FATABLE_YFA values.
-        z_forces: `[float]`
+        z_forces: list of float
             Vector of Z forces. 156, FATABLE_ZFA values.
 
         Returns
         -------
-        applied_forces : `AppliedForces`
+        applied_forces : AppliedForces
             AppliedForces class holding forces details.
         """
         return ForceCalculator.AppliedForces(x_forces, y_forces, z_forces, self.fas)
@@ -360,7 +360,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        forces: `[[float]]`
+        forces: list of list of float
             Mirror forces. Vector of three (XYZ) mirror forces (length of each
             array equals to FATABLE_ZFA, 156).
         """
@@ -388,7 +388,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        config_dir : `str | pathlib.Path`
+        config_dir : str or pathlib.Path
             Directory where to look for configuration files.
         """
         config_dir = pathlib.Path(config_dir)
@@ -458,12 +458,12 @@ class ForceCalculator:
 
         Parameters
         ----------
-        out_dir: `pathlib.Path`
+        out_dir: pathlib.Path
             Path where table shall be saved.
-        comments: `str | list[str]`
+        comments: str or list of str
             Added or set comments. If reset_comments is True, comments in files
             are cleared.
-        reset_comments: `bool`, optional
+        reset_comments: bool, optional
             If True, reset comments in saved files. Defaults to False.
         """
         assert self.fas is not None
@@ -556,7 +556,7 @@ class ForceCalculator:
 
         Parameters
         ----------
-        accelerations: list[float]
+        accelerations: list of float
             3D (XYZ) angular acceleration vector, as provide by TMA (velocity
             derivation) or accelerometers. In radians per second square.
 
@@ -626,6 +626,7 @@ class ForceCalculator:
         Parameters
         ----------
         updates : pd.DataFrame
+            New acceleration (3) and velocity (3+2) coefficients matrices
         """
         for row in FATable:
 
@@ -648,12 +649,12 @@ class ForceCalculator:
 
         Parameters
         ----------
-        velocities: `[float]`
+        velocities: list of float
             3D angular velocity vector (XYZ). In radians per seccond.
 
         Returns
         -------
-        velocity_forces: `AppliedForces`
+        velocity_forces: AppliedForces
             Applied velocity forces.
         """
         vector = np.hstack(
