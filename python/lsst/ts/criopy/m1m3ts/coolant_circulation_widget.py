@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
 import astropy.units as u
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QDoubleSpinBox,
@@ -174,7 +174,7 @@ class CoolantPumpWidget(QWidget):
         self.m1m3ts.engineeringMode.connect(self.engineeringMode)
 
     @Slot()
-    def engineeringMode(self, data: typing.Any) -> None:
+    def engineeringMode(self, data: BaseMsgType) -> None:
         """Called when engineeringMode event is received. Intercept to
         enable/disable form buttons."""
         if data.engineeringMode:

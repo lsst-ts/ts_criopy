@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 from datetime import datetime
 from html import escape
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
 
@@ -83,15 +83,15 @@ class SALStatusBar(QStatusBar):
         comms[0].errorCode.connect(self.errorCode)
 
     @Slot()
-    def detailedState(self, data: typing.Any) -> None:
+    def detailedState(self, data: BaseMsgType) -> None:
         self.detailedStateLabel.setText(self.detailedStateFunction(data.detailedState))
 
     @Slot()
-    def configurationApplied(self, data: typing.Any) -> None:
+    def configurationApplied(self, data: BaseMsgType) -> None:
         self.settingsLabel.setText(data.version)
 
     @Slot()
-    def errorCode(self, data: typing.Any) -> None:
+    def errorCode(self, data: BaseMsgType) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )

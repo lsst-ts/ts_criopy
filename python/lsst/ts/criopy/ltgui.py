@@ -18,8 +18,6 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-import typing
-
 from lsst.ts import salobj
 from lsst.ts.xml.enums import LaserTracker
 from PySide2.QtCore import Slot
@@ -53,15 +51,15 @@ class LTEUI(EUIWindow):
         laser_tracker.laserStatus.connect(self.laser_status)
 
     @Slot()
-    def summary_state(self, data: typing.Any) -> None:
+    def summary_state(self, data: salobj.BaseMsgType) -> None:
         self.status_label.setText(self.state_string(salobj.State(data.summaryState)))
 
     @Slot()
-    def t2sa_status(self, data: typing.Any) -> None:
+    def t2sa_status(self, data: salobj.BaseMsgType) -> None:
         self.t2sa_label.setText(self.state_string(LaserTracker.T2SAStatus(data.status)))
 
     @Slot()
-    def laser_status(self, data: typing.Any) -> None:
+    def laser_status(self, data: salobj.BaseMsgType) -> None:
         self.laser_status_label.setText(
             self.state_string(LaserTracker.LaserStatus(data.status))
         )

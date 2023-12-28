@@ -23,6 +23,7 @@ import concurrent.futures
 import time
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
 from PySide2.QtGui import QContextMenuEvent, QPainter
@@ -249,7 +250,7 @@ class UserSelectedTimeChart(TimeChart):
                 break
 
     @Slot()
-    def _appendData(self, data: typing.Any) -> None:
+    def _appendData(self, data: BaseMsgType) -> None:
         if self._name is None:
             return
 

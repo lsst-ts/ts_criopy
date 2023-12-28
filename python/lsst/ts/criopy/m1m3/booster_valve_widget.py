@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
 import numpy as np
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QGridLayout, QWidget
 
@@ -101,7 +101,7 @@ class FollowingErrorTrigger(QWidget):
         m1m3.forceActuatorData.connect(self._forceActuatorData)
 
     @Slot()
-    def _forceActuatorData(self, data: typing.Any) -> None:
+    def _forceActuatorData(self, data: BaseMsgType) -> None:
         primaryFEMax = np.max(data.primaryCylinderFollowingError)
         primaryFEMin = np.min(data.primaryCylinderFollowingError)
 

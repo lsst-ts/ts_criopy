@@ -19,8 +19,8 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 import enum
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide2.QtCore import QPointF, QRect, Qt
 from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
@@ -80,7 +80,7 @@ class ForceActuatorItem(QGraphicsItem):
     def __init__(
         self,
         actuator: ForceActuatorData,
-        data: typing.Any,
+        data: BaseMsgType,
         data_index: int | None,
         state: int,
         kind: FASelection,

@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
-
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
@@ -384,7 +382,7 @@ class CompressorPageWidget(QWidget):
         self.compressor.status.connect(self.status)
 
     @Slot()
-    def status(self, data: typing.Any) -> None:
+    def status(self, data: salobj.BaseMsgType) -> None:
         summary_state = self.compressor.remote.evt_summaryState.get()
         if summary_state is not None:
             self.__control_widget.csc_state(summary_state)

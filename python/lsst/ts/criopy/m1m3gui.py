@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtWidgets import QLabel
 
@@ -105,7 +105,7 @@ class EUI(EUIWindow):
 
         self.m1m3.detailedState.connect(self.detailed_state)
 
-    def detailed_state(self, data: typing.Any) -> None:
+    def detailed_state(self, data: BaseMsgType) -> None:
         self.statusLabel.setText(detailedStateString(data.detailedState))
 
 

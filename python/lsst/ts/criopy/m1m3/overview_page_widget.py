@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
 import astropy.units as u
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
@@ -282,16 +282,16 @@ class OverviewPageWidget(QWidget):
         mtmount.azimuth.connect(self.azimuth)
         mtmount.elevation.connect(self.elevation)
 
-    def _setValues(self, variables: dict[str, QLabel], data: typing.Any) -> None:
+    def _setValues(self, variables: dict[str, QLabel], data: BaseMsgType) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
     @Slot()
-    def appliedForces(self, data: typing.Any) -> None:
+    def appliedForces(self, data: BaseMsgType) -> None:
         self._setValues(self.faCommanded, data)
 
     @Slot()
-    def detailedState(self, data: typing.Any) -> None:
+    def detailedState(self, data: BaseMsgType) -> None:
         # summary state, mirror state, mode
         matrix = [
             ["---", "---", "---"],
@@ -316,44 +316,44 @@ class OverviewPageWidget(QWidget):
         self.modeStateLabel.setText(m[2])
 
     @Slot()
-    def errorCode(self, data: typing.Any) -> None:
+    def errorCode(self, data: BaseMsgType) -> None:
         self.errorCodeLabel.setText(hex(data.errorCode))
 
     @Slot()
-    def accelerometerData(self, data: typing.Any) -> None:
+    def accelerometerData(self, data: BaseMsgType) -> None:
         self.accelationXLabel.setText("%0.3f" % (data.angularAccelerationX))
         self.accelationYLabel.setText("%0.3f" % (data.angularAccelerationY))
         self.accelationZLabel.setText("%0.3f" % (data.angularAccelerationZ))
 
     @Slot()
-    def force_controller_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: BaseMsgType) -> None:
         self.slewFlag.setText("On" if data.slewFlag else "Off")
 
     @Slot()
-    def forceActuatorData(self, data: typing.Any) -> None:
+    def forceActuatorData(self, data: BaseMsgType) -> None:
         self._setValues(self.faMeasured, data)
 
     @Slot()
-    def gyroData(self, data: typing.Any) -> None:
+    def gyroData(self, data: BaseMsgType) -> None:
         self.velocityXLabel.setText("%0.3f" % (data.angularVelocityX))
         self.velocityYLabel.setText("%0.3f" % (data.angularVelocityY))
         self.velocityZLabel.setText("%0.3f" % (data.angularVelocityZ))
 
     @Slot()
-    def hardpointActuatorData(self, data: typing.Any) -> None:
+    def hardpointActuatorData(self, data: BaseMsgType) -> None:
         self._setValues(self.hpMeasured, data)
         self._setValues(self.hpPosition, data)
 
     @Slot()
-    def imsData(self, data: typing.Any) -> None:
+    def imsData(self, data: BaseMsgType) -> None:
         self._setValues(self.imsPosition, data)
 
     @Slot()
-    def inclinometerData(self, data: typing.Any) -> None:
+    def inclinometerData(self, data: BaseMsgType) -> None:
         self.inclinometerElevationLabel.setText(f"{data.inclinometerAngle:.3f}")
 
     @Slot()
-    def forceActuatorSettings(self, data: typing.Any) -> None:
+    def forceActuatorSettings(self, data: BaseMsgType) -> None:
         self.inclinometerLabel.setEnabled(data.useInclinometer)
         self.inclinometerElevationLabel.setEnabled(data.useInclinometer)
 
@@ -367,14 +367,14 @@ class OverviewPageWidget(QWidget):
             self.inclinometerTMALabel.setText("<b>TMA</b>")
 
     @Slot()
-    def outerLoopData(self, data: typing.Any) -> None:
+    def outerLoopData(self, data: BaseMsgType) -> None:
         self.broadcastCounter.setText(str(data.broadcastCounter))
         self.executionTime.setText(f"{(data.executionTime * u.s.to(u.ms)):.2f}")
 
     @Slot()
-    def azimuth(self, data: typing.Any) -> None:
+    def azimuth(self, data: BaseMsgType) -> None:
         self.tmaAzimuthLabel.setText("%0.3f" % (data.actualPosition))
 
     @Slot()
-    def elevation(self, data: typing.Any) -> None:
+    def elevation(self, data: BaseMsgType) -> None:
         self.tmaElevationLabel.setText("%0.3f" % (data.actualPosition))

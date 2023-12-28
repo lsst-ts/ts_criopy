@@ -27,7 +27,7 @@ from datetime import datetime
 import click
 import h5py
 import numpy as np
-from lsst.ts.salobj import Domain, Remote
+from lsst.ts.salobj import BaseMsgType, Domain, Remote
 
 from .cache import Cache
 
@@ -318,12 +318,12 @@ class Collector:
         except Exception:
             self.log.exception(f"Cannot collect data for {VMS_DEVICES[self.index]}")
 
-    async def _data(self, data: typing.Any) -> None:
+    async def _data(self, data: BaseMsgType) -> None:
         self.cache.newChunk(data)
         if data.sensor == 1:
             self._bar_index += len(data.accelerationX)
 
-    async def _fpgaState(self, data: typing.Any) -> None:
+    async def _fpgaState(self, data: BaseMsgType) -> None:
         period = 1 if data is None else data.period
         freq = 1000 if data is None else int(np.ceil(1000.0 / period))
         self.log.info(f"{VMS_DEVICES[self.index]} frequency {freq}, period {period}")

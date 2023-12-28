@@ -24,6 +24,7 @@ __all__ = ["Cache"]
 import typing
 
 import numpy as np
+from lsst.ts.salobj import BaseMsgType
 
 from .. import TimeCache
 
@@ -76,7 +77,7 @@ class Cache(TimeCache):
         self.sampleTime = sampleTime
         self._changedIntervalSampleTime()
 
-    def newChunk(self, data: typing.Any) -> tuple[bool, bool]:
+    def newChunk(self, data: BaseMsgType) -> tuple[bool, bool]:
         """Add new data chunk. Append data to cache if all sensors are
         received. Keeps window cache, removes old entries if over window.
 
