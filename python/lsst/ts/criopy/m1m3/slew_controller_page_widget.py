@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, SetSlewControllerSettings
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
@@ -55,7 +55,7 @@ class ForceButton(ColoredButton):
         )
 
     @Slot()
-    def slew_controller_settings(self, data: typing.Any) -> None:
+    def slew_controller_settings(self, data: BaseMsgType) -> None:
         name = self.objectName()
         if name == "BoosterValves":
             use = getattr(data, "trigger" + name)
@@ -162,7 +162,7 @@ class SlewControllerPageWidget(QWidget):
         self.setEnabled(self.__active_state is True and self.__slew_flag is False)
 
     @Slot()
-    def detailed_state(self, data: typing.Any) -> None:
+    def detailed_state(self, data: BaseMsgType) -> None:
         self.__active_state = data.detailedState in (
             DetailedStates.PARKEDENGINEERING,
             DetailedStates.RAISINGENGINEERING,
@@ -172,6 +172,6 @@ class SlewControllerPageWidget(QWidget):
         self.__set_enabled()
 
     @Slot()
-    def force_controller_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: BaseMsgType) -> None:
         self.__slew_flag = data.slewFlag
         self.__set_enabled()

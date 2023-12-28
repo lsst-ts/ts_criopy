@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Signal
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QVBoxLayout, QWidget
@@ -96,7 +96,7 @@ class TopicStatusLabel(ColoredButton):
             self._window.setLayout(layout)
         self._window.show()
 
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         updated = False
         for f in self.fields:
             v = getattr(data, f.field)

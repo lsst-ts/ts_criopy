@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData
 from PySide2.QtCore import QEvent, Signal
 from PySide2.QtGui import QMouseEvent
@@ -126,7 +126,7 @@ class MirrorView(QGraphicsView):
     def addForceActuator(
         self,
         actuator: ForceActuatorData,
-        data: typing.Any,
+        data: BaseMsgType,
         dataIndex: int | None,
         state: int,
     ) -> None:
@@ -156,7 +156,7 @@ class MirrorView(QGraphicsView):
         )
 
     def updateForceActuator(
-        self, actuator_id: int, data: typing.Any, state: int
+        self, actuator_id: int, data: BaseMsgType, state: int
     ) -> None:
         """Update actuator value and state.
 

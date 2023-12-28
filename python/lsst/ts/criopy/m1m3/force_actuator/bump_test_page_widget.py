@@ -20,6 +20,7 @@
 import asyncio
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable, actuator_id_to_index
 from PySide2.QtCore import Qt, Slot
@@ -311,7 +312,7 @@ class BumpTestPageWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
 
     @Slot()
-    def detailedState(self, data: typing.Any) -> None:
+    def detailedState(self, data: BaseMsgType) -> None:
         """Called when detailedState event is received. Intercept to
         enable/disable form buttons."""
         if data.detailedState == MTM1M3.DetailedStates.PARKEDENGINEERING:
@@ -327,7 +328,7 @@ class BumpTestPageWidget(QWidget):
             self.killBumpTestButton.setEnabled(False)
 
     @Slot()
-    def appliedForces(self, data: typing.Any) -> None:
+    def appliedForces(self, data: BaseMsgType) -> None:
         """Adds applied forces to graph."""
         chartData: list[float] = []
         if self.x_index is not None:
@@ -341,7 +342,7 @@ class BumpTestPageWidget(QWidget):
             self.chart.append(data.timestamp, chartData, cache_index=0)
 
     @Slot()
-    def forceActuatorData(self, data: typing.Any) -> None:
+    def forceActuatorData(self, data: BaseMsgType) -> None:
         """Adds measured forces to graph."""
         chartData: list[float] = []
         if self.x_index is not None:
@@ -355,7 +356,7 @@ class BumpTestPageWidget(QWidget):
             self.chart.append(data.timestamp, chartData, cache_index=1)
 
     @asyncSlot()
-    async def forceActuatorBumpTestStatus(self, data: typing.Any) -> None:
+    async def forceActuatorBumpTestStatus(self, data: BaseMsgType) -> None:
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 

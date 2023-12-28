@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QDoubleSpinBox,
@@ -85,7 +85,7 @@ class MixingValveWidget(QWidget):
         self.m1m3ts.mixingValve.connect(self.mixingValve)
 
     @Slot()
-    def mixingValve(self, data: typing.Any) -> None:
+    def mixingValve(self, data: BaseMsgType) -> None:
         self.mixingValveChart.append(
             data.private_sndStamp,
             [data.rawValvePosition],

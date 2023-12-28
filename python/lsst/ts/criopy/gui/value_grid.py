@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QLabel, QWidget
 
@@ -94,7 +94,7 @@ class ValueGrid(QGroupBox):
         event.connect(self._dataChanged)
 
     @Slot()
-    def _dataChanged(self, data: typing.Any) -> None:
+    def _dataChanged(self, data: BaseMsgType) -> None:
         for e in dir(data):
             ch = self.findChild(QWidget, e)
             if ch is not None:
@@ -157,7 +157,7 @@ class InterlockOffGrid(ValueGrid):
             super().__init__(InterlockOffLabel, items, event, cols)
 
     @Slot()
-    def _dataChanged(self, data: typing.Any) -> None:
+    def _dataChanged(self, data: BaseMsgType) -> None:
         super()._dataChanged(data)
         if self.anyWarningLabel is not None:
             anyWarning = False

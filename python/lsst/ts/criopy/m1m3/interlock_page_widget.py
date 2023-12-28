@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
@@ -67,7 +67,7 @@ class InterlockPageWidget(QWidget):
         m1m3.interlockStatus.connect(self.interlockStatus)
 
     @Slot()
-    def interlockStatus(self, data: typing.Any) -> None:
+    def interlockStatus(self, data: BaseMsgType) -> None:
         self.chart.append(
             data.timestamp,
             [

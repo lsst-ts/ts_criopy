@@ -20,6 +20,7 @@
 import enum
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QAbstractItemView,
@@ -60,7 +61,7 @@ class DataWidget(QTableWidget):
     def empty(self) -> None:
         self.setValues(range(1, 97))
 
-    def setValues(self, data: typing.Any) -> None:
+    def setValues(self, data: BaseMsgType) -> None:
         r = 0
         c = 0
         for value in data:
@@ -126,7 +127,7 @@ class CommandWidget(QWidget):
             self.clicked.connect(self.edit)
 
         @Slot()
-        def engineeringMode(self, data: typing.Any) -> None:
+        def engineeringMode(self, data: BaseMsgType) -> None:
             self.setEnabled(data.engineeringMode)
             if not (data.engineeringMode):
                 self.setText(self._edit_title)
@@ -257,7 +258,7 @@ class ThermalValuePageWidget(TopicWindow):
 
         super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
 
-    def updateValues(self, data: typing.Any) -> None:
+    def updateValues(self, data: BaseMsgType) -> None:
         if data is None or self.field is None:
             self.commandWidget.updateValues(None)
         else:

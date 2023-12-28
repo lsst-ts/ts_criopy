@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 from qasync import asyncSlot
@@ -84,7 +84,7 @@ class AirPageWidget(QWidget):
         self.m1m3.airSupplyStatus.connect(self.airSupplyStatus)
 
     @Slot()
-    def airSupplyStatus(self, data: typing.Any) -> None:
+    def airSupplyStatus(self, data: BaseMsgType) -> None:
         self.turnAirOnButton.setDisabled(data.airCommandedOn)
         self.turnAirOffButton.setEnabled(data.airCommandedOn)
 

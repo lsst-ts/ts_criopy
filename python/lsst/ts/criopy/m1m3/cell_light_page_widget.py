@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
@@ -79,7 +79,7 @@ class CellLightPageWidget(QWidget):
         self.m1m3.cellLightStatus.connect(self.cellLightStatus)
 
     @Slot()
-    def cellLightStatus(self, data: typing.Any) -> None:
+    def cellLightStatus(self, data: BaseMsgType) -> None:
         self.cellLightsCommandedOnLabel.setValue(data.cellLightsCommandedOn)
         self.cellLightsOnLabel.setValue(data.cellLightsOn)
 

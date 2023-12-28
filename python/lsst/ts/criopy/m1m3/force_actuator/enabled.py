@@ -20,6 +20,7 @@
 
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide2.QtCore import Slot
@@ -165,7 +166,7 @@ class Enabled(StateEnabledWidget):
             )
 
     @Slot()
-    def enabledForceActuators(self, data: typing.Any) -> None:
+    def enabledForceActuators(self, data: BaseMsgType) -> None:
         """Callback with enabled FA data. Triggers display update."""
         if len(self.mirrorWidget.mirrorView.items()) == 0:
             new = True  # need to add force actuators

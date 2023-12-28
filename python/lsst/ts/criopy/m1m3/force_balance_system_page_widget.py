@@ -19,6 +19,7 @@
 
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
@@ -163,12 +164,12 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.m1m3.forceControllerState.connect(self.force_controller_state)
         self.m1m3.hardpointActuatorData.connect(self.hardpointActuatorData)
 
-    def _fillRow(self, variables: dict[str, QLabel], data: typing.Any) -> None:
+    def _fillRow(self, variables: dict[str, QLabel], data: BaseMsgType) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
     @Slot()
-    def appliedBalanceForces(self, data: typing.Any) -> None:
+    def appliedBalanceForces(self, data: BaseMsgType) -> None:
         self._fillRow(self.corrected, data)
 
         self.balanceChart.append(
@@ -186,7 +187,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         self.preclippedBalanceForces(data)
 
     @Slot()
-    def preclippedBalanceForces(self, data: typing.Any) -> None:
+    def preclippedBalanceForces(self, data: BaseMsgType) -> None:
         try:
             self.balanceForcesClipped.setClipped(
                 (
@@ -198,12 +199,12 @@ class ForceBalanceSystemPageWidget(QWidget):
             self.balanceForcesClipped.setClipped(False)
 
     @Slot()
-    def force_controller_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: BaseMsgType) -> None:
         self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
         self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
 
     @Slot()
-    def hardpointActuatorData(self, data: typing.Any) -> None:
+    def hardpointActuatorData(self, data: BaseMsgType) -> None:
         for hp in range(6):
             self.hardpoints[hp].setValue(data.measuredForce[hp])
         self.hardpoints[6].setValue(sum(data.measuredForce))
