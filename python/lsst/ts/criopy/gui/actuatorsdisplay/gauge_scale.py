@@ -102,7 +102,8 @@ class GaugeScale(QWidget):
         """Overridden method. Paint gauge as series of lines, and adds text
         labels."""
         painter = QPainter(self)
-        painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
         swidth = max(self.width() - 100, 20)
         sheight = self.height()
         if self._min == self._max:
@@ -115,7 +116,7 @@ class GaugeScale(QWidget):
                     0,
                     self.width() - swidth,
                     sheight,
-                    Qt.AlignCenter,
+                    int(Qt.AlignCenter),
                     self.formatValue(self._min),
                 )
             return
@@ -130,7 +131,7 @@ class GaugeScale(QWidget):
             0,
             self.width() - swidth,
             30,
-            Qt.AlignCenter,
+            int(Qt.AlignCenter),
             self.formatValue(self._max),
         )
         painter.drawText(
@@ -138,7 +139,7 @@ class GaugeScale(QWidget):
             sheight / 2.0 - 30,
             self.width() - swidth,
             30,
-            Qt.AlignCenter,
+            int(Qt.AlignCenter),
             self.formatValue((self._max + self._min) / 2.0),
         )
         painter.drawText(
@@ -146,6 +147,6 @@ class GaugeScale(QWidget):
             sheight - 30,
             self.width() - swidth,
             30,
-            Qt.AlignCenter,
+            int(Qt.AlignCenter),
             self.formatValue(self._min),
         )

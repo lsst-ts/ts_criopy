@@ -424,11 +424,14 @@ class ForceCalculator:
         RuntimeError
             When number of rows in table doesn't match rows argument.
         """
-        ret = pd.read_csv(filename)
-        if len(ret.index) != rows:
-            raise RuntimeError(
-                f"Expected {rows} in {filename}, found {len(ret.index)}."
-            )
+        try:
+            ret = pd.read_csv(filename, comment="#")
+            if len(ret.index) != rows:
+                raise RuntimeError(
+                    f"Expected {rows} in {filename}, found {len(ret.index)}."
+                )
+        except pd.errors.ParserError as er:
+            raise RuntimeError(f"Cannot parse {filename}: {er}")
         return ret
 
     def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:

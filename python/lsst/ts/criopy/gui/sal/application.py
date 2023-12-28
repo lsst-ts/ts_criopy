@@ -36,6 +36,18 @@ class Application:
     application including splash screen (can be disabled by command line
     option). Splash screen is shown during SAL initialization.
 
+    Attributes
+    ----------
+    eui : `QMainWindow`
+        Main application window.
+    parser : `QCommandLineParser`
+        Command line argument parser.
+
+    Methods
+    -------
+    process_command_line(self, parser: QCommandLineParser) -> None
+        Called to process command line arguments collected by application.
+
     Parameters
     ----------
     eui_class : `class`
@@ -60,34 +72,44 @@ class Application:
            app.run()
     """
 
-    def __init__(self, eui_class: type[QMainWindow]):
+    def __init__(
+        self,
+        eui_class: type[QMainWindow],
+        *options: QCommandLineOption,
+        **arguments: tuple[str, str],
+    ):
         self._eui_class = eui_class
         self._app = QApplication(sys.argv)
         self._app.setApplicationVersion(__version__)
 
-        parser = QCommandLineParser()
-        parser.addHelpOption()
-        parser.addVersionOption()
+        self.parser = QCommandLineParser()
+        self.parser.addHelpOption()
+        self.parser.addVersionOption()
 
         noSplash = QCommandLineOption(["n", "no-splash"], "don't show splash screen")
-        parser.addOption(noSplash)
+        self.parser.addOption(noSplash)
 
         salInfo = QCommandLineOption(
             ["s", "SAL-info"],
             "show SAL info (including methods checksums) and exits",
         )
-        parser.addOption(salInfo)
+        self.parser.addOption(salInfo)
 
-        parser.process(self._app)
+        self.parser.addOptions(options)
+
+        for name, options in arguments.items():
+            self.parser.addPositionalArgument(name, *options)
+
+        self.parser.process(self._app)
 
         self._loop = QEventLoop(self._app)
         asyncio.set_event_loop(self._loop)
 
         self._comms: list[MetaSAL] = []
         self._comms_args: list[SplashScreen.CommArgs] = []
-        self._sal_info = parser.isSet(salInfo)
-        self._splash = not (parser.isSet(noSplash))
-        self._eui: typing.Any | None = None
+        self._sal_info = self.parser.isSet(salInfo)
+        self._splash = not (self.parser.isSet(noSplash))
+        self.eui: QMainWindow | None = None
 
     def add_comm(
         self,
@@ -110,10 +132,17 @@ class Application:
         """
         self._comms_args.append(SplashScreen.CommArgs(name, manual, kwargs))
 
+    def process_command_line(self) -> None:
+        """Called to process command line arguments. Shall be overridden in
+        children, if custom command line processing is desired. Use self.parser
+        to access command line parser."""
+        pass
+
     def run(self) -> None:
         """Runs the application. Creates splash screen, display it if
         requested. Creates and display main window after SAL/DDS is
-        initialized."""
+        initialized.
+        """
 
         if self._sal_info:
             for c in self._comms:
@@ -129,12 +158,15 @@ class Application:
         class AppSplashScreen(SplashScreen):
             def started(splash, *comms: MetaSAL) -> None:  # noqa: N805
                 eui = self._eui_class(*comms)
-                splash.finish(self._eui)
+                splash.finish(self.eui)
                 eui.show()
-                self._eui = eui
+                self.eui = eui
                 # re-emit signals from history
                 for c in comms:
                     c.reemit_remote()
+
+                assert self.eui is not None
+                self.process_command_line()
 
         splash = AppSplashScreen(*self._comms_args, show=self._splash)
         if self._splash:

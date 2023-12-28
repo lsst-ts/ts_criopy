@@ -12,6 +12,7 @@ v0.6.2
 * shows heartbeats in VMSGUI
 # Tools for DC accelerometers transformations
 * improved unit displays
+* improved command line processing
 
 v0.6.1
 ------

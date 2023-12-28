@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import sys
 
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import (
@@ -90,23 +91,36 @@ class ConfigDir(QWidget):
     @Slot()
     def select_dir(self) -> None:
         """Display dialog to select new configuration directory."""
-        self.config_dir = QFileDialog.getExistingDirectory(
+        config_dir = QFileDialog.getExistingDirectory(
             self,
             "Select configuration directory",
             os.path.dirname(self.path.text()),
         )
-        if self.config_dir == "":
+        if config_dir == "":
             return
+        self.load_config(config_dir)
+
+    def load_config(self, config_dir: str) -> None:
+        """Load new configuration. Can be called from application to load
+        configuration.
+
+        Parameters
+        ----------
+        config_dir : `str`
+            New configuration directory to load.
+        """
+        self.config_dir = config_dir
         try:
             self.reload_config()
             self.path.setText(self.config_dir)
             self.reload.setDisabled(False)
         except Exception as ex:
+            self.config_dir = ""
             self.configurationChanged.emit("")
             warning(
                 self,
                 "Cannot load configuration",
-                f"<center>Cannot load configuration from {self.config_dir}<p>{ex}</p></center>",
+                f"<center>Cannot load configuration from {config_dir}<p>{ex}</p></center>",
             )
 
 
@@ -116,12 +130,12 @@ class SIM(QMainWindow):
 
         self.setWindowTitle("M1M3 Simulator")
 
-        force_calculator = ForceCalculator()
-        simulator = Simulator(force_calculator)
+        self.force_calculator = ForceCalculator()
+        simulator = Simulator(self.force_calculator)
 
         layout = QVBoxLayout()
 
-        config_dir = ConfigDir(force_calculator)
+        config_dir = ConfigDir(self.force_calculator)
         config_dir.configurationChanged.connect(self.__configuration_changed)
 
         layout.addWidget(config_dir)
@@ -145,9 +159,32 @@ class SIM(QMainWindow):
         self.simulator_widget.setDisabled(new_config == "")
         self.simulator_widget.recalculate()
 
+    def load_config(self, config_dir: str) -> None:
+        """Load new configuration.
+
+        Parameters
+        ----------
+        config_dir : `str`
+            New configuration directory.
+        """
+        self.force_calculator.load_config(config_dir)
+        self.__configuration_changed(config_dir)
+
+
+class SIMApplication(Application):
+    def process_command_line(self) -> None:
+        """Called to process command line arguments."""
+        positional_arguments = self.parser.positionalArguments()
+        if len(positional_arguments) == 1:
+            assert self.eui is not None
+            self.eui.load_config(positional_arguments[0])
+
 
 def run() -> None:
     # Create the Qt Application
-    app = Application(SIM)
+    app = SIMApplication(SIM, config=("Configuration directory", ""))
+    if len(app.parser.positionalArguments()) > 1:
+        print("Only one config directory can be specified!", file=sys.stderr)
+        sys.exit(1)
 
     app.run()

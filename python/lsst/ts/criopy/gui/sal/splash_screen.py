@@ -21,6 +21,7 @@ __all__ = ["SplashScreen"]
 
 import asyncio
 import binascii
+import sys
 import time
 import traceback
 from dataclasses import dataclass
@@ -86,8 +87,17 @@ class SplashScreen(QSplashScreen):
         if len(self.comms) == 0 and len(self.comms_args) > 0:
             # make sure the loop was started
             assert asyncio.get_event_loop().is_running()
-            for args in self.comms_args:
-                self.comms.append(create(args.name, manual=args.manual, **args.kwargs))
+            for arg in self.comms_args:
+                try:
+                    self.comms.append(create(arg.name, manual=arg.manual, **arg.kwargs))
+                except Exception as ex:
+                    print(
+                        f"Cannot create remote for {arg.name} - is the SAL "
+                        "environment configured and running?",
+                        file=sys.stderr,
+                    )
+                    print(f"Error: {ex}", file=sys.stderr)
+                    sys.exit(1)
 
         for comm in self.comms:
             if not comm.remote.salinfo.started:
