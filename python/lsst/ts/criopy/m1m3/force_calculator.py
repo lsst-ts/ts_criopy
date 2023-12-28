@@ -111,20 +111,23 @@ class ForceTable:
         RuntimeError
             When number of rows in table doesn't match rows argument.
         """
-        self.data = pd.read_csv(filename, comment="#")
-        if len(self.data.index) != rows:
-            raise RuntimeError(
-                f"Expected {rows} in {filename}, found {len(self.data.index)}."
-            )
+        try:
+            self.data = pd.read_csv(filename, comment="#")
+            if len(self.data.index) != rows:
+                raise RuntimeError(
+                    f"Expected {rows} in {filename}, found {len(self.data.index)}."
+                )
 
-        self.comments = []
-        with open(filename, "r") as f:
-            for line in f.readlines():
-                line = line.strip()
-                if line[0] == "#":
-                    self.comments.append(line)
+            self.comments = []
+            with open(filename, "r") as f:
+                for line in f.readlines():
+                    line = line.strip()
+                    if line[0] == "#":
+                        self.comments.append(line)
 
-        logging.debug(f"Loaded {filename}; rows {len(self.data.index)}")
+            logging.debug(f"Loaded {filename}; rows {len(self.data.index)}")
+        except pd.errors.ParserError as er:
+            raise RuntimeError(f"Cannot parse {filename}: {er}")
 
         return self
 
@@ -510,31 +513,6 @@ class ForceCalculator:
             self._velocity_computation.append(
                 pd.DataFrame([(t.data[axis] / 1000.0) for t in self.velocity_tables]).T
             )
-
-    def __load_table(self, filename: str | pathlib.Path, rows: int) -> pd.DataFrame:
-        """Load table from CSV.
-
-        Parameters
-        ----------
-        filename : `str | pathlib.Path`
-            Load table data from that CSV file.
-        rows : `int`
-            Expected number of rows.
-
-        Throws
-        ------
-        RuntimeError
-            When number of rows in table doesn't match rows argument.
-        """
-        try:
-            ret = pd.read_csv(filename, comment="#")
-            if len(ret.index) != rows:
-                raise RuntimeError(
-                    f"Expected {rows} in {filename}, found {len(ret.index)}."
-                )
-        except pd.errors.ParserError as er:
-            raise RuntimeError(f"Cannot parse {filename}: {er}")
-        return ret
 
     def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:
         return self.hardpoint_to_forces_moments.data @ hardpoints
