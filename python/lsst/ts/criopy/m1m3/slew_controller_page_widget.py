@@ -31,17 +31,17 @@ from .force_grid import Forces, ForcesGrid, PreclippedForces
 
 
 class ForceButton(ColoredButton):
+    """Button controlling use/don't use actuator force."""
+
     def __init__(self, use: bool, name: str, m1m3: MetaSAL):
         super().__init__("Use" if use else "Do not use")
         self.setObjectName(name)
         self.m1m3 = m1m3
 
         self.__use = use
-        self.__active_state = False
 
         self.clicked.connect(self.enable_force)
         self.m1m3.slewControllerSettings.connect(self.slew_controller_settings)
-        self.m1m3.detailedState.connect(self.detailed_state)
 
     @asyncSlot()
     async def enable_force(self) -> None:
@@ -53,9 +53,6 @@ class ForceButton(ColoredButton):
             ),
             enableSlewManagement=self.__use,
         )
-
-    def set_button_enable(self, use: bool) -> None:
-        self.setDisabled(use if self.__use else not (use))
 
     @Slot()
     def slew_controller_settings(self, data: typing.Any) -> None:
@@ -70,25 +67,7 @@ class ForceButton(ColoredButton):
         else:
             self.setColor(None if self.__use else Qt.red)
 
-        if self.__active_state:
-            self.set_button_enable(use)
-
-    @Slot()
-    def detailed_state(self, data: typing.Any) -> None:
-        self.__active_state = data.detailedState in (
-            DetailedStates.PARKEDENGINEERING,
-            DetailedStates.RAISINGENGINEERING,
-            DetailedStates.ACTIVEENGINEERING,
-            DetailedStates.LOWERINGENGINEERING,
-        )
-        if self.__active_state:
-            slew_controller_settings = self.m1m3.remote.evt_slewControllerSettings.get()
-            if slew_controller_settings is not None:
-                self.slew_controller_settings(slew_controller_settings)
-            else:
-                self.setEnabled(True)
-        else:
-            self.setDisabled(True)
+        self.setDisabled(use if self.__use else not (use))
 
     @classmethod
     def create(cls, name: str, m1m3: MetaSAL) -> list["ForceButton"]:
@@ -96,6 +75,11 @@ class ForceButton(ColoredButton):
 
 
 class SlewControllerPageWidget(QWidget):
+    """Display and control components of the slew controller."""
+
+    __active_state = False
+    __slew_flag = False
+
     def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
@@ -170,3 +154,24 @@ class SlewControllerPageWidget(QWidget):
         layout.addWidget(ChartWidget(velocity_axis, max_items=50 * 5))
 
         self.setLayout(layout)
+
+        self.m1m3.detailedState.connect(self.detailed_state)
+        self.m1m3.forceControllerState.connect(self.force_controller_state)
+
+    def __set_enabled(self) -> None:
+        self.setEnabled(self.__active_state is True and self.__slew_flag is False)
+
+    @Slot()
+    def detailed_state(self, data: typing.Any) -> None:
+        self.__active_state = data.detailedState in (
+            DetailedStates.PARKEDENGINEERING,
+            DetailedStates.RAISINGENGINEERING,
+            DetailedStates.ACTIVEENGINEERING,
+            DetailedStates.LOWERINGENGINEERING,
+        )
+        self.__set_enabled()
+
+    @Slot()
+    def force_controller_state(self, data: typing.Any) -> None:
+        self.__slew_flag = data.slewFlag
+        self.__set_enabled()

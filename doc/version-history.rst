@@ -11,6 +11,7 @@ v0.6.2
 * fix for new qasync library
 * shows heartbeats in VMSGUI
 * Tools for DC accelerometers transformations
+* Disable slew controller changes when slew flag is active
 * improved acceleration - forces fits
 * improved unit displays
 * improved command line processing
