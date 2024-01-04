@@ -24,10 +24,11 @@
 import argparse
 import asyncio
 import logging
+from urllib.parse import urlencode, urlunparse
 
 from astropy.time import Time, TimeDelta
 from lsst.ts.criopy.m1m3 import BumpTestTimes
-from lsst.ts.xml.tables.m1m3 import force_actuator_from_id
+from lsst.ts.xml.tables.m1m3 import ForceActuatorData, force_actuator_from_id
 from lsst_efd_client import EfdClient
 
 
@@ -90,14 +91,40 @@ async def run_loop() -> None:
         actuator = force_actuator_from_id(aid)
         logging.info(f"** Actuator {aid} type: {actuator.actuator_type}")
         primary, secondary = await btt.find_times(aid, args.start_time, args.end_time)
+
+        def print_bump(start: Time, end: Time) -> None:
+            def act(index: int | None, actuator: ForceActuatorData) -> int:
+                return 0 if index is None else actuator
+
+            params = {
+                "refresh": "Paused",
+                "tempVars[x_index]": act(actuator.x_index, actuator.actuator_id),
+                "tempVars[y_index]": act(actuator.y_index, actuator.actuator_id),
+                "tempVars[z_index]": actuator.actuator_id,
+                "tempVars[s_index]": act(actuator.s_index, actuator.actuator_id),
+                "lower": start.isot + "Z",
+                "upper": end.isot + "Z",
+            }
+            url = urlunparse(
+                (
+                    "https",
+                    "summit-lsp.lsst.codes",
+                    "/chronograf/sources/1/dashboards/199",
+                    "",
+                    urlencode(params),
+                    "",
+                )
+            )
+            print(start.isot, end.isot, url)
+
         print("Primary bump tests")
         for bump in primary:
-            print(bump[0].isot, bump[1].isot)
+            print_bump(bump[0], bump[1])
 
         print("===================")
         print("Secondary bump tests")
         for bump in secondary:
-            print(bump[0].isot, bump[1].isot)
+            print_bump(bump[0], bump[1])
 
 
 def run() -> None:
