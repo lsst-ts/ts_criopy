@@ -30,13 +30,13 @@ class BumpTestTimes:
 
     Parameters
     ----------
-    client : lsst_efd_client.efd_helper.EfdClient object
-        This is used to query the EFD
+    client : lsst_efd_client.efd_helper.EfdClient object, optional
+        This is used to query the EFD. Default to summit_efd client.
     """
 
-    def __init__(self, client: EfdClient = EfdClient("summit_efd")):
+    def __init__(self, client: EfdClient | None = None):
         super().__init__()
-        self.client = client
+        self.client = EfdClient("summit_efd") if client is None else client
 
     async def find_times(
         self,
