@@ -43,7 +43,7 @@ class BumpTestTimes:
         actuator_id: int,
         start: Time = (Time.now() - TimeDelta(7, format="jd")),
         end: Time = Time.now(),
-    ) -> tuple[list[tuple[float, float]], list[tuple[float | None, float | None]]]:
+    ) -> tuple[list[tuple[Time, Time]], list[tuple[Time, Time]]]:
         """Find bump test query times
         actuator_id : `int`
             Force Actuator identification number. Starting with 101, the first
@@ -55,57 +55,58 @@ class BumpTestTimes:
         end: Time
             Astropy Time of search end. Defaults to current time.
 
-        returns: Two nested list of ints, one for the primary bump and one for
-            the secondary bump [start,end], [start, end]...]
-            These times will be in unix_tai format
+        returns: Two nested list of Time, one for the primary bump and one for
+            the secondary bump [start,end], [start, end]...].
         """
         fa = force_actuator_from_id(actuator_id)
-        many_bumps = await self.client.select_time_series(
-            "lsst.sal.MTM1M3.logevent_forceActuatorBumpTestStatus", "*", start, end
-        )
 
-        these_bumps = many_bumps[many_bumps["actuatorId"] == actuator_id]
         # Find the test names
         primary_bump = f"primaryTest{fa.index}"
+        query_fields = "time, actuatorId, " + primary_bump
         if fa.actuator_type == FAType.DAA:
             secondary_bump = f"secondaryTest{fa.s_index}"
+            query_fields += ", " + secondary_bump
         else:
             secondary_bump = None
+
+        bumps = await self.client.influx_client.query(
+            f"SELECT {query_fields} "
+            'FROM "efd"."autogen"."lsst.sal.MTM1M3.logevent_forceActuatorBumpTestStatus" '
+            f"WHERE time >= '{start.isot}+00:00' AND time <= '{end.isot}+00:00' "
+            f"AND actuatorId = {actuator_id}"
+        )
+
+        print(bumps)
+
         # Now find the separate tests
-        times = these_bumps["timestamp"].values
+        times = bumps.index
         start_times = []
         end_times = []
         for i, time in enumerate(times):
             if i == 0:
                 start_times.append(time)
                 continue
-            if (time - times[i - 1]) > 60.0:
+            if (time - times[i - 1]) > TimeDelta(60.0, format="sec"):
                 start_times.append(time)
                 end_times.append(times[i - 1])
         end_times.append(times[-1])
         # Now use these to find the bump test start and end times
-        primary_times: list[tuple[float, float]] = []
-        secondary_times: list[tuple[float | None, float | None]] = []
+        primary_times: list[tuple[Time, Time]] = []
+        secondary_times: list[tuple[Time, Time]] = []
         for start_time, end_time in zip(start_times, end_times):
-            this_bump = these_bumps[
-                (these_bumps["timestamp"] >= start_time)
-                & (these_bumps["timestamp"] <= end_time)
-            ]
+            this_bump = bumps[(bumps.index >= start_time) & (bumps.index <= end_time)]
             try:
-                plot_start = (
-                    this_bump[this_bump[primary_bump] == 2]["timestamp"].values[0] - 1.0
-                )
-                plot_end = plot_start + 14.0
+                plot_start = Time(
+                    this_bump[this_bump[primary_bump] == 2].index[0]
+                ) - TimeDelta(1, format="sec")
+                plot_end = plot_start + TimeDelta(14, format="sec")
                 primary_times.append((plot_start, plot_end))
                 if secondary_bump is not None:
-                    plot_start = (
-                        this_bump[this_bump[secondary_bump] == 2]["timestamp"].values[0]
-                        - 1.0
-                    )
-                    plot_end = plot_start + 14.0
+                    plot_start = Time(
+                        this_bump[this_bump[secondary_bump] == 2].index[0]
+                    ) - TimeDelta(1, format="sec")
+                    plot_end = plot_start + TimeDelta(14, format="sec")
                     secondary_times.append((plot_start, plot_end))
-                else:
-                    secondary_times.append((None, None))
             except IndexError:
                 continue
         return primary_times, secondary_times

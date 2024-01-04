@@ -84,12 +84,20 @@ async def run_loop() -> None:
 
     btt = BumpTestTimes(EfdClient(args.efd))
 
+    logging.info(f"Looking for bump test times in {args.start_time} to {args.end_time}")
+
     for aid in [int(a) for a in args.actuators]:
         actuator = force_actuator_from_id(aid)
-        print(f"** Actuator {aid} type: {actuator.actuator_type}")
+        logging.info(f"** Actuator {aid} type: {actuator.actuator_type}")
         primary, secondary = await btt.find_times(aid, args.start_time, args.end_time)
-        print(primary)
-        print(secondary)
+        print("Primary bump tests")
+        for bump in primary:
+            print(bump[0].isot, bump[1].isot)
+
+        print("===================")
+        print("Secondary bump tests")
+        for bump in secondary:
+            print(bump[0].isot, bump[1].isot)
 
 
 def run() -> None:
