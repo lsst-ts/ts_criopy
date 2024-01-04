@@ -94,7 +94,3 @@ async def run_loop() -> None:
 
 def run() -> None:
     asyncio.run(run_loop())
-
-
-if __name__ == "__main__":
-    run()
