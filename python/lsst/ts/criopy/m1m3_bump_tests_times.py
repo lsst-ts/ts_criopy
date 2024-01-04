@@ -108,8 +108,12 @@ async def run_loop() -> None:
             url = urlunparse(
                 (
                     "https",
-                    "summit-lsp.lsst.codes",
-                    "/chronograf/sources/1/dashboards/199",
+                    "summit-lsp.lsst.codes"
+                    if args.efd == "summit_efd"
+                    else "usdf-rsp.slac.stanford.edu",
+                    "/chronograf/sources/1/dashboards/199"
+                    if args.efd == "summit_efd"
+                    else "/chronograf/sources/1/dashboards/61",
                     "",
                     urlencode(params),
                     "",

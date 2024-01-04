@@ -76,8 +76,6 @@ class BumpTestTimes:
             f"AND actuatorId = {actuator_id}"
         )
 
-        print(bumps)
-
         # Now find the separate tests
         times = bumps.index
         start_times = []
