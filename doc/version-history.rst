@@ -8,6 +8,7 @@ v0.6.2
 ------
 
 * show forces distribution per quadrant and with XYZ forces off
+* BumpTestTImes class, script to retrieve bump tests runs
 * fix for new qasync library
 * shows heartbeats in VMSGUI
 * Tools for DC accelerometers transformations
