@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
 
@@ -169,7 +169,7 @@ class ValuePageWidget(Widget):
     def changeValues(self) -> None:
         pass
 
-    def updateValues(self, data: typing.Any) -> None:
+    def updateValues(self, data: BaseMsgType) -> None:
         if data is None or self.field is None:
             for label in self.dataWidget.forceActuatorLabels:
                 label.setText("---")

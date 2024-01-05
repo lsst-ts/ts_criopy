@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 from functools import partial
 
 import astropy.units as u
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
 from PySide2.QtCore import Qt, Signal, Slot
 from PySide2.QtWidgets import (
@@ -464,11 +464,11 @@ class HardpointsWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_disableHardpointChase)
 
     @Slot()
-    def hardpointActuatorSettings(self, data: typing.Any) -> None:
+    def hardpointActuatorSettings(self, data: BaseMsgType) -> None:
         self.offsetType.set_scales(data.micrometersPerStep, data.micrometersPerEncoder)
 
     @Slot()
-    def hardpointActuatorData(self, data: typing.Any) -> None:
+    def hardpointActuatorData(self, data: BaseMsgType) -> None:
         hs = self.m1m3.remote.evt_hardpointActuatorSettings.get()
         if hs is not None:
             for idx, f in enumerate(data.measuredForce):
@@ -504,7 +504,7 @@ class HardpointsWidget(QWidget):
             getattr(self, k).setValue(getattr(data, k))
 
     @Slot()
-    def hardpointActuatorState(self, data: typing.Any) -> None:
+    def hardpointActuatorState(self, data: BaseMsgType) -> None:
         states = {
             HardpointActuatorMotionState.STANDBY: "Standby",
             HardpointActuatorMotionState.CHASING: "Chasing",

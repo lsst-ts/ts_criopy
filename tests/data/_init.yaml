@@ -1,3 +1,47 @@
+AccelerometerSettings:
+  AngularAccelerationXDistance: 0.9478
+  AngularAccelerationYDistance: 0.7565
+  AngularAccelerationZDistance: 4.2500
+  Accelerometer1:
+    Bias: 0.009
+    Sensitivity: .1993
+    Offset: 0.011519981
+    Scalar: 1.0
+  Accelerometer2:
+    Bias: 0.0039
+    Sensitivity: 1.994
+    Offset: 0.007553103
+    Scalar: 1.0
+  Accelerometer3:
+    Bias: 0.0125
+    Sensitivity: 1.994
+    Offset: 0.086111715
+    Scalar: 1.0
+  Accelerometer4:
+    Bias: 0.0007
+    Sensitivity: 1.995
+    Offset: 0.156193491
+    Scalar: 1.0
+  Accelerometer5:
+    Bias: 0.0146
+    Sensitivity: 1.997
+    Offset: -0.141127269
+    Scalar: 1.0
+  Accelerometer6:
+    Bias: 0.017
+    Sensitivity: 1.996
+    Offset: 0.00167552
+    Scalar: 1.0
+  Accelerometer7:
+    Bias: -0.0108
+    Sensitivity: 1.994
+    Offset: -0.010106905
+    Scalar: 1.0
+  Accelerometer8:
+    Bias: 0.0179
+    Sensitivity: 1.992
+    Offset: -0.075325936
+    Scalar: 1.0
 ForceActuatorSettings:
   AccelerationXTablePath: AccelerationXTable.csv
   AccelerationYTablePath: AccelerationYTable.csv

@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCharts import QtCharts
 from PySide2.QtCore import QSettings
 from PySide2.QtGui import QContextMenuEvent, QPainter
@@ -86,7 +86,7 @@ class HistogramPageWidget(Widget):
     def changeValues(self) -> None:
         self.histogramView.setName(self.getCurrentFieldName())
 
-    def updateValues(self, data: typing.Any) -> None:
+    def updateValues(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters

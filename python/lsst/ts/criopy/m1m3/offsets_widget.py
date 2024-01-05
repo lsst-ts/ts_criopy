@@ -20,6 +20,7 @@
 import typing
 
 import astropy.units as u
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
@@ -317,7 +318,7 @@ class OffsetsWidget(QWidget):
         self.set_targets(args)
         await self.moveMirror(**args)
 
-    def __fill_row(self, variables: dict[str, QLabel], data: typing.Any) -> None:
+    def __fill_row(self, variables: dict[str, QLabel], data: BaseMsgType) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
@@ -328,32 +329,32 @@ class OffsetsWidget(QWidget):
             v.setValue(getattr(self.__hp_data, k) - getattr(self._imsData, k))
 
     @Slot()
-    def _hardpointActuatorDataCallback(self, data: typing.Any) -> None:
+    def _hardpointActuatorDataCallback(self, data: BaseMsgType) -> None:
         self.__fill_row(self.hpVariables, data)
         self.__hp_data = data
         self.copyCurrentButton.setEnabled(True)
         self.__update_diffs()
 
     @Slot()
-    def _imsDataCallback(self, data: typing.Any) -> None:
+    def _imsDataCallback(self, data: BaseMsgType) -> None:
         self.__fill_row(self.imsVariables, data)
         self._imsData = data
         self.__update_diffs()
 
     @Slot()
-    def _preclippedOffsetForces(self, data: typing.Any) -> None:
+    def _preclippedOffsetForces(self, data: BaseMsgType) -> None:
         self.__fill_row(self.preclipped, data)
 
     @Slot()
-    def _appliedOffsetForces(self, data: typing.Any) -> None:
+    def _appliedOffsetForces(self, data: BaseMsgType) -> None:
         self.__fill_row(self.applied, data)
 
     @Slot()
-    def _forceActuatorCallback(self, data: typing.Any) -> None:
+    def _forceActuatorCallback(self, data: BaseMsgType) -> None:
         self.__fill_row(self.measured, data)
 
     @Slot()
-    def _detailedStateCallback(self, data: typing.Any) -> None:
+    def _detailedStateCallback(self, data: BaseMsgType) -> None:
         enabled = data.detailedState == DetailedStates.ACTIVEENGINEERING
 
         self.moveMirrorButton.setEnabled(enabled)

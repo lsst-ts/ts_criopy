@@ -22,6 +22,7 @@
 import typing
 
 import numpy
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
@@ -190,7 +191,7 @@ class Widget(QSplitter):
             "changeValues method must be implemented in all Widget childrens"
         )
 
-    def updateValues(self, data: typing.Any) -> None:
+    def updateValues(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -364,7 +365,7 @@ class Widget(QSplitter):
             pass
 
     @Slot()
-    def dataChanged(self, data: typing.Any) -> None:
+    def dataChanged(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 

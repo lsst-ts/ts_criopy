@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtWidgets import QLabel
 
@@ -105,7 +105,7 @@ class EUI(EUIWindow):
 
         self.m1m3.detailedState.connect(self.detailed_state)
 
-    def detailed_state(self, data: typing.Any) -> None:
+    def detailed_state(self, data: BaseMsgType) -> None:
         self.statusLabel.setText(detailedStateString(data.detailedState))
 
 
@@ -160,8 +160,8 @@ def detailedStateString(detailedState: int) -> str:
 def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
-    app.addComm("MTM1M3")
-    app.addComm(
+    app.add_comm("MTM1M3")
+    app.add_comm(
         "MTMount",
         include=[
             "azimuth",
@@ -171,7 +171,7 @@ def run() -> None:
             "softwareVersions",
         ],
     )
-    app.addComm("MTAirCompressor", index=1)
-    app.addComm("MTAirCompressor", index=2)
+    app.add_comm("MTAirCompressor", index=1)
+    app.add_comm("MTAirCompressor", index=2)
 
     app.run()

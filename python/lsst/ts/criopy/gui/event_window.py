@@ -19,8 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import typing
-
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtGui import QStandardItem, QStandardItemModel
 from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
@@ -63,7 +62,7 @@ class EventWindow(QWidget):
             self.newData(data)
 
     @Slot()
-    def newData(self, data: typing.Any) -> None:
+    def newData(self, data: BaseMsgType) -> None:
         usedMembers = filter(
             lambda member: not (member.startswith("_") and member == "priority"),
             data.__dict__,

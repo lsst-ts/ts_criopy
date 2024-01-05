@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 from datetime import datetime
 from html import escape
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
@@ -52,7 +52,7 @@ class SALErrorCodeWidget(QWidget):
         comm.errorCode.connect(self.errorCode)
 
     @Slot()
-    def errorCode(self, data: typing.Any) -> None:
+    def errorCode(self, data: BaseMsgType) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )

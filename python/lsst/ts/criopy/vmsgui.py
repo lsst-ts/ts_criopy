@@ -19,10 +19,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 from functools import partial
 
 import astropy.units as u
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import QSettings, Qt, Signal, Slot
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow
@@ -182,7 +182,7 @@ class EUI(QMainWindow):
         return actuator_id
 
     @Slot()
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         cache = self.caches[data.salIndex - 1]
         added, chunk_removed = cache.newChunk(data)
         if added:
@@ -194,7 +194,7 @@ class EUI(QMainWindow):
             )
 
     @Slot()
-    def fpgaState(self, fpgaState: typing.Any) -> None:
+    def fpgaState(self, fpgaState: BaseMsgType) -> None:
         index = fpgaState.salIndex - 1
         self.statusBar.sampleTimes[index] = fpgaState.period
         self.caches[index].setSampleTime(fpgaState.period * u.ms.to(u.s))
@@ -219,5 +219,5 @@ def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
     for index in range(1, 4):
-        app.addComm("MTVMS", index=index, manual={"data": {"queue_len": 400}})
+        app.add_comm("MTVMS", index=index, manual={"data": {"queue_len": 400}})
     app.run()

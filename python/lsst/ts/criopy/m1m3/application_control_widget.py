@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtGui import QColor
@@ -90,7 +90,7 @@ class HPWarnings:
             return "Event hardpointActuatorSettings wasn't received"
         return f"Warning: {self.warningHigh:.2f} Fault: {self.faultHigh:.2f}"
 
-    def hardpointActuatorSettings(self, data: typing.Any) -> None:
+    def hardpointActuatorSettings(self, data: BaseMsgType) -> None:
         self.faultHigh = data.airPressureFaultHigh
         self._faultLow = data.airPressureFaultLow
         self._faultLowRaising = data.airPressureFaultLowRaising
@@ -188,7 +188,7 @@ class SlewWidget(QWidget):
         await command(self, self.m1m3.remote.cmd_boosterValveClose)
 
     @Slot()
-    def booster_valve_status(self, data: typing.Any) -> None:
+    def booster_valve_status(self, data: BaseMsgType) -> None:
         pal_open = self.booster_open.palette()
         pal_close = self.booster_close.palette()
         if data.userTriggered:
@@ -206,19 +206,19 @@ class SlewWidget(QWidget):
         self.booster_close.setPalette(pal_close)
 
     @Slot()
-    def force_controller_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: BaseMsgType) -> None:
         pal_on = self.slew_flag_on.palette()
         pal_off = self.slew_flag_off.palette()
         if data.slewFlag:
             pal_on.setColor(pal_on.Button, Colors.WARNING)
             pal_off.setColor(pal_off.Button, self._default_color)
             self.slew_flag_on.setEnabled(False)
-            self.slew_flag_off.setDisabled(True)
+            self.slew_flag_off.setEnabled(True)
         else:
             pal_on.setColor(pal_on.Button, self._default_color)
             pal_off.setColor(pal_off.Button, Colors.OK)
             self.slew_flag_on.setEnabled(True)
-            self.slew_flag_off.setDisabled(False)
+            self.slew_flag_off.setEnabled(False)
 
         self.slew_flag_on.setPalette(pal_on)
         self.slew_flag_off.setPalette(pal_off)
@@ -419,7 +419,7 @@ class M1M3CSCControl(CSCControlWidget):
         await command(self, self.m1m3.remote.cmd_panic)
 
     @Slot()
-    def detailed_state(self, data: typing.Any) -> None:
+    def detailed_state(self, data: BaseMsgType) -> None:
         self._panic_button.setEnabled(
             not (data.detailedState == DetailedStates.OFFLINE)
         )
@@ -481,7 +481,7 @@ class ApplicationControlWidget(QWidget):
         self.m1m3.hardpointActuatorSettings.connect(self.hardpointActuatorSettings)
 
     @Slot()
-    def detailedState(self, data: typing.Any) -> None:
+    def detailedState(self, data: BaseMsgType) -> None:
         self.slewWidget.setEnabled(
             data.detailedState
             not in (
@@ -495,14 +495,14 @@ class ApplicationControlWidget(QWidget):
         self._set_hardpoint_warnings(data.detailedState)
 
     @Slot()
-    def hardpointActuatorSettings(self, data: typing.Any) -> None:
+    def hardpointActuatorSettings(self, data: BaseMsgType) -> None:
         self._hpWarnings.hardpointActuatorSettings(data)
         state = self.m1m3.remote.evt_detailedState.get()
         if state is not None:
             self._set_hardpoint_warnings(state)
 
     @Slot()
-    def raisingLoweringInfo(self, data: typing.Any) -> None:
+    def raisingLoweringInfo(self, data: BaseMsgType) -> None:
         self.weightSupportedPercent.setValue(data.weightSupportedPercent)
         pal = self.supportedNumber.palette()
         if data.weightSupportedPercent == 0:
@@ -518,7 +518,7 @@ class ApplicationControlWidget(QWidget):
         self.supportedNumber.setPalette(pal)
 
     @Slot()
-    def hardpointMonitorData(self, data: typing.Any) -> None:
+    def hardpointMonitorData(self, data: BaseMsgType) -> None:
         min_d = min(data.breakawayPressure)
         max_d = max(data.breakawayPressure)
 

@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 from qasync import asyncSlot
@@ -208,7 +208,7 @@ class PowerPageWidget(QWidget):
         self.m1m3.powerSupplyData.connect(self.powerSupplyData)
 
     @Slot()
-    def powerStatus(self, data: typing.Any) -> None:
+    def powerStatus(self, data: BaseMsgType) -> None:
         for b in range(4):
             busName = bus(b)
             mainCmd = getattr(data, f"powerNetwork{busName}CommandedOn")
@@ -226,7 +226,7 @@ class PowerPageWidget(QWidget):
             self.auxOutputLabels[b].setValue(auxOut)
 
     @Slot()
-    def powerWarning(self, data: typing.Any) -> None:
+    def powerWarning(self, data: BaseMsgType) -> None:
         for b in range(4):
             busName = bus(b)
             mainMis = getattr(data, f"powerNetwork{busName}OutputMismatch")
@@ -236,7 +236,7 @@ class PowerPageWidget(QWidget):
             self.auxMismatchLabels[b].setValue(auxMis)
 
     @Slot()
-    def powerSupplyData(self, data: typing.Any) -> None:
+    def powerSupplyData(self, data: BaseMsgType) -> None:
         for b in range(4):
             name = f"powerNetwork{chr(ord('A') + b)}Current"
             self.currentLabels[b].setText(f"{getattr(data, name):0.3f}")

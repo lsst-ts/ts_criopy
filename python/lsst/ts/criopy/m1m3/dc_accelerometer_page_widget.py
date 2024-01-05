@@ -72,7 +72,11 @@ class DCAccelerometerPageWidget(QWidget):
                     ArraySignal(
                         m1m3.accelerometerData,
                         [
-                            ArrayItem("rawAccelerometer", "<b>Raw</b>", Volt),
+                            ArrayItem(
+                                "rawAccelerometer",
+                                "<b>Raw</b>",
+                                partial(Volt, fmt="+.04f"),
+                            ),
                             ArrayItem("accelerometer", "<b>Acceleration</b>", MSec2),
                         ],
                     )
@@ -92,7 +96,9 @@ class DCAccelerometerPageWidget(QWidget):
             )
         )
 
-        axis = Axis("Angular Acceleration (rad/s<sup>2</sup>)", m1m3.accelerometerData)
+        axis = Axis(
+            "Angular Acceleration (&deg;/s<sup>2</sup>)", m1m3.accelerometerData
+        )
         axis.addValues(
             {
                 "X": "angularAccelerationX",

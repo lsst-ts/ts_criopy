@@ -21,8 +21,18 @@
 __all__ = ["SimulatorWidget"]
 
 import numpy as np
-from PySide2.QtWidgets import QDoubleSpinBox, QFormLayout, QPushButton, QWidget
+from PySide2.QtWidgets import (
+    QDoubleSpinBox,
+    QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
+from .force_calculator import ForceCalculator
 from .simulator import Simulator
 
 
@@ -36,6 +46,73 @@ class DegreeEntry(QDoubleSpinBox):
         self.setSingleStep(0.01)
         self.setSuffix(unit)
         self.setValue(0)
+
+
+class ForceStatistics(QWidget):
+    """Display per-quadrant statistics"""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Force X"), 0, 1)
+        layout.addWidget(QLabel("Force Y"), 0, 2)
+        layout.addWidget(QLabel("Force Z"), 0, 3)
+        layout.addWidget(QLabel("Moment X"), 0, 4)
+        layout.addWidget(QLabel("Moment Y"), 0, 5)
+        layout.addWidget(QLabel("Moment Z"), 0, 6)
+        layout.addWidget(QLabel("Total"), 0, 7)
+
+        layout.addWidget(QLabel("Q/off"), 0, 0)
+        layout.addWidget(QLabel("1st"), 1, 0)
+        layout.addWidget(QLabel("2nd"), 2, 0)
+        layout.addWidget(QLabel("3rd"), 3, 0)
+        layout.addWidget(QLabel("4th"), 4, 0)
+        layout.addWidget(QLabel("X off"), 5, 0)
+        layout.addWidget(QLabel("Y off"), 6, 0)
+        layout.addWidget(QLabel("Z off"), 7, 0)
+
+        self.labels = [[QLabel() for col in range(7)] for row in range(7)]
+
+        for row in range(7):
+            for col in range(7):
+                layout.addWidget(self.labels[row][col], row + 1, col + 1)
+
+        self.setLayout(layout)
+
+    def set_forces(self, forces: ForceCalculator.AppliedForces) -> None:
+        def populate_row(row: int, f: ForceCalculator.AppliedForces) -> None:
+            for col, field in enumerate(
+                ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]
+            ):
+                self.labels[row][col].setText(f"{getattr(f,field):.2f}")
+
+        for quadrant in range(1, 5):
+            populate_row(
+                quadrant - 1,
+                forces.clear_quadrants(*[q for q in range(1, 5) if q != quadrant]),
+            )
+
+        populate_row(
+            4,
+            ForceCalculator.AppliedForces(
+                y_forces=forces.yForces, z_forces=forces.zForces
+            ),
+        )
+
+        populate_row(
+            5,
+            ForceCalculator.AppliedForces(
+                x_forces=forces.xForces, z_forces=forces.zForces
+            ),
+        )
+
+        populate_row(
+            6,
+            ForceCalculator.AppliedForces(
+                x_forces=forces.xForces, y_forces=forces.yForces
+            ),
+        )
 
 
 class HardpointForceEntry(QDoubleSpinBox):
@@ -72,7 +149,9 @@ class SimulatorWidget(QWidget):
 
         self.simulator = simulator
 
-        layout = QFormLayout()
+        layout = QVBoxLayout()
+
+        form = QFormLayout()
 
         self.hardpoints = [
             HardpointForceEntry(),
@@ -102,24 +181,34 @@ class SimulatorWidget(QWidget):
         ]
 
         for hp in range(6):
-            layout.addRow(f"Hardpoint {hp+1}", self.hardpoints[hp])
+            form.addRow(f"Hardpoint {hp+1}", self.hardpoints[hp])
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"Offset Force {axis}", self.hp_fam[idx])
+            form.addRow(f"Offset Force {axis}", self.hp_fam[idx])
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"Offset Moment {axis}", self.hp_fam[idx + 3])
+            form.addRow(f"Offset Moment {axis}", self.hp_fam[idx + 3])
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"{axis} Velocity", self.velocities[idx])
+            form.addRow(f"{axis} Velocity", self.velocities[idx])
 
         for idx, axis in enumerate("XYZ"):
-            layout.addRow(f"{axis} Acceleration", self.accelerations[idx])
+            form.addRow(f"{axis} Acceleration", self.accelerations[idx])
 
         recalculate = QPushButton("Set")
         recalculate.clicked.connect(self.recalculate)
 
-        layout.addRow(recalculate)
+        form.addRow(recalculate)
+
+        self._force_statistics = ForceStatistics()
+
+        form_hbox = QHBoxLayout()
+        form_hbox.addLayout(form)
+        form_hbox.addStretch()
+
+        layout.addLayout(form_hbox)
+        layout.addWidget(self._force_statistics)
+        layout.addStretch()
 
         self.setLayout(layout)
 
@@ -129,3 +218,6 @@ class SimulatorWidget(QWidget):
         self.simulator.hardpoint_fam([hp.value() for hp in self.hp_fam])
         self.simulator.hardpoint_forces([hp.value() for hp in self.hardpoints])
         self.simulator.velocity(np.radians([v.value() for v in self.velocities]))
+        self.simulator.applied_forces()
+
+        self._force_statistics.set_forces(self.simulator.all_forces)

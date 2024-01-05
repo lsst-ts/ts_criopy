@@ -22,6 +22,7 @@
 import typing
 from functools import partial
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Signal
 
 from ..time_chart import TimeChart, TimeChartView
@@ -106,7 +107,7 @@ class ChartWidget(TimeChartView):
 
         super().__init__(self.chart)
 
-    def _append(self, data: typing.Any, axis_index: int, fields: list[str]) -> None:
+    def _append(self, data: BaseMsgType, axis_index: int, fields: list[str]) -> None:
         if self._has_timestamp is None:
             try:
                 getattr(data, "timestamp")

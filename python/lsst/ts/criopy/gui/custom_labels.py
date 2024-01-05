@@ -17,11 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import re
 import typing
 from datetime import datetime
 
 import astropy.units as u
 from astropy.coordinates import Angle
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Qt, QTimer, Signal, Slot
 from PySide2.QtGui import QColor, QPalette
 from PySide2.QtWidgets import (
@@ -157,7 +159,7 @@ class DataLabel(QLabel):
         return DataLabel()
 
     @Slot()
-    def _data(self, data: typing.Any) -> None:
+    def _data(self, data: BaseMsgType) -> None:
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -232,6 +234,8 @@ class UnitLabel(QLabel):
             self.unit_name = aliases[self.unit_name]
         except KeyError:
             pass
+
+        self.unit_name = re.sub(r"\bdeg[^;]", "°", self.unit_name)
 
         # s2, s3 using sup
         self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
@@ -336,7 +340,7 @@ class DataUnitLabel(UnitLabel):
             self.setCursor(Qt.PointingHandCursor)
 
     @Slot()
-    def _data(self, data: typing.Any) -> None:
+    def _data(self, data: BaseMsgType) -> None:
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -872,7 +876,7 @@ class WarningButton(ColoredButton):
         self.clicked.connect(self._showWindow)
 
     @Slot()
-    def _data(self, data: typing.Any) -> None:
+    def _data(self, data: BaseMsgType) -> None:
         self.setValue(getattr(data, self._field))
 
     def _showWindow(self) -> None:
@@ -917,7 +921,7 @@ class InterlockOffLabel(QLabel):
             signal.connect(self._data)
 
     @Slot()
-    def _data(self, data: typing.Any) -> None:
+    def _data(self, data: BaseMsgType) -> None:
         self.setValue(getattr(data, self._field))
 
     def setValue(self, interlock_off: bool) -> None:
@@ -1071,7 +1075,7 @@ class Heartbeat(QWidget):
         self.timestamp.setText("<font color='red'>- timeouted -</font>")
 
     @Slot()
-    def heartbeat(self, data: typing.Any) -> None:
+    def heartbeat(self, data: BaseMsgType) -> None:
         """Slot to connect to heartbeat data signal.
 
         Parameters
@@ -1127,7 +1131,7 @@ class LogEventWarning(QLabel):
         signal.connect(self._logEvent)
 
     @Slot()
-    def _logEvent(self, data: typing.Any) -> None:
+    def _logEvent(self, data: BaseMsgType) -> None:
         if data.anyWarning:
             self.setText("<font color='yellow'>Warning</font>")
         else:
@@ -1153,7 +1157,7 @@ class SimulationStatus(QLabel):
             self.setText(f"{comm.remote.salinfo.name} simulationMode missing")
 
     @Slot()
-    def simulationMode(self, data: typing.Any) -> None:
+    def simulationMode(self, data: BaseMsgType) -> None:
         self.setText(
             "<font color='green'>HW</font>"
             if data.mode == 0

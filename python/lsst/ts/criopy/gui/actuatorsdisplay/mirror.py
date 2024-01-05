@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide2.QtWidgets import QGraphicsScene
 
@@ -54,7 +54,7 @@ class Mirror(QGraphicsScene):
     def addForceActuator(
         self,
         actuator: ForceActuatorData,
-        data: typing.Any,
+        data: BaseMsgType,
         data_index: int | None,
         state: int,
         kind: FASelection,
@@ -104,7 +104,7 @@ class Mirror(QGraphicsScene):
         raise KeyError(f"Cannot find actuator with ID {actuator_id}")
 
     def updateForceActuator(
-        self, actuator_id: int, data: typing.Any, state: int
+        self, actuator_id: int, data: BaseMsgType, state: int
     ) -> None:
         """Updates actuator value and state.
 

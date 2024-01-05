@@ -19,10 +19,10 @@
 
 __all__ = ["LEVELS", "LogToolBar", "LogWidget", "LogDock", "Messages"]
 
-import typing
 from datetime import datetime
 from html import escape
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import QObject, Signal, Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import (
@@ -160,7 +160,7 @@ class Messages(QPlainTextEdit):
             comm.logMessage.connect(self.logMessage)
 
     @Slot()
-    def logMessage(self, data: typing.Any) -> None:
+    def logMessage(self, data: BaseMsgType) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )

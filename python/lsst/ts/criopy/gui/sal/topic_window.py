@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import (
     QFormLayout,
@@ -199,11 +199,11 @@ class TopicWindow(DockWindow):
             print("TopicWindow._changeField:", err)
             pass
 
-    def updateValues(self, data: typing.Any) -> None:
+    def updateValues(self, data: BaseMsgType) -> None:
         raise RuntimeError("Abstract method updateValues")
 
     @Slot()
-    def dataChanged(self, data: typing.Any) -> None:
+    def dataChanged(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 
