@@ -28,6 +28,7 @@ test:
     - ts-conda-build =0.3
     - ts-xml
     - ts-salobj {{ salobj_version }}
+    - lsst-efd-client
     - pandas
     - pyyaml
   source_files:
@@ -61,5 +62,6 @@ requirements:
     - qasync
     - ts-xml
     - ts-salobj
+    - lsst-efd-client
     - pandas
     - pyyaml
