@@ -25,3 +25,4 @@ from .power_page_widget import PowerPageWidget
 from .simulator import Simulator
 from .simulator_widget import SimulatorWidget
 from .slew_controller_page_widget import SlewControllerPageWidget
+from .actuator_summary import ActuatorSummary
