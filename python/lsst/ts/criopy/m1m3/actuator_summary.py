@@ -8,8 +8,7 @@
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
 # Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
+# version#
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
@@ -18,11 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import enum
 import pandas as pd
-from astropy.time import Time, TimeDelta
-from lsst.ts.xml.tables.m1m3 import FATable, FAIndex, force_actuator_from_id, actuator_id_to_index
+from astropy.time import Time
+from lsst.ts.xml.tables.m1m3 import FATable, force_actuator_from_id
 from lsst_efd_client import EfdClient
-from lsst.summit.utils.tmaUtils import TMAEvent, TMAEventMaker
+from lsst.summit.utils.tmaUtils import TMAEvent
 
 
 class ActuatorSummary:
@@ -72,7 +72,7 @@ class ActuatorSummary:
         end: Time | None = None,
         output: str | None = 'Mean',
         describe: bool | None = False,
-    ) -> [list[float, float], list[float, float]]:
+    ) -> enum.auto():
         """Find following error for a single FA
         id: int, Force actuator ID - runs up to 443
         event : TMAEvent, optional
@@ -93,7 +93,6 @@ class ActuatorSummary:
         primary_follow = f"primaryCylinderFollowingError{fa.index}"
         if fa.actuator_type.name == 'DAA':
             secondary_follow = f"secondaryCylinderFollowingError{fa.s_index}"
-            secondary_name = fa.orientation.name
         else:
             secondary_follow = None
 
@@ -125,7 +124,7 @@ class ActuatorSummary:
         end: Time | None = None,
         output: str | None = 'Mean',
         describe: bool | None = False,
-    ) -> [list[float, float], list[float, float]]:
+    ) -> enum.auto():
         """Find following errors for all FAs
         event : TMAEvent, optional
             TMAEvent to be used to find the start and end times
