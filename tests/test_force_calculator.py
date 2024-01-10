@@ -51,6 +51,28 @@ class ForceCalculatorTestCase(unittest.TestCase):
         self.assertEqual(a.my, 430.0953056310003)
         self.assertEqual(a.mz, -212.0001997679999)
 
+    def test_cylinder_forces(self) -> None:
+        RECIPROCAL_SQRT2 = 0.70710678118654752440084436210485
+
+        a = self.calculator.get_applied_forces_from_cylinder_forces(
+            np.arange(0, 156 / 2, 0.5), np.arange(0, 112 / 4, 0.25)
+        )
+        self.assertEqual(a.zForces[0], 0)
+        self.assertEqual(a.zForces[1], 0.5)
+        self.assertEqual(a.zForces[2], 1 + RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.zForces[11], 11 / 2.0 + 8 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.zForces[88], 88 / 2.0 + 63 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.zForces[112], 112 / 2.0 + 84 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.zForces[147], 147 / 2.0 + 109 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.zForces[155], 155 / 2.0)
+
+        self.assertEqual(a.yForces[1], RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.yForces[57], -63 * RECIPROCAL_SQRT2 / 4.0)
+
+        self.assertEqual(a.xForces[0], -8 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.xForces[8], 84 * RECIPROCAL_SQRT2 / 4.0)
+        self.assertEqual(a.xForces[11], -109 * RECIPROCAL_SQRT2 / 4.0)
+
     def test_hardpoints(self) -> None:
         fam = self.calculator.hardpoint_forces_and_moments(
             [100, -100, 200, -200, 300, -300]

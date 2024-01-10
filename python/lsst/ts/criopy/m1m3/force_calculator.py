@@ -32,6 +32,7 @@ from lsst.ts.xml.tables.m1m3 import (
     FATABLE_YFA,
     FATABLE_ZFA,
     HP_COUNT,
+    FAOrientation,
     FATable,
 )
 
@@ -354,6 +355,48 @@ class ForceCalculator:
             AppliedForces class holding forces details.
         """
         return ForceCalculator.AppliedForces(x_forces, y_forces, z_forces, self.fas)
+
+    def get_applied_forces_from_cylinder_forces(
+        self, primary: list[float], secondary: list[float]
+    ) -> AppliedForces:
+        """Calculate AppliedForces from forces measured/applied per cylinder.
+
+        Parameters
+        ----------
+        primary: list of float
+            Primary cylinder forces.
+        secondary:
+            Secondary cylinder forces.
+
+        Returns
+        -------
+        applied_forces : AppliedForces
+            AppliedForces class holding forces details.
+        """
+        assert len(primary) == FATABLE_ZFA
+        assert len(secondary) == FATABLE_XFA + FATABLE_YFA
+
+        x_forces: list[float] = []
+        y_forces: list[float] = []
+        z_forces: list[float] = []
+
+        RECIPROCAL_SQRT2 = 0.70710678118654752440084436210485
+        for fa in FATable:
+            if fa.orientation is FAOrientation.NA:
+                z_forces.append(primary[fa.index])
+            else:
+                secondary_force = secondary[fa.s_index] * RECIPROCAL_SQRT2
+                z_forces.append(primary[fa.index] + secondary_force)
+                if fa.orientation is FAOrientation.X_PLUS:
+                    x_forces.append(secondary_force)
+                elif fa.orientation is FAOrientation.X_MINUS:
+                    x_forces.append(-secondary_force)
+                elif fa.orientation is FAOrientation.Y_PLUS:
+                    y_forces.append(secondary_force)
+                elif fa.orientation is FAOrientation.Y_MINUS:
+                    y_forces.append(-secondary_force)
+
+        return self.get_applied_forces(x_forces, y_forces, z_forces)
 
     def get_applied_forces_from_mirror(
         self, forces: list[list[float]]
