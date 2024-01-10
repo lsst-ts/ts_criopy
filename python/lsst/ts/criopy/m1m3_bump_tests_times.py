@@ -27,7 +27,7 @@ import logging
 from urllib.parse import urlencode, urlunparse
 
 from astropy.time import Time, TimeDelta
-from lsst.ts.criopy.m1m3 import BumpTestTimes
+from lsst.ts.criopy.m1m3 import BumpTestTimes, ForceActuatorForces
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData, force_actuator_from_id
 from lsst_efd_client import EfdClient
 
@@ -64,6 +64,12 @@ def parse_arguments() -> argparse.Namespace:
         help="EFD name. Defaults to usdf_efd",
     )
     parser.add_argument(
+        "--details",
+        default=False,
+        action="store_true",
+        help="Print details (average/min/max following errors,..",
+    )
+    parser.add_argument(
         "-d",
         default=False,
         action="store_true",
@@ -83,7 +89,9 @@ async def run_loop() -> None:
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=level)
 
-    btt = BumpTestTimes(EfdClient(args.efd))
+    client = EfdClient(args.efd)
+
+    btt = BumpTestTimes(client)
 
     logging.info(f"Looking for bump test times in {args.start_time} to {args.end_time}")
 
@@ -92,7 +100,7 @@ async def run_loop() -> None:
         logging.info(f"** Actuator {aid} type: {actuator.actuator_type}")
         primary, secondary = await btt.find_times(aid, args.start_time, args.end_time)
 
-        def print_bump(start: Time, end: Time) -> None:
+        async def print_bump(start: Time, end: Time) -> None:
             def act(index: int | None, actuator: ForceActuatorData) -> int:
                 return 0 if index is None else actuator
 
@@ -120,15 +128,23 @@ async def run_loop() -> None:
                 )
             )
             print(start.isot, end.isot, url)
+            if args.details:
+                faf = ForceActuatorForces(start, end, client)
+                following_errors = await faf.following_errors()
+                flat_fe = following_errors.values.reshape(-1)
+                print(
+                    f"Following errors min: {flat_fe.min():.3f} N "
+                    f"max {flat_fe.max():.3f} N"
+                )
 
         print("Primary bump tests")
         for bump in primary:
-            print_bump(bump[0], bump[1])
+            await print_bump(bump[0], bump[1])
 
         print("===================")
         print("Secondary bump tests")
         for bump in secondary:
-            print_bump(bump[0], bump[1])
+            await print_bump(bump[0], bump[1])
 
 
 def run() -> None:
