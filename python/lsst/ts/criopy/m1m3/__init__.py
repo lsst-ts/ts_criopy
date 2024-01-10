@@ -8,6 +8,7 @@ from .bump_test_times import BumpTestTimes
 from .cell_light_page_widget import CellLightPageWidget
 from .dc_accelerometer_page_widget import DCAccelerometerPageWidget
 from .direction_pad_widget import DirectionPadWidget
+from .force_actuator_forces import ForceActuatorForces
 from .force_balance_system_page_widget import ForceBalanceSystemPageWidget
 from .force_calculator import ForceCalculator
 from .force_grid import Forces, ForcesGrid, PreclippedForces
