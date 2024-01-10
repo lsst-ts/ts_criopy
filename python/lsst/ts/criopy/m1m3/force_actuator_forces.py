@@ -66,12 +66,15 @@ class ForceActuatorForces:
             Dataframe with following errors for the actuator.
         """
         fields = [f"primaryCylinderFollowingError{actuator.index}"]
+        out = ["primary"]
         if actuator.s_index is not None:
             fields.append(f"secondaryCylinderFollowingError{actuator.s_index}")
+            out.append("secondary")
 
-        return await self.client.select_time_series(
+        following_errors = await self.client.select_time_series(
             "lsst.sal.MTM1M3.forceActuatorData", fields, self.start, self.end
         )
+        return following_errors.rename(columns=dict(zip(fields, out)))
 
     async def following_errors(self) -> pd.DataFrame:
         """Find following errors for all FAs

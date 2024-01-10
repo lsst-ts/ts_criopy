@@ -130,10 +130,15 @@ async def run_loop() -> None:
             print(start.isot, end.isot, url)
             if args.details:
                 faf = ForceActuatorForces(start, end, client)
+                fa_fe = await faf.actuator_following_error(actuator)
+                print(
+                    f"Following errors min: {fa_fe.primary.min():.3f} N "
+                    f"max: {fa_fe.secondary.max():.3f} N"
+                )
                 following_errors = await faf.following_errors()
                 flat_fe = following_errors.values.reshape(-1)
                 print(
-                    f"Following errors min: {flat_fe.min():.3f} N "
+                    f"All following errors min: {flat_fe.min():.3f} N "
                     f"max {flat_fe.max():.3f} N"
                 )
 
