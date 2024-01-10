@@ -19,6 +19,7 @@ dependencies = [
   "moto",
   "boto3",
   "h5py",
+  "ts_xml",
   "lsst_efd_client",
 ]
 
