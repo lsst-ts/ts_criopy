@@ -8,6 +8,7 @@ v0.7.0
 ------
 
 * ForceActuatorForces class for data access
+* Fix DCA Gain display
 
 v0.6.2
 ------
