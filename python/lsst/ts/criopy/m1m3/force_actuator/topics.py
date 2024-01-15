@@ -546,6 +546,8 @@ class Topics(TopicCollection):
                 ],
                 "forceActuatorSettings",
             ),
+            # Calibration info is stored for all ILCs, including SAA - so the
+            # index shall always be FAIndex.Z
             TopicData(
                 "FA Main Calibration Info",
                 [
@@ -567,27 +569,27 @@ class Topics(TopicCollection):
                     TopicField(
                         "Secondary Coefficient",
                         "mainSecondaryCylinderCoefficient",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Offset",
                         "mainSecondaryCylinderLoadCellOffset",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Sensitivity",
                         "mainSecondaryLoadCellSensitivity",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                     TopicField(
-                        "Primary Cylinder Gain",
+                        "Primary Cylinder DCA Gain",
                         "mezzaninePrimaryCylinderGain",
                         FAIndex.Z,
                     ),
                     TopicField(
-                        "Secondary Cylinder Gain",
+                        "Secondary Cylinder DCA Gain",
                         "mezzanineSecondaryCylinderGain",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                 ],
                 "forceActuatorInfo",
@@ -613,17 +615,17 @@ class Topics(TopicCollection):
                     TopicField(
                         "Secondary Coefficient",
                         "backupSecondaryCylinderCoefficient",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Offset",
                         "backupSecondaryCylinderLoadCellOffset",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                     TopicField(
                         "Secondary Sensitivity",
                         "backupSecondaryLoadCellSensitivity",
-                        FAIndex.SECONDARY,
+                        FAIndex.Z,
                     ),
                 ],
                 "forceActuatorInfo",

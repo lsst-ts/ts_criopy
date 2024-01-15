@@ -26,7 +26,7 @@ test:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - ts-conda-build =0.3
-    - ts-idl {{ idl_version }}
+    - ts-xml
     - ts-salobj {{ salobj_version }}
     - pandas
     - pyyaml
@@ -59,7 +59,7 @@ requirements:
     - h5py
     - pyside2
     - qasync
-    - ts-idl
+    - ts-xml
     - ts-salobj
     - pandas
     - pyyaml
