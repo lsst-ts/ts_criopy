@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QPushButton
 from qasync import asyncSlot
@@ -47,7 +47,7 @@ class EnterExitEngineeringButton(QPushButton):
         )
 
     @Slot()
-    def engineering_mode(self, data: typing.Any) -> None:
+    def engineering_mode(self, data: BaseMsgType) -> None:
         self.setText(
             self.EXIT_ENGINEERING if data.engineeringMode else self.ENTER_ENGINEERING
         )

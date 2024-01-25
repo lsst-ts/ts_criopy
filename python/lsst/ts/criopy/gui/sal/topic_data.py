@@ -19,6 +19,7 @@
 
 import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Slot
 
 from ...salcomm import MetaSAL
@@ -55,7 +56,7 @@ class TopicField:
         self.valueIndex = valueIndex
         self.scaleType = scaleType
 
-    def getValue(self, data: object) -> typing.Any:
+    def getValue(self, data: BaseMsgType) -> typing.Any:
         return getattr(data, self.fieldName)
 
 

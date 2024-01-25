@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtWidgets import QWidget
@@ -188,5 +188,5 @@ class StateEnabledWidget(QWidget):
         m1m3.detailedState.connect(self.detailedState)
 
     @Slot()
-    def detailedState(self, data: typing.Any) -> None:
+    def detailedState(self, data: BaseMsgType) -> None:
         self.setEnabled(data.detailedState in self._enabledStates)

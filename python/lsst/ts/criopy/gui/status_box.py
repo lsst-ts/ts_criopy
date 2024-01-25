@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import QSize, Signal, Slot
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QHBoxLayout, QWidget
@@ -109,7 +109,7 @@ class StatusBox(QWidget):
         signal.connect(self._data)
 
     @Slot()
-    def _data(self, data: typing.Any) -> None:
+    def _data(self, data: BaseMsgType) -> None:
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
             if item is not None:

@@ -6,6 +6,7 @@ from .eui_window import EUIWindow
 from .sal_error_code_widget import SALErrorCodeWidget
 from .sal_log import LogDock, LogWidget
 from .sal_status_bar import SALStatusBar
+from .splash_screen import SplashScreen
 from .state_enabled import (
     ActiveButton,
     DetailedStateEnabledButton,

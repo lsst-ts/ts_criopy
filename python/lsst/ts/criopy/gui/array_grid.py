@@ -99,7 +99,7 @@ __all__ = [
 
 import typing
 
-from lsst.ts.salobj import base
+from lsst.ts.salobj import BaseMsgType, base
 from PySide2.QtCore import QObject, Qt, Signal, Slot
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
@@ -202,7 +202,7 @@ class AbstractColumn(QObject):
         return idx
 
     @Slot()
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         """Process incoming data.
 
         Parameters
@@ -329,7 +329,7 @@ class ArrayFields(AbstractColumn):
         return row + 1
 
     @Slot()
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         for i in self.items:
             if i is None:
                 continue
@@ -361,7 +361,7 @@ class ArrayLabels(AbstractColumn):
         return row + 1
 
     @Slot()
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         pass
 
 
@@ -395,7 +395,7 @@ class ArraySignal(AbstractColumn):
         return None
 
     @Slot()
-    def data(self, data: typing.Any) -> None:
+    def data(self, data: BaseMsgType) -> None:
         for i in self.array_items:
             field = i.objectName()
             if field == "":

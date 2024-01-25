@@ -77,7 +77,8 @@ class EnumScale(QWidget):
         """Overridden method. Paint gauge as series of lines, and adds text
         labels."""
         painter = QPainter(self)
-        painter.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
         palette = QGuiApplication.palette()
         palette.setCurrentColorGroup(
             palette.Active if self.isEnabled() else palette.Inactive
@@ -107,7 +108,7 @@ class EnumScale(QWidget):
                 y + 2 * t_height,
                 swidth - 2 * x_offset,
                 t_height,
-                Qt.AlignCenter,
+                int(Qt.AlignCenter),
                 self.formatValue(value),
             )
 

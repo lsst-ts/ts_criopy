@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
@@ -58,7 +58,7 @@ class ApplicationStatusWidget(QWidget):
         self.m1m3.detailedState.connect(self.processEventDetailedState)
 
     @Slot()
-    def raisingLoweringInfo(self, data: typing.Any) -> None:
+    def raisingLoweringInfo(self, data: BaseMsgType) -> None:
         detailedData = self.m1m3.remote.evt_detailedState.get()
         if detailedData is None:
             return
@@ -103,7 +103,7 @@ class ApplicationStatusWidget(QWidget):
             pass
 
     @Slot()
-    def processEventDetailedState(self, data: typing.Any) -> None:
+    def processEventDetailedState(self, data: BaseMsgType) -> None:
         modeStateText = "Unknown"
         mirrorStateText = "Unknown"
         if data.detailedState == DetailedStates.DISABLED:

@@ -19,8 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-import typing
-
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Signal, Slot
 from PySide2.QtGui import QMouseEvent
 from PySide2.QtWidgets import QFormLayout, QWidget
@@ -76,7 +75,7 @@ class DataFormWidget(QWidget):
 
         signal.connect(self._process_signal)
 
-    def _process_signal(self, data: typing.Any) -> None:
+    def _process_signal(self, data: BaseMsgType) -> None:
         for e in dir(data):
             ch = self.findChild(QWidget, e)
             if ch is not None:
@@ -126,7 +125,7 @@ class DataFormButton(ColoredButton):
         self.clicked.connect(self._displayDetails)
 
     @Slot()
-    def _dataChanged(self, data: typing.Any) -> None:
+    def _dataChanged(self, data: BaseMsgType) -> None:
         color = Colors.OK
         for f in self._fields:
             if getattr(data, f[1].objectName()) is True:

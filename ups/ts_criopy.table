@@ -4,7 +4,7 @@
 #   the "sconsUtils" package.
 setupRequired(sconsUtils)
 setupRequired(ts_salobj)
-setupRequired(ts_idl)
+setupRequired(ts_xml)
 
 # The following is boilerplate for all packages.
 # See https://dmtn-001.lsst.io for details on LSST_LIBRARY_PATH.

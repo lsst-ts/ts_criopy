@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
+from lsst.ts.salobj import BaseMsgType
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
@@ -44,7 +44,7 @@ class OverviewPageWidget(QWidget):
         laser_tracker.offsetsPublish.connect(self.offsets_publish)
 
     @Slot()
-    def offsets_publish(self, data: typing.Any) -> None:
+    def offsets_publish(self, data: BaseMsgType) -> None:
         r = self.measurements.rowCount() + 1
         self.measurements.setRowCount(r)
         for c, f in enumerate(self.PUBLISH_FIELDS):

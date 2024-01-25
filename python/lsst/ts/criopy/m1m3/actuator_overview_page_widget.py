@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 from functools import partial
 
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, EnableDisableForceComponent
 from PySide2.QtCore import Qt, Slot
 from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
@@ -61,7 +61,7 @@ class ForceButton(ColoredButton):
         self.setDisabled(applied if self.__enable else not (applied))
 
     @Slot()
-    def force_controller_state(self, data: typing.Any) -> None:
+    def force_controller_state(self, data: BaseMsgType) -> None:
         applied = getattr(data, self.objectName() + "ForcesApplied")
         if applied:
             self.setColor(Qt.green if self.__enable else None)
@@ -72,7 +72,7 @@ class ForceButton(ColoredButton):
             self.set_button_enable(applied)
 
     @Slot()
-    def detailed_state(self, data: typing.Any) -> None:
+    def detailed_state(self, data: BaseMsgType) -> None:
         self.__engineering_state = (
             data.detailedState == DetailedStates.ACTIVEENGINEERING
         )

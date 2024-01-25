@@ -4,6 +4,26 @@
 Version History
 ===============
 
+v0.7.0
+------
+
+* ForceActuatorForces class for data access
+* Fix DCA Gain display
+* fixed Conda build
+
+v0.6.2
+------
+
+* show forces distribution per quadrant and with XYZ forces off
+* BumpTestTImes class, script to retrieve bump tests runs
+* fix for new qasync library
+* shows heartbeats in VMSGUI
+* Tools for DC accelerometers transformations
+* Disable slew controller changes when slew flag is active
+* improved acceleration - forces fits
+* improved unit displays
+* improved command line processing
+
 v0.6.1
 ------
 

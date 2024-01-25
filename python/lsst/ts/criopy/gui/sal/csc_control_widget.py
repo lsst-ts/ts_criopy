@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import typing
 
 from lsst.ts import salobj
 from PySide2.QtCore import Slot
@@ -199,7 +198,7 @@ class CSCControlWidget(QWidget):
         return states_map[state]
 
     @Slot()
-    def csc_state(self, data: typing.Any) -> None:
+    def csc_state(self, data: salobj.BaseMsgType) -> None:
         # text mean button is enabled and given text shall be displayed. None
         # for disabled buttons.
         self.__last_enabled = None
