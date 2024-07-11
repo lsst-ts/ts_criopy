@@ -22,8 +22,8 @@ import typing
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QGridLayout,
     QLabel,

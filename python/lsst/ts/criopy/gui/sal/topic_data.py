@@ -20,7 +20,7 @@
 import typing
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 
 from ...salcomm import MetaSAL
 from ..actuatorsdisplay import Scales

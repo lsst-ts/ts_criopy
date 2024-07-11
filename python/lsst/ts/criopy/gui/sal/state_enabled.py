@@ -20,8 +20,8 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QWidget
 
 from ...salcomm import MetaSAL
 from .. import ColoredButton
@@ -42,7 +42,7 @@ class SignalButton(ColoredButton):
     ----------
     text : `str`
         Button text. Passed to ColoredButton.
-    signal : `PySide2.QtCore.Signal`
+    signal : `PySide6.QtCore.Signal`
         Signal
     variable : `str`
         Name of variable governing enable/disable switching. Part of signal.

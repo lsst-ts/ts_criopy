@@ -22,8 +22,8 @@ __all__ = ["PSDWidget"]
 import time
 
 import numpy as np
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import QPointF, Qt, Slot
+from PySide6.QtCharts import QLineSeries, QLogValueAxis, QValueAxis
+from PySide6.QtCore import QPointF, Qt, Slot
 
 from .bars import ToolBar
 from .cache import Cache
@@ -62,14 +62,14 @@ class PSDWidget(CacheWidget):
             return
 
         if self.chartView.logX:
-            xAxis = QtCharts.QLogValueAxis()
+            xAxis = QLogValueAxis()
         else:
-            xAxis = QtCharts.QValueAxis()
+            xAxis = QValueAxis()
 
         if self.chartView.logY:
-            yAxis = QtCharts.QLogValueAxis()
+            yAxis = QLogValueAxis()
         else:
-            yAxis = QtCharts.QValueAxis()
+            yAxis = QValueAxis()
 
         xAxis.setTitleText("Frequency (Hz)")
         yAxis.setTitleText("PSD ((" + self.unit + ")<sup>2</sup> Hz <sup>-1</sup>)")
@@ -141,9 +141,7 @@ class PSDWidget(CacheWidget):
                 ]
             return (psd, frequencies)
 
-        def plot(
-            serie: QtCharts.QLineSeries, signal: list[float]
-        ) -> tuple[float, float]:
+        def plot(serie: QLineSeries, signal: list[float]) -> tuple[float, float]:
             """Calculates and plot PSD - Power Spectral Density. Downsamples
             the calculated PSD so reasonable number of points is displayed.
 

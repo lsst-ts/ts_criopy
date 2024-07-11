@@ -23,16 +23,16 @@ import asyncio
 import concurrent
 import typing
 
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication, QGraphicsItem
+from PySide6.QtCharts import QAbstractAxis, QAbstractSeries, QChart
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QGraphicsItem
 
 from .. import TimeCache
 
 __all__ = ["AbstractChart"]
 
 
-class AbstractChart(QtCharts.QChart):
+class AbstractChart(QChart):
     """
     Parameters
     ----------
@@ -57,13 +57,13 @@ class AbstractChart(QtCharts.QChart):
 
     def findAxis(
         self, titleText: str, axisType: Qt.Orientation = Qt.Vertical
-    ) -> QtCharts.QAbstractAxis | None:
+    ) -> QAbstractAxis | None:
         for a in self.axes(axisType):
             if a.titleText() == titleText:
                 return a
         return None
 
-    def findSerie(self, name: str) -> QtCharts.QAbstractSeries | None:
+    def findSerie(self, name: str) -> QAbstractSeries | None:
         """
         Returns series with given name.
 

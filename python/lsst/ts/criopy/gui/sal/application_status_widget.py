@@ -20,8 +20,8 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from ...salcomm import MetaSAL, warning
 from .summary_state_label import SummaryStateLabel

@@ -19,8 +19,8 @@
 
 from functools import partial
 
-from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import QWidget
 
 from ..gui import UnitLabel
 from ..gui.array_grid import AbstractColumn, ArrayFields, ArrayGrid

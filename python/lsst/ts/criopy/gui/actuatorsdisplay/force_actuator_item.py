@@ -22,9 +22,9 @@ import enum
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
-from PySide2.QtCore import QPointF, QRect, Qt
-from PySide2.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
-from PySide2.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
+from PySide6.QtCore import QPointF, QRect, Qt
+from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
+from PySide6.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
 from ...gui import Colors
 from .gauge_scale import GaugeScale
@@ -258,7 +258,7 @@ class ForceActuatorItem(QGraphicsItem):
             self._center, 10 * self._scale_factor, 10 * self._scale_factor
         )
 
-        painter.setPen(palette.color(palette.ButtonText))
+        painter.setPen(palette.buttonText().color())
 
         font = painter.font()
         font.setPixelSize(6.5 * self._scale_factor)

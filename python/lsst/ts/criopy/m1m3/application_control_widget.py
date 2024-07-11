@@ -20,9 +20,9 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtGui import QColor
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QColor, QPalette
+from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLCDNumber,
@@ -142,7 +142,7 @@ class SlewWidget(QWidget):
         self.slew_flag_off = ActiveButton("Slew OFF", m1m3)
 
         pal = self.slew_flag_on.palette()
-        self._default_color = pal.color(pal.Button)
+        self._default_color = pal.button().color()
 
         self.booster_open = EngineeringButton("Booster Open", m1m3)
         self.booster_close = EngineeringButton("Booster Close", m1m3)
@@ -192,13 +192,13 @@ class SlewWidget(QWidget):
         pal_open = self.booster_open.palette()
         pal_close = self.booster_close.palette()
         if data.userTriggered:
-            pal_open.setColor(pal_open.Button, Colors.WARNING)
-            pal_close.setColor(pal_close.Button, self._default_color)
+            pal_open.setColor(QPalette.Normal, QPalette.Button, Colors.WARNING)
+            pal_close.setColor(QPalette.Normal, QPalette.Button, self._default_color)
             self.booster_open.setEnabled(False)
             self.booster_close.setEnabled(True)
         else:
-            pal_open.setColor(pal_open.Button, self._default_color)
-            pal_close.setColor(pal_close.Button, Colors.OK)
+            pal_open.setColor(QPalette.Normal, QPalette.Button, self._default_color)
+            pal_close.setColor(QPalette.Normal, QPalette.Button, Colors.OK)
             self.booster_open.setEnabled(True)
             self.booster_close.setEnabled(False)
 
@@ -210,13 +210,13 @@ class SlewWidget(QWidget):
         pal_on = self.slew_flag_on.palette()
         pal_off = self.slew_flag_off.palette()
         if data.slewFlag:
-            pal_on.setColor(pal_on.Button, Colors.WARNING)
-            pal_off.setColor(pal_off.Button, self._default_color)
+            pal_on.setColor(QPalette.Normal, QPalette.Button, Colors.WARNING)
+            pal_off.setColor(QPalette.Normal, QPalette.Button, self._default_color)
             self.slew_flag_on.setEnabled(False)
             self.slew_flag_off.setEnabled(True)
         else:
-            pal_on.setColor(pal_on.Button, self._default_color)
-            pal_off.setColor(pal_off.Button, Colors.OK)
+            pal_on.setColor(QPalette.Normal, QPalette.Button, self._default_color)
+            pal_off.setColor(QPalette.Normal, QPalette.Button, Colors.OK)
             self.slew_flag_on.setEnabled(True)
             self.slew_flag_off.setEnabled(False)
 
@@ -513,7 +513,7 @@ class ApplicationControlWidget(QWidget):
             col = QColor(255, 255, 0)
         else:
             col = QColor(0, 255, 0)
-        pal.setColor(pal.Background, col)
+        pal.setColor(QPalette.Normal, QPalette.Window, col)
         self.supportedNumber.display(f"{data.weightSupportedPercent:.02f}")
         self.supportedNumber.setPalette(pal)
 
@@ -523,12 +523,16 @@ class ApplicationControlWidget(QWidget):
         max_d = max(data.breakawayPressure)
 
         min_pal = self.minPressure.palette()
-        min_pal.setColor(min_pal.Background, self._hpWarnings.get_color(min_d))
+        min_pal.setColor(
+            QPalette.Normal, QPalette.Window, self._hpWarnings.get_color(min_d)
+        )
         self.minPressure.display(f"{min_d:.02f}")
         self.minPressure.setPalette(min_pal)
 
         max_pal = self.minPressure.palette()
-        max_pal.setColor(max_pal.Background, self._hpWarnings.get_color(max_d))
+        max_pal.setColor(
+            QPalette.Normal, QPalette.Window, self._hpWarnings.get_color(max_d)
+        )
         self.maxPressure.display(f"{max_d:.02f}")
         self.maxPressure.setPalette(max_pal)
 

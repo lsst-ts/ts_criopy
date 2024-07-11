@@ -23,8 +23,8 @@ import typing
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget, Scales
@@ -110,7 +110,7 @@ class Enabled(StateEnabledWidget):
             self.disableButton.setEnabled(False)
             return
 
-        self.selectedActuatorId.setEditText(str(s.actuator_id))
+        self.selectedActuatorId.setEditText(str(s.actuator.actuator_id))
         self.selectedActuatorValueLabel.setText(str(s.data))
         self._updateSelected()
 

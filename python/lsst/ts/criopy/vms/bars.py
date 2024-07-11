@@ -22,8 +22,8 @@ __all__ = ["ToolBar", "StatusBar"]
 from datetime import datetime
 
 import astropy.units as u
-from PySide2.QtCore import QSettings, Signal, Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QSettings, Signal, Slot
+from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QLabel,
     QSpinBox,

@@ -23,8 +23,8 @@ import math
 import typing
 
 import numpy as np
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import QPointF, Qt, Slot
+from PySide6.QtCharts import QLineSeries, QLogValueAxis, QValueAxis
+from PySide6.QtCore import QPointF, Qt, Slot
 
 from ..gui import AbstractChart, DockWindow
 from .bars import ToolBar
@@ -70,7 +70,7 @@ class CSCPSDWidget(DockWindow):
 
         self.chart = AbstractChart()
 
-        self.chartView = ChartView(self.chart, QtCharts.QLineSeries)
+        self.chartView = ChartView(self.chart, QLineSeries)
         self.chartView.updateMaxSensor(num_sensor)
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)
@@ -105,14 +105,14 @@ class CSCPSDWidget(DockWindow):
             return
 
         if self.chartView.logX:
-            xAxis = QtCharts.QLogValueAxis()
+            xAxis = QLogValueAxis()
         else:
-            xAxis = QtCharts.QValueAxis()
+            xAxis = QValueAxis()
 
         if self.chartView.logY:
-            yAxis = QtCharts.QLogValueAxis()
+            yAxis = QLogValueAxis()
         else:
-            yAxis = QtCharts.QValueAxis()
+            yAxis = QValueAxis()
 
         xAxis.setTitleText("Frequency (Hz)")
         yAxis.setTitleText("PSD ((" + self.unit + ")<sup>2</sup> Hz <sup>-1</sup>)")
@@ -146,7 +146,7 @@ class CSCPSDWidget(DockWindow):
         if self.callSetupAxes is True:
             self.setupAxes()
 
-        def plot(serie: QtCharts.QLineSeries, psd: typing.Any) -> tuple[float, float]:
+        def plot(serie: QLineSeries, psd: typing.Any) -> tuple[float, float]:
             """Plot recieved PSD.
 
             Parameters

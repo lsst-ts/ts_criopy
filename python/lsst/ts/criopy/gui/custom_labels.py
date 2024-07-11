@@ -24,9 +24,9 @@ from datetime import datetime
 import astropy.units as u
 from astropy.coordinates import Angle
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Qt, QTimer, Signal, Slot
-from PySide2.QtGui import QColor, QPalette
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtGui import QColor, QPalette
+from PySide6.QtWidgets import (
     QDockWidget,
     QFrame,
     QLabel,
@@ -114,8 +114,8 @@ class ColoredButton(QPushButton):
         """
         pal = self.palette()
         if color is None:
-            color = pal.color(QPalette.Base)
-        pal.setColor(QPalette.Button, color)
+            color = pal.base().color()
+        pal.setColor(QPalette.Normal, QPalette.Button, color)
         self.setPalette(pal)
 
     def setTextColor(self, text: str, color: QColor) -> None:
@@ -283,7 +283,7 @@ class UnitLabel(QLabel):
             New text color.
         """
         pal = self.palette()
-        pal.setColor(pal.WindowText, color)
+        pal.setColor(QPalette.Normal, QPalette.WindowText, color)
         self.setPalette(pal)
 
 
@@ -1039,7 +1039,7 @@ class Heartbeat(QWidget):
         super().__init__(parent)
 
         layout = QVBoxLayout()
-        layout.setMargin(0)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         if indicator:
             self.hbIndicator = QProgressBar()

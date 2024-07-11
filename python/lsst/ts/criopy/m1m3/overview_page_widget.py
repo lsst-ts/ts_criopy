@@ -20,8 +20,8 @@
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from ..gui import Arcsec, DataLabel, Force, Heartbeat, Mm, Moment, WarningButton
 from ..salcomm import MetaSAL

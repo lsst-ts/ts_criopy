@@ -42,11 +42,11 @@ except ModuleNotFoundError:
 parser = argparse.ArgumentParser(
     description="Save VMS data to a file, either HDF5 or CSV.",
     epilog=(
-        "Data are read as they arrive in DDS messages, matched by timestamps."
-        " Only complete (from all accelerometers the device provides) records"
-        " are stored. Allows either single or multiple devices recording. Can"
-        " be launched as daemon, running on background. Recorded data can be"
-        " analysed offline with VMSGUI."
+        "Data are read as they arrive in DDS messages, matched by timestamps. "
+        "Only complete (from all accelerometers the device provides) records "
+        "are stored. Allows either single or multiple devices recording. On "
+        "Linux it can be launched as daemon, running on background. "
+        "Recorded data can be analysed offline with VMSGUI."
     ),
 )
 parser.add_argument(
@@ -134,12 +134,15 @@ parser.add_argument(
     default=None,
     help="write log messages to given file",
 )
-parser.add_argument(
-    "--daemon",
-    action="store_true",
-    dest="daemon",
-    help="starts as daemon (fork to start process).",
-)
+
+if sys.platform == "linux":
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        dest="daemon",
+        help="starts as daemon (fork to start process).",
+    )
+
 parser.add_argument(
     "--rotate",
     action="store",
@@ -202,7 +205,11 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
         for t in tasks:
             t.cancel()
 
-    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+    signals = [signal.SIGINT, signal.SIGTERM]
+    if sys.platform == "linux":
+        signals += [signal.SIGHUP]
+
+    for signum in signals:
         signal.signal(signum, cancel_all)
 
     file_type = ""
@@ -260,7 +267,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
 
 def run() -> None:
     args = parser.parse_args()
-    if args.daemon:
+    if sys.platform == "linux" and args.daemon:
         r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)  # type: ignore
         child = os.fork()
         if child == 0:

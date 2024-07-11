@@ -19,7 +19,7 @@
 
 __all__ = ["TopicCollection"]
 
-from PySide2.QtCore import Slot
+from PySide6.QtCore import Slot
 
 from ...salcomm import MetaSAL
 from .topic_data import TopicData

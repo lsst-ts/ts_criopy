@@ -100,9 +100,9 @@ __all__ = [
 import typing
 
 from lsst.ts.salobj import BaseMsgType, base
-from PySide2.QtCore import QObject, Qt, Signal, Slot
-from PySide2.QtGui import QMouseEvent
-from PySide2.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
+from PySide6.QtCore import QObject, Qt, Signal, Slot
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
 from qasync import asyncSlot
 
 from ..salcomm import warning

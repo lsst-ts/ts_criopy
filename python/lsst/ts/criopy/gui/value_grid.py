@@ -19,8 +19,8 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Signal, Slot
-from PySide2.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QLabel, QWidget
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QLabel, QWidget
 
 from .custom_labels import (
     InterlockOffLabel,

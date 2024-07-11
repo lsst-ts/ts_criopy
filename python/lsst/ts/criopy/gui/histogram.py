@@ -20,12 +20,12 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 import numpy as np
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QGraphicsItem
+from PySide6.QtCharts import QBarCategoryAxis, QBarSeries, QBarSet, QChart, QValueAxis
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QGraphicsItem
 
 
-class Histogram(QtCharts.QChart):
+class Histogram(QChart):
     def __init__(
         self,
         parent: QGraphicsItem = None,
@@ -41,17 +41,17 @@ class Histogram(QtCharts.QChart):
         super().__init__(parent, wFlags)
         self.nbins = nbins
 
-        self.set = QtCharts.QBarSet("Data")
+        self.set = QBarSet("Data")
 
-        self.serie = QtCharts.QBarSeries()
+        self.serie = QBarSeries()
         self.serie.append(self.set)
 
         self.addSeries(self.serie)
 
-        self.yAxis = QtCharts.QValueAxis()
+        self.yAxis = QValueAxis()
         self.addAxis(self.yAxis, Qt.AlignLeft)
 
-        self.xAxis = QtCharts.QBarCategoryAxis()
+        self.xAxis = QBarCategoryAxis()
         self.addAxis(self.xAxis, Qt.AlignBottom)
 
         self.legend().setVisible(True)
@@ -66,12 +66,12 @@ class Histogram(QtCharts.QChart):
             New values for histogram computation.
         """
         hist, bin_edges = np.histogram(values, self.nbins)
-        self.set = QtCharts.QBarSet("Data")
+        self.set = QBarSet("Data")
         self.set.append(list(hist))
 
         self.removeSeries(self.serie)
 
-        self.serie = QtCharts.QBarSeries()
+        self.serie = QBarSeries()
         self.serie.setBarWidth(1)
         self.serie.append(self.set)
         self.addSeries(self.serie)

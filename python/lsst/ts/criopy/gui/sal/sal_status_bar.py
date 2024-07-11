@@ -21,8 +21,8 @@ from datetime import datetime
 from html import escape
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
 
 from ...salcomm import MetaSAL
 from ..custom_labels import Heartbeat, SimulationStatus, VLine
@@ -61,7 +61,7 @@ class SALStatusBar(QStatusBar):
 
         hbWidget = QWidget()
         hbLayout = QHBoxLayout()
-        hbLayout.setMargin(0)
+        hbLayout.setContentsMargins(0, 0, 0, 0)
         hbWidget.setLayout(hbLayout)
 
         for comm in comms:
@@ -97,6 +97,6 @@ class SALStatusBar(QStatusBar):
         )
         self.errorCodeLabel.setText(
             f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
-            f"{'green' if data.errorCode==0 else 'red'}"
+            f"{'green' if data.errorCode == 0 else 'red'}"
             f"'>{escape(data.errorReport)}</span>"
         )

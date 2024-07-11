@@ -17,13 +17,28 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import os
+
+try:
+    qt_api = os.environ["QT_API"]
+    if qt_api.lower() != "pyside6":
+        print(
+            f"QT_API environmental variable is set to {qt_api}, changing it to pyside6 for qasync operation."
+        )
+        os.environ["QT_API"] = "pyside6"
+except KeyError:
+    print(
+        "Empty QT_API environmental variable, setting it to pyside6 for qasync operations."
+    )
+    os.environ["QT_API"] = "pyside6"
+
 import asyncio
 import signal
 import sys
 import typing
 
-from PySide2.QtCore import QCommandLineOption, QCommandLineParser
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
 from ... import __version__
@@ -177,7 +192,10 @@ class Application:
             self._loop.call_soon(splash.stop)
             self._loop.call_soon(self._app.closeAllWindows)
 
-        for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+        signals = [signal.SIGINT, signal.SIGTERM]
+        if sys.platform == "linux":
+            signals += [signal.SIGHUP]
+        for signum in signals:
             signal.signal(signum, handler)
 
         # Run the main Qt loop

@@ -20,9 +20,9 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtGui import QStandardItem, QStandardItemModel
-from PySide2.QtWidgets import QTreeView, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QTreeView, QVBoxLayout, QWidget
 
 from ..salcomm import MetaSAL
 

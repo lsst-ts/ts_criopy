@@ -22,6 +22,21 @@
 # For an explanation why these next lines are so complicated, see
 # https://confluence.lsstcorp.org/pages/viewpage.action?spaceKey=LTS&title=Enabling+Mypy+in+Pytest
 
+import os
+
+try:
+    qt_api = os.environ["QT_API"]
+    if qt_api.lower() != "pyside6":
+        print(
+            f"QT_API environmental variable is set to {qt_api}, changing it to pyside6 "
+            "for qasync operation."
+        )
+        os.environ["QT_API"] = "pyside6"
+except KeyError:
+    print(
+        "Empty QT_API environmental variable - better if it's set to pyside6, but will try to run the code."
+    )
+
 import typing
 
 if typing.TYPE_CHECKING:

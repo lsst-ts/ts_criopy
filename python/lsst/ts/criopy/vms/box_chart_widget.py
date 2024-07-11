@@ -20,8 +20,8 @@
 __all__ = ["BoxChartWidget"]
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Qt, Slot
+from PySide6.QtCharts import QBoxPlotSeries
+from PySide6.QtCore import Qt, Slot
 
 from ..gui import DockWindow
 from ..salcomm import MetaSAL
@@ -46,7 +46,7 @@ class BoxChartWidget(DockWindow):
         super().__init__(title)
         self.channels = channels
         self.chart = TimeBoxChart()
-        self.chartView = ChartView(self.chart, QtCharts.QBoxPlotSeries)
+        self.chartView = ChartView(self.chart, QBoxPlotSeries)
         self.setWidget(self.chartView)
 
         comm.data.connect(self.data)

@@ -18,8 +18,8 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts import salobj
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from ..gui import (
     RPM,
@@ -71,9 +71,11 @@ class CompressorCSC(CSCControlWidget):
 
         return default_buttons + [
             TEXT_POWER_ON if status.startByRemote is True else None,
-            TEXT_POWER_OFF
-            if status.startByRemote is False and status.operating is True
-            else None,
+            (
+                TEXT_POWER_OFF
+                if status.startByRemote is False and status.operating is True
+                else None
+            ),
             TEXT_RESET,
         ]
 

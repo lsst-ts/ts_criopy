@@ -140,11 +140,11 @@ class Collector:
             ("name", VMS_DEVICES[self.index]),
             (
                 "ext",
-                "hdf"
-                if "5" in self.file_type
-                else "csv.gz"
-                if "z" in self.file_type
-                else "csv",
+                (
+                    "hdf"
+                    if "5" in self.file_type
+                    else "csv.gz" if "z" in self.file_type else "csv"
+                ),
             ),
         ]
         for name, value in repl:

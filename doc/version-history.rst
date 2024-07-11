@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.8.0
+------
+
+* Migrated to PySide6
+
 v0.7.0
 ------
 

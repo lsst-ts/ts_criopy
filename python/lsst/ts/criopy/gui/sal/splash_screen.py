@@ -27,9 +27,9 @@ import traceback
 from dataclasses import dataclass
 from typing import Any
 
-from PySide2.QtCore import QTimer, Slot
-from PySide2.QtGui import QPixmap
-from PySide2.QtWidgets import QApplication, QSplashScreen
+from PySide6.QtCore import QTimer, Slot
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication, QSplashScreen
 
 from ...salcomm import MetaSAL, create
 

@@ -21,8 +21,8 @@ __all__ = ["CacheTimeWidget"]
 
 import time
 
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import QDateTime, QPointF, Qt, Slot
+from PySide6.QtCharts import QDateTimeAxis, QLogValueAxis, QValueAxis
+from PySide6.QtCore import QDateTime, QPointF, Qt, Slot
 
 from .bars import ToolBar
 from .cache import Cache
@@ -60,14 +60,14 @@ class CacheTimeWidget(CacheWidget):
         if len(self.chart.series()) == 0:
             return
 
-        xAxis = QtCharts.QDateTimeAxis()
+        xAxis = QDateTimeAxis()
         xAxis.setTickCount(10)
         xAxis.setFormat("mm:ss.zzz")
 
         if self.chartView.logY:
-            yAxis = QtCharts.QLogValueAxis()
+            yAxis = QLogValueAxis()
         else:
-            yAxis = QtCharts.QValueAxis()
+            yAxis = QValueAxis()
 
         xAxis.setTitleText("Time (s)")
         yAxis.setTitleText("Velocity (" + self.unit + ")")

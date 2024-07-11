@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.xml.tables.m1m3 import FATable
-from PySide2.QtWidgets import QComboBox
+from PySide6.QtWidgets import QComboBox
 
 __all__ = ["ComboBox"]
 
