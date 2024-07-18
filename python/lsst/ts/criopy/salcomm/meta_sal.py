@@ -21,6 +21,24 @@
 
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
 
+import os
+import sys
+
+from .. import ExitErrorCodes
+
+try:
+    qt_api = os.environ["QT_API"]
+    if qt_api.lower() != "pyside6":
+        print(
+            f"QT_API environmental variable is set to {qt_api}, please change it to pyside6 "
+            "for qasync operation!"
+        )
+        sys.exit(ExitErrorCodes.WRONG_QT_API)
+except KeyError:
+    print(
+        "Empty QT_API environmental variable - better if it's set to pyside6, but will try to run the code."
+    )
+
 import asyncio
 import typing
 

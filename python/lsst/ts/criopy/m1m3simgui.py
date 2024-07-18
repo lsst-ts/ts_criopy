@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from . import ExitErrorCodes
 from .gui.sal import Application
 from .m1m3 import ForceCalculator, Simulator, SimulatorWidget
 from .m1m3.force_actuator import GraphPageWidget
@@ -187,6 +188,6 @@ def run() -> None:
     app = SIMApplication(SIM, config=("Configuration directory", ""))
     if len(app.parser.positionalArguments()) > 1:
         print("Only one config directory can be specified!", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(ExitErrorCodes.WRONG_COMMAND_LINE_ARGUMENTS)
 
     app.run()

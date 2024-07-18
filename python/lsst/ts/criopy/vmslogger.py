@@ -29,7 +29,7 @@ import sys
 import time
 import typing
 
-from . import parseDuration
+from . import ExitErrorCodes, parseDuration
 from .vms import VMS_DEVICES, Collector
 
 try:
@@ -179,7 +179,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
             os.chdir(args.workdir)
         except OSError as oerr:
             print(f"Cannot chdir to {args.workdir}: {oerr.strerror}")
-            sys.exit(2)
+            sys.exit(ExitErrorCodes.VMSLOGGER_CANNOT_CHDIR)
 
     if args.logfile:
         fh = logging.FileHandler(args.logfile)
@@ -221,7 +221,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
                 "Python is missing h5py module, saving HDF 5 file is not"
                 " supported. Please install h5py first (pip install h5py)."
             )
-            sys.exit(1)
+            sys.exit(ExitErrorCodes.VMSLOGGER_MISSING_H5PY)
         file_type += "5"
     else:
         if args.size is None:
@@ -289,9 +289,9 @@ def run() -> None:
             ret = os.read(r_pipe, 50)
             os.close(r_pipe)
             if ret == b"OK\n":
-                sys.exit(0)
+                sys.exit(os.EX_OK)
 
             print("Returned: ", ret)
-            sys.exit(1)
+            sys.exit(ExitErrorCodes.VMSLOGGER_SUBPROCESS_STARTUP)
     else:
         asyncio.run(main(args))

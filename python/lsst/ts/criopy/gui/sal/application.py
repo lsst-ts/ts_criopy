@@ -17,21 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import os
-
-try:
-    qt_api = os.environ["QT_API"]
-    if qt_api.lower() != "pyside6":
-        print(
-            f"QT_API environmental variable is set to {qt_api}, changing it to pyside6 for qasync operation."
-        )
-        os.environ["QT_API"] = "pyside6"
-except KeyError:
-    print(
-        "Empty QT_API environmental variable, setting it to pyside6 for qasync operations."
-    )
-    os.environ["QT_API"] = "pyside6"
-
 import asyncio
 import signal
 import sys

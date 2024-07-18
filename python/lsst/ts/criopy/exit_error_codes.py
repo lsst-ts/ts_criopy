@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of cRIO GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -22,31 +22,20 @@
 # For an explanation why these next lines are so complicated, see
 # https://confluence.lsstcorp.org/pages/viewpage.action?spaceKey=LTS&title=Enabling+Mypy+in+Pytest
 
-import os
+__all__ = ["ExitErrorCodes"]
 
-try:
-    qt_api = os.environ["QT_API"]
-    if qt_api.lower() != "pyside6":
-        print(
-            f"QT_API environmental variable is set to {qt_api}, changing it to pyside6 "
-            "for qasync operation."
-        )
-        os.environ["QT_API"] = "pyside6"
-except KeyError:
-    print(
-        "Empty QT_API environmental variable - better if it's set to pyside6, but will try to run the code."
-    )
+from enum import IntEnum, auto
 
-import typing
 
-if typing.TYPE_CHECKING:
-    __version__ = "?"
-else:
-    try:
-        from .version import *
-    except ImportError:
-        __version__ = "?"
+class ExitErrorCodes(IntEnum):
+    """
+    Application exit status codes.
+    """
 
-from .duration_parser import parseDuration
-from .exit_error_codes import ExitErrorCodes
-from .time_cache import TimeCache
+    ASYNCIO_LOOP_NOT_RUNNING = auto()
+    SAL_NOT_SETUP = auto()
+    VMSLOGGER_CANNOT_CHDIR = auto()
+    VMSLOGGER_MISSING_H5PY = auto()
+    VMSLOGGER_SUBPROCESS_STARTUP = auto()
+    WRONG_COMMAND_LINE_ARGUMENTS = auto()
+    WRONG_QT_API = auto()

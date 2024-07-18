@@ -31,6 +31,7 @@ from PySide6.QtCore import QTimer, Slot
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QSplashScreen
 
+from ... import ExitErrorCodes
 from ...salcomm import MetaSAL, create
 
 
@@ -85,8 +86,12 @@ class SplashScreen(QSplashScreen):
     @Slot()
     def _checkStarted(self) -> None:
         if len(self.comms) == 0 and len(self.comms_args) > 0:
-            # make sure the loop was started
-            assert asyncio.get_event_loop().is_running()
+            # make sure the loop is started
+            if not asyncio.get_event_loop().is_running():
+                if time.monotonic() - self._start_time > 120:
+                    print("The asyncio loop is not running after 2 minutes, exiting!")
+                    sys.exit(ExitErrorCodes.ASYNCIO_LOOP_NOT_RUNNING)
+                return
             for arg in self.comms_args:
                 try:
                     self.comms.append(create(arg.name, manual=arg.manual, **arg.kwargs))
@@ -97,7 +102,7 @@ class SplashScreen(QSplashScreen):
                         file=sys.stderr,
                     )
                     print(f"Error: {ex}", file=sys.stderr)
-                    sys.exit(1)
+                    sys.exit(ExitErrorCodes.SAL_NOT_SETUP)
 
         for comm in self.comms:
             if not comm.remote.salinfo.started:
