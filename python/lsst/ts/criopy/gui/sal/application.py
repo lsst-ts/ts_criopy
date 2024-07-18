@@ -120,7 +120,6 @@ class Application:
         self._loop = QEventLoop(self._app)
         asyncio.set_event_loop(self._loop)
 
-        self._comms: list[MetaSAL] = []
         self._comms_args: list[SplashScreen.CommArgs] = []
         self._sal_info = self.parser.isSet(salInfo)
         self._splash = not (self.parser.isSet(noSplash))
@@ -159,17 +158,6 @@ class Application:
         initialized.
         """
 
-        if self._sal_info:
-            for c in self._comms:
-                for m in dir(c.remote):
-                    if (
-                        m.startswith("cmd_")
-                        or m.startswith("tel_")
-                        or m.startswith("evt_")
-                    ):
-                        print(getattr(c.remote, m).dds_name)
-            sys.exit(0)
-
         class AppSplashScreen(SplashScreen):
             def started(splash, *comms: MetaSAL) -> None:  # noqa: N805
                 eui = self._eui_class(*comms)
@@ -182,6 +170,17 @@ class Application:
 
                 assert self.eui is not None
                 self.process_command_line()
+
+                if self._sal_info:
+                    for c in splash.comms:
+                        for m in dir(c.remote):
+                            if (
+                                m.startswith("cmd_")
+                                or m.startswith("tel_")
+                                or m.startswith("evt_")
+                            ):
+                                print(getattr(c.remote, m).dds_name)
+                    self._app.quit()
 
         splash = AppSplashScreen(*self._comms_args, show=self._splash)
         if self._splash:
