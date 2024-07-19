@@ -85,10 +85,15 @@ class SplashScreen(QSplashScreen):
 
     @Slot()
     def _checkStarted(self) -> None:
+        duration = time.monotonic() - self._start_time
         if len(self.comms) == 0 and len(self.comms_args) > 0:
             # make sure the loop is started
             if not asyncio.get_event_loop().is_running():
-                if time.monotonic() - self._start_time > 120:
+                if self._show:
+                    self.showMessage(f"Waiting for loop .. {duration:.1f}s")
+                else:
+                    print(f"Waiting to loop .. {duration:.1f}s")
+                if duration > 120:
                     print("The asyncio loop is not running after 2 minutes, exiting!")
                     sys.exit(ExitErrorCodes.ASYNCIO_LOOP_NOT_RUNNING)
                 return
@@ -103,25 +108,27 @@ class SplashScreen(QSplashScreen):
                     )
                     print(f"Error: {ex}", file=sys.stderr)
                     sys.exit(ExitErrorCodes.SAL_NOT_SETUP)
+                duration = time.monotonic() - self._start_time
+                started = [comm.remote.salinfo.name for comm in self.comms]
+                if self._show:
+                    started_str = "\n".join(started)
+                    self.showMessage(f"Started {duration:.1f}s\n{started_str}")
+                else:
+                    print(f"Started [{','.join(started)}] .. {duration:.1f}s")
 
         for comm in self.comms:
             if not comm.remote.salinfo.started:
                 if self._show:
                     state = "Starting .. " if self.state == 0 else "Stopping .. "
-                    self.showMessage(
-                        f"{state} {time.monotonic() - self._start_time:.1f}s"
-                    )
+                    self.showMessage(f"{state} {duration:.1f}s")
                 else:
-                    print(
-                        "Waiting for SAL .."
-                        f" {time.monotonic() - self._start_time:.0f}s\r",
-                        end="",
-                    )
+                    print(f"Waiting for SAL .. {duration:.1f}s\r", end="")
                 return
 
         self._check_timer.stop()
         self.state = 2
-
+        if not self._show:
+            print(f"Started in {duration:.1f}s")
         try:
             self.started(*self.comms)
         except Exception:
