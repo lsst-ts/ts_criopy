@@ -21,9 +21,9 @@ from datetime import datetime
 from html import escape
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 
 from ...salcomm import MetaSAL
 
@@ -58,7 +58,7 @@ class SALErrorCodeWidget(QWidget):
         )
         self.plainText.appendHtml(
             f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
-            f"{'green' if data.errorCode==0 else 'red'}'"
+            f"{'green' if data.errorCode == 0 else 'red'}'"
             f">{escape(data.errorReport)}</span>"
         )
         self.plainText.ensureCursorVisible()

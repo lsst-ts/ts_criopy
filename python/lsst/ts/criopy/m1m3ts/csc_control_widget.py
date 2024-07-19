@@ -19,8 +19,8 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QPushButton
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QPushButton
 from qasync import asyncSlot
 
 from ..gui.sal import CSCControlWidget

@@ -22,7 +22,7 @@ __all__ = ["Simulator"]
 
 import typing
 
-from PySide2.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal
 
 from .force_calculator import ForceCalculator
 

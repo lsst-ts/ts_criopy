@@ -22,9 +22,9 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData
-from PySide2.QtCore import QEvent, Signal
-from PySide2.QtGui import QMouseEvent
-from PySide2.QtWidgets import QGraphicsView
+from PySide6.QtCore import QEvent, Signal
+from PySide6.QtGui import QMouseEvent
+from PySide6.QtWidgets import QGraphicsView
 
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
@@ -149,10 +149,12 @@ class MirrorView(QGraphicsView):
             data,
             dataIndex,
             state,
-            FASelection.SELECTED
-            if self._selected_actuator is not None
-            and actuator.actuator_id == self._selected_actuator.actuator.actuator_id
-            else FASelection.NORMAL,
+            (
+                FASelection.SELECTED
+                if self._selected_actuator is not None
+                and actuator.actuator_id == self._selected_actuator.actuator.actuator_id
+                else FASelection.NORMAL
+            ),
         )
 
     def updateForceActuator(

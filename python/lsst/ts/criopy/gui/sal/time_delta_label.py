@@ -20,8 +20,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.utils import current_tai
-from PySide2.QtCore import QTimerEvent
-from PySide2.QtWidgets import QLabel
+from PySide6.QtCore import QTimerEvent
+from PySide6.QtWidgets import QLabel
 
 __all__ = ["TimeDeltaLabel"]
 

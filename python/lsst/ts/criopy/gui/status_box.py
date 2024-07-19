@@ -19,9 +19,9 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import QSize, Signal, Slot
-from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QHBoxLayout, QWidget
+from PySide6.QtCore import QSize, Signal, Slot
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QHBoxLayout, QWidget
 
 from .colors import Colors
 from .custom_labels import ColoredButton

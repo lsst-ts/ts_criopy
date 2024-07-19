@@ -23,9 +23,9 @@ import typing
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable, actuator_id_to_index
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtGui import QColor
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (
     QGridLayout,
     QGroupBox,
     QHBoxLayout,

@@ -19,8 +19,8 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 
 from ..salcomm import MetaSAL
 

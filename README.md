@@ -63,12 +63,12 @@ CLI for VMS logging. Can save VMS data as cvs or, with optional
 * Python 3.8 or later
 * [numpy](https://numpy.org)
 * [astropy](https://astropy.org)
-* [PySide2 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide2)
+* [PySide6 (QtCore, QtGui, QtCharts, QtWidgets)](https://pypi.org/project/PySide6)
 * [qasync](https://pypi.org/project/qasync/)
 
 For SAL etc:
 
-* [LSST ts_salobj](https://github.com/lsst-ts/ts_salobj)
+* [LSST ts\_salobj](https://github.com/lsst-ts/ts_salobj)
 
 
 # SAL binding
@@ -94,9 +94,14 @@ layouts,..).
 make_idl_files.py MTM1M3 MTM1M3TS MTMount MTVMS
 ```
 
+### PySide6 and qasync
+
+On systems with both PySide2 and PySide6 installed, qasync library needs
+QT\_API environmental variable set to pyside6.
+
 ## SALComm
 
-Heart of the application is SALComm. The module links ts_salobj callbacks with
+Heart of the application is SALComm. The module links ts\_salobj callbacks with
 Qt Signals. Names of signals matches SAL events and telemetry topics. This
 allows for simple integration of DDS/SAL and GUI widgets. Widgets in need to
 receive SAL data accept SALComm as constructor parameter, and after setting up
@@ -106,6 +111,16 @@ the widget SALComm provided Qt Signals are connected to slots in the widget.
 
 Qt Slots are decorated with @Slot and usually not documented, as the only
 functions is to update widgets with data received from SAL/DDS. Please see
-[PySide2 documentation](https://wiki.qt.io/Qt_for_Python_Signals_and_Slots) and
+[PySide6 documentation](https://wiki.qt.io/Qt_for_Python_Signals_and_Slots) and
 [SALComm](tree/main/python/lsst/ts/criopy/SALComm/MetaSAL.py) for details how
 this works.
+
+## Running GUIs from Docker container
+
+It's perfectly fine to run GUIs from docker container. For that, a host machine
+must contain some X11 server. Docker container must be started with DISPLAY
+pointing to the X11 server display, such as this:
+
+```
+docker run -ti -e DISPLAY=127.0.0.1:0.0 <container>
+```

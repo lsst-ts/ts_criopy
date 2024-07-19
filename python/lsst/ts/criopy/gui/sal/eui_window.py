@@ -22,9 +22,9 @@ import enum
 import typing
 from functools import partial
 
-from PySide2.QtCore import QSettings, Slot
-from PySide2.QtGui import QCloseEvent
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QSettings, Slot
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QListWidget,

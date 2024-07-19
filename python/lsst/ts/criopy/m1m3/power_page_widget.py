@@ -19,8 +19,8 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QGridLayout, QLabel, QSpacerItem, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
 from ..gui import PowerOnOffLabel, StatusGrid, TimeChart, TimeChartView, WarningLabel

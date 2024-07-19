@@ -19,9 +19,9 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
-from PySide2.QtCore import QSettings, Qt, Signal, Slot
-from PySide2.QtGui import QCloseEvent
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QSettings, Qt, Signal, Slot
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import (
     QButtonGroup,
     QDoubleSpinBox,
     QGridLayout,

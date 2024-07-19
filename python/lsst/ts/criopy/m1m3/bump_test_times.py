@@ -24,7 +24,6 @@ from lsst_efd_client import EfdClient
 
 
 class BumpTestTimes:
-
     """Returns a set of times for bump tests given the actuator ID and
     an input timespan
 

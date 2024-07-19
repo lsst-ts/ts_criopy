@@ -20,9 +20,9 @@
 
 import typing
 
-from PySide2.QtCore import QSize, Qt
-from PySide2.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent, QPalette
+from PySide6.QtWidgets import QWidget
 
 
 class EnumScale(QWidget):
@@ -81,7 +81,7 @@ class EnumScale(QWidget):
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
         palette = QGuiApplication.palette()
         palette.setCurrentColorGroup(
-            palette.Active if self.isEnabled() else palette.Inactive
+            QPalette.Active if self.isEnabled() else QPalette.Inactive
         )
 
         swidth = self.width()
@@ -98,7 +98,7 @@ class EnumScale(QWidget):
             painter.drawRect(0, y, swidth, sheight / l_labels)
 
             painter.setBrush(palette.window())
-            painter.setPen(palette.color(palette.WindowText))
+            painter.setPen(palette.windowText().color())
             painter.drawRect(
                 x_offset, y + 2 * t_height, swidth - 2 * x_offset, t_height
             )

@@ -21,8 +21,8 @@ from functools import partial
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, EnableDisableForceComponent
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
 from ..gui import ArrayFields, ColoredButton, UnitLabel

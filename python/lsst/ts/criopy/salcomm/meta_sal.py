@@ -21,12 +21,30 @@
 
 # Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
 
+import os
+import sys
+
+from .. import ExitErrorCodes
+
+try:
+    qt_api = os.environ["QT_API"]
+    if qt_api.lower() != "pyside6":
+        print(
+            f"QT_API environmental variable is set to {qt_api}, please change it to pyside6 "
+            "for qasync operation!"
+        )
+        sys.exit(ExitErrorCodes.WRONG_QT_API)
+except KeyError:
+    print(
+        "Empty QT_API environmental variable - better if it's set to pyside6, but will try to run the code."
+    )
+
 import asyncio
 import typing
 
 from lsst.ts.salobj import Domain, Remote
 from lsst.ts.salobj.topics import RemoteEvent, RemoteTelemetry
-from PySide2.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal
 
 __all__ = ["MetaSAL", "create"]
 
@@ -110,7 +128,7 @@ def create(
 ) -> MetaSAL:
     """Creates SALComm instance for given remote(s).
 
-    The returned object contains PySide2.QtCore.Signal class variables. Those
+    The returned object contains PySide6.QtCore.Signal class variables. Those
     signals are emitted when SAL callback occurs, effectively linking SAL/DDS
     and Qt world. Signals can be connected to multiple Qt slots to process the
     incoming data.
@@ -137,7 +155,7 @@ def create(
 
        import sys
        from qasync import QEventLoop, asyncSlot
-       from PySide2.QtWidgets import QApplication, QPushButton
+       from PySide6.QtWidgets import QApplication, QPushButton
 
        app = QApplication(sys.argv)
        loop = QEventLoop(app)

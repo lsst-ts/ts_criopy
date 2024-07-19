@@ -20,8 +20,8 @@
 
 from lsst.ts import salobj
 from lsst.ts.xml.enums import LaserTracker
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QLabel
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QLabel
 
 from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar
 from .lasertracker import OverviewPageWidget

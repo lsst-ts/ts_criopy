@@ -24,8 +24,8 @@ __all__ = ["TimeBoxChart"]
 import time
 
 import numpy as np
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Qt, Slot
+from PySide6.QtCharts import QBoxPlotSeries, QBoxSet
+from PySide6.QtCore import Qt, Slot
 
 from ..gui import AbstractChart
 from .unit import coefficients, deltas, units
@@ -65,7 +65,7 @@ class TimeBoxChart(AbstractChart):
         self.unit = unit
 
     def append(
-        self, serie: QtCharts.QBoxPlotSeries, timestamp: float, data: list[float]
+        self, serie: QBoxPlotSeries, timestamp: float, data: list[float]
     ) -> None:
         """Add data to a serie. Creates serie if needed. Shrink if
         more than expected elements are stored.
@@ -84,7 +84,7 @@ class TimeBoxChart(AbstractChart):
                 serie.remove(serie.boxSets()[0])
 
         quantiles = np.quantile(data, [0, 0.25, 0.5, 0.75, 1]) * self.coefficient
-        boxSet = QtCharts.QBoxSet(
+        boxSet = QBoxSet(
             *quantiles,
             f"{time.localtime(timestamp).tm_sec:02d}.{int((timestamp - np.floor(timestamp)) * 1000)}",
         )
@@ -97,11 +97,11 @@ class TimeBoxChart(AbstractChart):
             if len(bs) > 0:
                 d_min = min(
                     d_min,
-                    min([b.at(QtCharts.QBoxSet.LowerExtreme) for b in bs]),
+                    min([b.at(QBoxSet.LowerExtreme) for b in bs]),
                 )
                 d_max = max(
                     d_max,
-                    max([b.at(QtCharts.QBoxSet.UpperExtreme) for b in bs]),
+                    max([b.at(QBoxSet.UpperExtreme) for b in bs]),
                 )
 
         self.createDefaultAxes()

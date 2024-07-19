@@ -22,7 +22,7 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
-from PySide2.QtWidgets import QGraphicsScene
+from PySide6.QtWidgets import QGraphicsScene
 
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale

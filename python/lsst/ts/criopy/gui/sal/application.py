@@ -22,8 +22,8 @@ import signal
 import sys
 import typing
 
-from PySide2.QtCore import QCommandLineOption, QCommandLineParser
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
 from ... import __version__
@@ -105,7 +105,6 @@ class Application:
         self._loop = QEventLoop(self._app)
         asyncio.set_event_loop(self._loop)
 
-        self._comms: list[MetaSAL] = []
         self._comms_args: list[SplashScreen.CommArgs] = []
         self._sal_info = self.parser.isSet(salInfo)
         self._splash = not (self.parser.isSet(noSplash))
@@ -144,17 +143,6 @@ class Application:
         initialized.
         """
 
-        if self._sal_info:
-            for c in self._comms:
-                for m in dir(c.remote):
-                    if (
-                        m.startswith("cmd_")
-                        or m.startswith("tel_")
-                        or m.startswith("evt_")
-                    ):
-                        print(getattr(c.remote, m).dds_name)
-            sys.exit(0)
-
         class AppSplashScreen(SplashScreen):
             def started(splash, *comms: MetaSAL) -> None:  # noqa: N805
                 eui = self._eui_class(*comms)
@@ -168,6 +156,17 @@ class Application:
                 assert self.eui is not None
                 self.process_command_line()
 
+                if self._sal_info:
+                    for c in splash.comms:
+                        for m in dir(c.remote):
+                            if (
+                                m.startswith("cmd_")
+                                or m.startswith("tel_")
+                                or m.startswith("evt_")
+                            ):
+                                print(getattr(c.remote, m).dds_name)
+                    self._app.quit()
+
         splash = AppSplashScreen(*self._comms_args, show=self._splash)
         if self._splash:
             splash.show()
@@ -177,7 +176,10 @@ class Application:
             self._loop.call_soon(splash.stop)
             self._loop.call_soon(self._app.closeAllWindows)
 
-        for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+        signals = [signal.SIGINT, signal.SIGTERM]
+        if sys.platform == "linux":
+            signals += [signal.SIGHUP]
+        for signum in signals:
             signal.signal(signum, handler)
 
         # Run the main Qt loop

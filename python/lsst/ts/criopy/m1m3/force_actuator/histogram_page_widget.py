@@ -19,22 +19,22 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import QSettings
-from PySide2.QtGui import QContextMenuEvent, QPainter
-from PySide2.QtWidgets import QInputDialog, QMenu
+from PySide6.QtCharts import QChartView
+from PySide6.QtCore import QSettings
+from PySide6.QtGui import QContextMenuEvent, QPainter
+from PySide6.QtWidgets import QInputDialog, QMenu
 
 from ...gui import Histogram
 from ...salcomm import MetaSAL
 from .widget import Widget
 
 
-class HistogramView(QtCharts.QChartView):
+class HistogramView(QChartView):
     def __init__(self) -> None:
         self.histogram = Histogram()
         super().__init__(self.histogram)
         self.setRenderHint(QPainter.Antialiasing)
-        self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
+        self.setRubberBand(QChartView.HorizontalRubberBand)
 
         self.config: str | None = None
 
