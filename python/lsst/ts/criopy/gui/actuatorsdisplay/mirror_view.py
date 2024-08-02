@@ -26,6 +26,7 @@ from PySide6.QtCore import QEvent, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView
 
+from .fcu_item import FCUItem
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 from .mirror import Mirror
@@ -136,7 +137,7 @@ class MirrorView(QGraphicsView):
         ----------
         actuator : `ForceActuatorData`
             Force Actuator data.
-        data : `Any`
+        data : `BaseMsgType`
             Force Actuator value.
         data_index : `int`
             Force Actuator value index.
@@ -144,21 +145,24 @@ class MirrorView(QGraphicsView):
             Force Actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID or ForceActuatorItem.STATE_WARNING.
         """
-        self._mirror.add_force_actuator(
-            actuator,
-            data,
-            data_index,
-            state,
-            (
-                FASelection.SELECTED
-                if self._selected_actuator is not None
-                and actuator.actuator_id == self._selected_actuator.actuator.actuator_id
-                else FASelection.NORMAL
-            ),
+        self._mirror.addItem(
+            ForceActuatorItem(
+                actuator,
+                data,
+                data_index,
+                state,
+                (
+                    FASelection.SELECTED
+                    if self._selected_actuator is not None
+                    and actuator.actuator_id
+                    == self._selected_actuator.actuator.actuator_id
+                    else FASelection.NORMAL
+                ),
+            )
         )
 
     def add_fcu(self, fcu: FCUData) -> None:
-        pass
+        self._mirror.addItem(FCUItem(fcu))
 
     def update_force_actuator(
         self, actuator_id: int, data: BaseMsgType, state: int

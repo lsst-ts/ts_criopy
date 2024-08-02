@@ -1,5 +1,6 @@
 from .bump_test_scale import BumpTestScale
 from .enabled_disabled_scale import EnabledDisabledScale
+from .fcu_item import FCUItem
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 from .mirror import Mirror

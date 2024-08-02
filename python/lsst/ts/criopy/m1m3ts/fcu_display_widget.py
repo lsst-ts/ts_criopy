@@ -22,7 +22,7 @@
 __all__ = ["FCUDisplayWidget"]
 
 from lsst.ts.xml.tables.m1m3 import FCUTable
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui.actuatorsdisplay import MirrorWidget
 from ..salcomm import MetaSAL
@@ -35,3 +35,8 @@ class FCUDisplayWidget(QWidget):
 
         for row in FCUTable:
             self.mirror_widget.mirrorView.add_fcu(row)
+
+        plot_layout = QVBoxLayout()
+        plot_layout.addWidget(self.mirror_widget)
+
+        self.setLayout(plot_layout)
