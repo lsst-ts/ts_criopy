@@ -21,10 +21,9 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtWidgets import QGraphicsScene
 
-from .force_actuator_item import FASelection, ForceActuatorItem
+from .force_actuator_item import ForceActuatorItem
 from .gauge_scale import GaugeScale
 
 
@@ -50,32 +49,6 @@ class Mirror(QGraphicsScene):
         """
         for a in self.items():
             a.set_color_scale(scale)
-
-    def add_force_actuator(
-        self,
-        actuator: ForceActuatorData,
-        data: BaseMsgType,
-        data_index: int | None,
-        state: int,
-        kind: FASelection,
-    ) -> None:
-        """Adds actuator to the list.
-
-        Parameters
-        ----------
-        actuator : `ForceActuatorData`
-            Row from m1m3_fa_table.
-        data : `float`
-            Force Actuator value.
-        data_index : `int`
-            Force Actuator value index.
-        state : `int`
-            Force Actuator state. ForceActuatorItem.STATE_INVALID,
-            ForceActuatorItem.STATE_VALID or ForceActuatorItem.STATE_WARNING.
-        kind : `FASelection`
-            Force actuator kind - normal, selected or selected neighbour.
-        """
-        self.addItem(ForceActuatorItem(actuator, data, data_index, state, kind))
 
     def getForceActuator(self, actuator_id: int) -> ForceActuatorItem:
         """Returns actuator with given ID.
