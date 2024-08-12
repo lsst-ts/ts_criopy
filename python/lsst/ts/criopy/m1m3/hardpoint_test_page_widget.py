@@ -97,7 +97,7 @@ class HardpointTestPageWidget(QWidget):
                             ArrayItem("encoder", "Encoder"),
                             ArrayItem(
                                 "measuredForce",
-                                "Measuerd force",
+                                "Measured force",
                                 partial(Force, fmt=".03f"),
                             ),
                             ArrayItem(

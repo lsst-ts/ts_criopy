@@ -115,7 +115,8 @@ class ColoredButton(QPushButton):
         pal = self.palette()
         if color is None:
             color = pal.base().color()
-        pal.setColor(QPalette.Normal, QPalette.Button, color)
+
+        pal.setColor(QPalette.Button, color)
         self.setPalette(pal)
 
     def setTextColor(self, text: str, color: QColor) -> None:
@@ -283,7 +284,7 @@ class UnitLabel(QLabel):
             New text color.
         """
         pal = self.palette()
-        pal.setColor(QPalette.Normal, QPalette.WindowText, color)
+        pal.setColor(QPalette.WindowText, color)
         self.setPalette(pal)
 
 

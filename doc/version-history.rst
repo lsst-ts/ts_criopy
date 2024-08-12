@@ -8,6 +8,7 @@ v0.8.0
 ------
 
 * Migrated to PySide6
+* Changes to conda/test builds
 
 v0.7.0
 ------

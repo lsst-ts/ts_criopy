@@ -23,7 +23,7 @@ import enum
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QPointF, QRect, Qt
-from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPen, QTransform
+from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPalette, QPen, QTransform
 from PySide6.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
 
 from ...gui import Colors
@@ -212,7 +212,7 @@ class ForceActuatorItem(QGraphicsItem):
 
         palette = QGuiApplication.palette()
         if not self.isEnabled():
-            palette.setCurrentColorGroup(palette.Inactive)
+            palette.setCurrentColorGroup(QPalette.Inactive)
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)

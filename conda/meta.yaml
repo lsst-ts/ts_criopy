@@ -33,6 +33,7 @@ test:
     - lsst-efd-client
     - pandas
     - pyyaml
+    - qt6-charts
   script_env:
     - QT_API=pyside6
   source_files:
@@ -51,6 +52,7 @@ requirements:
     - {{ cdt('libxext') }}     # [linux]
     - python {{python}}
     - ts-conda-build =0.3
+    - qt6-charts
   host:
     - python {{python}}
     - setuptools
