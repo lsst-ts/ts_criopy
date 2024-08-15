@@ -34,7 +34,7 @@ class FCUDisplayWidget(QWidget):
         self.mirror_widget = MirrorWidget()
 
         for row in FCUTable:
-            self.mirror_widget.mirrorView.add_fcu(row)
+            self.mirror_widget.mirror_view.add_fcu(row)
 
         plot_layout = QVBoxLayout()
         plot_layout.addWidget(self.mirror_widget)

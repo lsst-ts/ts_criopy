@@ -213,22 +213,22 @@ class Widget(QSplitter):
         for field in self.topics.topics[topicIndex].fields:
             self.fieldList.addItem(field.name)
 
-        fieldIndex = self.topics.topics[topicIndex].selectedField
-        if fieldIndex < 0:
+        field_index = self.topics.topics[topicIndex].selected_field
+        if field_index < 0:
             self._set_unknown()
             return
 
-        self.fieldList.setCurrentRow(fieldIndex)
-        self.__change_field(topicIndex, fieldIndex)
+        self.fieldList.setCurrentRow(field_index)
+        self.__change_field(topicIndex, field_index)
 
     @Slot()
-    def currentFieldChanged(self, fieldIndex: int) -> None:
+    def currentFieldChanged(self, field_index: int) -> None:
         topicIndex = self.topicList.currentRow()
-        if topicIndex < 0 or fieldIndex < 0:
+        if topicIndex < 0 or field_index < 0:
             self._set_unknown()
             return
-        self.__change_field(topicIndex, fieldIndex)
-        self.topics.topics[topicIndex].selectedField = fieldIndex
+        self.__change_field(topicIndex, field_index)
+        self.topics.topics[topicIndex].selected_field = field_index
 
     @Slot()
     def editValues(self) -> None:
@@ -348,13 +348,13 @@ class Widget(QSplitter):
         self.editButton.setEnabled(enabled)
         self.clearButton.setEnabled(enabled)
 
-    def __change_field(self, topicIndex: int, fieldIndex: int) -> None:
+    def __change_field(self, topicIndex: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
         self._topic = self.topics.topics[topicIndex]
         self.__setModifyCommand(self._topic.command)
-        self.field = self._topic.fields[fieldIndex]
+        self.field = self._topic.fields[field_index]
         try:
             self.topics.change_topic(topicIndex, self.data_changed, self.m1m3)
             data = self._get_data()

@@ -44,8 +44,8 @@ class Enabled(StateEnabledWidget):
     """
 
     def __init__(self, m1m3: MetaSAL):
-        self.mirrorWidget = MirrorWidget()
-        self.mirrorWidget.setScaleType(Scales.ENABLED_DISABLED)
+        self.mirror_widget = MirrorWidget()
+        self.mirror_widget.setScaleType(Scales.ENABLED_DISABLED)
         super().__init__(
             m1m3,
             [
@@ -59,7 +59,7 @@ class Enabled(StateEnabledWidget):
 
         self.m1m3.enabledForceActuators.connect(self.enabledForceActuators)
 
-        self.mirrorWidget.mirror_view.selectionChanged.connect(self.selectionChanged)
+        self.mirror_widget.mirror_view.selectionChanged.connect(self.selectionChanged)
 
         self.selectedActuatorId = ComboBox()
         self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
@@ -83,7 +83,7 @@ class Enabled(StateEnabledWidget):
         vLayout.addWidget(self.disableButton)
 
         layout = QHBoxLayout()
-        layout.addWidget(self.mirrorWidget)
+        layout.addWidget(self.mirror_widget)
         layout.addLayout(vLayout)
         self.setLayout(layout)
 
@@ -143,7 +143,7 @@ class Enabled(StateEnabledWidget):
 
     @Slot()
     def _actuatorChanged(self, text: str) -> None:
-        self.mirrorWidget.set_selected(int(text))
+        self.mirror_widget.set_selected(int(text))
 
     @asyncSlot()
     async def _enable_all_force_actuators(self) -> None:
@@ -168,9 +168,9 @@ class Enabled(StateEnabledWidget):
     @Slot()
     def enabledForceActuators(self, data: BaseMsgType) -> None:
         """Callback with enabled FA data. Triggers display update."""
-        if len(self.mirrorWidget.mirror_view.items()) == 0:
+        if len(self.mirror_widget.mirror_view.items()) == 0:
             new = True  # need to add force actuators
-            self.mirrorWidget.clear()
+            self.mirror_widget.clear()
         else:
             new = False
 
@@ -184,16 +184,16 @@ class Enabled(StateEnabledWidget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
             if new:
-                self.mirrorWidget.mirror_view.add_force_actuator(
+                self.mirror_widget.mirror_view.add_force_actuator(
                     row,
                     value,
                     index,
                     state,
                 )
             else:
-                self.mirrorWidget.mirror_view.update_force_actuator(
+                self.mirror_widget.mirror_view.update_force_actuator(
                     actuator_id, value, state
                 )
 
-        self.mirrorWidget.set_color_scale()
+        self.mirror_widget.set_color_scale()
         self._updateSelected()

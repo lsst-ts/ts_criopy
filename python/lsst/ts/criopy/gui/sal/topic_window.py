@@ -89,7 +89,7 @@ class TopicWindow(QSplitter):
 
         plot_layout = QVBoxLayout()
         selection_layout = QVBoxLayout()
-        filterLayout = QHBoxLayout()
+        filter_layout = QHBoxLayout()
 
         w_left = QWidget()
         w_left.setLayout(plot_layout)
@@ -105,25 +105,27 @@ class TopicWindow(QSplitter):
         if detail_widget is not None:
             selection_layout.addWidget(detail_widget)
         else:
-            self.selectedActuatorIdLabel = QLabel()
-            self.selectedActuatorValueLabel = QLabel()
-            self.selectedActuatorWarningLabel = WarningLabel()
-            self.lastUpdatedLabel = TimeDeltaLabel()
+            self.selected_actuator_id_label = QLabel()
+            self.selected_actuator_value_label = QLabel()
+            self.selected_actuator_warning_label = WarningLabel()
+            self.last_updated_label = TimeDeltaLabel()
 
             details_layout = QFormLayout()
             details_layout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-            details_layout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
             details_layout.addRow(
-                QLabel("Actuator Value"), self.selectedActuatorValueLabel
+                QLabel("Actuator Id"), self.selected_actuator_id_label
             )
             details_layout.addRow(
-                QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
+                QLabel("Actuator Value"), self.selected_actuator_value_label
             )
-            details_layout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+            details_layout.addRow(
+                QLabel("Actuator Warning"), self.selected_actuator_warning_label
+            )
+            details_layout.addRow(QLabel("Last Updated"), self.last_updated_label)
             selection_layout.addLayout(details_layout)
 
         selection_layout.addWidget(QLabel("Filter Data"))
-        selection_layout.addLayout(filterLayout)
+        selection_layout.addLayout(filter_layout)
 
         self.topic_list = QListWidget()
         self.topic_list.currentRowChanged.connect(self.current_topic_changed)
@@ -149,7 +151,7 @@ class TopicWindow(QSplitter):
         for field in self.collection.topics[topic_index].fields:
             self.field_list.addItem(field.name)
 
-        field_index = self.collection.topics[topic_index].selectedField
+        field_index = self.collection.topics[topic_index].selected_field
         if field_index < 0:
             self._set_unknown()
             return
@@ -164,7 +166,7 @@ class TopicWindow(QSplitter):
             self._set_unknown()
             return
         self._change_field(topic_index, field_index)
-        self.collection.topics[topic_index].selectedField = field_index
+        self.collection.topics[topic_index].selected_field = field_index
 
     def _set_unknown(self) -> None:
         self.last_updated_label.set_unknown()
