@@ -213,33 +213,33 @@ class Widget(QSplitter):
         for field in self.topics.topics[topicIndex].fields:
             self.fieldList.addItem(field.name)
 
-        fieldIndex = self.topics.topics[topicIndex].selectedField
-        if fieldIndex < 0:
+        field_index = self.topics.topics[topicIndex].selected_field
+        if field_index < 0:
             self._set_unknown()
             return
 
-        self.fieldList.setCurrentRow(fieldIndex)
-        self.__change_field(topicIndex, fieldIndex)
+        self.fieldList.setCurrentRow(field_index)
+        self.__change_field(topicIndex, field_index)
 
     @Slot()
-    def currentFieldChanged(self, fieldIndex: int) -> None:
+    def currentFieldChanged(self, field_index: int) -> None:
         topicIndex = self.topicList.currentRow()
-        if topicIndex < 0 or fieldIndex < 0:
+        if topicIndex < 0 or field_index < 0:
             self._set_unknown()
             return
-        self.__change_field(topicIndex, fieldIndex)
-        self.topics.topics[topicIndex].selectedField = fieldIndex
+        self.__change_field(topicIndex, field_index)
+        self.topics.topics[topicIndex].selected_field = field_index
 
     @Slot()
     def editValues(self) -> None:
         def get_axis(topic: TopicData) -> str:
             axis = ""
             for f in topic.fields:
-                if f.valueIndex == FAIndex.X:
+                if f.value_index == FAIndex.X:
                     axis += "x"
-                elif f.valueIndex == FAIndex.Y:
+                elif f.value_index == FAIndex.Y:
                     axis += "y"
-                elif f.valueIndex == FAIndex.Z:
+                elif f.value_index == FAIndex.Z:
                     axis += "z"
             return "".join(sorted(set(axis)))
 
@@ -271,7 +271,7 @@ class Widget(QSplitter):
                 "Topic or field is None in Widget.getCurrentFieldName:"
                 f" {self._topic}, {self.field}"
             )
-        return (self._topic.topic, self.field.fieldName)
+        return (self._topic.topic, self.field.field_name)
 
     def _get_data(self) -> typing.Any:
         if self._topic is None:
@@ -313,7 +313,7 @@ class Widget(QSplitter):
         # near neighbour
         nearIDs = FATable[selected_actuator.actuator.index].near_neighbors
         nearIndices = list(
-            selected_actuator.actuator.near_neighbors_indices(self.field.valueIndex)
+            selected_actuator.actuator.near_neighbors_indices(self.field.value_index)
         )
 
         if len(nearIndices) == 0:
@@ -330,7 +330,9 @@ class Widget(QSplitter):
             FATable[selected_actuator.actuator.index].far_neighbors,
         )
         farIndices = list(
-            selected_actuator.actuator.only_far_neighbors_indices(self.field.valueIndex)
+            selected_actuator.actuator.only_far_neighbors_indices(
+                self.field.value_index
+            )
         )
         if len(farIndices) == 0:
             self.farSelectedIdsLabel.setText("---")
@@ -346,26 +348,26 @@ class Widget(QSplitter):
         self.editButton.setEnabled(enabled)
         self.clearButton.setEnabled(enabled)
 
-    def __change_field(self, topicIndex: int, fieldIndex: int) -> None:
+    def __change_field(self, topicIndex: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
         self._topic = self.topics.topics[topicIndex]
         self.__setModifyCommand(self._topic.command)
-        self.field = self._topic.fields[fieldIndex]
+        self.field = self._topic.fields[field_index]
         try:
-            self.topics.change_topic(topicIndex, self.dataChanged, self.m1m3)
+            self.topics.change_topic(topicIndex, self.data_changed, self.m1m3)
             data = self._get_data()
             self.changeValues()
             self.updateValues(data)
-            self.dataChanged(data)
+            self.data_changed(data)
         except RuntimeError as err:
             print("ForceActuator.Widget.__change_field", err)
             self._topic = None
             pass
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 

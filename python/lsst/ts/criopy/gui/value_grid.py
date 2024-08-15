@@ -91,10 +91,10 @@ class ValueGrid(QGroupBox):
 
         self.setLayout(layout)
 
-        event.connect(self._dataChanged)
+        event.connect(self._data_changed)
 
     @Slot()
-    def _dataChanged(self, data: BaseMsgType) -> None:
+    def _data_changed(self, data: BaseMsgType) -> None:
         for e in dir(data):
             ch = self.findChild(QWidget, e)
             if ch is not None:
@@ -157,8 +157,8 @@ class InterlockOffGrid(ValueGrid):
             super().__init__(InterlockOffLabel, items, event, cols)
 
     @Slot()
-    def _dataChanged(self, data: BaseMsgType) -> None:
-        super()._dataChanged(data)
+    def _data_changed(self, data: BaseMsgType) -> None:
+        super()._data_changed(data)
         if self.anyWarningLabel is not None:
             anyWarning = False
             for e in dir(data):

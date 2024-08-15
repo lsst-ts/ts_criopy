@@ -34,28 +34,28 @@ class GraphPageWidget(Widget):
     """
 
     def __init__(self, m1m3: MetaSAL | Simulator):
-        self.mirrorWidget = MirrorWidget()
+        self.mirror_widget = MirrorWidget()
 
         for row in FATable:
-            self.mirrorWidget.mirrorView.add_force_actuator(
+            self.mirror_widget.mirrorView.add_force_actuator(
                 row,
                 None,
                 None,
                 ForceActuatorItem.STATE_INACTIVE,
             )
 
-        self.mirrorWidget.mirrorView.selectionChanged.connect(
+        self.mirror_widget.mirrorView.selectionChanged.connect(
             self.updateSelectedActuator
         )
 
-        super().__init__(m1m3, self.mirrorWidget)
+        super().__init__(m1m3, self.mirror_widget)
 
     def changeValues(self) -> None:
         """Called when data are changed."""
         if self.field is None:
             raise RuntimeError("field is None in GraphPageWidget.changeValues")
 
-        self.mirrorWidget.setScaleType(self.field.scaleType)
+        self.mirror_widget.setScaleType(self.field.scale_type)
 
     def updateValues(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
@@ -84,7 +84,7 @@ class GraphPageWidget(Widget):
 
         for row in FATable:
             index = row.index
-            data_index = row.get_index(self.field.valueIndex)
+            data_index = row.get_index(self.field.value_index)
             if values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif warningData is not None or data_index is None:
@@ -96,17 +96,17 @@ class GraphPageWidget(Widget):
                 None if (values is None or data_index is None) else values[data_index]
             )
 
-            self.mirrorWidget.mirrorView.updateForceActuator(
+            self.mirror_widget.mirrorView.updateForceActuator(
                 row.actuator_id, value, state
             )
 
         if values is None:
-            self.mirrorWidget.setRange(0, 0)
+            self.mirror_widget.setRange(0, 0)
             return
 
-        self.mirrorWidget.setRange(min(values), max(values))
+        self.mirror_widget.setRange(min(values), max(values))
 
-        selected = self.mirrorWidget.mirrorView.selected()
+        selected = self.mirror_widget.mirrorView.selected()
         if selected is not None:
             if selected.data is not None:
                 self.selectedActuatorValueLabel.setText(selected.getValue())

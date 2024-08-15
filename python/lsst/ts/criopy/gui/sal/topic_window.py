@@ -120,49 +120,49 @@ class TopicWindow(QSplitter):
         selection_layout.addWidget(QLabel("Filter Data"))
         selection_layout.addLayout(filterLayout)
 
-        self.topicList = QListWidget()
-        self.topicList.currentRowChanged.connect(self.currentTopicChanged)
+        self.topic_list = QListWidget()
+        self.topic_list.currentRowChanged.connect(self.current_topic_changed)
         for topic in self.collection.topics:
-            self.topicList.addItem(topic.name)
-        self.fieldList = QListWidget()
-        self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
+            self.topic_list.addItem(topic.name)
+        self.field_list = QListWidget()
+        self.field_list.currentRowChanged.connect(self.current_field_changed)
 
         plot_layout.addWidget(user_widget)
 
-        filterLayout.addWidget(self.topicList)
-        filterLayout.addWidget(self.fieldList)
+        filterLayout.addWidget(self.topic_list)
+        filterLayout.addWidget(self.field_list)
 
-        self.topicList.setCurrentRow(0)
+        self.topic_list.setCurrentRow(0)
 
     @Slot()
     def currentTopicChanged(self, topic_index: int) -> None:
         if topic_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
 
-        self.fieldList.clear()
+        self.field_list.clear()
         for field in self.collection.topics[topic_index].fields:
-            self.fieldList.addItem(field.name)
+            self.field_list.addItem(field.name)
 
-        field_index = self.collection.topics[topic_index].selectedField
+        field_index = self.collection.topics[topic_index].selected_field
         if field_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
 
-        self.fieldList.setCurrentRow(field_index)
+        self.field_list.setCurrentRow(field_index)
         self._changeField(topic_index, field_index)
 
     @Slot()
-    def currentFieldChanged(self, field_index: int) -> None:
-        topic_index = self.topicList.currentRow()
+    def current_field_changed(self, field_index: int) -> None:
+        topic_index = self.topic_list.currentRow()
         if topic_index < 0 or field_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
         self._changeField(topic_index, field_index)
-        self.collection.topics[topic_index].selectedField = field_index
+        self.collection.topics[topic_index].selected_field = field_index
 
-    def _setUnknown(self) -> None:
-        self.lastUpdatedLabel.setUnknown()
+    def _set_unknown(self) -> None:
+        self.lastUpdatedLabel.set_unknown()
 
     def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
         """
@@ -186,26 +186,26 @@ class TopicWindow(QSplitter):
         self.selectedActuatorValueLabel.setText(selected_actuator.getValue())
         self.selectedActuatorWarningLabel.setValue(selected_actuator.warning)
 
-    def _changeField(self, topic_index: int, field_index: int) -> None:
+    def _change_field(self, topic_index: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
         topic = self.collection.topics[topic_index]
         self.field = topic.fields[field_index]
         try:
-            self.collection.change_topic(topic_index, self.dataChanged, self.comm)
+            self.collection.change_topic(topic_index, self.data_changed, self.comm)
 
             data = getattr(self.comm.remote, topic.getTopic()).get()
-            self.dataChanged(data)
+            self.data_changed(data)
         except RuntimeError as err:
             print("TopicWindow._changeField:", err)
             pass
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         raise RuntimeError("Abstract method updateValues")
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 
@@ -213,9 +213,9 @@ class TopicWindow(QSplitter):
         ----------
 
         """
-        self.updateValues(data)
+        self.update_values(data)
         if data is None:
-            self._setUnknown()
+            self._set_unknown()
         else:
             try:
                 self.lastUpdatedLabel.setTime(data.timestamp)
