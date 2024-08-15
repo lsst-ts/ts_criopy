@@ -25,7 +25,7 @@ from lsst_efd_client import EfdClient
 
 class ForceActuatorForces:
     """Returns several different summaries of the force actuator
-    following errors
+    following errors.
 
     Parameters
     ----------
@@ -92,7 +92,7 @@ class ForceActuatorForces:
             "lsst.sal.MTM1M3.forceActuatorData", fields, self.start, self.end
         )
 
-    async def actuaror_forces(self, actuator: ForceActuatorData) -> pd.DataFrame:
+    async def actuator_forces(self, actuator: ForceActuatorData) -> pd.DataFrame:
         fields = [f"zForce{actuator.z_index}"]
 
         if actuator.x_index is not None:

@@ -53,7 +53,7 @@ class DataWidget(QTableWidget):
         for r in range(0, 10):
             self.setVerticalHeaderItem(r, QTableWidgetItem(str(r * 10)))
             for c in range(0, 10):
-                item = QTableWidgetItem("")
+                item = QTableWidgetItem("---")
                 self.setItem(r, c, item)
         self.empty()
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -65,7 +65,7 @@ class DataWidget(QTableWidget):
         r = 0
         c = 0
         for value in data:
-            self.item(r, c).setText(str(value))
+            self.item(r, c).setText(f"{value:0.2f}")
             c += 1
             if c >= self.columnCount():
                 c = 0
