@@ -20,6 +20,7 @@ from .inclinometer_page_widget import InclinometerPageWidget
 from .interlock_page_widget import InterlockPageWidget
 from .lvdt_page_widget import LVDTPageWidget
 from .offsets_widget import OffsetsWidget
+from .outer_loop_page_widget import OuterLoopPageWidget
 from .overview_page_widget import OverviewPageWidget
 from .pid_page_widget import PIDPageWidget
 from .power_page_widget import PowerPageWidget

@@ -40,6 +40,7 @@ from .m1m3 import (
     InterlockPageWidget,
     LVDTPageWidget,
     OffsetsWidget,
+    OuterLoopPageWidget,
     OverviewPageWidget,
     PIDPageWidget,
     PowerPageWidget,
@@ -97,6 +98,7 @@ class EUI(EUIWindow):
         self.add_page("Force Actuator Value", force_actuator.ValuePageWidget, self.m1m3)
         self.add_page("Compressor 1", CompressorPageWidget, self.compressor_1)
         self.add_page("Compressor 2", CompressorPageWidget, self.compressor_2)
+        self.add_page("Outer loop", OuterLoopPageWidget, self.m1m3)
         self.add_page("SAL Log", LogWidget, self.m1m3)
         self.add_page("SAL Errors", SALErrorCodeWidget, self.m1m3)
 

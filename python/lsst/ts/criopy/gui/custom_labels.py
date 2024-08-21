@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 from ..salcomm import MetaSAL
 from .colors import Colors
 from .event_window import EventWindow
+from .min_max_label import MinLabel
 
 __all__ = [
     "VLine",
@@ -61,6 +62,8 @@ __all__ = [
     "PressureInmBar",
     "Hours",
     "Seconds",
+    "MilliSeconds",
+    "MinMilliSeconds",
     "KiloWatt",
     "DMS",
     "DataDegC",
@@ -151,7 +154,7 @@ class DataLabel(QLabel):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self.new_data)
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
@@ -160,7 +163,7 @@ class DataLabel(QLabel):
         return DataLabel()
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def new_data(self, data: BaseMsgType) -> None:
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -335,13 +338,13 @@ class DataUnitLabel(UnitLabel):
         super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self.new_data)
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def new_data(self, data: BaseMsgType) -> None:
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -609,6 +612,16 @@ class Seconds(DataUnitLabel):
         super().__init__(None, field, ".0f", u.s)
 
 
+class MilliSeconds(DataUnitLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(None, field, ".1f", u.s, u.ms)
+
+
+class MinMilliSeconds(MilliSeconds, metaclass=MinLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(field)
+
+
 class KiloWatt(DataUnitLabel):
     def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field, ".01f", u.kW)
@@ -872,12 +885,12 @@ class WarningButton(ColoredButton):
         self.comm = comm
         self._topic = topic
         self._field = field
-        getattr(comm, topic).connect(self._data)
+        getattr(comm, topic).connect(self.newData)
         self.window: None | EventWindow = None
         self.clicked.connect(self._showWindow)
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def newData(self, data: BaseMsgType) -> None:
         self.setValue(getattr(data, self._field))
 
     def _showWindow(self) -> None:
@@ -919,10 +932,19 @@ class InterlockOffLabel(QLabel):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self.new_data)
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def new_data(self, data: BaseMsgType) -> None:
+        """Called when new data arrives. Should be overwritten to include data
+        pre-processing.
+
+        Parameters
+        ----------
+        data : `BaseMsgType`
+            Message data. As new_data method is connected to data signal, the
+            signal stub pass that as additional argument to the call.
+        """
         self.setValue(getattr(data, self._field))
 
     def setValue(self, interlock_off: bool) -> None:
