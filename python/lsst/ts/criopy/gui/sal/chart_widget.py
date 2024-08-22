@@ -33,14 +33,21 @@ AxisVar = typing.TypeVar("AxisVar", bound="Axis")
 
 
 class AxisValue:
-    def __init__(self, field: str, index: int | None = None):
+    def __init__(
+        self, field: str, index: int | None = None, scale: float | None = None
+    ):
         self.field = field
         self.index = index
+        self.scale = scale
 
     def get_value(self, data: BaseMsgType) -> float:
         if self.index is not None:
-            return getattr(data, self.field)[self.index]
-        return getattr(data, self.field)
+            ret = getattr(data, self.field)[self.index]
+        else:
+            ret = getattr(data, self.field)
+        if self.scale is not None:
+            return ret * self.scale
+        return ret
 
 
 class Axis:
@@ -61,8 +68,10 @@ class Axis:
         self.signal = signal
         self.fields: dict[str, AxisValue] = {}
 
-    def addValue(self: AxisVar, name: str, field: str) -> AxisVar:
-        self.fields[name] = AxisValue(field)
+    def addValue(
+        self: AxisVar, name: str, field: str, scale: float | None = None
+    ) -> AxisVar:
+        self.fields[name] = AxisValue(field, scale=scale)
         return self
 
     def addArrayValue(self: AxisVar, name: str, field: str, index: int) -> AxisVar:
@@ -124,7 +133,7 @@ class ChartWidget(TimeChartView):
         self,
         data: BaseMsgType,
         axis_index: int,
-        fields: typing.Iterable[str | tuple[str, int]],
+        fields: typing.Iterable[AxisValue]],
     ) -> None:
         if self._has_timestamp is None:
             try:
@@ -135,10 +144,7 @@ class ChartWidget(TimeChartView):
 
         displayData = []
         for f in fields:
-            if isinstance(f, tuple):
-                displayData.append(getattr(data, f[0])[f[1]])
-            else:
-                displayData.append(getattr(data, f))
+            displayData.append(f.get_value(data))
 
         self.chart.append(
             data.timestamp if self._has_timestamp else data.private_sndStamp,

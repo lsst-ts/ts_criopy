@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import astropy.units as u
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui import DataFormWidget, MaxMilliSeconds, MilliSeconds, MinMilliSeconds
@@ -43,7 +44,7 @@ class OuterLoopPageWidget(QWidget):
         layout.addSpacing(30)
 
         axis = Axis("Time (s)", m1m3.outerLoopData)
-        axis.addValue("Execution time", "executionTime")
+        axis.addValue("Execution time", "executionTime", u.s.to(u.ms))
 
         layout.addWidget(ChartWidget(axis))
 
