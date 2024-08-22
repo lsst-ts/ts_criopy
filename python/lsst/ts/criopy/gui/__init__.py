@@ -18,6 +18,7 @@ from .custom_labels import (
     ColoredButton,
     ConnectedLabel,
     DataDegC,
+    DataFormatorLabel,
     DataLabel,
     DataUnitLabel,
     DegS2,

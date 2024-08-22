@@ -46,6 +46,7 @@ __all__ = [
     "VLine",
     "ColoredButton",
     "DataLabel",
+    "DataFormatorLabel",
     "UnitLabel",
     "DataUnitLabel",
     "Force",
@@ -290,6 +291,10 @@ class UnitLabel(QLabel):
 
 
 class DataFormatorLabel(UnitLabel):
+    """Formated unit label. Add formating and handling of the cursor
+    interactions."""
+
+    resetFormat = Signal()
 
     def __init__(self, signal: Signal | None, formator: DataFormator):
         super().__init__()
@@ -300,6 +305,8 @@ class DataFormatorLabel(UnitLabel):
         self.setObjectName(formator._field)
         self.setCursor(Qt.PointingHandCursor)
 
+        self.resetFormat.connect(formator.reset_formator)
+
     @Slot()
     def new_data(self, data: BaseMsgType) -> None:
         self.setText(self.formator.format(data))
@@ -309,8 +316,9 @@ class DataFormatorLabel(UnitLabel):
 # closest I was able to get was probably using **kwargs for DataLabel and
 # UnitLabel, and keep Python super().__init__(... call
 class DataUnitLabel(DataFormatorLabel):
-    """Combines DataLabel and UnitLabel. Parameters specify signal and field
-    name (as in DataLabel) and display options (as in UnitLabel).
+    """Combines DataFormatorLabel and UnitLabel handling for SAL data with
+    error and warning functions. Parameters specify signal and field name (as
+    in DataLabel) and display options (as in UnitLabel).
 
     Parameters
     ----------
@@ -1148,7 +1156,7 @@ class Heartbeat(QWidget):
         else:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    "<font color='{Colors.OK.name()}'>%H:%M:%S.%f</font>"
+                    f"<font color='{Colors.OK.name()}'>%H:%M:%S.%f</font>"
                 )
             )
 

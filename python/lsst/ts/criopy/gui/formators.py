@@ -24,6 +24,7 @@ import typing
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
+from PySide6.QtCore import Slot
 
 from .colors import Colors
 
@@ -97,6 +98,10 @@ class DataFormator:
             text = f"<font color='{Colors.WARNING.name()}'>{text}</font>"
         return text
 
+    @Slot()
+    def reset_formator(self) -> None:
+        pass
+
 
 class MinFormator(DataFormator):
     _current_data: BaseMsgType = None
@@ -111,6 +116,10 @@ class MinFormator(DataFormator):
                 self._current_data = data
         return super().format(self._current_data)
 
+    @Slot()
+    def reset_formator(self) -> None:
+        self._current_data = None
+
 
 class MaxFormator(DataFormator):
     _current_data: BaseMsgType = None
@@ -124,3 +133,7 @@ class MaxFormator(DataFormator):
             if getattr(data, self._field) > getattr(self._current_data, self._field):
                 self._current_data = data
         return super().format(self._current_data)
+
+    @Slot()
+    def reset_formator(self) -> None:
+        self._current_data = None

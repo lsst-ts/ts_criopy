@@ -18,7 +18,8 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import astropy.units as u
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from ..gui import DataFormWidget, MaxMilliSeconds, MilliSeconds, MinMilliSeconds
 from ..gui.sal import Axis, ChartWidget
@@ -30,16 +31,30 @@ class OuterLoopPageWidget(QWidget):
         super().__init__()
 
         layout = QVBoxLayout()
-        layout.addWidget(
+
+        self.statistics = [
+            MinMilliSeconds(field="executionTime"),
+            MaxMilliSeconds(field="executionTime"),
+        ]
+
+        values = QHBoxLayout()
+        values.addWidget(
             DataFormWidget(
                 m1m3.outerLoopData,
                 [
                     ("Execution time", MilliSeconds(field="executionTime")),
-                    ("Min", MinMilliSeconds(field="executionTime")),
-                    ("Max", MaxMilliSeconds(field="executionTime")),
+                    ("Min", self.statistics[0]),
+                    ("Max", self.statistics[1]),
                 ],
             )
         )
+
+        reset_button = QPushButton("&Reset statistics")
+        reset_button.clicked.connect(self.reset)
+
+        values.addWidget(reset_button)
+
+        layout.addLayout(values)
 
         layout.addSpacing(30)
 
@@ -49,3 +64,7 @@ class OuterLoopPageWidget(QWidget):
         layout.addWidget(ChartWidget(axis))
 
         self.setLayout(layout)
+
+    @Slot()
+    def reset(self) -> None:
+        [s.resetFormat.emit() for s in self.statistics]
