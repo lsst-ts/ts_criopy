@@ -19,7 +19,7 @@
 
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from ..gui import DataFormWidget, MilliSeconds, MinMilliSeconds
+from ..gui import DataFormWidget, MaxMilliSeconds, MilliSeconds, MinMilliSeconds
 from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
@@ -35,6 +35,7 @@ class OuterLoopPageWidget(QWidget):
                 [
                     ("Execution time", MilliSeconds(field="executionTime")),
                     ("Min", MinMilliSeconds(field="executionTime")),
+                    ("Max", MaxMilliSeconds(field="executionTime")),
                 ],
             )
         )

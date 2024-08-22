@@ -27,7 +27,7 @@ from lsst.ts.salobj import BaseMsgType
 
 from .colors import Colors
 
-__all__ = ["DataFormator", "MinFormator"]
+__all__ = ["DataFormator", "MinFormator", "MaxFormator"]
 
 
 class DataFormator:
@@ -108,5 +108,19 @@ class MinFormator(DataFormator):
             self._current_data = data
         else:
             if getattr(data, self._field) < getattr(self._current_data, self._field):
+                self._current_data = data
+        return super().format(self._current_data)
+
+
+class MaxFormator(DataFormator):
+    _current_data: BaseMsgType = None
+
+    def format(self, data: BaseMsgType) -> str:
+        assert self._field is not None
+
+        if self._current_data is None:
+            self._current_data = data
+        else:
+            if getattr(data, self._field) > getattr(self._current_data, self._field):
                 self._current_data = data
         return super().format(self._current_data)

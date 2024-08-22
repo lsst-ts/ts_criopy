@@ -40,7 +40,7 @@ from PySide6.QtWidgets import (
 from ..salcomm import MetaSAL
 from .colors import Colors
 from .event_window import EventWindow
-from .formators import DataFormator, MinFormator
+from .formators import DataFormator, MaxFormator, MinFormator
 
 __all__ = [
     "VLine",
@@ -64,6 +64,7 @@ __all__ = [
     "Seconds",
     "MilliSeconds",
     "MinMilliSeconds",
+    "MaxMilliSeconds",
     "KiloWatt",
     "DMS",
     "DataDegC",
@@ -199,7 +200,7 @@ class UnitLabel(QLabel):
 
     def __init__(
         self,
-        fmt: str = "d",
+        fmt: str = "f",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
         is_warn_func: typing.Callable[[float], bool] | None = None,
@@ -291,6 +292,7 @@ class UnitLabel(QLabel):
 class DataFormatorLabel(UnitLabel):
 
     def __init__(self, signal: Signal | None, formator: DataFormator):
+        super().__init__()
         if signal is not None:
             signal.connect(self.new_data)
 
@@ -341,7 +343,7 @@ class DataUnitLabel(DataFormatorLabel):
         self,
         signal: Signal,
         field: str | None = None,
-        fmt: str = "d",
+        fmt: str = "f",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
         is_warn_func: typing.Callable[[float], bool] | None = None,
@@ -623,6 +625,11 @@ class MilliSeconds(DataUnitLabel):
 class MinMilliSeconds(DataFormatorLabel):
     def __init__(self, field: str | None = None):
         super().__init__(None, MinFormator(field, ".1f", u.s, u.ms))
+
+
+class MaxMilliSeconds(DataFormatorLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(None, MaxFormator(field, ".1f", u.s, u.ms))
 
 
 class KiloWatt(DataUnitLabel):

@@ -33,6 +33,7 @@ from .custom_labels import (
     Liter,
     LiterMinute,
     LogEventWarning,
+    MaxMilliSeconds,
     MilliSeconds,
     MinMilliSeconds,
     Mm,

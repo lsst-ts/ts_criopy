@@ -77,9 +77,8 @@ class DataFormWidget(QWidget):
 
     def _process_signal(self, data: BaseMsgType) -> None:
         for e in dir(data):
-            ch = self.findChild(QWidget, e)
-            if ch is not None:
-                ch.setValue(getattr(data, e))
+            for ch in self.findChildren(QWidget, e):
+                ch.new_data(data)
 
     def mousePressEvent(self, ev: QMouseEvent) -> None:
         if self._timeChart is not None:
