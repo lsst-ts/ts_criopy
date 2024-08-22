@@ -27,9 +27,20 @@ from PySide6.QtCore import Signal
 
 from ..time_chart import TimeChart, TimeChartView
 
-__all__ = ["Axis", "ChartWidget"]
+__all__ = ["AxisValue", "Axis", "ChartWidget"]
 
 AxisVar = typing.TypeVar("AxisVar", bound="Axis")
+
+
+class AxisValue:
+    def __init__(self, field: str, index: int | None = None):
+        self.field = field
+        self.index = index
+
+    def get_value(self, data: BaseMsgType) -> float:
+        if self.index is not None:
+            return getattr(data, self.field)[self.index]
+        return getattr(data, self.field)
 
 
 class Axis:
@@ -48,17 +59,17 @@ class Axis:
     def __init__(self, title: str, signal: Signal):
         self.title = title
         self.signal = signal
-        self.fields: dict[str, str | tuple[str, int]] = {}
+        self.fields: dict[str, AxisValue] = {}
 
     def addValue(self: AxisVar, name: str, field: str) -> AxisVar:
-        self.fields[name] = field
+        self.fields[name] = AxisValue(field)
         return self
 
     def addArrayValue(self: AxisVar, name: str, field: str, index: int) -> AxisVar:
-        self.fields[name] = (field, index)
+        self.fields[name] = AxisValue(field, index)
         return self
 
-    def addValues(self: AxisVar, fields: dict[str, str]) -> AxisVar:
+    def add_values(self: AxisVar, fields: dict[str, AxisValue]) -> AxisVar:
         self.fields = {**self.fields, **fields}
         return self
 
@@ -81,7 +92,11 @@ class ChartWidget(TimeChartView):
         a1.addValue("Z", "zForce")
 
         a2 = Axis("Applied Forces (N)", m1m3.appliedForces)
-        a2.addValues({"X" : "xForce", "Y" : "yForce", "Z" : "zForce"})
+        a2.add_values({
+            "X" : AxisValue("xForce"),
+            "Y" : AxisValue("yForce"),
+            "Z" : AxisValue("zForce")
+        })
 
         chart = ChartWidget(a1, a2, Axis(
             "Pre-clipped Forces (N)",
