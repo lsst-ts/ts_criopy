@@ -20,9 +20,9 @@
 import typing
 
 import astropy.units as u
-from PySide2.QtCore import Signal
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
     QApplication,
     QDoubleSpinBox,
     QFormLayout,

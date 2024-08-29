@@ -24,7 +24,6 @@ from lsst_efd_client import EfdClient
 
 
 class ForceActuatorForces:
-
     """Returns several different summaries of the force actuator
     following errors
 

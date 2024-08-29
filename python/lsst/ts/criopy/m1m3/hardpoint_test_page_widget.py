@@ -20,8 +20,8 @@
 from functools import partial
 
 from lsst.ts.xml.enums.MTM1M3 import HardpointTest
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui import (
     ArrayButton,
@@ -97,7 +97,7 @@ class HardpointTestPageWidget(QWidget):
                             ArrayItem("encoder", "Encoder"),
                             ArrayItem(
                                 "measuredForce",
-                                "Measuerd force",
+                                "Measured force",
                                 partial(Force, fmt=".03f"),
                             ),
                             ArrayItem(

@@ -24,8 +24,8 @@ import typing
 import numpy
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QListWidget,
@@ -397,4 +397,4 @@ class Widget(QSplitter):
             except AttributeError:
                 self.forces_moments[i + 3].setText("-N-")
 
-        self.forces_moments[6].setText(f"{getattr(data,'forceMagnitude'):.3f} N")
+        self.forces_moments[6].setText(f"{getattr(data, 'forceMagnitude'):.3f} N")

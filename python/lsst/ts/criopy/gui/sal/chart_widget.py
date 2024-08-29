@@ -23,7 +23,7 @@ import typing
 from functools import partial
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import Signal
+from PySide6.QtCore import Signal
 
 from ..time_chart import TimeChart, TimeChartView
 

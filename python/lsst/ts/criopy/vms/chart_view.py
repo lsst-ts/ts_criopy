@@ -19,10 +19,10 @@
 
 __all__ = ["ChartView"]
 
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Qt, Signal
-from PySide2.QtGui import QContextMenuEvent
-from PySide2.QtWidgets import QAction, QMenu
+from PySide6.QtCharts import QAbstractSeries, QLineSeries
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction, QContextMenuEvent
+from PySide6.QtWidgets import QMenu
 
 from ..gui import TimeChartView
 from .unit import menuUnits, units
@@ -32,7 +32,7 @@ class ChartView(TimeChartView):
     axisChanged = Signal(bool, bool)
     unitChanged = Signal(str)
 
-    def __init__(self, title: str, serieType: QtCharts.QAbstractSeries):
+    def __init__(self, title: str, serieType: QAbstractSeries):
         super().__init__(title)
         self._serieType = serieType
         self._maxSensor = 0
@@ -81,7 +81,7 @@ class ChartView(TimeChartView):
                 action.setCheckable(True)
                 action.setChecked(self.chart().findSerie(name) is not None)
 
-        if isinstance(self._serieType, QtCharts.QLineSeries):
+        if isinstance(self._serieType, QLineSeries):
             contextMenu.addSeparator()
             logX = contextMenu.addAction("Log X")
             logX.setCheckable(True)

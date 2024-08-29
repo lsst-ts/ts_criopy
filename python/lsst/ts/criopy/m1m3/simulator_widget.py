@@ -21,7 +21,7 @@
 __all__ = ["SimulatorWidget"]
 
 import numpy as np
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QGridLayout,
@@ -85,7 +85,7 @@ class ForceStatistics(QWidget):
             for col, field in enumerate(
                 ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]
             ):
-                self.labels[row][col].setText(f"{getattr(f,field):.2f}")
+                self.labels[row][col].setText(f"{getattr(f, field):.2f}")
 
         for quadrant in range(1, 5):
             populate_row(

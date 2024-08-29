@@ -23,7 +23,7 @@ import asyncio
 import typing
 
 from lsst.ts.salobj import base
-from PySide2.QtWidgets import QMessageBox, QWidget
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 from .meta_sal import MetaSAL
 

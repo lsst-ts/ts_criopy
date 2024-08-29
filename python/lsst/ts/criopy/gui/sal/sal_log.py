@@ -23,9 +23,9 @@ from datetime import datetime
 from html import escape
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCore import QObject, Signal, Slot
-from PySide2.QtGui import QFont
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
     QComboBox,
     QDockWidget,
     QHBoxLayout,
@@ -174,16 +174,23 @@ class Messages(QPlainTextEdit):
         self.ensureCursorVisible()
 
 
-class Object(QObject):
-    """Construct and populate toolbar and messages."""
+class LogWidget(QWidget):
+    def __init__(self, *comms: MetaSAL):
+        super().__init__()
 
-    def __init__(self, toolbar: LogToolBar, messages: Messages, *comms: MetaSAL):
         self.comms = comms
-        self.messages = messages
+        self.messages = Messages(*comms)
+        self.toolbar = LogToolBar(self, *comms)
 
-        toolbar.clear.connect(messages.clear)
-        toolbar.changeLevel.connect(self.changeLevel)
-        toolbar.setSize.connect(self.setMessageSize)
+        self.toolbar.clear.connect(self.messages.clear)
+        self.toolbar.changeLevel.connect(self.changeLevel)
+        self.toolbar.setSize.connect(self.setMessageSize)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.messages)
+
+        self.setLayout(layout)
 
     @Slot()
     def setMessageSize(self, i: int) -> None:
@@ -194,23 +201,7 @@ class Object(QObject):
         await command_group(self, list(self.comms), "setLogLevel", level=index * 10)
 
 
-class LogWidget(QWidget, Object):
-    def __init__(self, *comms: MetaSAL):
-        QWidget.__init__(self)
-
-        messages = Messages(*comms)
-        toolbar = LogToolBar(self, *comms)
-
-        Object.__init__(self, toolbar, messages, *comms)
-
-        layout = QVBoxLayout()
-        layout.addWidget(toolbar)
-        layout.addWidget(messages)
-
-        self.setLayout(layout)
-
-
-class LogDock(DockWindow, Object):
+class LogDock(DockWindow):
     """Dock with SAL messages.
 
     Parameters
@@ -222,10 +213,21 @@ class LogDock(DockWindow, Object):
     def __init__(self, *comms: MetaSAL):
         super().__init__("SAL Log")
 
-        messages = Messages(*comms)
-        toolbar = LogToolBar(self, *comms)
+        self.comms = comms
+        self.messages = Messages(*comms)
+        self.toolbar = LogToolBar(self, *comms)
 
-        Object.__init__(self, toolbar, messages, *comms)
+        self.toolbar.clear.connect(self.messages.clear)
+        self.toolbar.changeLevel.connect(self.changeLevel)
+        self.toolbar.setSize.connect(self.setMessageSize)
 
-        self.setTitleBarWidget(toolbar)
-        self.setWidget(messages)
+        self.setTitleBarWidget(self.toolbar)
+        self.setWidget(self.messages)
+
+    @Slot()
+    def setMessageSize(self, i: int) -> None:
+        self.messages.setMaximumBlockCount(i)
+
+    @asyncSlot()
+    async def changeLevel(self, index: int) -> None:
+        await command_group(self, list(self.comms), "setLogLevel", level=index * 10)

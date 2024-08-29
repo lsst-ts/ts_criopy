@@ -20,7 +20,7 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from PySide2.QtWidgets import QLabel
+from PySide6.QtWidgets import QLabel
 
 from .aircompressor import CompressorPageWidget
 from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar

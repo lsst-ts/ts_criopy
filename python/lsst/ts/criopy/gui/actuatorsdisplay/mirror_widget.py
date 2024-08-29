@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from PySide2.QtGui import QResizeEvent
-from PySide2.QtWidgets import QHBoxLayout, QWidget
+from PySide6.QtGui import QResizeEvent
+from PySide6.QtWidgets import QHBoxLayout, QWidget
 
 from .bump_test_scale import BumpTestScale
 from .enabled_disabled_scale import EnabledDisabledScale

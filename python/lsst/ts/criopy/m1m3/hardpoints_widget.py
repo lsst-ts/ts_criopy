@@ -22,8 +22,8 @@ from functools import partial
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
-from PySide2.QtCore import Qt, Signal, Slot
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtWidgets import (
     QApplication,
     QDoubleSpinBox,
     QGridLayout,
@@ -489,7 +489,7 @@ class HardpointsWidget(QWidget):
                 label.setTextColor(color)
 
             for idx, e in enumerate(data.encoder):
-                color = self.palette().color(self.palette().WindowText)
+                color = self.palette().windowText().color()
                 if e < hs.lowProximityEncoder[idx] or e > hs.highProximityEncoder[idx]:
                     color = Colors.WARNING
 

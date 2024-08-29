@@ -29,7 +29,7 @@ import sys
 import time
 import typing
 
-from . import parseDuration
+from . import ExitErrorCodes, parseDuration
 from .vms import VMS_DEVICES, Collector
 
 try:
@@ -42,11 +42,11 @@ except ModuleNotFoundError:
 parser = argparse.ArgumentParser(
     description="Save VMS data to a file, either HDF5 or CSV.",
     epilog=(
-        "Data are read as they arrive in DDS messages, matched by timestamps."
-        " Only complete (from all accelerometers the device provides) records"
-        " are stored. Allows either single or multiple devices recording. Can"
-        " be launched as daemon, running on background. Recorded data can be"
-        " analysed offline with VMSGUI."
+        "Data are read as they arrive in DDS messages, matched by timestamps. "
+        "Only complete (from all accelerometers the device provides) records "
+        "are stored. Allows either single or multiple devices recording. On "
+        "Linux it can be launched as daemon, running on background. "
+        "Recorded data can be analysed offline with VMSGUI."
     ),
 )
 parser.add_argument(
@@ -134,12 +134,15 @@ parser.add_argument(
     default=None,
     help="write log messages to given file",
 )
-parser.add_argument(
-    "--daemon",
-    action="store_true",
-    dest="daemon",
-    help="starts as daemon (fork to start process).",
-)
+
+if sys.platform == "linux":
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        dest="daemon",
+        help="starts as daemon (fork to start process).",
+    )
+
 parser.add_argument(
     "--rotate",
     action="store",
@@ -176,7 +179,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
             os.chdir(args.workdir)
         except OSError as oerr:
             print(f"Cannot chdir to {args.workdir}: {oerr.strerror}")
-            sys.exit(2)
+            sys.exit(ExitErrorCodes.VMSLOGGER_CANNOT_CHDIR)
 
     if args.logfile:
         fh = logging.FileHandler(args.logfile)
@@ -202,7 +205,11 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
         for t in tasks:
             t.cancel()
 
-    for signum in [signal.SIGINT, signal.SIGHUP, signal.SIGTERM]:
+    signals = [signal.SIGINT, signal.SIGTERM]
+    if sys.platform == "linux":
+        signals += [signal.SIGHUP]
+
+    for signum in signals:
         signal.signal(signum, cancel_all)
 
     file_type = ""
@@ -214,7 +221,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
                 "Python is missing h5py module, saving HDF 5 file is not"
                 " supported. Please install h5py first (pip install h5py)."
             )
-            sys.exit(1)
+            sys.exit(ExitErrorCodes.VMSLOGGER_MISSING_H5PY)
         file_type += "5"
     else:
         if args.size is None:
@@ -260,7 +267,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
 
 def run() -> None:
     args = parser.parse_args()
-    if args.daemon:
+    if sys.platform == "linux" and args.daemon:
         r_pipe, w_pipe = os.pipe2(os.O_NONBLOCK)  # type: ignore
         child = os.fork()
         if child == 0:
@@ -282,9 +289,9 @@ def run() -> None:
             ret = os.read(r_pipe, 50)
             os.close(r_pipe)
             if ret == b"OK\n":
-                sys.exit(0)
+                sys.exit(os.EX_OK)
 
             print("Returned: ", ret)
-            sys.exit(1)
+            sys.exit(ExitErrorCodes.VMSLOGGER_SUBPROCESS_STARTUP)
     else:
         asyncio.run(main(args))

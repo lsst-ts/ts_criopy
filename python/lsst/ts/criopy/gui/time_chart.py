@@ -24,10 +24,10 @@ import time
 import typing
 
 from lsst.ts.salobj import BaseMsgType
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import QDateTime, QPointF, Qt, Signal, Slot
-from PySide2.QtGui import QContextMenuEvent, QPainter
-from PySide2.QtWidgets import QMenu
+from PySide6.QtCharts import QChart, QChartView, QDateTimeAxis, QLineSeries, QValueAxis
+from PySide6.QtCore import QDateTime, QPointF, Qt, Signal, Slot
+from PySide6.QtGui import QContextMenuEvent, QPainter
+from PySide6.QtWidgets import QMenu
 
 from .abstract_chart import AbstractChart
 from .custom_labels import UnitLabel
@@ -63,19 +63,19 @@ class TimeChart(AbstractChart):
         update_interval: float = 0.1,
     ):
         super().__init__(update_interval=update_interval)
-        self.timeAxis: QtCharts.QDateTimeAxis | None = None
+        self.timeAxis: QDateTimeAxis | None = None
 
         self._createCaches(items, max_items)
         self._attachSeries()
 
     def _addSerie(self, name: str, axis: str) -> None:
-        s = QtCharts.QLineSeries()
+        s = QLineSeries()
         s.setName(name)
         # TODO crashes (core dumps) on some systems. Need to investigate
         # s.setUseOpenGL(True)
         a = self.findAxis(axis)
         if a is None:
-            a = QtCharts.QValueAxis()
+            a = QValueAxis()
             a.setTickCount(10)
             a.setTitleText(axis)
             self.addAxis(
@@ -95,7 +95,7 @@ class TimeChart(AbstractChart):
         # likely the axis or even graph not shown. It's irrelevant when you
         # fill series with data. See QtChart::createDefaultAxes in QtChart
         # source code for details.
-        self.timeAxis = QtCharts.QDateTimeAxis()
+        self.timeAxis = QDateTimeAxis()
         self.timeAxis.setReverse(True)
         self.timeAxis.setTickCount(5)
         self.timeAxis.setFormat("h:mm:ss.zzz")
@@ -260,7 +260,7 @@ class UserSelectedTimeChart(TimeChart):
             self.append(data.private_sndStamp, [getattr(data, self._name)])
 
 
-class TimeChartView(QtCharts.QChartView):
+class TimeChartView(QChartView):
     """Time chart view. Add handling of mouse move events.
 
     Parameters
@@ -269,13 +269,13 @@ class TimeChartView(QtCharts.QChartView):
         Chart associated with view. Defaults to None.
     """
 
-    def __init__(self, chart: QtCharts.QChart | None = None):
+    def __init__(self, chart: QChart | None = None):
         if chart is None:
             super().__init__()
         else:
             super().__init__(chart)
         self.setRenderHint(QPainter.Antialiasing)
-        self.setRubberBand(QtCharts.QChartView.HorizontalRubberBand)
+        self.setRubberBand(QChartView.HorizontalRubberBand)
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         contextMenu = QMenu()

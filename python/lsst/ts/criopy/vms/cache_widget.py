@@ -23,8 +23,8 @@ import concurrent.futures
 import time
 
 from lsst.ts.utils import make_done_future
-from PySide2.QtCharts import QtCharts
-from PySide2.QtCore import Slot
+from PySide6.QtCharts import QLineSeries
+from PySide6.QtCore import Slot
 
 from ..gui import AbstractChart, DockWindow
 from .bars import ToolBar
@@ -68,7 +68,7 @@ class CacheWidget(DockWindow):
 
         self.cache = cache
 
-        self.chartView = ChartView(self.chart, QtCharts.QLineSeries)
+        self.chartView = ChartView(self.chart, QLineSeries)
         self.chartView.updateMaxSensor(self.cache.sensors())
         self.chartView.axisChanged.connect(self.axisChanged)
         self.chartView.unitChanged.connect(self.unitChanged)

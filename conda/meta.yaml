@@ -10,6 +10,8 @@ source:
 build:
   noarch: python
   script: {{PYTHON}} -m pip install --no-deps --ignore-installed .
+  script_env:
+    - QT_API=pyside6
   entry_points:
     - M1M3GUI = lsst.ts.criopy.m1m3gui:run
     - M1M3SIMGUI = lsst.ts.criopy.m1m3simgui:run
@@ -31,6 +33,9 @@ test:
     - lsst-efd-client
     - pandas
     - pyyaml
+    - qt6-charts
+  script_env:
+    - QT_API=pyside6
   source_files:
     - python
     - tests
@@ -45,20 +50,20 @@ requirements:
     - {{ cdt('libxdamage') }}  # [linux]
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
+    - python {{python}}
+    - ts-conda-build =0.3
+    - qt6-charts
   host:
     - python {{python}}
     - setuptools
     - setuptools_scm
     - xorg-libxfixes # [linux]
-  build:
-    - python {{python}}
-    - ts-conda-build =0.3
   run:
     - python {{python}}
     - numpy
     - astropy
     - h5py
-    - pyside2
+    - pyside6
     - qasync
     - ts-xml
     - ts-salobj

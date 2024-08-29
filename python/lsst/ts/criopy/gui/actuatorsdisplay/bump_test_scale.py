@@ -19,7 +19,7 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.xml.enums.MTM1M3 import BumpTest
-from PySide2.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from ...gui import Colors
 from .enum_scale import EnumScale

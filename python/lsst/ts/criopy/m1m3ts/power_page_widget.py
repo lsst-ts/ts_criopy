@@ -19,7 +19,7 @@
 
 __all__ = ["PowerPageWidget"]
 
-from PySide2.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui import StatusGrid
 from ..salcomm import MetaSAL

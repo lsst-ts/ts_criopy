@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.salobj import State
-from PySide2.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal
 
 from ..custom_labels import DataLabel
 

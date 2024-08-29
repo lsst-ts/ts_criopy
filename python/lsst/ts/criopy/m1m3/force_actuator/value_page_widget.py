@@ -22,7 +22,7 @@
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable
-from PySide2.QtWidgets import QGridLayout, QLabel, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
 
 from ...salcomm import MetaSAL
 from .widget import Widget
