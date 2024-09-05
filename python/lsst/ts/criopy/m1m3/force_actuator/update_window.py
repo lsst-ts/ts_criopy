@@ -202,12 +202,8 @@ class UpdateWindow(QSplitter):
 
         settings = QSettings("LSST.TS", "M1M3Offsets_" + self.command)
         try:
-            geometry = settings.value("geometry")
-            assert geometry is not None
-            self.restoreGeometry(geometry)
-            windowState = settings.value("windowState")
-            assert windowState is not None
-            self.restoreState(windowState)
+            self.restoreGeometry(settings.value("geometry"))
+            self.restoreState(settings.value("windowState"))
         except AttributeError:
             self.resize(700, 600)
 
@@ -238,7 +234,7 @@ class UpdateWindow(QSplitter):
 
         for key, value in self.offsets.items():
             axis = key[0]
-            row = FATable[selected.index]
+            row = FATable[selected.actuator.index]
             actIndex = None
             if axis == "x":
                 actIndex = row.x_index
@@ -251,7 +247,7 @@ class UpdateWindow(QSplitter):
 
         self.__last_selected = selected
 
-        self.edit_widget.setSelected(selected.actuator_id, forces)
+        self.edit_widget.setSelected(selected.actuator.actuator_id, forces)
 
     def redraw(self) -> None:
         """Refresh value and gauge scale to match self.offsets"""
@@ -321,7 +317,7 @@ class UpdateWindow(QSplitter):
     def valueChanged(self) -> None:
         if self.__last_selected is None:
             return
-        lastRow = FATable[self.__last_selected.index]
+        lastRow = FATable[self.__last_selected.actuator.index]
         values = self.edit_widget.getXYZ()
 
         for key, value in self.offsets.items():
