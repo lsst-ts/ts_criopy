@@ -292,7 +292,18 @@ class UnitLabel(QLabel):
 
 class DataFormatorLabel(UnitLabel):
     """Formated unit label. Add formating and handling of the cursor
-    interactions."""
+    interactions.
+
+    Parameters
+    ----------
+    signal : `Signal`
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+    formator : DataFormator
+        Object formating new data. It can be used to collect statistics -
+        displaying instead of the actual value minimum, maximum or similar
+        calculated values.
+    """
 
     resetFormat = Signal()
 
@@ -312,9 +323,6 @@ class DataFormatorLabel(UnitLabel):
         self.setText(self.formator.format(data))
 
 
-# TODO: tried to combine UnitLabel and DataLabel directly, but failed.  the
-# closest I was able to get was probably using **kwargs for DataLabel and
-# UnitLabel, and keep Python super().__init__(... call
 class DataUnitLabel(DataFormatorLabel):
     """Combines DataFormatorLabel and UnitLabel handling for SAL data with
     error and warning functions. Parameters specify signal and field name (as

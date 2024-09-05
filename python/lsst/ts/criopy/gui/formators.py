@@ -32,6 +32,31 @@ __all__ = ["DataFormator", "MinFormator", "MaxFormator"]
 
 
 class DataFormator:
+    """Class formating data prior to displaying them.
+
+    Parameters
+    ----------
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    unit : `astropy.units`, optional
+        Variable unit. Default is None - no unit
+    convert : `astropy.units`, optional
+        Convert values to this unit. Default is None - no unit. If provided,
+        unit must be provided as well.
+    is_warn_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded warning value.
+    is_err_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded error value.
+    """
+
     def __init__(
         self,
         field: str | None = None,
@@ -87,6 +112,17 @@ class DataFormator:
         self.is_err_func = is_err_func
 
     def format(self, data: BaseMsgType) -> str:
+        """Does the formating.
+
+        Parameters
+        ----------
+        data : `BaseMsgType`
+            New data, in SALobj/ts_xml structure.
+
+        Returns
+        -------
+        text : `str`
+            String to display in the label."""
         assert self._field is not None
 
         value = getattr(data, self._field)
@@ -100,10 +136,14 @@ class DataFormator:
 
     @Slot()
     def reset_formator(self) -> None:
+        """Called to reset collected data."""
         pass
 
 
 class MinFormator(DataFormator):
+    """Display minimum value of received data. Resets minimum on reset_formator
+    signal."""
+
     _current_data: BaseMsgType = None
 
     def format(self, data: BaseMsgType) -> str:
@@ -122,6 +162,9 @@ class MinFormator(DataFormator):
 
 
 class MaxFormator(DataFormator):
+    """Display maximum value of received data. Resets maximum on reset_formator
+    signal."""
+
     _current_data: BaseMsgType = None
 
     def format(self, data: BaseMsgType) -> str:

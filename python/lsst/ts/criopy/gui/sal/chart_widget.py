@@ -133,7 +133,7 @@ class ChartWidget(TimeChartView):
         self,
         data: BaseMsgType,
         axis_index: int,
-        fields: typing.Iterable[AxisValue]],
+        fields: typing.Iterable[AxisValue],
     ) -> None:
         if self._has_timestamp is None:
             try:

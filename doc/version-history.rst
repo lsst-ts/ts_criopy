@@ -7,6 +7,7 @@ Version History
 v0.8.1
 ------
 
+* Display outerLoop data
 * Fixed mypy issues
 
 v0.8.0
