@@ -98,16 +98,19 @@ class ChartWidget(TimeChartView):
         axis_index = 0
         for v in values:
             v.signal.connect(
-                partial(
-                    self._append, axis_index=axis_index, fields=list(v.fields.values())
-                )
+                partial(self._append, axis_index=axis_index, fields=v.fields.values())
             )
             axis_index += 1
         self._has_timestamp: bool | None = None
 
         super().__init__(self.chart)
 
-    def _append(self, data: BaseMsgType, axis_index: int, fields: list[str]) -> None:
+    def _append(
+        self,
+        data: BaseMsgType,
+        axis_index: int,
+        fields: typing.Iterable[str | tuple[str, int]],
+    ) -> None:
         if self._has_timestamp is None:
             try:
                 getattr(data, "timestamp")
@@ -117,7 +120,7 @@ class ChartWidget(TimeChartView):
 
         displayData = []
         for f in fields:
-            if type(f) is tuple:
+            if isinstance(f, tuple):
                 displayData.append(getattr(data, f[0])[f[1]])
             else:
                 displayData.append(getattr(data, f))
