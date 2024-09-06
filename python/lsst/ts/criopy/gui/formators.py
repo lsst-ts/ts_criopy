@@ -32,7 +32,8 @@ __all__ = ["DataFormator", "MinFormator", "MaxFormator"]
 
 
 class DataFormator:
-    """Class formating data prior to displaying them.
+    """Class formating data prior to displaying them. Internal state of the
+    formator can be reseted by emitting reset_formator signal.
 
     Parameters
     ----------
@@ -53,7 +54,7 @@ class DataFormator:
         text). Default is None - no color coded warning value.
     is_err_func : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
-        to be in warning range and will be color coded (displayed in warning
+        to be in error range and will be color coded (displayed in error
         text). Default is None - no color coded error value.
     """
 
@@ -121,7 +122,7 @@ class DataFormator:
 
         Returns
         -------
-        text : `str`
+        str
             String to display in the label."""
         assert self._field is not None
 
@@ -136,7 +137,8 @@ class DataFormator:
 
     @Slot()
     def reset_formator(self) -> None:
-        """Called to reset collected data."""
+        """Called to reset collected data. Placeholder for resetting internal
+        state of the formator."""
         pass
 
 
