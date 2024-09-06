@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import astropy.units as u
 from lsst.ts import salobj
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
@@ -255,7 +256,10 @@ class CompressorPageWidget(QWidget):
                     (
                         "Volume",
                         DataUnitLabel(
-                            field="compressorVolume", unit="m3/min", fmt=".01f"
+                            None,
+                            field="compressorVolume",
+                            unit=u.m**3 / u.min,
+                            fmt=".01f",
                         ),
                     ),
                     (

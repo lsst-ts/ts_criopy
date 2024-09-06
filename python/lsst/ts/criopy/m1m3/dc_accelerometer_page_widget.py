@@ -32,7 +32,7 @@ from ..gui import (
     Volt,
     WarningGrid,
 )
-from ..gui.sal import Axis, ChartWidget
+from ..gui.sal import Axis, AxisValue, ChartWidget
 from ..salcomm import MetaSAL
 
 
@@ -99,11 +99,11 @@ class DCAccelerometerPageWidget(QWidget):
         axis = Axis(
             "Angular Acceleration (&deg;/s<sup>2</sup>)", m1m3.accelerometerData
         )
-        axis.addValues(
+        axis.add_values(
             {
-                "X": "angularAccelerationX",
-                "Y": "angularAccelerationY",
-                "Z": "angularAccelerationZ",
+                "X": AxisValue("angularAccelerationX"),
+                "Y": AxisValue("angularAccelerationY"),
+                "Z": AxisValue("angularAccelerationZ"),
             }
         )
 

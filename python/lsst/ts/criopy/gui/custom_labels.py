@@ -40,11 +40,13 @@ from PySide6.QtWidgets import (
 from ..salcomm import MetaSAL
 from .colors import Colors
 from .event_window import EventWindow
+from .formators import DataFormator, MaxFormator, MinFormator
 
 __all__ = [
     "VLine",
     "ColoredButton",
     "DataLabel",
+    "DataFormatorLabel",
     "UnitLabel",
     "DataUnitLabel",
     "Force",
@@ -61,6 +63,9 @@ __all__ = [
     "PressureInmBar",
     "Hours",
     "Seconds",
+    "MilliSeconds",
+    "MinMilliSeconds",
+    "MaxMilliSeconds",
     "KiloWatt",
     "DMS",
     "DataDegC",
@@ -84,9 +89,6 @@ __all__ = [
     "SimulationStatus",
     "DockWindow",
 ]
-
-WARNING = "#FF6700"
-"""Warning color"""
 
 
 class VLine(QFrame):
@@ -151,7 +153,7 @@ class DataLabel(QLabel):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self.new_data)
         if field is not None:
             self.setObjectName(field)
             self.setCursor(Qt.PointingHandCursor)
@@ -160,7 +162,7 @@ class DataLabel(QLabel):
         return DataLabel()
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def new_data(self, data: BaseMsgType) -> None:
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -199,7 +201,7 @@ class UnitLabel(QLabel):
 
     def __init__(
         self,
-        fmt: str = "d",
+        fmt: str = "f",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
         is_warn_func: typing.Callable[[float], bool] | None = None,
@@ -269,9 +271,9 @@ class UnitLabel(QLabel):
         """
         text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
         if self.is_err_func is not None and self.is_err_func(value):
-            self.setText("<font color='red'>" + text + "</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>{text}</font>")
         elif self.is_warn_func is not None and self.is_warn_func(value):
-            self.setText(f"<font color='{WARNING}'>{text}</font>")
+            self.setText(f"<font color='{Colors.WARNING.name()}'>{text}</font>")
         else:
             self.setText(text)
 
@@ -288,12 +290,43 @@ class UnitLabel(QLabel):
         self.setPalette(pal)
 
 
-# TODO: tried to combine UnitLabel and DataLabel directly, but failed.  the
-# closest I was able to get was probably using **kwargs for DataLabel and
-# UnitLabel, and keep Python super().__init__(... call
-class DataUnitLabel(UnitLabel):
-    """Combines DataLabel and UnitLabel. Parameters specify signal and field
-    name (as in DataLabel) and display options (as in UnitLabel).
+class DataFormatorLabel(UnitLabel):
+    """Formated unit label. Add formating and handling of the cursor
+    interactions.
+
+    Parameters
+    ----------
+    signal : `Signal`
+        When not None, given signal will be connected to method calling
+        setValue with a field from signal data. Field is the second argument.
+    formator : DataFormator
+        Object formating new data. It can be used to collect statistics -
+        displaying instead of the actual value minimum, maximum or similar
+        calculated values.
+    """
+
+    resetFormat = Signal()
+
+    def __init__(self, signal: Signal | None, formator: DataFormator):
+        super().__init__()
+        if signal is not None:
+            signal.connect(self.new_data)
+
+        self.formator = formator
+        self.setObjectName(formator._field)
+        self.setCursor(Qt.PointingHandCursor)
+
+        self.resetFormat.connect(formator.reset_formator)
+
+    @Slot()
+    def new_data(self, data: BaseMsgType) -> None:
+        self.setText(self.formator.format(data))
+
+
+class DataUnitLabel(DataFormatorLabel):
+    """Combines DataFormatorLabel and UnitLabel handling for SAL data with
+    error and warning functions. Parameters specify signal and field name (as
+    in DataLabel) and display options (as in UnitLabel).
 
     Parameters
     ----------
@@ -324,26 +357,17 @@ class DataUnitLabel(UnitLabel):
 
     def __init__(
         self,
-        signal: Signal | None = None,
+        signal: Signal,
         field: str | None = None,
-        fmt: str = "d",
-        unit: u.Unit | None = None,
+        fmt: str = "f",
+        unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
         is_warn_func: typing.Callable[[float], bool] | None = None,
         is_err_func: typing.Callable[[float], bool] | None = None,
     ):
-        super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
-        if signal is not None:
-            self._field = field
-            signal.connect(self._data)
-        if field is not None:
-            self.setObjectName(field)
-            self.setCursor(Qt.PointingHandCursor)
-
-    @Slot()
-    def _data(self, data: BaseMsgType) -> None:
-        assert self._field is not None
-        self.setValue(getattr(data, self._field))
+        super().__init__(
+            signal, DataFormator(field, fmt, unit, convert, is_warn_func, is_err_func)
+        )
 
 
 class Force(DataUnitLabel):
@@ -609,6 +633,21 @@ class Seconds(DataUnitLabel):
         super().__init__(None, field, ".0f", u.s)
 
 
+class MilliSeconds(DataUnitLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(None, field, ".1f", u.s, u.ms)
+
+
+class MinMilliSeconds(DataFormatorLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(None, MinFormator(field, ".1f", u.s, u.ms))
+
+
+class MaxMilliSeconds(DataFormatorLabel):
+    def __init__(self, field: str | None = None):
+        super().__init__(None, MaxFormator(field, ".1f", u.s, u.ms))
+
+
 class KiloWatt(DataUnitLabel):
     def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__(signal, field, ".01f", u.kW)
@@ -716,9 +755,9 @@ class OnOffLabel(DataLabel):
             is raised.
         """
         if value:
-            self.setText("<font color='red'>On</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>On</font>")
         else:
-            self.setText("<font color='green'>Off</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>Off</font>")
 
 
 class PowerOnOffLabel(DataLabel):
@@ -775,9 +814,9 @@ class ConnectedLabel(DataLabel):
             Current (=to be displayed) variable value. True means connected.
         """
         if is_connected:
-            self.setText("<font color='green'>Connected</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>Connected</font>")
         else:
-            self.setText("<font color='red'>Disconnected</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>Disconnected</font>")
 
 
 class ErrorLabel(DataLabel):
@@ -811,9 +850,9 @@ class ErrorLabel(DataLabel):
             Current (=to be displayed) variable value. True means error.
         """
         if value:
-            self.setText("<font color='red'>ERROR</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>ERROR</font>")
         else:
-            self.setText("<font color='green'>OK</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>OK</font>")
 
 
 class WarningLabel(DataLabel):
@@ -847,9 +886,9 @@ class WarningLabel(DataLabel):
             Current (=to be displayed) variable value. True means warning.
         """
         if value:
-            self.setText("<font color='red'>WARNING</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>WARNING</font>")
         else:
-            self.setText("<font color='green'>OK</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>OK</font>")
 
 
 class WarningButton(ColoredButton):
@@ -872,12 +911,12 @@ class WarningButton(ColoredButton):
         self.comm = comm
         self._topic = topic
         self._field = field
-        getattr(comm, topic).connect(self._data)
+        getattr(comm, topic).connect(self.newData)
         self.window: None | EventWindow = None
         self.clicked.connect(self._showWindow)
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def newData(self, data: BaseMsgType) -> None:
         self.setValue(getattr(data, self._field))
 
     def _showWindow(self) -> None:
@@ -919,10 +958,19 @@ class InterlockOffLabel(QLabel):
         super().__init__("---")
         if signal is not None:
             self._field = field
-            signal.connect(self._data)
+            signal.connect(self.new_data)
 
     @Slot()
-    def _data(self, data: BaseMsgType) -> None:
+    def new_data(self, data: BaseMsgType) -> None:
+        """Called when new data arrives. Should be overwritten to include data
+        pre-processing.
+
+        Parameters
+        ----------
+        data : `BaseMsgType`
+            Message data. As new_data method is connected to data signal, the
+            signal stub pass that as additional argument to the call.
+        """
         self.setValue(getattr(data, self._field))
 
     def setValue(self, interlock_off: bool) -> None:
@@ -935,9 +983,9 @@ class InterlockOffLabel(QLabel):
             (=PROBLEM).
         """
         if interlock_off:
-            self.setText("<font color='red'>PROBLEM</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>PROBLEM</font>")
         else:
-            self.setText("<font color='green'>OK</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>OK</font>")
 
 
 class StatusLabel(QLabel):
@@ -958,9 +1006,9 @@ class StatusLabel(QLabel):
             Current (=to be displayed) variable value. True means OK.
         """
         if value:
-            self.setText("<font color='green'>OK</font>")
+            self.setText(f"<font color='{Colors.OK.name()}'>OK</font>")
         else:
-            self.setText("<font color='red'>Error</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>Error</font>")
 
 
 class EnumLabel(QLabel):
@@ -985,7 +1033,7 @@ class EnumLabel(QLabel):
         try:
             self.setText(self._mapping[value])
         except KeyError:
-            self.setText(f"<fonr color='red'>Unknown {value}</font>")
+            self.setText(f"<font color='{Colors.ERROR.name()}'>Unknown {value}</font>")
 
 
 class Clipped(QLabel):
@@ -997,9 +1045,13 @@ class Clipped(QLabel):
 
     def setClipped(self, clipped: bool) -> None:
         if clipped:
-            self.setText(f"<font color='red'>{self._force} forces clipped</font>")
+            self.setText(
+                f"<font color='{Colors.ERROR.name()}'>{self._force} forces clipped</font>"
+            )
         else:
-            self.setText(f"<font color='green'>{self._force} forces not clipped</font>")
+            self.setText(
+                f"<font color='{Colors.OK.name()}'>{self._force} forces not clipped</font>"
+            )
 
 
 class Heartbeat(QWidget):
@@ -1073,7 +1125,9 @@ class Heartbeat(QWidget):
             self.hbIndicator.setFormat("")
             self.hbIndicator.setValue(0)
             self.hbIndicator.setInvertedAppearance(False)
-        self.timestamp.setText("<font color='red'>- timeouted -</font>")
+        self.timestamp.setText(
+            f"<font color='{Colors.ERROR.name()}'>- timeouted -</font>"
+        )
 
     @Slot()
     def heartbeat(self, data: BaseMsgType) -> None:
@@ -1098,19 +1152,19 @@ class Heartbeat(QWidget):
         if abs(diff) > self.difftime_error:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='red'>%H:%M:%S.%f ({diff:0.3f})</font>"
+                    f"<font color='{Colors.ERROR.name()}'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         elif abs(diff) > self.difftime_warning:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    f"<font color='{WARNING}'>%H:%M:%S.%f ({diff:0.3f})</font>"
+                    f"<font color='{Colors.WARNING.name()}'>%H:%M:%S.%f ({diff:0.3f})</font>"
                 )
             )
         else:
             self.timestamp.setText(
                 datetime.fromtimestamp(data.private_sndStamp).strftime(
-                    "<font color='green'>%H:%M:%S.%f</font>"
+                    f"<font color='{Colors.OK.name()}'>%H:%M:%S.%f</font>"
                 )
             )
 
@@ -1160,9 +1214,9 @@ class SimulationStatus(QLabel):
     @Slot()
     def simulationMode(self, data: BaseMsgType) -> None:
         self.setText(
-            "<font color='green'>HW</font>"
+            f"<font color='{Colors.OK.name()}'>HW</font>"
             if data.mode == 0
-            else "<font color='red'>SIM</font>"
+            else f"<font color='{Colors.ERROR.name()}'>SIM</font>"
         )
 
 

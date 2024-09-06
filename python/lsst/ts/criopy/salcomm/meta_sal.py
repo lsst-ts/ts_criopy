@@ -1,4 +1,4 @@
-# This file is part of M1M3 SS GUI.
+# This file is part of M1M3 GUI.
 #
 # Developed for the LSST Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -18,8 +18,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-# Generated from MTM1M3_Events, MTM1M3_Telemetry and MTMount_Telemetry
 
 import os
 import sys
