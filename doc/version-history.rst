@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.8.1
+------
+
+* Fixed mypy issues
+
 v0.8.0
 ------
 

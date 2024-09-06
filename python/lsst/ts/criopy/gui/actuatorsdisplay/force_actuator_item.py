@@ -132,7 +132,10 @@ class ForceActuatorItem(QGraphicsItem):
             New selection status.
         """
         self._kind = kind
-        self.update()
+        try:
+            self.update()
+        except RuntimeError:
+            pass
 
     @property
     def data(self) -> float:
