@@ -151,8 +151,8 @@ class DataLabel(QLabel):
 
     def __init__(self, signal: Signal | None = None, field: str | None = None):
         super().__init__("---")
+        self._field = field
         if signal is not None:
-            self._field = field
             signal.connect(self.new_data)
         if field is not None:
             self.setObjectName(field)
@@ -357,7 +357,7 @@ class DataUnitLabel(DataFormatorLabel):
 
     def __init__(
         self,
-        signal: Signal,
+        signal: Signal | None = None,
         field: str | None = None,
         fmt: str = "f",
         unit: str | u.Unit | None = None,

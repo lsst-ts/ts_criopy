@@ -104,8 +104,8 @@ class DirectionPadWidget(QWidget):
             layout.addWidget(
                 positionButton(
                     style.standardIcon(QStyle.SP_ArrowUp),
-                    "X+",
-                    0 + indexOffset,
+                    "Y+",
+                    1 + indexOffset,
                     deltaSB,
                     scale,
                 ),
@@ -115,8 +115,8 @@ class DirectionPadWidget(QWidget):
             layout.addWidget(
                 positionButton(
                     style.standardIcon(QStyle.SP_ArrowDown),
-                    "X-",
-                    0 + indexOffset,
+                    "Y-",
+                    1 + indexOffset,
                     deltaSB,
                     -scale,
                 ),
@@ -126,8 +126,8 @@ class DirectionPadWidget(QWidget):
             layout.addWidget(
                 positionButton(
                     style.standardIcon(QStyle.SP_ArrowLeft),
-                    "Y-",
-                    1 + indexOffset,
+                    "X-",
+                    0 + indexOffset,
                     deltaSB,
                     -scale,
                 ),
@@ -137,8 +137,8 @@ class DirectionPadWidget(QWidget):
             layout.addWidget(
                 positionButton(
                     style.standardIcon(QStyle.SP_ArrowRight),
-                    "Y+",
-                    1 + indexOffset,
+                    "X+",
+                    0 + indexOffset,
                     deltaSB,
                     scale,
                 ),
