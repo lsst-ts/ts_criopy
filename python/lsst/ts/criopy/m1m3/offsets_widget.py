@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import typing
+from functools import partial
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
@@ -119,7 +120,9 @@ class OffsetsWidget(QWidget):
                 "mz": Moment(),
             }
 
-        def createArray(var: str, label: type[DataUnitLabel]) -> dict[str, QLabel]:
+        def createArray(
+            var: str, label: typing.Callable[[], DataUnitLabel]
+        ) -> dict[str, QLabel]:
             ret = {}
             for i in range(6):
                 ret[f"{var}[{i}]"] = label()
@@ -132,10 +135,9 @@ class OffsetsWidget(QWidget):
         self.diffs = createXYZRWarning()
 
         self.hp_forces = createForces()
-
-        self.hp_measured_force = createArray("measuredForce", Force)
+        self.hp_measured_forces = createArray("measuredForce", Force)
         self.hp_displacement = createArray("displacement", Mm)
-        self.hp_encoder = createArray("encoder", DataUnitLabel)
+        self.hp_encoder = createArray("encoder", partial(DataUnitLabel, fmt="d"))
 
         def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
             for k, v in variables.items():
@@ -178,8 +180,15 @@ class OffsetsWidget(QWidget):
         addDataRow(self.hp_forces, row)
 
         row += 1
+        dataLayout.addWidget(QLabel(), row, 0)  # empty roe
+
+        row += 1
+        for hp_num in range(1, 7):
+            dataLayout.addWidget(QLabel(f"<b>{hp_num}</b>"), row, hp_num)
+
+        row += 1
         dataLayout.addWidget(QLabel("<b>HP measured forces</b>"), row, 0)
-        addDataRow(self.hp_measured_force, row)
+        addDataRow(self.hp_measured_forces, row)
 
         row += 1
         dataLayout.addWidget(QLabel("HP displacement"), row, 0)
@@ -221,6 +230,15 @@ class OffsetsWidget(QWidget):
         self.measured = createForces()
 
         row += 3
+        for i in range(6):
+            text = (
+                f"Force {chr(ord('W') + i)}"
+                if i < 3
+                else f"Moment {chr(ord('W') + i - 3)}"
+            )
+            dataLayout.addWidget(QLabel(f"<b>{text}</b>"))
+
+        row += 1
         dataLayout.addWidget(QLabel("<b>Preclipped</b>"), row, 0)
         addDataRow(self.preclipped, row)
 
@@ -375,7 +393,7 @@ class OffsetsWidget(QWidget):
     def _hardpointActuatorDataCallback(self, data: BaseMsgType) -> None:
         self.__fill_row(self.hp_position, data)
         self.__fill_row(self.hp_forces, data)
-        self.__fill_array(self.hp_measured_force, data)
+        self.__fill_array(self.hp_measured_forces, data)
         self.__fill_array(self.hp_displacement, data)
         self.__fill_array(self.hp_encoder, data)
         self.__hp_data = data
