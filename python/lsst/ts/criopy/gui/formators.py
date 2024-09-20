@@ -32,7 +32,27 @@ __all__ = ["Formator", "DataFormator", "MinFormator", "MaxFormator"]
 
 
 class Formator:
-    """Basic formatting for data display. Also takes care of text coloring."""
+    """Basic formatting for data display. Also takes care of text coloring.
+
+    Parameters
+    ----------
+    fmt : `str`, optional
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    unit : `astropy.units`, optional
+        Variable unit. Default is None - no unit
+    convert : `astropy.units`, optional
+        Convert values to this unit. Default is None - no unit. If provided,
+        unit must be provided as well.
+    is_warn_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded warning value.
+    is_err_func : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in error range and will be color coded (displayed in error
+        text). Default is None - no color coded error value.
+    """
 
     def __init__(
         self,
@@ -86,6 +106,18 @@ class Formator:
         self.is_err_func = is_err_func
 
     def format(self, value: typing.Any) -> str:
+        """Returns formatted value.
+
+        Parameters
+        ----------
+        value : `Any`
+            Value to be formatted.
+
+        Returns
+        -------
+        str
+            Formatted value.
+        """
         text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
 
         if self.is_err_func is not None and self.is_err_func(value):
@@ -141,7 +173,7 @@ class DataFormator(Formator):
         super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
 
     def format_data(self, data: BaseMsgType) -> str:
-        """Does the formating.
+        """Does the formating for incoming data.
 
         Parameters
         ----------

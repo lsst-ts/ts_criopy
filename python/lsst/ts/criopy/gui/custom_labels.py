@@ -163,6 +163,7 @@ class DataLabel(QLabel):
 
     @Slot()
     def new_data(self, data: BaseMsgType) -> None:
+        """Called when new data arrives. Updates label text."""
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
@@ -226,6 +227,15 @@ class UnitLabel(QLabel):
 
 
 class FormatLabel(UnitLabel):
+    """A simply formatting label.
+
+    Parameters
+    ----------
+    fmt : `str`
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    """
+
     def __init__(self, fmt: str):
         super().__init__(Formator(fmt))
 
