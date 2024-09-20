@@ -22,7 +22,7 @@ from functools import partial
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from ..gui import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
+from ..gui import ArrayGrid, ArrayItem, ArraySignal, FormatLabel
 from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
@@ -44,12 +44,12 @@ class LVDTPageWidget(QWidget):
                             ArrayItem(
                                 "breakawayLVDT",
                                 "<b>Breakaway LVDT</b>",
-                                partial(UnitLabel, fmt=".04"),
+                                partial(FormatLabel, fmt=".04"),
                             ),
                             ArrayItem(
                                 "displacementLVDT",
                                 "<b>Displacement LVDTt</b>",
-                                partial(UnitLabel, fmt=".04"),
+                                partial(FormatLabel, fmt=".04"),
                             ),
                         ],
                     )

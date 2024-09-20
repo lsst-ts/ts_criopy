@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import re
 import typing
 from datetime import datetime
 
@@ -40,13 +39,14 @@ from PySide6.QtWidgets import (
 from ..salcomm import MetaSAL
 from .colors import Colors
 from .event_window import EventWindow
-from .formators import DataFormator, MaxFormator, MinFormator
+from .formators import DataFormator, Formator, MaxFormator, MinFormator
 
 __all__ = [
     "VLine",
     "ColoredButton",
     "DataLabel",
     "DataFormatorLabel",
+    "FormatLabel",
     "UnitLabel",
     "DataUnitLabel",
     "Force",
@@ -182,83 +182,24 @@ class UnitLabel(QLabel):
 
     Parameters
     ----------
-    fmt : `str`, optional
-        Format string. See Python formatting function for details. Defaults to
-        'd' for decimal number.
-    unit : `astropy.units or str`, optional
-        Variable unit. Default is None - no unit. Can be specified as string.
-    convert : `astropy.units`, optional
-        Convert values to this unit. Default is None - no unit. If provided,
-        unit must be provided as well.
-    is_warn_func : `func`, optional
-        Function evaluated on each value. If true is returned, value is assumed
-        to be in warning range and will be color coded (displayed in warning
-        text). Default is None - no color coded warning value.
-    is_err_func : `func`, optional
-        Function evaluated on each value. If true is returned, value is assumed
-        to be in warning range and will be color coded (displayed in warning
-        text). Default is None - no color coded error value."""
+    formator : Formator
+        Object formating new data. It can be used to collect statistics -
+        displaying instead of the actual value minimum, maximum or similar
+        calculated values."""
+
+    resetFormat = Signal()
 
     def __init__(
         self,
-        fmt: str = "f",
-        unit: str | u.Unit | None = None,
-        convert: u.Unit | None = None,
-        is_warn_func: typing.Callable[[float], bool] | None = None,
-        is_err_func: typing.Callable[[float], bool] | None = None,
+        formator: Formator | None = None,
     ):
         super().__init__("---")
-        self.fmt = fmt
-        if isinstance(unit, str):
-            unit = u.Unit(unit)
+        self.formator = Formator() if formator is None else formator
 
-        if unit is not None:
-            assert issubclass(unit.__class__, u.UnitBase)
-
-        if convert is not None:
-            if unit is None:
-                raise RuntimeError("Cannot specify conversion without input units!")
-            self.scale = unit.to(convert)
-            self.unit_name = convert.to_string()
-        elif unit is not None:
-            self.scale = 1
-            self.unit_name = unit.to_string()
-        else:
-            self.scale = 1
-            self.unit_name = ""
-
-        # we can display some units better using unicode
-        aliases = {
-            "deg_C": "°C",
-            "1 / min": "RPM",
-            "m N": "N m",
-        }
-        try:
-            self.unit_name = aliases[self.unit_name]
-        except KeyError:
-            pass
-
-        self.unit_name = re.sub(r"\bdeg[^;]", "°", self.unit_name)
-
-        # s2, s3 using sup
-        self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
-        self.unit_name = self.unit_name.replace("s3", "s<sup>3</sup>")
-
-        self.unit_name = " " + self.unit_name
-
-        self.unit = unit
-        self.convert = convert
-        self.is_warn_func = is_warn_func
-        self.is_err_func = is_err_func
+        self.resetFormat.connect(self.formator.reset_formator)
 
     def __copy__(self) -> "UnitLabel":
-        return UnitLabel(
-            self.fmt,
-            self.unit,
-            self.convert,
-            self.is_warn_func,
-            self.is_err_func,
-        )
+        return UnitLabel(self.formator)
 
     def setValue(self, value: float) -> None:
         """Sets value. Transformation and formatting is done according to unit,
@@ -269,13 +210,7 @@ class UnitLabel(QLabel):
         value : `float`
             Current (=to be displayed) variable value.
         """
-        text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
-        if self.is_err_func is not None and self.is_err_func(value):
-            self.setText(f"<font color='{Colors.ERROR.name()}'>{text}</font>")
-        elif self.is_warn_func is not None and self.is_warn_func(value):
-            self.setText(f"<font color='{Colors.WARNING.name()}'>{text}</font>")
-        else:
-            self.setText(text)
+        self.setText(self.formator.format(value))
 
     def setTextColor(self, color: QColor) -> None:
         """Change text color.
@@ -288,6 +223,11 @@ class UnitLabel(QLabel):
         pal = self.palette()
         pal.setColor(QPalette.WindowText, color)
         self.setPalette(pal)
+
+
+class FormatLabel(UnitLabel):
+    def __init__(self, fmt: str):
+        super().__init__(Formator(fmt))
 
 
 class DataFormatorLabel(UnitLabel):
@@ -305,22 +245,18 @@ class DataFormatorLabel(UnitLabel):
         calculated values.
     """
 
-    resetFormat = Signal()
-
     def __init__(self, signal: Signal | None, formator: DataFormator):
-        super().__init__()
+        super().__init__(formator)
+
         if signal is not None:
             signal.connect(self.new_data)
 
-        self.formator = formator
         self.setObjectName(formator._field)
         self.setCursor(Qt.PointingHandCursor)
 
-        self.resetFormat.connect(formator.reset_formator)
-
     @Slot()
     def new_data(self, data: BaseMsgType) -> None:
-        self.setText(self.formator.format(data))
+        self.setText(self.formator.format_data(data))  # type: ignore[attr-defined]
 
 
 class DataUnitLabel(DataFormatorLabel):
@@ -399,7 +335,7 @@ class Moment(UnitLabel):
     """
 
     def __init__(self, fmt: str = ".02f"):
-        super().__init__(fmt, u.N * u.m)
+        super().__init__(Formator(fmt, u.N * u.m))
 
 
 class Mm(UnitLabel):
@@ -417,7 +353,7 @@ class Mm(UnitLabel):
         is_warn_func: typing.Callable[[float], bool] | None = None,
         is_err_func: typing.Callable[[float], bool] | None = None,
     ):
-        super().__init__(fmt, u.meter, u.mm, is_warn_func, is_err_func)
+        super().__init__(Formator(fmt, u.meter, u.mm, is_warn_func, is_err_func))
 
 
 class MmWarning(Mm):
@@ -464,7 +400,7 @@ class Arcsec(UnitLabel):
         is_warn_func: typing.Callable[[float], bool] | None = None,
         is_err_func: typing.Callable[[float], bool] | None = None,
     ):
-        super().__init__(fmt, u.deg, u.arcsec, is_warn_func, is_err_func)
+        super().__init__(Formator(fmt, u.deg, u.arcsec, is_warn_func, is_err_func))
 
 
 class Ampere(DataUnitLabel):

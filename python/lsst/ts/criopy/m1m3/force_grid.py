@@ -22,7 +22,7 @@ from functools import partial
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget
 
-from ..gui import UnitLabel
+from ..gui import FormatLabel
 from ..gui.array_grid import AbstractColumn, ArrayFields, ArrayGrid
 
 __all__ = ["Forces", "ForcesGrid", "PreclippedForces"]
@@ -51,13 +51,13 @@ class Forces(ArrayFields):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             label,
-            partial(UnitLabel, ".02f"),
+            partial(FormatLabel, ".02f"),
             signal,
             extra_widgets=extra_widgets,
         )
 
 
-class PreclippedLabel(UnitLabel):
+class PreclippedLabel(FormatLabel):
     def __init__(self, fmt: str = ".02f"):
         super().__init__(".02f")
 

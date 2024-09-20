@@ -60,10 +60,10 @@ class DataFormWidget(QWidget):
         self,
         signal: Signal,
         fields: list[tuple[str | None, DataLabel]],
-        timeChart: TimeChart | None = None,
+        time_chart: TimeChart | None = None,
     ):
         super().__init__()
-        self._timeChart = timeChart
+        self.__time_chart = time_chart
 
         layout = QFormLayout()
         for text, label in fields:
@@ -81,10 +81,10 @@ class DataFormWidget(QWidget):
                 ch.new_data(data)
 
     def mousePressEvent(self, ev: QMouseEvent) -> None:
-        if self._timeChart is not None:
+        if self.__time_chart is not None:
             child = self.childAt(ev.pos())
             if child is not None:
-                self._timeChart.topicSelected.emit(child)
+                self.__time_chart.topicSelected.emit(child)
 
 
 class DataFormButton(ColoredButton):

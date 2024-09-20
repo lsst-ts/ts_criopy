@@ -214,10 +214,10 @@ class UserSelectedTimeChart(TimeChart):
         self._signal = None
         self._name: str | None = None
         self._index: int | None = None
-        self.topicSelected.connect(self._topicSelected)
+        self.topicSelected.connect(self._topic_selected)
 
     @Slot()
-    def _topicSelected(self, obj: UnitLabel) -> None:
+    def _topic_selected(self, obj: UnitLabel) -> None:
         name = obj.objectName()
         index = None
         try:

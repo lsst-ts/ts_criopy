@@ -28,7 +28,7 @@ from ..gui import (
     ArrayLabels,
     ArraySignal,
     DataDegC,
-    UnitLabel,
+    FormatLabel,
     WarningGrid,
 )
 from ..gui.sal import Axis, ChartWidget
@@ -56,7 +56,7 @@ class GyroPageWidget(QWidget):
                                     "angularVelocityZ",
                                 ],
                                 "<b>Angular Velocity (Deg/sec)</b>",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayLabels(""),
                             ArrayFields(
