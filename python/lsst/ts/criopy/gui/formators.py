@@ -44,11 +44,11 @@ class Formator:
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
-    is_warn_func : `func`, optional
+    warning_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in warning range and will be color coded (displayed in warning
         text). Default is None - no color coded warning value.
-    is_err_func : `func`, optional
+    error_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in error range and will be color coded (displayed in error
         text). Default is None - no color coded error value.
@@ -59,8 +59,8 @@ class Formator:
         fmt: str = "d",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
-        is_warn_func: typing.Callable[[float], bool] | None = None,
-        is_err_func: typing.Callable[[float], bool] | None = None,
+        warning_function: typing.Callable[[float], bool] | None = None,
+        error_function: typing.Callable[[float], bool] | None = None,
     ):
         self.fmt = fmt
         if isinstance(unit, str):
@@ -102,8 +102,8 @@ class Formator:
 
         self.unit = unit
         self.convert = convert
-        self.is_warn_func = is_warn_func
-        self.is_err_func = is_err_func
+        self.warning_function = warning_function
+        self.error_function = error_function
 
     def format(self, value: typing.Any) -> str:
         """Returns formatted value.
@@ -120,9 +120,9 @@ class Formator:
         """
         text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
 
-        if self.is_err_func is not None and self.is_err_func(value):
+        if self.error_function is not None and self.error_function(value):
             text = f"<font color='{Colors.ERROR.name()}'>{text}</font>"
-        elif self.is_warn_func is not None and self.is_warn_func(value):
+        elif self.warning_function is not None and self.warning_function(value):
             text = f"<font color='{Colors.WARNING.name()}'>{text}</font>"
         return text
 
@@ -150,11 +150,11 @@ class DataFormator(Formator):
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
-    is_warn_func : `func`, optional
+    warning_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in warning range and will be color coded (displayed in warning
         text). Default is None - no color coded warning value.
-    is_err_func : `func`, optional
+    error_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in error range and will be color coded (displayed in error
         text). Default is None - no color coded error value.
@@ -166,11 +166,11 @@ class DataFormator(Formator):
         fmt: str = "d",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
-        is_warn_func: typing.Callable[[float], bool] | None = None,
-        is_err_func: typing.Callable[[float], bool] | None = None,
+        warning_function: typing.Callable[[float], bool] | None = None,
+        error_function: typing.Callable[[float], bool] | None = None,
     ):
         self._field = field
-        super().__init__(fmt, unit, convert, is_warn_func, is_err_func)
+        super().__init__(fmt, unit, convert, warning_function, error_function)
 
     def format_data(self, data: BaseMsgType) -> str:
         """Does the formating for incoming data.
