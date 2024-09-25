@@ -39,6 +39,7 @@ class GaugeScale(QWidget):
         self._min: float = 1
         self._max: float = 1
         self._fmt = fmt
+        self._formated_zero = f"{0:{self._fmt}}"
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
@@ -62,7 +63,10 @@ class GaugeScale(QWidget):
         return QSize(100, 100)
 
     def formatValue(self, value: float) -> str:
-        return f"{value:{self._fmt}}"
+        ret = f"{value:{self._fmt}}"
+        if ret == self._formated_zero:
+            return str(value)
+        return ret
 
     def getColor(self, value: float) -> QColor | None:
         """Returns color for given value.
