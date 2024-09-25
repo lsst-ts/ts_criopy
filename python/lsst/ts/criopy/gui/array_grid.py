@@ -404,7 +404,7 @@ class ArraySignal(AbstractColumn):
                 d = getattr(data, i.objectName())
                 for fi, c in enumerate(i.items):
                     if c is not None:
-                        c.setValue(d[fi])
+                        c.setValue(d[i.get_data_index(fi)])
 
 
 class ArrayButton(AbstractColumn):

@@ -7,6 +7,7 @@ Version History
 v0.8.1
 ------
 
+* Improve hardpoint display
 * Display outerLoop data
 * Fixed mypy issues
 

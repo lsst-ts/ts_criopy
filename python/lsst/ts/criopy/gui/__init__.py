@@ -26,6 +26,7 @@ from .custom_labels import (
     EnumLabel,
     ErrorLabel,
     Force,
+    FormatLabel,
     Heartbeat,
     Hours,
     Hz,

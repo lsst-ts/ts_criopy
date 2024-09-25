@@ -28,18 +28,14 @@ from PySide6.QtCore import Slot
 
 from .colors import Colors
 
-__all__ = ["DataFormator", "MinFormator", "MaxFormator"]
+__all__ = ["Formator", "DataFormator", "MinFormator", "MaxFormator"]
 
 
-class DataFormator:
-    """Class formating data prior to displaying them. Internal state of the
-    formator can be reseted by emitting reset_formator signal.
+class Formator:
+    """Basic formatting for data display. Also takes care of text coloring.
 
     Parameters
     ----------
-    field : `str`, optional
-        When specified (and signal parameter is provided), will use this field
-        as fieldname from data arriving with the signal. Defaults to None.
     fmt : `str`, optional
         Format string. See Python formatting function for details. Defaults to
         'd' for decimal number.
@@ -48,11 +44,11 @@ class DataFormator:
     convert : `astropy.units`, optional
         Convert values to this unit. Default is None - no unit. If provided,
         unit must be provided as well.
-    is_warn_func : `func`, optional
+    warning_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in warning range and will be color coded (displayed in warning
         text). Default is None - no color coded warning value.
-    is_err_func : `func`, optional
+    error_function : `func`, optional
         Function evaluated on each value. If true is returned, value is assumed
         to be in error range and will be color coded (displayed in error
         text). Default is None - no color coded error value.
@@ -60,15 +56,12 @@ class DataFormator:
 
     def __init__(
         self,
-        field: str | None = None,
         fmt: str = "d",
         unit: str | u.Unit | None = None,
         convert: u.Unit | None = None,
-        is_warn_func: typing.Callable[[float], bool] | None = None,
-        is_err_func: typing.Callable[[float], bool] | None = None,
+        warning_function: typing.Callable[[float], bool] | None = None,
+        error_function: typing.Callable[[float], bool] | None = None,
     ):
-        self._field = field
-
         self.fmt = fmt
         if isinstance(unit, str):
             unit = u.Unit(unit)
@@ -109,11 +102,78 @@ class DataFormator:
 
         self.unit = unit
         self.convert = convert
-        self.is_warn_func = is_warn_func
-        self.is_err_func = is_err_func
+        self.warning_function = warning_function
+        self.error_function = error_function
 
-    def format(self, data: BaseMsgType) -> str:
-        """Does the formating.
+    def format(self, value: typing.Any) -> str:
+        """Returns formatted value.
+
+        Parameters
+        ----------
+        value : `Any`
+            Value to be formatted.
+
+        Returns
+        -------
+        str
+            Formatted value.
+        """
+        text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
+
+        if self.error_function is not None and self.error_function(value):
+            text = f"<font color='{Colors.ERROR.name()}'>{text}</font>"
+        elif self.warning_function is not None and self.warning_function(value):
+            text = f"<font color='{Colors.WARNING.name()}'>{text}</font>"
+        return text
+
+    @Slot()
+    def reset_formator(self) -> None:
+        """Called to reset collected data. Placeholder for resetting internal
+        state of the formator."""
+        pass
+
+
+class DataFormator(Formator):
+    """Class formating data prior to displaying them. Internal state of the
+    formator can be reseted by emitting reset_formator signal.
+
+    Parameters
+    ----------
+    field : `str`, optional
+        When specified (and signal parameter is provided), will use this field
+        as fieldname from data arriving with the signal. Defaults to None.
+    fmt : `str`, optional
+        Format string. See Python formatting function for details. Defaults to
+        'd' for decimal number.
+    unit : `astropy.units`, optional
+        Variable unit. Default is None - no unit
+    convert : `astropy.units`, optional
+        Convert values to this unit. Default is None - no unit. If provided,
+        unit must be provided as well.
+    warning_function : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in warning range and will be color coded (displayed in warning
+        text). Default is None - no color coded warning value.
+    error_function : `func`, optional
+        Function evaluated on each value. If true is returned, value is assumed
+        to be in error range and will be color coded (displayed in error
+        text). Default is None - no color coded error value.
+    """
+
+    def __init__(
+        self,
+        field: str | None = None,
+        fmt: str = "d",
+        unit: str | u.Unit | None = None,
+        convert: u.Unit | None = None,
+        warning_function: typing.Callable[[float], bool] | None = None,
+        error_function: typing.Callable[[float], bool] | None = None,
+    ):
+        self._field = field
+        super().__init__(fmt, unit, convert, warning_function, error_function)
+
+    def format_data(self, data: BaseMsgType) -> str:
+        """Does the formating for incoming data.
 
         Parameters
         ----------
@@ -126,20 +186,7 @@ class DataFormator:
             String to display in the label."""
         assert self._field is not None
 
-        value = getattr(data, self._field)
-        text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
-
-        if self.is_err_func is not None and self.is_err_func(value):
-            text = "<font color='{Colors.ERROR.name()}'>{text}</font>"
-        elif self.is_warn_func is not None and self.is_warn_func(value):
-            text = f"<font color='{Colors.WARNING.name()}'>{text}</font>"
-        return text
-
-    @Slot()
-    def reset_formator(self) -> None:
-        """Called to reset collected data. Placeholder for resetting internal
-        state of the formator."""
-        pass
+        return self.format(getattr(data, self._field))
 
 
 class MinFormator(DataFormator):
@@ -148,7 +195,7 @@ class MinFormator(DataFormator):
 
     _current_data: BaseMsgType = None
 
-    def format(self, data: BaseMsgType) -> str:
+    def format_data(self, data: BaseMsgType) -> str:
         assert self._field is not None
 
         if self._current_data is None:
@@ -156,7 +203,7 @@ class MinFormator(DataFormator):
         else:
             if getattr(data, self._field) < getattr(self._current_data, self._field):
                 self._current_data = data
-        return super().format(self._current_data)
+        return super().format_data(self._current_data)
 
     @Slot()
     def reset_formator(self) -> None:
@@ -169,7 +216,7 @@ class MaxFormator(DataFormator):
 
     _current_data: BaseMsgType = None
 
-    def format(self, data: BaseMsgType) -> str:
+    def format_data(self, data: BaseMsgType) -> str:
         assert self._field is not None
 
         if self._current_data is None:
@@ -177,7 +224,7 @@ class MaxFormator(DataFormator):
         else:
             if getattr(data, self._field) > getattr(self._current_data, self._field):
                 self._current_data = data
-        return super().format(self._current_data)
+        return super().format_data(self._current_data)
 
     @Slot()
     def reset_formator(self) -> None:
