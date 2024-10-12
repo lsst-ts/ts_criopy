@@ -330,7 +330,9 @@ class Widget(QSplitter):
             FATable[selected_actuator.actuator.index].far_neighbors,
         )
         farIndices = list(
-            selected_actuator.actuator.only_far_neighbors_indices(self.field.value_index)
+            selected_actuator.actuator.only_far_neighbors_indices(
+                self.field.value_index
+            )
         )
         if len(farIndices) == 0:
             self.far_selected_ids_label.setText("---")

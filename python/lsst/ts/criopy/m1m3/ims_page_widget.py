@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+from functools import partial
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
@@ -33,8 +34,10 @@ from ..gui import (
     Mm,
     TimeChart,
     TimeChartView,
+    UnitLabel,
     WarningGrid,
 )
+from ..gui.formators import Formator
 from ..salcomm import MetaSAL
 
 
@@ -75,13 +78,13 @@ class IMSPageWidget(QWidget):
                             ArrayItem(
                                 "rawSensorData",
                                 "<b>Axial</b>",
-                                Mm,
+                                partial(UnitLabel, Formator("0.3f", u.mm)),
                                 indices=[0, 2, 4, 6],
                             ),
                             ArrayItem(
                                 "rawSensorData",
                                 "<b>Tangent</b>",
-                                Mm,
+                                partial(UnitLabel, Formator("0.3f", u.mm)),
                                 indices=[1, 3, 5, 7],
                             ),
                         ],

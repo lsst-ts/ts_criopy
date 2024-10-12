@@ -7,7 +7,9 @@ Version History
 v0.8.1
 ------
 
+* Correctly show small values (= calibrations)
 * Improve hardpoint display
+* Improve IMS display
 * Display outerLoop data
 * Fixed mypy issues
 
