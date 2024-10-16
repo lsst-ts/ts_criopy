@@ -578,7 +578,7 @@ class Topics(TopicCollection):
                     ),
                     TopicField(
                         "Secondary Sensitivity",
-                        "mainSecondaryLoadCellSensitivity",
+                        "mainSecondaryCylinderLoadCellSensitivity",
                         FAIndex.Z,
                     ),
                     TopicField(
@@ -624,7 +624,7 @@ class Topics(TopicCollection):
                     ),
                     TopicField(
                         "Secondary Sensitivity",
-                        "backupSecondaryLoadCellSensitivity",
+                        "backupSecondaryCylinderLoadCellSensitivity",
                         FAIndex.Z,
                     ),
                 ],

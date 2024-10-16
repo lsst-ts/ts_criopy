@@ -36,48 +36,48 @@ class TopicField:
     ----------
     name : `str`
         Text displayed in selection list box.
-    fieldName : `str`
+    field_name : `str`
         Name of field inside SAL/DDS topic.
-    valueIndex : `int`
+    value_index : `int`
         Variable kind.
-    scaleType : `Scales`
+    scale_type : `Scales`
         Scale type. Select scale used to display field values.
     """
 
     def __init__(
         self,
         name: str,
-        fieldName: str,
-        valueIndex: int,
-        scaleType: Scales = Scales.GAUGE,
+        field_name: str,
+        value_index: int,
+        scale_type: Scales = Scales.GAUGE,
     ):
         self.name = name
-        self.fieldName = fieldName
-        self.valueIndex = valueIndex
-        self.scaleType = scaleType
+        self.field_name = field_name
+        self.value_index = value_index
+        self.scale_type = scale_type
 
     def getValue(self, data: BaseMsgType) -> typing.Any:
-        return getattr(data, self.fieldName)
+        return getattr(data, self.field_name)
 
 
 class OnOffField(TopicField):
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.ONOFF)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.ONOFF)
 
 
 class WarningField(TopicField):
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.WARNING)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.WARNING)
 
 
 class WaitingField(TopicField):
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.WAITING)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.WAITING)
 
 
 class EnabledDisabledField(TopicField):
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.ENABLED_DISABLED)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.ENABLED_DISABLED)
 
 
 class TopicData:
