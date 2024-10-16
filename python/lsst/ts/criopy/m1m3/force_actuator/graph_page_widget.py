@@ -55,7 +55,7 @@ class GraphPageWidget(Widget):
         if self.field is None:
             raise RuntimeError("field is None in GraphPageWidget.changeValues")
 
-        self.mirrorWidget.setScaleType(self.field.scaleType)
+        self.mirrorWidget.setScaleType(self.field.scale_type)
 
     def updateValues(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
@@ -84,7 +84,7 @@ class GraphPageWidget(Widget):
 
         for row in FATable:
             index = row.index
-            data_index = row.get_index(self.field.valueIndex)
+            data_index = row.get_index(self.field.value_index)
             if values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif warningData is not None or data_index is None:
@@ -109,8 +109,8 @@ class GraphPageWidget(Widget):
         selected = self.mirrorWidget.mirrorView.selected()
         if selected is not None:
             if selected.data is not None:
-                self.selectedActuatorValueLabel.setText(selected.getValue())
+                self.selected_actuator_value_label.setText(selected.getValue())
             if warningData is not None:
-                self.selectedActuatorWarningLabel.setValue(
+                self.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))
                 )

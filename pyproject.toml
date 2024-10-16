@@ -21,7 +21,6 @@ dependencies = [
   "click",
   "jsonschema",
   "h5py",
-  "ts_ddsconfig",
   "ts_idl",
   "ts_salobj",
   "ts_xml",

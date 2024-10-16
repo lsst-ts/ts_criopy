@@ -77,7 +77,7 @@ class EUI(QMainWindow):
             m.addAction(
                 "New &raw graph",
                 partial(
-                    self._addCacheWidget,
+                    self._add_cache_widget,
                     i,
                     "Raw acceleration",
                     RawAccelerationWidget,
@@ -86,16 +86,16 @@ class EUI(QMainWindow):
             m.addAction("New &box graph", partial(self._addBox, i))
             m.addAction(
                 "New &PSD graph",
-                partial(self._addCacheWidget, i, "PSD", PSDWidget),
+                partial(self._add_cache_widget, i, "PSD", PSDWidget),
             )
             m.addAction("&CSC PSD graph", partial(self._addCSCPSDWidget, i))
             m.addAction(
                 "New &Velocity graph",
-                partial(self._addCacheWidget, i, "Velocity", VelocityWidget),
+                partial(self._add_cache_widget, i, "Velocity", VelocityWidget),
             )
             m.addAction(
                 "New &Displacement graph",
-                partial(self._addCacheWidget, i, "Displacement", DisplacementWidget),
+                partial(self._add_cache_widget, i, "Displacement", DisplacementWidget),
             )
             m.addSeparator()
 
@@ -130,29 +130,29 @@ class EUI(QMainWindow):
     def _addCSCPSDWidget(self, index: int) -> None:
         prefix = "CSC PSD " + self.SYSTEMS[index] + ":"
         actuator_id = self.getNextId(prefix)
-        aWidget = CSCPSDWidget(
+        a_widget = CSCPSDWidget(
             prefix + str(actuator_id),
             self.toolBar,
             self.comms[index].psd,
             self.caches[index].sensors(),
         )
-        self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
-        self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
+        self.toolBar.frequencyChanged.connect(a_widget.frequencyChanged)
+        self.addDockWidget(Qt.TopDockWidgetArea, a_widget)
 
-    def _addCacheWidget(
-        self, index: int, prefix: str, chartTypeClass: CacheWidget
+    def _add_cache_widget(
+        self, index: int, prefix: str, chart_type_class: type[CacheWidget]
     ) -> None:
         prefix = prefix + " " + self.SYSTEMS[index] + ":"
         actuator_id = self.getNextId(prefix)
-        aWidget = chartTypeClass(
+        a_widget = chart_type_class(
             prefix + str(actuator_id),
             self.caches[index],
             self.toolBar,
         )
-        self.cacheUpdated.connect(aWidget.cacheUpdated)
-        self.toolBar.frequencyChanged.connect(aWidget.frequencyChanged)
-        self.toolBar.integralBinningChanged.connect(aWidget.integralBinningChanged)
-        self.addDockWidget(Qt.TopDockWidgetArea, aWidget)
+        self.cacheUpdated.connect(a_widget.cacheUpdated)
+        self.toolBar.frequencyChanged.connect(a_widget.frequencyChanged)
+        self.toolBar.integralBinningChanged.connect(a_widget.integralBinningChanged)
+        self.addDockWidget(Qt.TopDockWidgetArea, a_widget)
 
     def _addBox(self, index: int) -> None:
         prefix = "Box " + self.SYSTEMS[index] + ":"

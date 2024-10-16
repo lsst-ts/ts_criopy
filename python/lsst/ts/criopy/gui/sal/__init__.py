@@ -1,6 +1,6 @@
 from .application import Application
 from .application_status_widget import ApplicationStatusWidget
-from .chart_widget import Axis, ChartWidget
+from .chart_widget import Axis, AxisValue, ChartWidget
 from .csc_control_widget import CSCControlWidget
 from .eui_window import EUIWindow
 from .sal_error_code_widget import SALErrorCodeWidget

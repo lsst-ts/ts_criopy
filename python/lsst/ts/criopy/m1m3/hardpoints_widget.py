@@ -42,10 +42,10 @@ from ..gui import (
     ArraySignal,
     Colors,
     Force,
+    FormatLabel,
     Mm,
     Moment,
     OnOffLabel,
-    UnitLabel,
 )
 from ..gui.sal import DetailedStateEnabledButton
 from ..salcomm import MetaSAL, command
@@ -189,27 +189,27 @@ class HardpointsWidget(QWidget):
                         ArrayItem(
                             "breakawayLVDT",
                             "Breakaway LVDT",
-                            partial(UnitLabel, ".02f"),
+                            partial(FormatLabel, ".02f"),
                         ),
                         ArrayItem(
                             "breakawayPressure",
                             "Breakaway Pressure",
-                            partial(UnitLabel, ".02f"),
+                            partial(FormatLabel, ".02f"),
                         ),
                         ArrayItem(
                             "pressureSensor1",
                             "Pressure Sensor 1",
-                            partial(UnitLabel, ".04f"),
+                            partial(FormatLabel, ".04f"),
                         ),
                         ArrayItem(
                             "pressureSensor2",
                             "Pressure Sensor 2",
-                            partial(UnitLabel, ".04f"),
+                            partial(FormatLabel, ".04f"),
                         ),
                         ArrayItem(
                             "pressureSensor3",
                             "Pressure Sensor 3",
-                            partial(UnitLabel, ".04f"),
+                            partial(FormatLabel, ".04f"),
                         ),
                     ],
                 ),
@@ -365,7 +365,7 @@ class HardpointsWidget(QWidget):
         row += 1
 
         def addDataRow(
-            variables: dict[str, tuple[str, UnitLabel]], row: int, col: int = 0
+            variables: dict[str, tuple[str, FormatLabel]], row: int, col: int = 0
         ) -> None:
             for k, v in variables.items():
                 self.dataLayout.addWidget(QLabel(f"<b>{v[0]}</b>"), row, col)
@@ -451,7 +451,7 @@ class HardpointsWidget(QWidget):
         for hp in range(6):
             self.hpOffsets[hp].setValue(0)
 
-    def _fillRow(self, hpData: list[float], rowLabels: list[UnitLabel]) -> None:
+    def _fillRow(self, hpData: list[float], rowLabels: list[FormatLabel]) -> None:
         for hp in range(6):
             rowLabels[hp].setValue(hpData[hp])
 

@@ -22,7 +22,7 @@ from functools import partial
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-from ..gui import ArrayGrid, ArrayItem, ArraySignal, UnitLabel
+from ..gui import ArrayGrid, ArrayItem, ArraySignal, FormatLabel
 from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL
 
@@ -44,38 +44,40 @@ class PIDPageWidget(QWidget):
                             ArrayItem(
                                 "setpoint",
                                 "Setpoint",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "measuredPID",
                                 "Measured PID",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
-                            ArrayItem("error", "Error", partial(UnitLabel, fmt=".03f")),
+                            ArrayItem(
+                                "error", "Error", partial(FormatLabel, fmt=".03f")
+                            ),
                             ArrayItem(
                                 "errorT1",
                                 "Error T1",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "errorT2",
                                 "Error T2",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "control",
                                 "Control",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "controlT1",
                                 "Control T1",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "controlT2",
                                 "Control T2",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                         ],
                     ),
@@ -95,35 +97,35 @@ class PIDPageWidget(QWidget):
                             ArrayItem(
                                 "timestep",
                                 "Timestep",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
-                            ArrayItem("p", "P", partial(UnitLabel, fmt=".03f")),
-                            ArrayItem("i", "I", partial(UnitLabel, fmt=".03f")),
-                            ArrayItem("d", "D", partial(UnitLabel, fmt=".03f")),
+                            ArrayItem("p", "P", partial(FormatLabel, fmt=".03f")),
+                            ArrayItem("i", "I", partial(FormatLabel, fmt=".03f")),
+                            ArrayItem("d", "D", partial(FormatLabel, fmt=".03f")),
                             ArrayItem(
                                 "calculatedA",
                                 "Calculated A",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "calculatedB",
                                 "Calculated B",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "calculatedC",
                                 "Calculated C",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "calculatedD",
                                 "Calculated D",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                             ArrayItem(
                                 "calculatedE",
                                 "Calculated E",
-                                partial(UnitLabel, fmt=".03f"),
+                                partial(FormatLabel, fmt=".03f"),
                             ),
                         ],
                     ),
