@@ -74,6 +74,7 @@ class Simulator(QObject):
 
     appliedAccelerationForces = Signal(map)
     appliedBalanceForces = Signal(map)
+    appliedElevationForces = Signal(map)
     appliedForces = Signal(map)
     appliedOffsetForces = Signal(map)
     appliedVelocityForces = Signal(map)
@@ -87,6 +88,7 @@ class Simulator(QObject):
         self.abf = ForceCalculator.AppliedForces()
         self.avf = ForceCalculator.AppliedForces()
         self.all_forces = ForceCalculator.AppliedForces()
+        self.ef = ForceCalculator.AppliedForces()
         self.offsets = ForceCalculator.AppliedForces()
 
         self.remote = M1M3Remote()
@@ -107,9 +109,22 @@ class Simulator(QObject):
     def applied_forces(self) -> None:
         """Calculate and distribute appliedForces, sum of all applied
         forces."""
-        self.all_forces = self.aaf + self.abf + self.avf + self.offsets
+        self.all_forces = self.ef + self.aaf + self.abf + self.avf + self.offsets
         self.remote.emitted("tel_appliedForces", self.all_forces)
         self.appliedForces.emit(self.all_forces)
+
+    def elevation(self, elevation: float) -> None:
+        """Calculate elevation forces. Forces will be transmitted in
+        appliedElevationForces pseudo-SAL signal.
+
+        Parameters
+        ----------
+        elevation : `float`
+            Elevation (in radians) for which the calculation will be carried.
+        """
+        self.ef = self.force_calculator.elevation(elevation)
+        self.remote.emitted("tel_appliedElevationForces", self.ef)
+        self.appliedElevationForces.emit(self.ef)
 
     def hardpoint_fam(self, fam: list[float]) -> None:
         """Calculate forces from hardpoint forces and moments. Those will be
