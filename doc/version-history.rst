@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.8.2
+------
+
+* Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
+
 v0.8.1
 ------
 
