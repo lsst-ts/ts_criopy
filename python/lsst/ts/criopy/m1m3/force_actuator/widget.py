@@ -67,7 +67,7 @@ class Widget(QSplitter):
         self.updateWindows: dict[str, QWidget] = {}
 
         self.field: typing.Any | None = None
-        self._topic: TopicData | None = None
+        self.topic: TopicData | None = None
 
         plot_layout = QVBoxLayout()
         selection_layout = QVBoxLayout()
@@ -100,7 +100,7 @@ class Widget(QSplitter):
 
         plot_layout.addWidget(userWidget)
 
-        def addDetails(
+        def add_details(
             row: int, name: str, label: QLabel, nears: QLabel, fars: QLabel
         ) -> None:
             details_layout.addWidget(QLabel(name), row, 0)
@@ -108,28 +108,28 @@ class Widget(QSplitter):
             details_layout.addWidget(nears, row, 2)
             details_layout.addWidget(fars, row, 3)
 
-        addDetails(
+        add_details(
             0,
             "<b>Variable</b>",
             QLabel("<b>Selected</b>"),
             QLabel("<b>Near Neighbors</b>"),
             QLabel("<b>Far Neighbors</b>"),
         )
-        addDetails(
+        add_details(
             1,
             "<b>Id</b>",
             self.selected_actuator_id_label,
             self.near_selected_ids_label,
             self.far_selected_ids_label,
         )
-        addDetails(
+        add_details(
             2,
             "<b>Value</b>",
             self.selected_actuator_value_label,
             self.near_selected_value_label,
             self.far_selected_value_label,
         )
-        addDetails(
+        add_details(
             3,
             "<b>Last Updated</b>",
             self.lastUpdatedLabel,
@@ -158,13 +158,16 @@ class Widget(QSplitter):
             details_layout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
             details_layout.addWidget(self.forces_moments[i + 3], 7, i + 1)
 
-        self.editButton = QPushButton("&Modify")
-        self.editButton.clicked.connect(self.editValues)
-        self.clearButton = QPushButton("&Zero")
-        self.clearButton.clicked.connect(self.zeroValues)
+        self.plot_button = QPushButton("&Plot")
+        self.plot_button.clicked.connect(self.plot_values)
+        self.edit_button = QPushButton("&Modify")
+        self.edit_button.clicked.connect(self.edit_values)
+        self.clear_button = QPushButton("&Zero")
+        self.clear_button.clicked.connect(self.zero_values)
 
-        details_layout.addWidget(self.editButton, 8, 0, 1, 2)
-        details_layout.addWidget(self.clearButton, 8, 2, 1, 2)
+        details_layout.addWidget(self.plot_button, 8, 0, 1, 2)
+        details_layout.addWidget(self.edit_button, 8, 2)
+        details_layout.addWidget(self.clear_button, 8, 3)
 
         filter_layout.addWidget(QLabel("Topic"), 1, 1)
         filter_layout.addWidget(QLabel("Field"), 1, 2)
@@ -231,7 +234,11 @@ class Widget(QSplitter):
         self.topics.topics[topicIndex].selectedField = fieldIndex
 
     @Slot()
-    def editValues(self) -> None:
+    def plot_values(self) -> None:
+        pass
+
+    @Slot()
+    def edit_values(self) -> None:
         def get_axis(topic: TopicData) -> str:
             axis = ""
             for f in topic.fields:
@@ -243,40 +250,38 @@ class Widget(QSplitter):
                     axis += "z"
             return "".join(sorted(set(axis)))
 
-        if self._topic is None or self._topic.command is None:
+        if self.topic is None or self.topic.command is None:
             return
 
-        suffix = self._topic.command
+        suffix = self.topic.command
         try:
             self.updateWindows[suffix].show()
         except KeyError:
-            w = UpdateWindow(self.m1m3, suffix, get_axis(self._topic))
+            w = UpdateWindow(self.m1m3, suffix, get_axis(self.topic))
             w.show()
             self.updateWindows[suffix] = w
 
     @asyncSlot()
-    async def zeroValues(self) -> None:
-        if self.field is None or self._topic is None or self._topic.command is None:
+    async def zero_values(self) -> None:
+        if self.field is None or self.topic is None or self.topic.command is None:
             return
-        await command(
-            self, getattr(self.m1m3.remote, "cmd_clear" + self._topic.command)
-        )
+        await command(self, getattr(self.m1m3.remote, "cmd_clear" + self.topic.command))
 
     def _set_unknown(self) -> None:
         self.lastUpdatedLabel.setUnknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
-        if self._topic is None or self._topic.topic is None or self.field is None:
+        if self.topic is None or self.topic.topic is None or self.field is None:
             raise RuntimeError(
                 "Topic or field is None in Widget.getCurrentFieldName:"
-                f" {self._topic}, {self.field}"
+                f" {self.topic}, {self.field}"
             )
-        return (self._topic.topic, self.field.field_name)
+        return (self.topic.topic, self.field.field_name)
 
     def _get_data(self) -> typing.Any:
-        if self._topic is None:
+        if self.topic is None:
             raise RuntimeError("Topic is None in Widget._get_data")
-        topic = self._topic.getTopic()
+        topic = self.topic.getTopic()
         if isinstance(topic, str):
             return getattr(self.m1m3.remote, topic).get()
         return topic
@@ -329,45 +334,54 @@ class Widget(QSplitter):
             lambda f: f not in near_ids,
             FATable[selected_actuator.actuator.index].far_neighbors,
         )
-        farIndices = list(
+        far_indices = list(
             selected_actuator.actuator.only_far_neighbors_indices(
                 self.field.value_index
             )
         )
-        if len(farIndices) == 0:
+        if len(far_indices) == 0:
             self.far_selected_ids_label.setText("---")
             self.far_selected_value_label.setText("---")
         else:
             self.far_selected_ids_label.setText(",".join(map(str, far_ids)))
             self.far_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
+                f"{selected_actuator.formatValue(numpy.average([data[i] for i in far_indices]))}"
             )
 
-    def __setModifyCommand(self, command: str | None) -> None:
+    def __set_plot_command(self) -> None:
+        enabled = (
+            self.topic is not None
+            and self.field is not None
+            and self.selected_actuator_id_label != "not selected"
+        )
+        self.plot_button.setEnabled(enabled)
+
+    def __set_modify_command(self, command: str | None) -> None:
         enabled = command is not None
-        self.editButton.setEnabled(enabled)
-        self.clearButton.setEnabled(enabled)
+        self.edit_button.setEnabled(enabled)
+        self.clear_button.setEnabled(enabled)
 
     def __change_field(self, topicIndex: int, fieldIndex: int) -> None:
         """
         Redraw actuators with new values.
         """
-        self._topic = self.topics.topics[topicIndex]
-        self.__setModifyCommand(self._topic.command)
-        self.field = self._topic.fields[fieldIndex]
+        self.topic = self.topics.topics[topicIndex]
+        self.__set_modify_command(self.topic.command)
+        self.field = self.topic.fields[fieldIndex]
+        self.__set_plot_command()
         try:
-            self.topics.change_topic(topicIndex, self.dataChanged, self.m1m3)
+            self.topics.change_topic(topicIndex, self.data_changed, self.m1m3)
             data = self._get_data()
             self.changeValues()
             self.updateValues(data)
-            self.dataChanged(data)
+            self.data_changed(data)
         except RuntimeError as err:
             print("ForceActuator.Widget.__change_field", err)
-            self._topic = None
+            self.topic = None
             pass
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 

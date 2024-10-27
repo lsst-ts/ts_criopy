@@ -8,6 +8,7 @@ v0.8.2
 ------
 
 * Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
+* Plot button to plot force actuator forces
 
 v0.8.1
 ------
