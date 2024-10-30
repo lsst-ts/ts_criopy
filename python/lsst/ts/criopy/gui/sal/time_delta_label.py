@@ -20,36 +20,56 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lsst.ts.utils import current_tai
-from PySide6.QtCore import QTimerEvent
-from PySide6.QtWidgets import QLabel
+from PySide6.QtCore import QTimerEvent, Signal, Slot
+
+from ..custom_labels import DataLabel
 
 __all__ = ["TimeDeltaLabel"]
 
 
-class TimeDeltaLabel(QLabel):
+class TimeDeltaLabel(DataLabel):
     """
     Displays time since some specified time in past. Updates display to show
     time from that past event.
+
+    Parameters
+    ----------
+    signal : `Signal`, optional
+        Signal to which the data shall be connected. If specified, widget will
+        connect to this signal wit the update. Defaults to None, no signal
+        connected.
+
+    field : `str`, optional
+        SAL field that contains time float. Usually private_sndStamp or
+        timestamp. Defaults to None, not field selected.
+
+    timeout : `int`, optional
+        Timeout value in ms. After this time expires, the label will turn red.
+        Defaults to 50 ms.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.eventTime: float | None = None
+    def __init__(
+        self, signal: Signal | None = None, field: str | None = None, timeout: int = 50
+    ) -> None:
+        super().__init__(signal, field)
+        self.event_time: float | None = None
+        self.timeout = timeout
         self.timer = None
 
     def update(self) -> None:
-        if self.eventTime is None:
+        if self.event_time is None:
             self.setText("---")
         else:
-            self.setText(f"{current_tai() - self.eventTime:.2f}")
+            self.setText(f"{current_tai() - self.event_time:.2f}")
 
-    def setTime(self, time: float) -> None:
-        if self.eventTime is None:
-            self.timer = self.startTimer(50)
-        self.eventTime = time
+    @Slot()
+    def setValue(self, time: float) -> None:
+        if self.event_time is None:
+            self.timer = self.startTimer(self.timeout)
+        self.event_time = time
 
-    def setUnknown(self) -> None:
-        self.eventTime = None
+    def set_unknown(self) -> None:
+        self.event_time = None
         if self.timer is not None:
             self.killTimer(self.timer)
             self.timer = None

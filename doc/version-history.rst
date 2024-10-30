@@ -8,6 +8,7 @@ v0.8.2
 ------
 
 * Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
+* Show time deltas on M1M3 TS glycol circulation page
 
 v0.8.1
 ------

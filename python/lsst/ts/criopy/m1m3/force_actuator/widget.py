@@ -263,7 +263,7 @@ class Widget(QSplitter):
         )
 
     def _set_unknown(self) -> None:
-        self.lastUpdatedLabel.setUnknown()
+        self.lastUpdatedLabel.set_unknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
         if self._topic is None or self._topic.topic is None or self.field is None:
@@ -382,9 +382,9 @@ class Widget(QSplitter):
             return
 
         try:
-            self.lastUpdatedLabel.setTime(data.timestamp)
+            self.lastUpdatedLabel.setValue(data.timestamp)
         except AttributeError:
-            self.lastUpdatedLabel.setTime(data.private_sndStamp)
+            self.lastUpdatedLabel.setValue(data.private_sndStamp)
 
         for i, axis in enumerate("xyz"):
             try:

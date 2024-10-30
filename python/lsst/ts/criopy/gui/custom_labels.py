@@ -167,7 +167,7 @@ class DataLabel(QLabel):
         assert self._field is not None
         self.setValue(getattr(data, self._field))
 
-    def setValue(self, value: bool) -> None:
+    def setValue(self, value: typing.Any) -> None:
         """Sets value.
 
         Parameters

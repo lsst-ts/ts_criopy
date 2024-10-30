@@ -42,6 +42,7 @@ from ..gui import (
     TopicStatusLabel,
     Volt,
 )
+from ..gui.sal import TimeDeltaLabel
 from ..salcomm import MetaSAL, command
 from .glycol_loop_temperature_widget import GlycolLoopTemperatureWidget
 
@@ -96,6 +97,7 @@ class CoolantPumpWidget(QWidget):
             DataFormWidget(
                 m1m3ts.glycolPump,
                 [
+                    ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Commanded Frequency", Hz(field="commandedFrequency")),
                     ("Output Frequency", Hz(field="outputFrequency")),
                     ("Output Current", Ampere(field="outputCurrent")),
@@ -222,6 +224,7 @@ class FlowMeterWidget(QWidget):
             DataFormWidget(
                 m1m3ts.flowMeter,
                 [
+                    ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Signal Strength", DataLabel(field="signalStrength")),
                     ("Flow Rate", LiterMinute(field="flowRate")),
                     ("Net Total", Liter(field="netTotalizer")),
