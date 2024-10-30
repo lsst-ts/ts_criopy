@@ -77,7 +77,11 @@ class DCAccelerometerPageWidget(QWidget):
                                 "<b>Raw</b>",
                                 partial(Volt, fmt="+.04f"),
                             ),
-                            ArrayItem("accelerometer", "<b>Acceleration</b>", MSec2),
+                            ArrayItem(
+                                "accelerometer",
+                                "<b>Acceleration</b>",
+                                partial(MSec2, fmt="+0.04f"),
+                            ),
                         ],
                     )
                 ],
