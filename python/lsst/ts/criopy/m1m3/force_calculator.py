@@ -84,10 +84,12 @@ class ForceTable:
         self.data = pd.DataFrame(*args, **kwargs)
         self.comments: list[str] = []
 
-    def drop(self, *args: Any, **kwargs: Any) -> None:
+    def drop(self, *args: Any, **kwargs: Any) -> pd.DataFrame | None:
+        """Drop data from table. Just a proxy for pandas.DataFrame.drop."""
         return self.data.drop(*args, **kwargs)
 
     def reset_comments(self) -> None:
+        """Clear comments associated with the table."""
         self.comments = []
 
     def load(self, filename: str | pathlib.Path, rows: int) -> Self:
@@ -155,6 +157,33 @@ class ForceTable:
             for c in self.comments:
                 f.write("# " + c + "\n")
             self.data.to_csv(f, index=False)
+
+
+class PolyForceTable(ForceTable):
+    """
+    Table representing forces calculated as n-th polynomial on a single
+    variable/vector.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.polys: list[np.polynomial.Polynomial] = []
+
+    def load(self, filename: str | pathlib.Path, rows: int) -> Self:
+        super().load(filename, rows)
+        self.polys = [np.polynomial.Polynomial(r[:0:-1]) for r in self.data.iloc]
+        return self
+
+    def __call__(self, value: float) -> Generator[float, None, None]:
+        """Return vector of polynomials evaluated for the given value.
+
+        Parameters
+        ----------
+        value : float
+            Value for which the polynomial will be evaluated.
+        """
+        for p in self.polys:
+            yield p(value)
 
 
 class ForceCalculator:
@@ -327,7 +356,9 @@ class ForceCalculator:
         self.hardpoint_to_forces_moments = ForceTable()
         self.forces_to_mirror: list[ForceTable] = []
         self.moments_to_mirror: list[ForceTable] = []
+
         self.acceleration_tables: list[ForceTable] = []
+        self.elevation_tables: list[PolyForceTable] = []
         self.velocity_tables: list[ForceTable] = []
 
         if config_dir is not None:
@@ -405,6 +436,7 @@ class ForceCalculator:
 
         self.forces_to_mirror = []
         self.moments_to_mirror = []
+        self.elevation_tables = []
         self.acceleration_tables = []
         self.velocity_tables = []
 
@@ -431,6 +463,12 @@ class ForceCalculator:
             self.acceleration_tables.append(
                 ForceTable().load(
                     tables_path / self.fas[f"Acceleration{axis}TablePath"],
+                    FATABLE_ZFA,
+                ),
+            )
+            self.elevation_tables.append(
+                PolyForceTable().load(
+                    tables_path / self.fas[f"Elevation{axis}TablePath"],
                     FATABLE_ZFA,
                 ),
             )
@@ -480,6 +518,11 @@ class ForceCalculator:
                 comments,
                 reset_comments,
             )
+            self.elevation_tables[i].save(
+                out_dir / self.fas[f"Elevation{axis}TablePath"],
+                comments,
+                reset_comments,
+            )
             self.velocity_tables[i].save(
                 out_dir / self.fas[f"Velocity{axis}TablePath"],
                 comments,
@@ -513,6 +556,23 @@ class ForceCalculator:
             self._velocity_computation.append(
                 pd.DataFrame([(t.data[axis] / 1000.0) for t in self.velocity_tables]).T
             )
+
+    def elevation(self, elevation: float) -> AppliedForces:
+        """Calculate elevation forces from provided elevation.
+
+        Parameters
+        ----------
+        elevation: float
+            Elevation in degrees.
+
+        Returns
+        -------
+        elevation_forces: AppliedForces
+            Calculated elevation forces
+        """
+        return self.get_applied_forces_from_mirror(
+            [list(et(90 - elevation)) for et in self.elevation_tables]
+        )
 
     def hardpoint_forces_and_moments(self, hardpoints: list[float]) -> pd.DataFrame:
         return self.hardpoint_to_forces_moments.data @ hardpoints

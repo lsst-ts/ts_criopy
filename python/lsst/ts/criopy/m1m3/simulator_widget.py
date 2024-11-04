@@ -39,6 +39,18 @@ from .simulator import Simulator
 class DegreeEntry(QDoubleSpinBox):
     """Entry for degrees input."""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.setDecimals(3)
+        self.setRange(-30, 190)
+        self.setSingleStep(1)
+        self.setSuffix(" °")
+        self.setValue(90)
+
+
+class DegreeTimeEntry(QDoubleSpinBox):
+    """Entry for degrees/time (sec, sec^2) input."""
+
     def __init__(self, unit: str):
         super().__init__()
         self.setDecimals(3)
@@ -153,6 +165,10 @@ class SimulatorWidget(QWidget):
 
         form = QFormLayout()
 
+        self.elevation = DegreeEntry()
+
+        form.addRow("Elevation", self.elevation)
+
         self.hardpoints = [
             HardpointForceEntry(),
             HardpointForceEntry(),
@@ -170,14 +186,14 @@ class SimulatorWidget(QWidget):
             HardpointMomentEntry(),
         ]
         self.velocities = [
-            DegreeEntry(" °/sec"),
-            DegreeEntry(" °/sec"),
-            DegreeEntry(" °/sec"),
+            DegreeTimeEntry(" °/sec"),
+            DegreeTimeEntry(" °/sec"),
+            DegreeTimeEntry(" °/sec"),
         ]
         self.accelerations = [
-            DegreeEntry(" °/sec\u00B2"),
-            DegreeEntry(" °/sec\u00B2"),
-            DegreeEntry(" °/sec\u00B2"),
+            DegreeTimeEntry(" °/sec\u00B2"),
+            DegreeTimeEntry(" °/sec\u00B2"),
+            DegreeTimeEntry(" °/sec\u00B2"),
         ]
 
         for hp in range(6):
@@ -215,9 +231,9 @@ class SimulatorWidget(QWidget):
     def recalculate(self) -> None:
         """Called when new forces shall be calculated."""
         self.simulator.acceleration(np.radians([a.value() for a in self.accelerations]))
+        self.simulator.elevation(self.elevation.value())
         self.simulator.hardpoint_fam([hp.value() for hp in self.hp_fam])
         self.simulator.hardpoint_forces([hp.value() for hp in self.hardpoints])
         self.simulator.velocity(np.radians([v.value() for v in self.velocities]))
         self.simulator.applied_forces()
-
         self._force_statistics.set_forces(self.simulator.all_forces)

@@ -56,6 +56,9 @@ ForceActuatorSettings:
   MomentDistributionXTablePath: MomentDistributionXTable.csv
   MomentDistributionYTablePath: MomentDistributionYTable.csv
   MomentDistributionZTablePath: MomentDistributionZTable.csv
+  ElevationXTablePath: ElevationXTable.csv
+  ElevationYTablePath: ElevationYTable.csv
+  ElevationZTablePath: ElevationZTable.csv
   VelocityXTablePath: VelocityXTable.csv
   VelocityYTablePath: VelocityYTable.csv
   VelocityZTablePath: VelocityZTable.csv
