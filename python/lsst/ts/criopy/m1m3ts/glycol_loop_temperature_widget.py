@@ -24,6 +24,7 @@ __all__ = ["GlycolLoopTemperatureWidget"]
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QVBoxLayout, QWidget
 
 from ..gui import DataDegC
+from ..gui.sal import TimeDeltaLabel
 from ..salcomm import MetaSAL
 
 
@@ -41,6 +42,11 @@ class GlycolLoopTemperatureWidget(QWidget):
 
         outside = QFormLayout()
         outside.addRow(
+            "Timestamp",
+            TimeDeltaLabel(m1m3ts.glycolLoopTemperature, "private_sndStamp", 3000),
+        )
+
+        outside.addRow(
             "Above mirror",
             DataDegC(m1m3ts.glycolLoopTemperature, "aboveMirrorTemperature"),
         )
@@ -55,12 +61,12 @@ class GlycolLoopTemperatureWidget(QWidget):
                 ),
             )
 
-        insideBox = QGroupBox("Inside cell")
-        insideBox.setLayout(inside)
+        inside_box = QGroupBox("Inside cell")
+        inside_box.setLayout(inside)
 
         left = QVBoxLayout()
         left.addLayout(outside)
-        left.addWidget(insideBox)
+        left.addWidget(inside_box)
 
         glycol = QFormLayout()
         glycol.addRow(
