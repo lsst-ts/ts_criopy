@@ -21,6 +21,7 @@
 __all__ = ["SimulatorWidget"]
 
 import numpy as np
+from lsst.ts.m1m3.utils import ForceCalculator, Simulator
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
@@ -31,9 +32,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from .force_calculator import ForceCalculator
-from .simulator import Simulator
 
 
 class DegreeEntry(QDoubleSpinBox):

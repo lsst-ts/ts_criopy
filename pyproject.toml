@@ -22,6 +22,7 @@ dependencies = [
   "jsonschema",
   "h5py",
   "ts_idl",
+  "ts_m1m3_utils",
   "ts_salobj",
   "ts_xml",
   "ts_utils",

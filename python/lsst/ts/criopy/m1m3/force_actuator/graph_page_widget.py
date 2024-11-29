@@ -18,12 +18,12 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
+from lsst.ts.m1m3.utils import Simulator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
 from ...salcomm import MetaSAL
-from .. import Simulator
 from .widget import Widget
 
 
