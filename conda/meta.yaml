@@ -28,6 +28,7 @@ test:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - ts-conda-build =0.3
+    - ts-m1m3-utils
     - ts-xml
     - ts-salobj {{ salobj_version }}
     - lsst-efd-client
@@ -65,6 +66,7 @@ requirements:
     - h5py
     - pyside6
     - qasync
+    - ts-m1m3-utils
     - ts-xml
     - ts-salobj
     - lsst-efd-client
