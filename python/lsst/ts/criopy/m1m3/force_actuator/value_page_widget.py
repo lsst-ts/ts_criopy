@@ -179,7 +179,7 @@ class ValuePageWidget(Widget):
         values = self.field.getValue(data)
         for row in FATable:
             i += 1
-            index = row.get_index(self.field.valueIndex)
+            index = row.get_index(self.field.value_index)
             if index is None:
                 self.dataWidget.forceActuatorLabels[i].setText("---")
             elif data is not None:

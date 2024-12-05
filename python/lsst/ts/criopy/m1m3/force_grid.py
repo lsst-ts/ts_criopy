@@ -62,7 +62,7 @@ class PreclippedLabel(FormatLabel):
         super().__init__(".02f")
 
     def setValue(self, value: float) -> None:
-        self.setText(f"<i>{(value * self.scale):{self.fmt}}{self.unit_name}</i>")
+        self.setText(f"<i>{self.formator.format(value)}</i>")
 
 
 class PreclippedForces(ArrayFields):
