@@ -245,11 +245,11 @@ class OffsetsWidget(QWidget):
         row += 3
         for i in range(6):
             text = (
-                f"Force {chr(ord('W') + i)}"
+                f"Force {chr(ord('X') + i)}"
                 if i < 3
-                else f"Moment {chr(ord('W') + i - 3)}"
+                else f"Moment {chr(ord('X') + i - 3)}"
             )
-            data_layout.addWidget(QLabel(f"<b>{text}</b>"))
+            data_layout.addWidget(QLabel(f"<b>{text}</b>"), row, i + 1)
 
         row += 1
         data_layout.addWidget(QLabel("<b>Preclipped</b>"), row, 0)
