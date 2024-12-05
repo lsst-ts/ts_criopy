@@ -10,6 +10,7 @@ v0.8.2
 * Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
 * Show time deltas on M1M3 TS glycol circulation page
 * Move simulator & aceleration tools into ts_m1m3_utils
+* Bug-fixes (EUI labels, omitted API changes)
 
 v0.8.1
 ------

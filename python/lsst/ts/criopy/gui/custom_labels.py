@@ -545,7 +545,7 @@ class RPM(DataUnitLabel):
         super().__init__(signal, field, fmt, u.Unit("min^-1"))
 
 
-class PressureInBar(DataLabel):
+class PressureInBar(DataUnitLabel):
     """Display pressure in bar and psi"""
 
     def __init__(self, signal: Signal | None = None, field: str | None = None):
@@ -553,7 +553,7 @@ class PressureInBar(DataLabel):
         self.unit_name = "bar"
 
     def setValue(self, value: float) -> None:
-        psi = value * 14.5038
+        psi = value * u.mbar.to(u.imperial.psi)
         self.setText(f"{value:.04f} bar ({psi:.02f} psi)")
 
 
