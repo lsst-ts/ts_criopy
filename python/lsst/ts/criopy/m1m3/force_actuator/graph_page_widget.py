@@ -82,10 +82,16 @@ class GraphPageWidget(Widget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
+        enabled = self.m1m3.remote.evt_enabledForceActuators.get()
+
         for row in FATable:
             index = row.index
             data_index = row.get_index(self.field.value_index)
-            if values is None or data_index is None:
+            if enabled is not None and not enabled.forceActuatorEnabled[index]:
+                state = ForceActuatorItem.STATE_INACTIVE
+                if values is not None:
+                    values[index] = None
+            elif values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif warningData is not None or data_index is None:
                 state = get_warning(index)
@@ -104,6 +110,8 @@ class GraphPageWidget(Widget):
             self.mirrorWidget.setRange(0, 0)
             return
 
+        # filter out None values
+        values = [v for v in values if v is not None]
         self.mirrorWidget.setRange(min(values), max(values))
 
         selected = self.mirrorWidget.mirrorView.selected()
