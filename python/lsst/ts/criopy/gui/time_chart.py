@@ -235,7 +235,15 @@ class UserSelectedTimeChart(TimeChart):
                 if self._signal is not None:
                     self._signal.disconnect(self._appendData)
 
-                self._createCaches({obj.unit_name: [name]})
+                try:
+                    unit_name = obj.formator.unit_name
+                except AttributeError:
+                    try:
+                        unit_name = obj.unit_name
+                    except AttributeError:
+                        unit_name = "Y"
+
+                self._createCaches({unit_name: [name]})
                 self._attachSeries()
 
                 self._signal = s

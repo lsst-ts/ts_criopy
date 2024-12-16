@@ -56,7 +56,10 @@ class EnumScale(QWidget):
         return list(self._levels.keys())
 
     def formatValue(self, value: typing.Any) -> str:
-        return self._levels[value][0]
+        try:
+            return self._levels[value][0]
+        except KeyError:
+            return str(value)
 
     def getColor(self, value: typing.Any) -> QColor:
         """Returns color value.

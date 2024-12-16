@@ -217,6 +217,22 @@ class ForceActuatorItem(QGraphicsItem):
         if not self.isEnabled():
             palette.setCurrentColorGroup(QPalette.Inactive)
 
+        # basic font to write text
+        font = painter.font()
+        font.setPixelSize(6.5 * self._scale_factor)
+        font.setItalic(True)
+
+        def draw_actuator_id() -> None:
+            painter.setFont(font)
+            painter.drawText(
+                self._center.x() - 10 * self._scale_factor,
+                self._center.y() - 10 * self._scale_factor,
+                20 * self._scale_factor,
+                10 * self._scale_factor,
+                int(Qt.AlignBottom) | int(Qt.AlignHCenter),
+                str(self.actuator.actuator_id),
+            )
+
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
         # paint grayed circle for actuators not providing the selected value
@@ -225,6 +241,7 @@ class ForceActuatorItem(QGraphicsItem):
             painter.drawEllipse(
                 self._center, 10 * self._scale_factor, 10 * self._scale_factor
             )
+            draw_actuator_id()
             return
         lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
         # draw rectangle around selected actuator
@@ -263,18 +280,7 @@ class ForceActuatorItem(QGraphicsItem):
 
         painter.setPen(palette.buttonText().color())
 
-        font = painter.font()
-        font.setPixelSize(6.5 * self._scale_factor)
-        font.setItalic(True)
-        painter.setFont(font)
-        painter.drawText(
-            self._center.x() - 10 * self._scale_factor,
-            self._center.y() - 10 * self._scale_factor,
-            20 * self._scale_factor,
-            10 * self._scale_factor,
-            int(Qt.AlignBottom) | int(Qt.AlignHCenter),
-            str(self.actuator.actuator_id),
-        )
+        draw_actuator_id()
 
         vstr = self.getValue()
         if len(vstr) > 6:
