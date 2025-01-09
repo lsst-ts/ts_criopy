@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import math
 
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
@@ -46,8 +47,6 @@ class MixingValveWidget(QWidget):
         selection_group = QGroupBox("Mixing valve control")
         self.command_mixing_valve = QRadioButton("&Raw")
         self.command_temperature = QRadioButton("&Temperature")
-
-        self.command_mixing_valve.setChecked(True)
 
         selection_layout = QVBoxLayout()
         selection_layout.addWidget(self.command_mixing_valve)
@@ -103,6 +102,9 @@ class MixingValveWidget(QWidget):
 
         self.setLayout(hlayout)
 
+        self.command_mixing_valve.toggled.connect(self._temperature_control)
+        self.command_mixing_valve.setChecked(True)
+
         self.m1m3ts.mixingValve.connect(self.mixing_valve)
         self.m1m3ts.appliedSetpoint.connect(self.applied_setpoint)
 
@@ -122,7 +124,16 @@ class MixingValveWidget(QWidget):
 
     @Slot()
     def applied_setpoint(self, data: BaseMsgType) -> None:
-        self.temperature_target.setValue(data.setpoint)
+        if math.isnan(data.setpoint):
+            self.command_temperature.setChecked(False)
+        else:
+            self.command_temperature.setChecked(True)
+            self.temperature_target.setValue(data.setpoint)
+
+    @Slot()
+    def _temperature_control(self, checked: bool) -> None:
+        self.mixing_valve_target.setEnabled(checked)
+        self.temperature_target.setEnabled(not (checked))
 
     @asyncSlot()
     async def _set(self) -> None:
