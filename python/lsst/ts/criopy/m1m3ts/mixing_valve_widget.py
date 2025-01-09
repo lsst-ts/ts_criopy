@@ -23,8 +23,10 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QPushButton,
+    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
@@ -41,18 +43,36 @@ class MixingValveWidget(QWidget):
         super().__init__()
         self.m1m3ts = m1m3ts
 
-        commandLayout = QFormLayout()
+        selection_group = QGroupBox("Mixing valve control")
+        self.command_mixing_valve = QRadioButton("&Raw")
+        self.command_temperature = QRadioButton("&Temperature")
 
-        self.target = QDoubleSpinBox()
-        self.target.setRange(0, 100)
-        self.target.setSingleStep(1)
-        self.target.setDecimals(2)
-        self.target.setSuffix("%")
-        commandLayout.addRow("Target", self.target)
+        self.command_mixing_valve.setChecked(True)
 
-        setMixingValve = QPushButton("Set")
-        setMixingValve.clicked.connect(self._setMixingValve)
-        commandLayout.addRow(setMixingValve)
+        selection_layout = QVBoxLayout()
+        selection_layout.addWidget(self.command_mixing_valve)
+        selection_layout.addWidget(self.command_temperature)
+        selection_group.setLayout(selection_layout)
+
+        command_layout = QFormLayout()
+
+        self.mixing_valve_target = QDoubleSpinBox()
+        self.mixing_valve_target.setRange(0, 100)
+        self.mixing_valve_target.setSingleStep(1)
+        self.mixing_valve_target.setDecimals(2)
+        self.mixing_valve_target.setSuffix("%")
+        command_layout.addRow("Target", self.mixing_valve_target)
+
+        self.temperature_target = QDoubleSpinBox()
+        self.temperature_target.setRange(-40, 50)
+        self.temperature_target.setSingleStep(1)
+        self.temperature_target.setDecimals(2)
+        self.temperature_target.setSuffix("°C")
+        command_layout.addRow("Setpoint", self.temperature_target)
+
+        set_mixing_valve = QPushButton("Set")
+        set_mixing_valve.clicked.connect(self._set)
+        command_layout.addRow(set_mixing_valve)
 
         vlayout = QVBoxLayout()
         vlayout.addWidget(
@@ -65,43 +85,61 @@ class MixingValveWidget(QWidget):
             )
         )
         vlayout.addSpacing(20)
-        vlayout.addLayout(commandLayout)
+        vlayout.addWidget(selection_group)
+        vlayout.addLayout(command_layout)
         vlayout.addStretch()
 
         hlayout = QHBoxLayout()
         hlayout.addLayout(vlayout)
 
-        self.mixingValveChart = TimeChart(
+        self.mixing_valve_chart = TimeChart(
             {
                 "Raw (V)": ["Raw Position"],
                 "Percent (%)": ["Position"],
             }
         )
 
-        hlayout.addWidget(TimeChartView(self.mixingValveChart))
+        hlayout.addWidget(TimeChartView(self.mixing_valve_chart))
 
         self.setLayout(hlayout)
 
-        self.m1m3ts.mixingValve.connect(self.mixingValve)
+        self.m1m3ts.mixingValve.connect(self.mixing_valve)
+        self.m1m3ts.appliedSetpoint.connect(self.applied_setpoint)
 
     @Slot()
-    def mixingValve(self, data: BaseMsgType) -> None:
-        self.mixingValveChart.append(
+    def mixing_valve(self, data: BaseMsgType) -> None:
+        self.mixing_valve_chart.append(
             data.private_sndStamp,
             [data.rawValvePosition],
             axis_index=0,
         )
 
-        self.mixingValveChart.append(
+        self.mixing_valve_chart.append(
             data.private_sndStamp,
             [data.valvePosition],
             axis_index=1,
         )
 
+    @Slot()
+    def applied_setpoint(self, data: BaseMsgType) -> None:
+        self.temperature_target.setValue(data.setpoint)
+
     @asyncSlot()
-    async def _setMixingValve(self) -> None:
-        await command(
-            self,
-            self.m1m3ts.remote.cmd_setMixingValve,
-            mixingValveTarget=self.target.value(),
-        )
+    async def _set(self) -> None:
+        if self.command_mixing_valve.isChecked():
+            await command(
+                self,
+                self.m1m3ts.remote.cmd_setMixingValve,
+                mixingValveTarget=self.mixing_valve_target.value(),
+            )
+            await command(
+                self,
+                self.m1m3ts.remote.cmd_applySetpoint,
+                setpoint=float("nan"),
+            )
+        else:
+            await command(
+                self,
+                self.m1m3ts.remote.cmd_applySetpoint,
+                setpoint=self.temperature_target.value(),
+            )
