@@ -8,6 +8,7 @@ v0.8.2
 ------
 
 * Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
+* Add ApplySetpoint command support to the M1M3TSGUI
 * Balance forces can be switched on/off only in engineering mode
 * Show time deltas on M1M3 TS glycol circulation page
 * Move simulator & aceleration tools into ts_m1m3_utils

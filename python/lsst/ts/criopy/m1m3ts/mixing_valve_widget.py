@@ -38,7 +38,13 @@ from ..salcomm import MetaSAL, command
 
 
 class MixingValveWidget(QWidget):
-    """Displays Mixing Valve data."""
+    """Displays Mixing Valve data, allows mixing valve control.
+
+    Parameters
+    ----------
+    m1m3ts : `MetaSAL`
+        M1M3 thermal system SAL client.
+    """
 
     def __init__(self, m1m3ts: MetaSAL):
         super().__init__()
