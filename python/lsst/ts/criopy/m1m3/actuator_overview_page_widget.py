@@ -25,7 +25,7 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
-from ..gui import ArrayFields, ColoredButton, UnitLabel
+from ..gui import ArrayFields, ColoredButton, FormatLabel
 from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL, command
 from .force_grid import Forces, ForcesGrid, PreclippedForces, PreclippedLabel
@@ -123,7 +123,7 @@ class ActuatorOverviewPageWidget(QWidget):
                     ArrayFields(
                         [None, None, "fz", "mx", "my", None, None],
                         "Applied Active Optics",
-                        partial(UnitLabel, ".02f"),
+                        partial(FormatLabel, ".02f"),
                         m1m3.appliedActiveOpticForces,
                         ForceButton.create("activeOptic", m1m3),
                     ),

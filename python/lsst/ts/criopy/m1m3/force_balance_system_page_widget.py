@@ -39,41 +39,41 @@ class ForceBalanceSystemPageWidget(QWidget):
         self._hardpointData = None
 
         layout = QVBoxLayout()
-        dataLayout = QGridLayout()
-        warningLayout = QHBoxLayout()
-        commandLayout = QVBoxLayout()
+        data_layout = QGridLayout()
+        warning_layout = QHBoxLayout()
+        command_layout = QVBoxLayout()
         plotLayout = QHBoxLayout()
-        layout.addLayout(commandLayout)
+        layout.addLayout(command_layout)
         layout.addSpacing(20)
-        layout.addLayout(dataLayout)
+        layout.addLayout(data_layout)
         layout.addSpacing(20)
-        layout.addLayout(warningLayout)
+        layout.addLayout(warning_layout)
         layout.addSpacing(20)
         layout.addLayout(plotLayout)
         self.setLayout(layout)
 
-        self.enableHardpointCorrectionsButton = DetailedStateEnabledButton(
+        self.enable_hardpoint_corrections_button = DetailedStateEnabledButton(
             "Enable Hardpoint Corrections",
             m1m3,
-            [DetailedStates.ACTIVE, DetailedStates.ACTIVEENGINEERING],
+            [DetailedStates.ACTIVEENGINEERING],
         )
-        self.enableHardpointCorrectionsButton.clicked.connect(
+        self.enable_hardpoint_corrections_button.clicked.connect(
             self.issueCommandEnableHardpointCorrections
         )
-        self.enableHardpointCorrectionsButton.setFixedWidth(256)
-        self.disableHardpointCorrectionsButton = DetailedStateEnabledButton(
+        self.enable_hardpoint_corrections_button.setFixedWidth(256)
+        self.disable_hardpoint_corrections_button = DetailedStateEnabledButton(
             "Disable Hardpoint Corrections",
             m1m3,
-            [DetailedStates.ACTIVE, DetailedStates.ACTIVEENGINEERING],
+            [DetailedStates.ACTIVEENGINEERING],
         )
-        self.disableHardpointCorrectionsButton.clicked.connect(
+        self.disable_hardpoint_corrections_button.clicked.connect(
             self.issueCommandDisableHardpointCorrections
         )
-        self.disableHardpointCorrectionsButton.setFixedWidth(256)
+        self.disable_hardpoint_corrections_button.setFixedWidth(256)
 
-        self.balanceForcesClipped = Clipped("Balance")
+        self.balance_forces_clipped = Clipped("Balance")
 
-        self.balanceChart = TimeChart(
+        self.balance_chart = TimeChart(
             {
                 "Balance Force (N)": [
                     "Force X",
@@ -84,10 +84,10 @@ class ForceBalanceSystemPageWidget(QWidget):
                 "Moment (N/m)": ["Moment X", "Moment Y", "Moment Z"],
             }
         )
-        self.balanceChartView = TimeChartView(self.balanceChart)
+        self.balanceChartView = TimeChartView(self.balance_chart)
 
-        commandLayout.addWidget(self.enableHardpointCorrectionsButton)
-        commandLayout.addWidget(self.disableHardpointCorrectionsButton)
+        command_layout.addWidget(self.enable_hardpoint_corrections_button)
+        command_layout.addWidget(self.disable_hardpoint_corrections_button)
 
         row = 0
 
@@ -102,7 +102,7 @@ class ForceBalanceSystemPageWidget(QWidget):
         ]
 
         for d in range(len(values)):
-            dataLayout.addWidget(QLabel(f"<b>{values[d]}</b>"), row, d + 1)
+            data_layout.addWidget(QLabel(f"<b>{values[d]}</b>"), row, d + 1)
 
         row += 1
 
@@ -117,45 +117,45 @@ class ForceBalanceSystemPageWidget(QWidget):
                 "forceMagnitude": Force(),
             }
 
-        def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
+        def add_data_row(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
             for k, v in variables.items():
-                dataLayout.addWidget(v, row, col)
+                data_layout.addWidget(v, row, col)
                 col += 1
 
         self.totals = createXYZ()
 
-        dataLayout.addWidget(QLabel("<b>Total</b>"), row, 0)
-        addDataRow(self.totals, row)
+        data_layout.addWidget(QLabel("<b>Total</b>"), row, 0)
+        add_data_row(self.totals, row)
 
         row += 1
         self.corrected = createXYZ()
-        dataLayout.addWidget(QLabel("<b>Corrected</b>"), row, 0)
-        addDataRow(self.corrected, row)
+        data_layout.addWidget(QLabel("<b>Corrected</b>"), row, 0)
+        add_data_row(self.corrected, row)
 
         row += 1
         self.remaing = createXYZ()
-        dataLayout.addWidget(QLabel("<b>Remaining</b>"), row, 0)
-        addDataRow(self.remaing, row)
+        data_layout.addWidget(QLabel("<b>Remaining</b>"), row, 0)
+        add_data_row(self.remaing, row)
 
         row += 1
-        dataLayout.addWidget(QLabel(" "), row, 0)
+        data_layout.addWidget(QLabel(" "), row, 0)
         row += 1
 
         hardpoints = [f"HP{x}" for x in range(1, 7)] + ["Mag"]
 
         for d in range(len(hardpoints)):
-            dataLayout.addWidget(QLabel(f"<b>{hardpoints[d]}</b>"), row, d + 1)
+            data_layout.addWidget(QLabel(f"<b>{hardpoints[d]}</b>"), row, d + 1)
 
         row += 1
 
-        dataLayout.addWidget(QLabel("<b>Measured Force</b>"), row, 0)
+        data_layout.addWidget(QLabel("<b>Measured Force</b>"), row, 0)
 
         self.hardpoints = [Force() for x in range(len(hardpoints))]
         for c in range(len(self.hardpoints)):
-            dataLayout.addWidget(self.hardpoints[c], row, c + 1)
+            data_layout.addWidget(self.hardpoints[c], row, c + 1)
 
-        warningLayout.addWidget(self.balanceForcesClipped)
-        warningLayout.addStretch()
+        warning_layout.addWidget(self.balance_forces_clipped)
+        warning_layout.addStretch()
 
         plotLayout.addWidget(self.balanceChartView)
 
@@ -172,12 +172,12 @@ class ForceBalanceSystemPageWidget(QWidget):
     def appliedBalanceForces(self, data: BaseMsgType) -> None:
         self._fillRow(self.corrected, data)
 
-        self.balanceChart.append(
+        self.balance_chart.append(
             data.timestamp,
             [data.fx, data.fy, data.fz, data.forceMagnitude],
             axis_index=0,
         )
-        self.balanceChart.append(
+        self.balance_chart.append(
             data.timestamp, [data.mx, data.my, data.mz], axis_index=1
         )
 
@@ -189,19 +189,19 @@ class ForceBalanceSystemPageWidget(QWidget):
     @Slot()
     def preclippedBalanceForces(self, data: BaseMsgType) -> None:
         try:
-            self.balanceForcesClipped.setClipped(
+            self.balance_forces_clipped.setClipped(
                 (
                     self.m1m3.remote.evt_balanceForcesApplied.get().timestamp
                     == self.m1m3.remote.evt_preclippedBalanceForces.get().timestamp
                 )
             )
         except AttributeError:
-            self.balanceForcesClipped.setClipped(False)
+            self.balance_forces_clipped.setClipped(False)
 
     @Slot()
     def force_controller_state(self, data: BaseMsgType) -> None:
-        self.enableHardpointCorrectionsButton.setDisabled(data.balanceForcesApplied)
-        self.disableHardpointCorrectionsButton.setEnabled(data.balanceForcesApplied)
+        self.enable_hardpoint_corrections_button.setDisabled(data.balanceForcesApplied)
+        self.disable_hardpoint_corrections_button.setEnabled(data.balanceForcesApplied)
 
     @Slot()
     def hardpointActuatorData(self, data: BaseMsgType) -> None:

@@ -214,10 +214,10 @@ class UserSelectedTimeChart(TimeChart):
         self._signal = None
         self._name: str | None = None
         self._index: int | None = None
-        self.topicSelected.connect(self._topicSelected)
+        self.topicSelected.connect(self._topic_selected)
 
     @Slot()
-    def _topicSelected(self, obj: UnitLabel) -> None:
+    def _topic_selected(self, obj: UnitLabel) -> None:
         name = obj.objectName()
         index = None
         try:
@@ -235,7 +235,15 @@ class UserSelectedTimeChart(TimeChart):
                 if self._signal is not None:
                     self._signal.disconnect(self._appendData)
 
-                self._createCaches({obj.unit_name: [name]})
+                try:
+                    unit_name = obj.formator.unit_name
+                except AttributeError:
+                    try:
+                        unit_name = obj.unit_name
+                    except AttributeError:
+                        unit_name = "Y"
+
+                self._createCaches({unit_name: [name]})
                 self._attachSeries()
 
                 self._signal = s

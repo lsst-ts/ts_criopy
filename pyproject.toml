@@ -11,7 +11,7 @@ urls = { documentation = "https://ts-criopy.lsst.io", repository = "https://gith
 dynamic = [ "version" ]
 dependencies = [
   "astropy",
-  "numpy",
+  "numpy>=1.4",
   "pandas",
   "pyside6",
   "pyyaml",
@@ -21,8 +21,8 @@ dependencies = [
   "click",
   "jsonschema",
   "h5py",
-  "ts_ddsconfig",
   "ts_idl",
+  "ts_m1m3_utils",
   "ts_salobj",
   "ts_xml",
   "ts_utils",

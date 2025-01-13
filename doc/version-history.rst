@@ -4,6 +4,25 @@
 Version History
 ===============
 
+v0.8.2
+------
+
+* Add elevation forces to M1M3SIMGUI (so also to ForceCalculator class)
+* Add ApplySetpoint command support to the M1M3TSGUI
+* Balance forces can be switched on/off only in engineering mode
+* Show time deltas on M1M3 TS glycol circulation page
+* Move simulator & aceleration tools into ts_m1m3_utils
+* Bug-fixes (EUI labels, omitted API changes)
+
+v0.8.1
+------
+
+* Correctly show small values (= calibrations)
+* Improve hardpoint display
+* Improve IMS display
+* Display outerLoop data
+* Fixed mypy issues
+
 v0.8.0
 ------
 

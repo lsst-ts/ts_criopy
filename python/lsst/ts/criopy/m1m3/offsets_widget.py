@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import typing
+from functools import partial
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
@@ -33,7 +34,16 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..gui import Arcsec, ArcsecWarning, Force, Mm, MmWarning, Moment
+from ..gui import (
+    Arcsec,
+    ArcsecWarning,
+    Force,
+    FormatLabel,
+    Mm,
+    MmWarning,
+    Moment,
+    UnitLabel,
+)
 from ..salcomm import MetaSAL, command
 from .direction_pad_widget import DirectionPadWidget
 
@@ -73,13 +83,13 @@ class OffsetsWidget(QWidget):
         self.m1m3 = m1m3
 
         self.__hp_data = None
-        self._imsData = None
+        self.__ims_data = None
 
         layout = QVBoxLayout()
 
-        dataLayout = QGridLayout()
+        data_layout = QGridLayout()
 
-        layout.addLayout(dataLayout)
+        layout.addLayout(data_layout)
         self.setLayout(layout)
 
         directions = ["X", "Y", "Z", "Rotation X", "Rotation Y", "Rotation Z"]
@@ -87,7 +97,7 @@ class OffsetsWidget(QWidget):
         row = 0
 
         for d in range(6):
-            dataLayout.addWidget(QLabel(f"<b>{directions[d]}</b>"), row, d + 1)
+            data_layout.addWidget(QLabel(f"<b>{directions[d]}</b>"), row, d + 1)
 
         def createXYZR() -> dict[str, QLabel]:
             return {
@@ -109,69 +119,6 @@ class OffsetsWidget(QWidget):
                 "zRotation": ArcsecWarning(),
             }
 
-        self.hpVariables = createXYZR()
-
-        self.imsVariables = createXYZR()
-
-        self.diffs = createXYZRWarning()
-
-        def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
-            for k, v in variables.items():
-                dataLayout.addWidget(v, row, col)
-                col += 1
-
-        row += 1
-        dataLayout.addWidget(QLabel("<b>HP</b>"), row, 0)
-        addDataRow(self.hpVariables, row)
-
-        row += 1
-        dataLayout.addWidget(QLabel("<b>IMS</b>"), row, 0)
-        addDataRow(self.imsVariables, row)
-
-        row += 1
-        dataLayout.addWidget(QLabel("<b>Diff</b>"), row, 0)
-        addDataRow(self.diffs, row)
-
-        row += 1
-        dataLayout.addWidget(QLabel("<b>Target</b>"), row, 0)
-
-        col = 1
-        for p in self.POSITIONS:
-            sb = QDoubleSpinBox()
-            if p[1:] == "Position":
-                sb.setRange(-10, 10)
-                sb.setDecimals(3)
-                sb.setSingleStep(0.001)
-            else:
-                sb.setRange(-300, 300)
-                sb.setDecimals(2)
-                sb.setSingleStep(0.01)
-
-            dataLayout.addWidget(sb, row, col)
-            setattr(self, "target_" + p, sb)
-            col += 1
-
-        row += 1
-
-        self.moveMirrorButton = QPushButton("Move Mirror")
-        self.moveMirrorButton.setEnabled(False)
-        self.moveMirrorButton.clicked.connect(self._moveMirror)
-        self.moveMirrorButton.setDefault(True)
-
-        dataLayout.addWidget(self.moveMirrorButton, row, 1, 1, 3)
-
-        self.copyCurrentButton = QPushButton("Copy Current")
-        self.copyCurrentButton.setEnabled(False)
-        self.copyCurrentButton.clicked.connect(self._copyCurrent)
-
-        dataLayout.addWidget(self.copyCurrentButton, row, 4, 1, 3)
-
-        row += 1
-        self.dir_pad = DirectionPadWidget()
-        self.dir_pad.setEnabled(False)
-        self.dir_pad.positionChanged.connect(self._positionChanged)
-        dataLayout.addWidget(self.dir_pad, row, 1, 3, 6)
-
         def createForces() -> dict[str, QLabel]:
             return {
                 "fx": Force(),
@@ -182,24 +129,142 @@ class OffsetsWidget(QWidget):
                 "mz": Moment(),
             }
 
+        def createArray(
+            var: str, label: typing.Callable[[], UnitLabel]
+        ) -> dict[str, QLabel]:
+            ret = {}
+            for i in range(6):
+                ret[f"{var}[{i}]"] = label()
+            return ret
+
+        self.hp_position = createXYZR()
+
+        self.ims_position = createXYZR()
+
+        self.diffs = createXYZRWarning()
+
+        self.hp_forces = createForces()
+        self.hp_measured_forces = createArray("measuredForce", Force)
+        self.hp_displacement = createArray("displacement", Mm)
+        self.hp_encoder = createArray("encoder", partial(FormatLabel, ".0f"))
+
+        def addDataRow(variables: dict[str, QLabel], row: int, col: int = 1) -> None:
+            for k, v in variables.items():
+                data_layout.addWidget(v, row, col)
+                col += 1
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>HP</b>"), row, 0)
+        addDataRow(self.hp_position, row)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>IMS</b>"), row, 0)
+        addDataRow(self.ims_position, row)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>Diff</b>"), row, 0)
+        addDataRow(self.diffs, row)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>Target</b>"), row, 0)
+
+        col = 1
+        for p in self.POSITIONS:
+            sb = QDoubleSpinBox()
+            if p[1:] == "Position":
+                sb.setRange(-10, 10)
+                sb.setDecimals(3)
+                sb.setSingleStep(0.1)
+            else:
+                sb.setRange(-300, 300)
+                sb.setDecimals(2)
+                sb.setSingleStep(0.1)
+
+            data_layout.addWidget(sb, row, col)
+            setattr(self, "target_" + p, sb)
+            col += 1
+
+        row += 1
+        self.move_mirror_button = QPushButton("Move Mirror")
+        self.move_mirror_button.setEnabled(False)
+        self.move_mirror_button.clicked.connect(self._move_mirror)
+        self.move_mirror_button.setDefault(True)
+
+        data_layout.addWidget(self.move_mirror_button, row, 1, 1, 2)
+
+        self.stop_mirror_button = QPushButton("&Stop")
+        self.stop_mirror_button.setEnabled(False)
+        self.stop_mirror_button.clicked.connect(self._stop_mirror)
+
+        data_layout.addWidget(self.stop_mirror_button, row, 3, 1, 2)
+
+        self.copy_current_button = QPushButton("Copy Current")
+        self.copy_current_button.setEnabled(False)
+        self.copy_current_button.clicked.connect(self._copy_current)
+
+        data_layout.addWidget(self.copy_current_button, row, 5, 1, 1)
+
+        zero_button = QPushButton("Zero target")
+        zero_button.clicked.connect(self._zero_target)
+
+        data_layout.addWidget(zero_button, row, 6, 1, 1)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>HP forces</b>"), row, 0)
+        addDataRow(self.hp_forces, row)
+
+        row += 1
+        data_layout.addWidget(QLabel(), row, 0)  # empty row
+
+        row += 1
+        for hp_num in range(1, 7):
+            data_layout.addWidget(QLabel(f"<b>{hp_num}</b>"), row, hp_num)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>HP measured forces</b>"), row, 0)
+        addDataRow(self.hp_measured_forces, row)
+
+        row += 1
+        data_layout.addWidget(QLabel("HP displacement"), row, 0)
+        addDataRow(self.hp_displacement, row)
+
+        row += 1
+        data_layout.addWidget(QLabel("HP encoder"), row, 0)
+        addDataRow(self.hp_encoder, row)
+
+        row += 1
+        self.dir_pad = DirectionPadWidget()
+        self.dir_pad.setEnabled(False)
+        self.dir_pad.positionChanged.connect(self._positionChanged)
+        data_layout.addWidget(self.dir_pad, row, 1, 3, 6)
+
         self.preclipped = createForces()
         self.applied = createForces()
         self.measured = createForces()
 
         row += 3
-        dataLayout.addWidget(QLabel("<b>Preclipped</b>"), row, 0)
+        for i in range(6):
+            text = (
+                f"Force {chr(ord('X') + i)}"
+                if i < 3
+                else f"Moment {chr(ord('X') + i - 3)}"
+            )
+            data_layout.addWidget(QLabel(f"<b>{text}</b>"), row, i + 1)
+
+        row += 1
+        data_layout.addWidget(QLabel("<b>Preclipped</b>"), row, 0)
         addDataRow(self.preclipped, row)
 
         row += 1
-        dataLayout.addWidget(QLabel("<b>Applied</b>"), row, 0)
+        data_layout.addWidget(QLabel("<b>Applied</b>"), row, 0)
         addDataRow(self.applied, row)
 
         row += 1
-        dataLayout.addWidget(QLabel("<b>Measured</b>"), row, 0)
+        data_layout.addWidget(QLabel("<b>Measured</b>"), row, 0)
         addDataRow(self.measured, row)
 
         row += 1
-        dataLayout.addWidget(QLabel("<b>Offset</b>"), row, 0)
+        data_layout.addWidget(QLabel("<b>Offset</b>"), row, 0)
 
         col = 1
         for p in self.FORCES:
@@ -208,7 +273,7 @@ class OffsetsWidget(QWidget):
             sb.setDecimals(1)
             sb.setSingleStep(1)
 
-            dataLayout.addWidget(sb, row, col)
+            data_layout.addWidget(sb, row, col)
             setattr(self, "forceOffsets_" + p, sb)
             col += 1
 
@@ -216,12 +281,12 @@ class OffsetsWidget(QWidget):
         self.offsetForces = QPushButton("Apply offset forces")
         self.offsetForces.setEnabled(False)
         self.offsetForces.clicked.connect(self._applyOffsetForces)
-        dataLayout.addWidget(self.offsetForces, row, 1, 1, 3)
+        data_layout.addWidget(self.offsetForces, row, 1, 1, 3)
 
         self.clearOffsetForcesButton = QPushButton("Reset forces")
         self.clearOffsetForcesButton.setEnabled(False)
         self.clearOffsetForcesButton.clicked.connect(self._clearOffsetForces)
-        dataLayout.addWidget(self.clearOffsetForcesButton, row, 4, 1, 3)
+        data_layout.addWidget(self.clearOffsetForcesButton, row, 4, 1, 3)
 
         layout.addStretch()
 
@@ -285,14 +350,24 @@ class OffsetsWidget(QWidget):
         return offsets
 
     @asyncSlot()
-    async def _moveMirror(self) -> None:
+    async def _move_mirror(self) -> None:
         targets = self.get_targets()
         self.dir_pad.set_position(targets[p] for p in self.POSITIONS)
         await self.moveMirror(**self.get_targets())
 
+    @asyncSlot()
+    async def _stop_mirror(self) -> None:
+        await command(self, self.m1m3.remote.cmd_stopHardpointMotion)
+
     @Slot()
-    def _copyCurrent(self) -> None:
+    def _copy_current(self) -> None:
         args = {k: getattr(self.__hp_data, k) for k in self.POSITIONS}
+        self.set_targets(args)
+        self.dir_pad.set_position(args[p] for p in self.POSITIONS)
+
+    @Slot()
+    def _zero_target(self) -> None:
+        args = {k: 0.0 for k in self.POSITIONS}
         self.set_targets(args)
         self.dir_pad.set_position(args[p] for p in self.POSITIONS)
 
@@ -318,46 +393,56 @@ class OffsetsWidget(QWidget):
         self.set_targets(args)
         await self.moveMirror(**args)
 
-    def __fill_row(self, variables: dict[str, QLabel], data: BaseMsgType) -> None:
+    def __fill_array(self, variables: dict[str, QLabel], data: typing.Any) -> None:
+        for k, v in variables.items():
+            sep = k.index("[")
+            v.setValue(getattr(data, k[:sep])[int(k[sep + 1])])
+
+    def __fill_row(self, variables: dict[str, QLabel], data: typing.Any) -> None:
         for k, v in variables.items():
             v.setValue(getattr(data, k))
 
     def __update_diffs(self) -> None:
-        if self.__hp_data is None or self._imsData is None:
+        if self.__hp_data is None or self.__ims_data is None:
             return
         for k, v in self.diffs.items():
-            v.setValue(getattr(self.__hp_data, k) - getattr(self._imsData, k))
+            v.setValue(getattr(self.__hp_data, k) - getattr(self.__ims_data, k))
 
     @Slot()
     def _hardpointActuatorDataCallback(self, data: BaseMsgType) -> None:
-        self.__fill_row(self.hpVariables, data)
+        self.__fill_row(self.hp_position, data)
+        self.__fill_row(self.hp_forces, data)
+        self.__fill_array(self.hp_measured_forces, data)
+        self.__fill_array(self.hp_displacement, data)
+        self.__fill_array(self.hp_encoder, data)
         self.__hp_data = data
-        self.copyCurrentButton.setEnabled(True)
+        self.copy_current_button.setEnabled(True)
         self.__update_diffs()
 
     @Slot()
     def _imsDataCallback(self, data: BaseMsgType) -> None:
-        self.__fill_row(self.imsVariables, data)
-        self._imsData = data
+        self.__fill_row(self.ims_position, data)
+        self.__ims_data = data
         self.__update_diffs()
 
     @Slot()
-    def _preclippedOffsetForces(self, data: BaseMsgType) -> None:
+    def _preclippedOffsetForces(self, data: typing.Any) -> None:
         self.__fill_row(self.preclipped, data)
 
     @Slot()
-    def _appliedOffsetForces(self, data: BaseMsgType) -> None:
+    def _appliedOffsetForces(self, data: typing.Any) -> None:
         self.__fill_row(self.applied, data)
 
     @Slot()
-    def _forceActuatorCallback(self, data: BaseMsgType) -> None:
+    def _forceActuatorCallback(self, data: typing.Any) -> None:
         self.__fill_row(self.measured, data)
 
     @Slot()
-    def _detailedStateCallback(self, data: BaseMsgType) -> None:
+    def _detailedStateCallback(self, data: typing.Any) -> None:
         enabled = data.detailedState == DetailedStates.ACTIVEENGINEERING
 
-        self.moveMirrorButton.setEnabled(enabled)
+        self.move_mirror_button.setEnabled(enabled)
+        self.stop_mirror_button.setEnabled(enabled)
         self.dir_pad.setEnabled(enabled)
         self.offsetForces.setEnabled(enabled)
         self.clearOffsetForcesButton.setEnabled(enabled)

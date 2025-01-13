@@ -69,24 +69,24 @@ class Widget(QSplitter):
         self.field: typing.Any | None = None
         self._topic: TopicData | None = None
 
-        plotLayout = QVBoxLayout()
-        selectionLayout = QVBoxLayout()
-        detailsLayout = QGridLayout()
-        filterLayout = QGridLayout()
+        plot_layout = QVBoxLayout()
+        selection_layout = QVBoxLayout()
+        details_layout = QGridLayout()
+        filter_layout = QGridLayout()
 
-        selectionLayout.addLayout(detailsLayout)
-        selectionLayout.addLayout(filterLayout)
+        selection_layout.addLayout(details_layout)
+        selection_layout.addLayout(filter_layout)
 
-        self.selectedActuatorIdLabel = QLabel()
-        self.selectedActuatorValueLabel = QLabel()
-        self.selectedActuatorWarningLabel = WarningLabel()
+        self.selected_actuator_id_label = QLabel()
+        self.selected_actuator_value_label = QLabel()
+        self.selected_actuator_warning_label = WarningLabel()
         self.lastUpdatedLabel = TimeDeltaLabel()
 
-        self.nearSelectedIdsLabel = QLabel()
-        self.nearSelectedValueLabel = QLabel()
+        self.near_selected_ids_label = QLabel()
+        self.near_selected_value_label = QLabel()
 
-        self.farSelectedIdsLabel = QLabel()
-        self.farSelectedValueLabel = QLabel()
+        self.far_selected_ids_label = QLabel()
+        self.far_selected_value_label = QLabel()
 
         self.topicList = QListWidget()
         self.topicList.setFixedWidth(256)
@@ -98,15 +98,15 @@ class Widget(QSplitter):
         self.fieldList.setFixedWidth(256)
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
 
-        plotLayout.addWidget(userWidget)
+        plot_layout.addWidget(userWidget)
 
         def addDetails(
             row: int, name: str, label: QLabel, nears: QLabel, fars: QLabel
         ) -> None:
-            detailsLayout.addWidget(QLabel(name), row, 0)
-            detailsLayout.addWidget(label, row, 1)
-            detailsLayout.addWidget(nears, row, 2)
-            detailsLayout.addWidget(fars, row, 3)
+            details_layout.addWidget(QLabel(name), row, 0)
+            details_layout.addWidget(label, row, 1)
+            details_layout.addWidget(nears, row, 2)
+            details_layout.addWidget(fars, row, 3)
 
         addDetails(
             0,
@@ -118,23 +118,23 @@ class Widget(QSplitter):
         addDetails(
             1,
             "<b>Id</b>",
-            self.selectedActuatorIdLabel,
-            self.nearSelectedIdsLabel,
-            self.farSelectedIdsLabel,
+            self.selected_actuator_id_label,
+            self.near_selected_ids_label,
+            self.far_selected_ids_label,
         )
         addDetails(
             2,
             "<b>Value</b>",
-            self.selectedActuatorValueLabel,
-            self.nearSelectedValueLabel,
-            self.farSelectedValueLabel,
+            self.selected_actuator_value_label,
+            self.near_selected_value_label,
+            self.far_selected_value_label,
         )
         addDetails(
             3,
             "<b>Last Updated</b>",
             self.lastUpdatedLabel,
             QLabel("<b>Warning</b>"),
-            self.selectedActuatorWarningLabel,
+            self.selected_actuator_warning_label,
         )
 
         self.forces_moments = [
@@ -147,36 +147,36 @@ class Widget(QSplitter):
             QLabel("---"),
         ]
 
-        detailsLayout.addWidget(QLabel("<b>Forces</b>"), 4, 0)
-        detailsLayout.addWidget(self.forces_moments[6], 5, 0)
+        details_layout.addWidget(QLabel("<b>Forces</b>"), 4, 0)
+        details_layout.addWidget(self.forces_moments[6], 5, 0)
         for i, a in enumerate("XYZ"):
-            detailsLayout.addWidget(QLabel(f"<b>{a}</b>"), 4, i + 1)
-            detailsLayout.addWidget(self.forces_moments[i], 5, i + 1)
+            details_layout.addWidget(QLabel(f"<b>{a}</b>"), 4, i + 1)
+            details_layout.addWidget(self.forces_moments[i], 5, i + 1)
 
-        detailsLayout.addWidget(QLabel("<b>Moments</b>"), 6, 0)
+        details_layout.addWidget(QLabel("<b>Moments</b>"), 6, 0)
         for i, a in enumerate("XYZ"):
-            detailsLayout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
-            detailsLayout.addWidget(self.forces_moments[i + 3], 7, i + 1)
+            details_layout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
+            details_layout.addWidget(self.forces_moments[i + 3], 7, i + 1)
 
         self.editButton = QPushButton("&Modify")
         self.editButton.clicked.connect(self.editValues)
         self.clearButton = QPushButton("&Zero")
         self.clearButton.clicked.connect(self.zeroValues)
 
-        detailsLayout.addWidget(self.editButton, 8, 0, 1, 2)
-        detailsLayout.addWidget(self.clearButton, 8, 2, 1, 2)
+        details_layout.addWidget(self.editButton, 8, 0, 1, 2)
+        details_layout.addWidget(self.clearButton, 8, 2, 1, 2)
 
-        filterLayout.addWidget(QLabel("Topic"), 1, 1)
-        filterLayout.addWidget(QLabel("Field"), 1, 2)
-        filterLayout.addWidget(self.topicList, 2, 1)
-        filterLayout.addWidget(self.fieldList, 2, 2)
+        filter_layout.addWidget(QLabel("Topic"), 1, 1)
+        filter_layout.addWidget(QLabel("Field"), 1, 2)
+        filter_layout.addWidget(self.topicList, 2, 1)
+        filter_layout.addWidget(self.fieldList, 2, 2)
 
         self.topicList.setCurrentRow(0)
 
         w_left = QWidget()
-        w_left.setLayout(plotLayout)
+        w_left.setLayout(plot_layout)
         w_right = QWidget()
-        w_right.setLayout(selectionLayout)
+        w_right.setLayout(selection_layout)
         w_right.setMaximumWidth(w_right.size().width())
         self.addWidget(w_left)
         self.addWidget(w_right)
@@ -235,11 +235,11 @@ class Widget(QSplitter):
         def get_axis(topic: TopicData) -> str:
             axis = ""
             for f in topic.fields:
-                if f.valueIndex == FAIndex.X:
+                if f.value_index == FAIndex.X:
                     axis += "x"
-                elif f.valueIndex == FAIndex.Y:
+                elif f.value_index == FAIndex.Y:
                     axis += "y"
-                elif f.valueIndex == FAIndex.Z:
+                elif f.value_index == FAIndex.Z:
                     axis += "z"
             return "".join(sorted(set(axis)))
 
@@ -263,7 +263,7 @@ class Widget(QSplitter):
         )
 
     def _set_unknown(self) -> None:
-        self.lastUpdatedLabel.setUnknown()
+        self.lastUpdatedLabel.set_unknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
         if self._topic is None or self._topic.topic is None or self.field is None:
@@ -271,7 +271,7 @@ class Widget(QSplitter):
                 "Topic or field is None in Widget.getCurrentFieldName:"
                 f" {self._topic}, {self.field}"
             )
-        return (self._topic.topic, self.field.fieldName)
+        return (self._topic.topic, self.field.field_name)
 
     def _get_data(self) -> typing.Any:
         if self._topic is None:
@@ -294,50 +294,52 @@ class Widget(QSplitter):
             warning).
         """
         if selected_actuator is None:
-            self.selectedActuatorIdLabel.setText("not selected")
-            self.selectedActuatorValueLabel.setText("")
-            self.selectedActuatorWarningLabel.setText("")
+            self.selected_actuator_id_label.setText("not selected")
+            self.selected_actuator_value_label.setText("")
+            self.selected_actuator_warning_label.setText("")
             return
 
         if self.field is None:
             raise RuntimeError("field not selected in Widget.updateSelectedActuator")
 
-        self.selectedActuatorIdLabel.setText(
+        self.selected_actuator_id_label.setText(
             str(selected_actuator.actuator.actuator_id)
         )
-        self.selectedActuatorValueLabel.setText(selected_actuator.getValue())
-        self.selectedActuatorWarningLabel.setValue(selected_actuator.warning)
+        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
         data = self.field.getValue(self._get_data())
 
         # near neighbour
-        nearIDs = FATable[selected_actuator.actuator.index].near_neighbors
-        nearIndices = list(
-            selected_actuator.actuator.near_neighbors_indices(self.field.valueIndex)
+        near_ids = FATable[selected_actuator.actuator.index].near_neighbors
+        near_indices = list(
+            selected_actuator.actuator.near_neighbors_indices(self.field.value_index)
         )
 
-        if len(nearIndices) == 0:
-            self.nearSelectedIdsLabel.setText("---")
-            self.nearSelectedValueLabel.setText("---")
+        if len(near_indices) == 0:
+            self.near_selected_ids_label.setText("---")
+            self.near_selected_value_label.setText("---")
         else:
-            self.nearSelectedIdsLabel.setText(",".join(map(str, nearIDs)))
-            self.nearSelectedValueLabel.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in nearIndices]))}"
+            self.near_selected_ids_label.setText(",".join(map(str, near_ids)))
+            self.near_selected_value_label.setText(
+                f"{selected_actuator.formatValue(numpy.average([data[i] for i in near_indices]))}"
             )
 
-        farIDs = filter(
-            lambda f: f not in nearIDs,
+        far_ids = filter(
+            lambda f: f not in near_ids,
             FATable[selected_actuator.actuator.index].far_neighbors,
         )
         farIndices = list(
-            selected_actuator.actuator.only_far_neighbors_indices(self.field.valueIndex)
+            selected_actuator.actuator.only_far_neighbors_indices(
+                self.field.value_index
+            )
         )
         if len(farIndices) == 0:
-            self.farSelectedIdsLabel.setText("---")
-            self.farSelectedValueLabel.setText("---")
+            self.far_selected_ids_label.setText("---")
+            self.far_selected_value_label.setText("---")
         else:
-            self.farSelectedIdsLabel.setText(",".join(map(str, farIDs)))
-            self.farSelectedValueLabel.setText(
+            self.far_selected_ids_label.setText(",".join(map(str, far_ids)))
+            self.far_selected_value_label.setText(
                 f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
             )
 
@@ -380,9 +382,9 @@ class Widget(QSplitter):
             return
 
         try:
-            self.lastUpdatedLabel.setTime(data.timestamp)
+            self.lastUpdatedLabel.setValue(data.timestamp)
         except AttributeError:
-            self.lastUpdatedLabel.setTime(data.private_sndStamp)
+            self.lastUpdatedLabel.setValue(data.private_sndStamp)
 
         for i, axis in enumerate("xyz"):
             try:
@@ -397,4 +399,7 @@ class Widget(QSplitter):
             except AttributeError:
                 self.forces_moments[i + 3].setText("-N-")
 
-        self.forces_moments[6].setText(f"{getattr(data, 'forceMagnitude'):.3f} N")
+        try:
+            self.forces_moments[6].setText(f"{getattr(data, 'forceMagnitude'):.3f} N")
+        except AttributeError:
+            pass

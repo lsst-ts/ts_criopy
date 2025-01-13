@@ -160,7 +160,7 @@ class TopicWindow(DockWindow):
         self.collection.topics[topic_index].selectedField = field_index
 
     def _setUnknown(self) -> None:
-        self.lastUpdatedLabel.setUnknown()
+        self.lastUpdatedLabel.set_unknown()
 
     def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
         """
@@ -216,6 +216,6 @@ class TopicWindow(DockWindow):
             self._setUnknown()
         else:
             try:
-                self.lastUpdatedLabel.setTime(data.timestamp)
+                self.lastUpdatedLabel.setValue(data.timestamp)
             except AttributeError:
-                self.lastUpdatedLabel.setTime(data.private_sndStamp)
+                self.lastUpdatedLabel.setValue(data.private_sndStamp)

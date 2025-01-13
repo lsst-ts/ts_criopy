@@ -18,12 +18,12 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
+from lsst.ts.m1m3.utils import Simulator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
 
 from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
 from ...salcomm import MetaSAL
-from .. import Simulator
 from .widget import Widget
 
 
@@ -55,7 +55,7 @@ class GraphPageWidget(Widget):
         if self.field is None:
             raise RuntimeError("field is None in GraphPageWidget.changeValues")
 
-        self.mirrorWidget.setScaleType(self.field.scaleType)
+        self.mirrorWidget.setScaleType(self.field.scale_type)
 
     def updateValues(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
@@ -82,10 +82,16 @@ class GraphPageWidget(Widget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
+        enabled = self.m1m3.remote.evt_enabledForceActuators.get()
+
         for row in FATable:
             index = row.index
-            data_index = row.get_index(self.field.valueIndex)
-            if values is None or data_index is None:
+            data_index = row.get_index(self.field.value_index)
+            if enabled is not None and not enabled.forceActuatorEnabled[index]:
+                state = ForceActuatorItem.STATE_INACTIVE
+                if values is not None:
+                    values[index] = None
+            elif values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif warningData is not None or data_index is None:
                 state = get_warning(index)
@@ -104,13 +110,15 @@ class GraphPageWidget(Widget):
             self.mirrorWidget.setRange(0, 0)
             return
 
+        # filter out None values
+        values = [v for v in values if v is not None]
         self.mirrorWidget.setRange(min(values), max(values))
 
         selected = self.mirrorWidget.mirrorView.selected()
         if selected is not None:
             if selected.data is not None:
-                self.selectedActuatorValueLabel.setText(selected.getValue())
+                self.selected_actuator_value_label.setText(selected.getValue())
             if warningData is not None:
-                self.selectedActuatorWarningLabel.setValue(
+                self.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))
                 )
