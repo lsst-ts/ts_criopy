@@ -209,10 +209,10 @@ class CommandWidget(QWidget):
 
     def startEdit(self, kind: Buttons) -> None:
         if kind == Buttons.HEATERS:
-            self.updateValues(self.heaters, True)
+            self.update_values(self.heaters, True)
             self.setFansButton.setDisabled(True)
         else:
-            self.updateValues(self.fans, True)
+            self.update_values(self.fans, True)
             self.setHeatersButton.setDisabled(True)
 
         self.dataWidget.setEditTriggers(QAbstractItemView.AllEditTriggers)
@@ -231,7 +231,7 @@ class CommandWidget(QWidget):
 
         self.cancel()
 
-    def updateValues(self, values: typing.Any, freeze: bool = False) -> None:
+    def update_values(self, values: typing.Any, freeze: bool = False) -> None:
         if self.freezed:
             return
 
@@ -258,8 +258,8 @@ class ThermalValuePageWidget(TopicWindow):
 
         super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         if data is None or self.field is None:
-            self.commandWidget.updateValues(None)
+            self.commandWidget.update_values(None)
         else:
-            self.commandWidget.updateValues(self.field.getValue(data))
+            self.commandWidget.update_values(self.field.getValue(data))

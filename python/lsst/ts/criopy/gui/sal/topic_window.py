@@ -43,7 +43,7 @@ from .topic_data import TopicField
 class TopicWindow(DockWindow):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement updateValues(data) method.
+    Children classes must implement update_values(data) method.
 
     Parameters
     ----------
@@ -56,12 +56,12 @@ class TopicWindow(DockWindow):
         Collections of data associated with widget.
     userWidget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
-        be update in updateValues(data) method.
+        be update in update_values(data) method.
 
     Methods
     -------
 
-    updateValues(data)
+    update_values(data)
         Must be defined in every child. This is called when selection is
         changed or when new data become available. If data parameter is None,
         then no data has been received for selected read topic.
@@ -83,30 +83,30 @@ class TopicWindow(DockWindow):
 
         self.field: TopicField | None = None
 
-        plotLayout = QVBoxLayout()
-        selectionLayout = QVBoxLayout()
-        detailsLayout = QFormLayout()
-        filterLayout = QHBoxLayout()
+        plot_layout = QVBoxLayout()
+        selection_layout = QVBoxLayout()
+        details_layout = QFormLayout()
+        filter_layout = QHBoxLayout()
 
         w_left = QWidget()
-        w_left.setLayout(plotLayout)
+        w_left.setLayout(plot_layout)
         splitter.addWidget(w_left)
         w_right = QWidget()
-        w_right.setLayout(selectionLayout)
+        w_right.setLayout(selection_layout)
         splitter.addWidget(w_right)
 
         splitter.setCollapsible(0, False)
         splitter.setStretchFactor(0, 10)
         splitter.setStretchFactor(1, 0)
 
-        selectionLayout.addLayout(detailsLayout)
-        selectionLayout.addWidget(QLabel("Filter Data"))
-        selectionLayout.addLayout(filterLayout)
+        selection_layout.addLayout(details_layout)
+        selection_layout.addWidget(QLabel("Filter Data"))
+        selection_layout.addLayout(filter_layout)
 
-        self.selectedActuatorIdLabel = QLabel()
-        self.selectedActuatorValueLabel = QLabel()
-        self.selectedActuatorWarningLabel = WarningLabel()
-        self.lastUpdatedLabel = TimeDeltaLabel()
+        self.selected_actuator_id_label = QLabel()
+        self.selected_actuator_value_label = QLabel()
+        self.selected_actuator_warning_label = WarningLabel()
+        self.last_updated_label = TimeDeltaLabel()
 
         self.topicList = QListWidget()
         self.topicList.currentRowChanged.connect(self.currentTopicChanged)
@@ -115,18 +115,20 @@ class TopicWindow(DockWindow):
         self.fieldList = QListWidget()
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
 
-        plotLayout.addWidget(userWidget)
+        plot_layout.addWidget(userWidget)
 
-        detailsLayout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-        detailsLayout.addRow(QLabel("Actuator Id"), self.selectedActuatorIdLabel)
-        detailsLayout.addRow(QLabel("Actuator Value"), self.selectedActuatorValueLabel)
-        detailsLayout.addRow(
-            QLabel("Actuator Warning"), self.selectedActuatorWarningLabel
+        details_layout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
+        details_layout.addRow(QLabel("Actuator Id"), self.selected_actuator_id_label)
+        details_layout.addRow(
+            QLabel("Actuator Value"), self.selected_actuator_value_label
         )
-        detailsLayout.addRow(QLabel("Last Updated"), self.lastUpdatedLabel)
+        details_layout.addRow(
+            QLabel("Actuator Warning"), self.selected_atuator_warning_label
+        )
+        details_layout.addRow(QLabel("Last Updated"), self.last_updated_label)
 
-        filterLayout.addWidget(self.topicList)
-        filterLayout.addWidget(self.fieldList)
+        filter_layout.addWidget(self.topicList)
+        filter_layout.addWidget(self.fieldList)
 
         self.topicList.setCurrentRow(0)
 
@@ -160,7 +162,7 @@ class TopicWindow(DockWindow):
         self.collection.topics[topic_index].selectedField = field_index
 
     def _setUnknown(self) -> None:
-        self.lastUpdatedLabel.set_unknown()
+        self.last_updated_label.set_unknown()
 
     def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
         """
@@ -175,14 +177,14 @@ class TopicWindow(DockWindow):
             warning).
         """
         if selected_actuator is None:
-            self.selectedActuatorIdLabel.setText("not selected")
-            self.selectedActuatorValueLabel.setText("")
-            self.selectedActuatorWarningLabel.setText("")
+            self.selected_actuator_id_label.setText("not selected")
+            self.selected_actuator_value_label.setText("")
+            self.selected_actuator_warning_label.setText("")
             return
 
-        self.selectedActuatorIdLabel.setText(str(selected_actuator.actuator_id))
-        self.selectedActuatorValueLabel.setText(selected_actuator.getValue())
-        self.selectedActuatorWarningLabel.setValue(selected_actuator.warning)
+        self.selected_actuator_id_label.setText(str(selected_actuator.actuator_id))
+        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
     def _changeField(self, topic_index: int, field_index: int) -> None:
         """
@@ -199,8 +201,8 @@ class TopicWindow(DockWindow):
             print("TopicWindow._changeField:", err)
             pass
 
-    def updateValues(self, data: BaseMsgType) -> None:
-        raise RuntimeError("Abstract method updateValues")
+    def update_values(self, data: BaseMsgType) -> None:
+        raise RuntimeError("Abstract method update_values")
 
     @Slot()
     def dataChanged(self, data: BaseMsgType) -> None:
@@ -211,11 +213,11 @@ class TopicWindow(DockWindow):
         ----------
 
         """
-        self.updateValues(data)
+        self.update_values(data)
         if data is None:
             self._setUnknown()
         else:
             try:
-                self.lastUpdatedLabel.setValue(data.timestamp)
+                self.last_updated_label.setValue(data.timestamp)
             except AttributeError:
-                self.lastUpdatedLabel.setValue(data.private_sndStamp)
+                self.last_updated_label.setValue(data.private_sndStamp)

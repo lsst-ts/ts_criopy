@@ -59,7 +59,7 @@ class Enabled(StateEnabledWidget):
 
         self.m1m3.enabledForceActuators.connect(self.enabledForceActuators)
 
-        self.mirrorWidget.mirrorView.selectionChanged.connect(self.selectionChanged)
+        self.mirrorWidget.mirror_view.selectionChanged.connect(self.selectionChanged)
 
         self.selectedActuatorId = ComboBox()
         self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
@@ -168,7 +168,7 @@ class Enabled(StateEnabledWidget):
     @Slot()
     def enabledForceActuators(self, data: BaseMsgType) -> None:
         """Callback with enabled FA data. Triggers display update."""
-        if len(self.mirrorWidget.mirrorView.items()) == 0:
+        if len(self.mirrorWidget.mirror_view.items()) == 0:
             new = True  # need to add force actuators
             self.mirrorWidget.clear()
         else:
@@ -184,14 +184,14 @@ class Enabled(StateEnabledWidget):
                 else ForceActuatorItem.STATE_ACTIVE
             )
             if new:
-                self.mirrorWidget.mirrorView.addForceActuator(
+                self.mirrorWidget.mirror_view.addForceActuator(
                     row,
                     value,
                     index,
                     state,
                 )
             else:
-                self.mirrorWidget.mirrorView.updateForceActuator(
+                self.mirrorWidget.mirror_view.update_force_actuator(
                     actuator_id, value, state
                 )
 

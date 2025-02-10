@@ -166,10 +166,10 @@ class ValuePageWidget(Widget):
 
         super().__init__(m1m3, self.dataWidget)
 
-    def changeValues(self) -> None:
+    def change_values(self) -> None:
         pass
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         if data is None or self.field is None:
             for label in self.dataWidget.forceActuatorLabels:
                 label.setText("---")
