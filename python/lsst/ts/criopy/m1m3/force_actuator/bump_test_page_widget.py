@@ -47,6 +47,34 @@ from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command
 
 
+def actuator_tested(data: BaseMsgType) -> int:
+    """Returns number of actuators being tested.
+
+    Parameters
+    ----------
+    data : BaseMsgType
+        forceActuatorBumpTestStatus data
+
+    Returns
+    -------
+    num_tested : int
+        Number of force actuators being tested.
+    """
+
+    def is_tested(state: int) -> int:
+        if state in [
+            MTM1M3.BumpTest.NOTTESTED,
+            MTM1M3.BumpTest.PASSED,
+            MTM1M3.BumpTest.FAILED,
+        ]:
+            return 1
+        return 0
+
+    return sum([is_tested(state) for state in data.primaryTest]) + sum(
+        [is_tested(state) for state in data.secondaryTest]
+    )
+
+
 class BumpTestPageWidget(QWidget):
     """
     Enable user to select actuator for bump test. Show graphs depicting actual
@@ -68,19 +96,20 @@ class BumpTestPageWidget(QWidget):
         self.y_index: int | None = None
         self.z_index: int | None = None
         self.s_index: int | None = None
-        self.testedId: int | None = None
-        self._testRunning = False
+        self.tested_id: int | None = None
+
+        self._test_running: bool = False
 
         actuatorBox = QGroupBox("Actuator")
-        self.actuatorsTable = QTableWidget(
+        self.actuators_table = QTableWidget(
             int(max([row.actuator_id for row in FATable])) % 100, 12
         )
-        self.actuatorsTable.setShowGrid(False)
+        self.actuators_table.setShowGrid(False)
 
         def set_none(r: int, c: int) -> None:
             item = QTableWidgetItem("")
             item.setFlags(Qt.NoItemFlags)
-            self.actuatorsTable.setItem(r, c, item)
+            self.actuators_table.setItem(r, c, item)
 
         for i in range(4):
             mr = int(
@@ -97,47 +126,47 @@ class BumpTestPageWidget(QWidget):
                     set_none(r, c)
 
         for tr in range(len(FATable)):
-            actuatorId = FATable[tr].actuator_id
-            row = (actuatorId % 100) - 1
-            colOffset = 3 * (int(actuatorId / 100) - 1)
+            actuator_id = FATable[tr].actuator_id
+            row = (actuator_id % 100) - 1
+            colOffset = 3 * (int(actuator_id / 100) - 1)
 
             def get_item(text: str) -> QTableWidgetItem:
                 item = QTableWidgetItem(text)
-                item.setData(Qt.UserRole, actuatorId)
+                item.setData(Qt.UserRole, actuator_id)
                 return item
 
-            self.actuatorsTable.setItem(row, 0 + colOffset, get_item(str(actuatorId)))
-            self.actuatorsTable.setItem(row, 1 + colOffset, get_item("P"))
+            self.actuators_table.setItem(row, 0 + colOffset, get_item(str(actuator_id)))
+            self.actuators_table.setItem(row, 1 + colOffset, get_item("P"))
             if FATable[tr].s_index is None:
                 set_none(row, 2 + colOffset)
             else:
-                self.actuatorsTable.setItem(
+                self.actuators_table.setItem(
                     row,
                     2 + colOffset,
                     get_item("Y" if (FATable[tr].x_index is None) else "X"),
                 )
 
-        self.actuatorsTable.horizontalHeader().hide()
-        self.actuatorsTable.horizontalHeader().setSectionResizeMode(
+        self.actuators_table.horizontalHeader().hide()
+        self.actuators_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeToContents
         )
-        self.actuatorsTable.horizontalHeader().setStretchLastSection(False)
-        self.actuatorsTable.verticalHeader().hide()
-        self.actuatorsTable.verticalHeader().setSectionResizeMode(
+        self.actuators_table.horizontalHeader().setStretchLastSection(False)
+        self.actuators_table.verticalHeader().hide()
+        self.actuators_table.verticalHeader().setSectionResizeMode(
             QHeaderView.ResizeToContents
         )
 
-        self.actuatorsTable.itemSelectionChanged.connect(self.itemSelectionChanged)
-        self.actuatorsTable.setSizePolicy(
+        self.actuators_table.itemSelectionChanged.connect(self.item_selection_changed)
+        self.actuators_table.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.MinimumExpanding
         )
-        self.actuatorsTable.setFixedWidth(
-            sum([self.actuatorsTable.columnWidth(c) for c in range(12)])
-            + self.actuatorsTable.verticalScrollBar().geometry().height() / 2
+        self.actuators_table.setFixedWidth(
+            sum([self.actuators_table.columnWidth(c) for c in range(12)])
+            + self.actuators_table.verticalScrollBar().geometry().height() / 2
             + 1
         )
         actuatorLayout = QVBoxLayout()
-        actuatorLayout.addWidget(self.actuatorsTable)
+        actuatorLayout.addWidget(self.actuators_table)
         actuatorBox.setLayout(actuatorLayout)
 
         def test_progress_bar() -> QProgressBar:
@@ -151,15 +180,15 @@ class BumpTestPageWidget(QWidget):
         self.secondaryPB = test_progress_bar()
         self.secondaryLabelPB = QLabel("Seconday")
 
-        self.progressGroup = QGroupBox("Test progress")
-        progressLayout = QGridLayout()
-        progressLayout.addWidget(self.primaryLabelPB, 0, 0)
-        progressLayout.addWidget(self.primaryPB, 0, 1)
-        progressLayout.addWidget(self.secondaryLabelPB, 1, 0)
-        progressLayout.addWidget(self.secondaryPB, 1, 1)
-        # progressLayout.addStretch(1)
-        self.progressGroup.setLayout(progressLayout)
-        self.progressGroup.setMaximumWidth(410)
+        self.progress_group = QGroupBox("Test progress")
+        progress_layout = QGridLayout()
+        progress_layout.addWidget(self.primaryLabelPB, 0, 0)
+        progress_layout.addWidget(self.primaryPB, 0, 1)
+        progress_layout.addWidget(self.secondaryLabelPB, 1, 0)
+        progress_layout.addWidget(self.secondaryPB, 1, 1)
+        # progress_layout.addStretch(1)
+        self.progress_group.setLayout(progress_layout)
+        self.progress_group.setMaximumWidth(410)
 
         self.chart: TimeChart | None = None
         self.chart_view = TimeChartView()
@@ -171,45 +200,49 @@ class BumpTestPageWidget(QWidget):
             button.clicked.connect(clicked)
             return button
 
-        self.bumpTestAllButton = make_button("Bump test all", self.bumpTestAll)
-        self.bumpTestButton = make_button("Run bump test", self.issueCommandBumpTest)
-        self.killBumpTestButton = make_button(
-            "Stop bump test", self.issueCommandKillBumpTest
+        self.bump_test_all_button = make_button("Bump test all", self.bump_test_all)
+        self.bump_test_button = make_button(
+            "Run bump test", self.send_bump_test_command
+        )
+        self.kill_bump_test_button = make_button(
+            "Stop bump test", self.issue_command_kill_bump_test
         )
 
         self.buttonLayout = QHBoxLayout()
-        self.buttonLayout.addWidget(self.bumpTestAllButton)
-        self.buttonLayout.addWidget(self.bumpTestButton)
-        self.buttonLayout.addWidget(self.killBumpTestButton)
+        self.buttonLayout.addWidget(self.bump_test_all_button)
+        self.buttonLayout.addWidget(self.bump_test_button)
+        self.buttonLayout.addWidget(self.kill_bump_test_button)
 
         self.layout = QVBoxLayout()
         self.forms = QHBoxLayout()
         self.forms.addWidget(actuatorBox)
-        self.forms.addWidget(self.progressGroup)
+        self.forms.addWidget(self.progress_group)
         self.forms.addWidget(LogWidget(self.m1m3))
         self.layout.addLayout(self.forms)
         self.layout.addWidget(self.chart_view)
         self.layout.addLayout(self.buttonLayout)
         self.setLayout(self.layout)
 
-        self.m1m3.detailedState.connect(self.detailedState)
-        self.m1m3.forceActuatorBumpTestStatus.connect(self.forceActuatorBumpTestStatus)
+        self.m1m3.detailedState.connect(self.detailed_state_data)
+        self.m1m3.forceActuatorBumpTestStatus.connect(
+            self.force_actuator_bump_test_status
+        )
 
-    def _recheckBumpTestButton(self, test_enabled: bool = True) -> None:
-        detailedState = self.m1m3.remote.evt_detailedState.get()
-        if detailedState is None or detailedState.detailedState not in [
+    def _recheck_bump_test_button(self, test_enabled: bool = True) -> None:
+        detailed_state = self.m1m3.remote.evt_detailedState.get()
+        if detailed_state is None or detailed_state.detailedState not in [
             MTM1M3.DetailedStates.PARKEDENGINEERING
         ]:
-            self.bumpTestButton.setEnabled(False)
+            self.bump_test_button.setEnabled(False)
         else:
-            self.bumpTestButton.setEnabled(
+            self.bump_test_button.setEnabled(
                 test_enabled and not (self._anyCylinderRunning())
             )
 
     @Slot()
-    def itemSelectionChanged(self) -> None:
+    def item_selection_changed(self) -> None:
         """Called when an actuator is selected from the list."""
-        items = self.actuatorsTable.selectedItems()
+        items = self.actuators_table.selectedItems()
         if len(items) == 0:
             return
         if len(items) > 1:
@@ -217,47 +250,47 @@ class BumpTestPageWidget(QWidget):
         else:
             actuators = f"{items[0].data(Qt.UserRole)}"
 
-        self._recheckBumpTestButton()
-        self.bumpTestButton.setText(f"Run bump test for FA ID {actuators}")
+        self._recheck_bump_test_button()
+        self.bump_test_button.setText(f"Run bump test for FA ID {actuators}")
 
     def toggledTest(self, toggled: bool) -> None:
         """Called when primary or secondary tests check box are toggled."""
-        self._recheckBumpTestButton(self.actuatorsTable.currentItem() is not None)
+        self._recheck_bump_test_button(self.actuators_table.currentItem() is not None)
 
     @asyncSlot()
-    async def bumpTestAll(self) -> None:
+    async def bump_test_all(self) -> None:
         for i in range(4):
             colOffset = i * 3
-            self.actuatorsTable.setRangeSelected(
+            self.actuators_table.setRangeSelected(
                 QTableWidgetSelectionRange(
                     0,
                     1 + colOffset,
-                    self.actuatorsTable.rowCount() - 1,
+                    self.actuators_table.rowCount() - 1,
                     2 + colOffset,
                 ),
                 False,
             )
-            self.actuatorsTable.setRangeSelected(
+            self.actuators_table.setRangeSelected(
                 QTableWidgetSelectionRange(
-                    0, colOffset, self.actuatorsTable.rowCount() - 1, colOffset
+                    0, colOffset, self.actuators_table.rowCount() - 1, colOffset
                 ),
                 True,
             )
-        await self._testItem(self.actuatorsTable.selectedItems()[0])
-        self.bumpTestButton.setEnabled(False)
+        await self._test_item(self.actuators_table.selectedItems()[0])
+        self.bump_test_button.setEnabled(False)
 
     @asyncSlot()
-    async def issueCommandBumpTest(self) -> None:
+    async def send_bump_test_command(self) -> None:
         """Call M1M3 bump test command."""
-        await self._testItem(self.actuatorsTable.selectedItems()[0])
+        await self._test_item(self.actuators_table.selectedItems()[0])
 
-    async def _testItem(self, item: QTableWidgetItem) -> None:
-        self.actuatorsTable.scrollToItem(item)
-        self.testedId = item.data(Qt.UserRole)
-        if self.testedId is None:
+    async def _test_item(self, item: QTableWidgetItem) -> None:
+        self.actuators_table.scrollToItem(item)
+        self.tested_id = item.data(Qt.UserRole)
+        if self.tested_id is None:
             return
         item.setSelected(False)
-        index = actuator_id_to_index(self.testedId)
+        index = actuator_id_to_index(self.tested_id)
         if index is None:
             return
 
@@ -289,78 +322,78 @@ class BumpTestPageWidget(QWidget):
 
         asyncio.get_event_loop().call_soon(add_timeChart)
 
-        self.progressGroup.setTitle(f"Test progress {self.testedId}")
+        self.progress_group.setTitle(f"Test progress {self.tested_id}")
         if self.s_index is not None:
             self.secondaryLabelPB.setText("Y" if self.x_index is None else "X")
 
         await command(
             self,
             self.m1m3.remote.cmd_forceActuatorBumpTest,
-            actuatorId=self.testedId,
+            actuator_id=self.tested_id,
             testPrimary=not (item.text() == "X" or item.text() == "Y"),
             testSecondary=not (item.text() == "P") and self.s_index is not None,
         )
-        self.killBumpTestButton.setText(f"Stop bump test FA ID {self.testedId}")
+        self.kill_bump_test_button.setText(f"Stop bump test FA ID {self.tested_id}")
 
     @asyncSlot()
-    async def issueCommandKillBumpTest(self) -> None:
+    async def issue_command_kill_bump_test(self) -> None:
         """Kill bump test."""
-        self.actuatorsTable.setRangeSelected(
-            QTableWidgetSelectionRange(0, 0, self.actuatorsTable.rowCount() - 1, 11),
+        self.actuators_table.setRangeSelected(
+            QTableWidgetSelectionRange(0, 0, self.actuators_table.rowCount() - 1, 11),
             False,
         )
         await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
 
     @Slot()
-    def detailedState(self, data: BaseMsgType) -> None:
+    def detailed_state_data(self, data: BaseMsgType) -> None:
         """Called when detailedState event is received. Intercept to
         enable/disable form buttons."""
         if data.detailedState == MTM1M3.DetailedStates.PARKEDENGINEERING:
-            self.bumpTestAllButton.setEnabled(True)
-            self.bumpTestButton.setEnabled(
-                self.actuatorsTable.currentItem() is not None
+            self.bump_test_all_button.setEnabled(True)
+            self.bump_test_button.setEnabled(
+                self.actuators_table.currentItem() is not None
             )
-            self.killBumpTestButton.setEnabled(False)
+            self.kill_bump_test_button.setEnabled(False)
             self.x_index = self.y_index = self.z_index = None
         else:
-            self.bumpTestAllButton.setEnabled(False)
-            self.bumpTestButton.setEnabled(False)
-            self.killBumpTestButton.setEnabled(False)
+            self.bump_test_all_button.setEnabled(False)
+            self.bump_test_button.setEnabled(False)
+            self.kill_bump_test_button.setEnabled(False)
 
     @Slot()
     def appliedForces(self, data: BaseMsgType) -> None:
         """Adds applied forces to graph."""
-        chartData: list[float] = []
+        chart_data: list[float] = []
         if self.x_index is not None:
-            chartData.append(data.xForces[self.x_index])
+            chart_data.append(data.xForces[self.x_index])
         if self.y_index is not None:
-            chartData.append(data.yForces[self.y_index])
+            chart_data.append(data.yForces[self.y_index])
         if self.z_index is not None:
-            chartData.append(data.zForces[self.z_index])
+            chart_data.append(data.zForces[self.z_index])
 
         if self.chart is not None:
-            self.chart.append(data.timestamp, chartData, cache_index=0)
+            self.chart.append(data.timestamp, chart_data, cache_index=0)
 
     @Slot()
     def forceActuatorData(self, data: BaseMsgType) -> None:
         """Adds measured forces to graph."""
-        chartData: list[float] = []
+        chart_data: list[float] = []
         if self.x_index is not None:
-            chartData.append(data.xForce[self.x_index])
+            chart_data.append(data.xForce[self.x_index])
         if self.y_index is not None:
-            chartData.append(data.yForce[self.y_index])
+            chart_data.append(data.yForce[self.y_index])
         if self.z_index is not None:
-            chartData.append(data.zForce[self.z_index])
+            chart_data.append(data.zForce[self.z_index])
 
         if self.chart is not None:
-            self.chart.append(data.timestamp, chartData, cache_index=1)
+            self.chart.append(data.timestamp, chart_data, cache_index=1)
 
     @asyncSlot()
-    async def forceActuatorBumpTestStatus(self, data: BaseMsgType) -> None:
+    async def force_actuator_bump_test_status(self, data: BaseMsgType) -> None:
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        testProgress = [
+        test_progress = [
             "Not tested",
             "Testing start zero",
             "Testing positive",
@@ -375,7 +408,7 @@ class BumpTestPageWidget(QWidget):
         if self.z_index is not None:
             self.primaryPB.setEnabled(True)
             val = data.primaryTest[self.z_index]
-            self.primaryPB.setFormat(f"ID {self.testedId} - {testProgress[val]} - %v")
+            self.primaryPB.setFormat(f"ID {self.tested_id} - {test_progress[val]} - %v")
             self.primaryPB.setValue(min(6, val))
         else:
             self.primaryPB.setEnabled(False)
@@ -383,16 +416,18 @@ class BumpTestPageWidget(QWidget):
         if self.s_index is not None:
             self.secondaryPB.setEnabled(True)
             val = data.secondaryTest[self.s_index]
-            self.secondaryPB.setFormat(f"ID {self.testedId} - {testProgress[val]} - %v")
+            self.secondaryPB.setFormat(
+                f"ID {self.tested_id} - {test_progress[val]} - %v"
+            )
             self.secondaryPB.setValue(min(6, val))
         else:
             self.secondaryPB.setEnabled(False)
 
         # list display
         for index in range(FATABLE_ZFA):
-            actuatorId = FATable[index].actuator_id
-            row = (actuatorId % 100) - 1
-            colOffset = 3 * (int(actuatorId / 100) - 1)
+            actuator_id = FATable[index].actuator_id
+            row = (actuator_id % 100) - 1
+            colOffset = 3 * (int(actuator_id / 100) - 1)
 
             def getColor(value: int) -> QColor:
                 if value == 6:
@@ -405,53 +440,53 @@ class BumpTestPageWidget(QWidget):
 
             pColor = getColor(data.primaryTest[index])
 
-            self.actuatorsTable.item(row, colOffset + 1).setBackground(pColor)
+            self.actuators_table.item(row, colOffset + 1).setBackground(pColor)
             s_index = FATable[index].s_index
             if s_index is not None:
                 sColor = getColor(data.secondaryTest[s_index])
-                self.actuatorsTable.item(row, colOffset + 2).setBackground(sColor)
+                self.actuators_table.item(row, colOffset + 2).setBackground(sColor)
                 if pColor == sColor:
-                    self.actuatorsTable.item(row, colOffset).setBackground(pColor)
+                    self.actuators_table.item(row, colOffset).setBackground(pColor)
             else:
-                self.actuatorsTable.item(row, colOffset).setBackground(pColor)
+                self.actuators_table.item(row, colOffset).setBackground(pColor)
 
         # no tests running..
         # first check that we are still in PARKEDENGINEERING
-        detailedState = self.m1m3.remote.evt_detailedState.get()
-        if detailedState is None or detailedState.detailedState not in [
+        detailed_state = self.m1m3.remote.evt_detailedState.get()
+        if detailed_state is None or detailed_state.detailedState not in [
             MTM1M3.DetailedStates.PARKEDENGINEERING
         ]:
-            self.bumpTestAllButton.setEnabled(False)
-            self.bumpTestButton.setEnabled(False)
-            self.killBumpTestButton.setEnabled(False)
+            self.bump_test_all_button.setEnabled(False)
+            self.bump_test_button.setEnabled(False)
+            self.kill_bump_test_button.setEnabled(False)
             return
 
         if data.actuatorId < 0:
-            selected = self.actuatorsTable.selectedItems()
+            selected = self.actuators_table.selectedItems()
             if len(selected) > 0:
-                await self._testItem(selected[0])
-            elif self._testRunning:
-                self.bumpTestAllButton.setEnabled(True)
-                self.bumpTestButton.setEnabled(
-                    self.actuatorsTable.currentItem() is not None
+                await self._test_item(selected[0])
+            elif self._test_running:
+                self.bump_test_all_button.setEnabled(True)
+                self.bump_test_button.setEnabled(
+                    self.actuators_table.currentItem() is not None
                     and self._anyCylinder()
                 )
-                self.killBumpTestButton.setEnabled(False)
+                self.kill_bump_test_button.setEnabled(False)
                 self.x_index = self.y_index = self.z_index = None
                 self.m1m3.appliedForces.disconnect(self.appliedForces)
                 self.m1m3.forceActuatorData.disconnect(self.forceActuatorData)
-                self._testRunning = False
+                self._test_running = False
 
-        elif self._testRunning is False:
-            self.bumpTestButton.setEnabled(False)
-            self.killBumpTestButton.setEnabled(True)
+        elif self._test_running is False:
+            self.bump_test_button.setEnabled(False)
+            self.kill_bump_test_button.setEnabled(True)
             self.m1m3.appliedForces.connect(self.appliedForces)
             self.m1m3.forceActuatorData.connect(self.forceActuatorData)
-            self._testRunning = True
+            self._test_running = True
 
     # helper functions. Helps correctly enable/disable Run bump test button.
     def _anyCylinderRunning(self) -> bool:
-        return self._testRunning is True and self._anyCylinder()
+        return self._test_running is True and self._anyCylinder()
 
     def _anyCylinder(self) -> bool:
-        return len(self.actuatorsTable.selectedItems()) > 0
+        return len(self.actuators_table.selectedItems()) > 0
