@@ -100,7 +100,7 @@ class BumpTestPageWidget(QWidget):
 
         self._test_running: bool = False
 
-        actuatorBox = QGroupBox("Actuator")
+        actuator_box = QGroupBox("Actuator")
         self.actuators_table = QTableWidget(
             int(max([row.actuator_id for row in FATable])) % 100, 12
         )
@@ -165,27 +165,24 @@ class BumpTestPageWidget(QWidget):
             + self.actuators_table.verticalScrollBar().geometry().height() / 2
             + 1
         )
-        actuatorLayout = QVBoxLayout()
-        actuatorLayout.addWidget(self.actuators_table)
-        actuatorBox.setLayout(actuatorLayout)
+        actuator_layout = QVBoxLayout()
+        actuator_layout.addWidget(self.actuators_table)
+        actuator_box.setLayout(actuator_layout)
 
         def test_progress_bar() -> QProgressBar:
             pb = QProgressBar()
             pb.setMaximum(6)
             return pb
 
-        self.primaryPB = test_progress_bar()
-        self.primaryLabelPB = QLabel("Primary")
-
-        self.secondaryPB = test_progress_bar()
-        self.secondaryLabelPB = QLabel("Seconday")
+        self.primary_progress_bar = test_progress_bar()
+        self.secondary_progress_bar = test_progress_bar()
 
         self.progress_group = QGroupBox("Test progress")
         progress_layout = QGridLayout()
-        progress_layout.addWidget(self.primaryLabelPB, 0, 0)
-        progress_layout.addWidget(self.primaryPB, 0, 1)
-        progress_layout.addWidget(self.secondaryLabelPB, 1, 0)
-        progress_layout.addWidget(self.secondaryPB, 1, 1)
+        progress_layout.addWidget(QLabel("Primary"), 0, 0)
+        progress_layout.addWidget(self.primary_progress_bar, 0, 1)
+        progress_layout.addWidget(QLabel("Secondary"), 1, 0)
+        progress_layout.addWidget(self.secondary_progress_bar, 1, 1)
         # progress_layout.addStretch(1)
         self.progress_group.setLayout(progress_layout)
         self.progress_group.setMaximumWidth(410)
@@ -208,20 +205,20 @@ class BumpTestPageWidget(QWidget):
             "Stop bump test", self.issue_command_kill_bump_test
         )
 
-        self.buttonLayout = QHBoxLayout()
-        self.buttonLayout.addWidget(self.bump_test_all_button)
-        self.buttonLayout.addWidget(self.bump_test_button)
-        self.buttonLayout.addWidget(self.kill_bump_test_button)
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.bump_test_all_button)
+        button_layout.addWidget(self.bump_test_button)
+        button_layout.addWidget(self.kill_bump_test_button)
 
-        self.layout = QVBoxLayout()
-        self.forms = QHBoxLayout()
-        self.forms.addWidget(actuatorBox)
-        self.forms.addWidget(self.progress_group)
-        self.forms.addWidget(LogWidget(self.m1m3))
-        self.layout.addLayout(self.forms)
-        self.layout.addWidget(self.chart_view)
-        self.layout.addLayout(self.buttonLayout)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        forms = QHBoxLayout()
+        forms.addWidget(actuator_box)
+        forms.addWidget(self.progress_group)
+        forms.addWidget(LogWidget(self.m1m3))
+        layout.addLayout(forms)
+        layout.addWidget(self.chart_view)
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
 
         self.m1m3.detailedState.connect(self.detailed_state_data)
         self.m1m3.forceActuatorBumpTestStatus.connect(
@@ -329,7 +326,7 @@ class BumpTestPageWidget(QWidget):
         await command(
             self,
             self.m1m3.remote.cmd_forceActuatorBumpTest,
-            actuator_id=self.tested_id,
+            actuatorId=self.tested_id,
             testPrimary=not (item.text() == "X" or item.text() == "Y"),
             testSecondary=not (item.text() == "P") and self.s_index is not None,
         )
@@ -406,22 +403,22 @@ class BumpTestPageWidget(QWidget):
 
         # test progress
         if self.z_index is not None:
-            self.primaryPB.setEnabled(True)
+            self.primary_progress_bar.setEnabled(True)
             val = data.primaryTest[self.z_index]
-            self.primaryPB.setFormat(f"ID {self.tested_id} - {test_progress[val]} - %v")
-            self.primaryPB.setValue(min(6, val))
+            self.primary_progress_bar.setFormat(f"ID {self.tested_id} - {test_progress[val]} - %v")
+            self.primary_progress_bar.setValue(min(6, val))
         else:
-            self.primaryPB.setEnabled(False)
+            self.primary_progress_bar.setEnabled(False)
 
         if self.s_index is not None:
-            self.secondaryPB.setEnabled(True)
+            self.secondary_progress_bar.setEnabled(True)
             val = data.secondaryTest[self.s_index]
-            self.secondaryPB.setFormat(
+            self.secondary_progress_bar.setFormat(
                 f"ID {self.tested_id} - {test_progress[val]} - %v"
             )
-            self.secondaryPB.setValue(min(6, val))
+            self.secondary_progress_bar.setValue(min(6, val))
         else:
-            self.secondaryPB.setEnabled(False)
+            self.secondary_progress_bar.setEnabled(False)
 
         # list display
         for index in range(FATABLE_ZFA):
