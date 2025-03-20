@@ -37,7 +37,7 @@ class MirrorWidget(QWidget):
 
     Attributes
     ----------
-    mirrorView : `MirrorView`
+    mirror_view : `MirrorView`
         Widget displaying mirror with actuators and gauge showing color scale.
     gauge : `GaugeScale`
         Gauge showing color scale used in actuators.
@@ -46,7 +46,7 @@ class MirrorWidget(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        self.mirrorView = MirrorView()
+        self.mirror_view = MirrorView()
         self._bumpTest = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
@@ -56,7 +56,7 @@ class MirrorWidget(QWidget):
         self._warning = WarningScale()
 
         layout = QHBoxLayout()
-        layout.addWidget(self.mirrorView)
+        layout.addWidget(self.mirror_view)
         layout.addWidget(self._gauge)
         layout.addWidget(self._bumpTest)
         layout.addWidget(self._enabled_disabled)
@@ -74,8 +74,8 @@ class MirrorWidget(QWidget):
         self.setLayout(layout)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.mirrorView.resetTransform()
-        self.mirrorView.update_scale()
+        self.mirror_view.resetTransform()
+        self.mirror_view.update_scale()
 
     def _replace(self, newWidget: QWidget) -> None:
         if self._curentWidget == newWidget:
@@ -122,7 +122,7 @@ class MirrorWidget(QWidget):
         self.set_color_scale()
 
     def set_color_scale(self) -> None:
-        self.mirrorView.set_color_scale(self._curentWidget)
+        self.mirror_view.set_color_scale(self._curentWidget)
 
     def set_selected(self, actuator_id: int) -> None:
         """Sets current selected force actuators. Emits update signals.
@@ -132,10 +132,10 @@ class MirrorWidget(QWidget):
         actuator_id : `int`
             Selected actuator ID.
         """
-        self.mirrorView.set_selected_id(actuator_id)
+        self.mirror_view.set_selected_id(actuator_id)
 
     def empty(self) -> bool:
-        return len(self.mirrorView.items()) == 0
+        return len(self.mirror_view.items()) == 0
 
     def clear(self) -> None:
-        self.mirrorView.clear()
+        self.mirror_view.clear()

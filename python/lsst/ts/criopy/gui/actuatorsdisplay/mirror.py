@@ -33,7 +33,7 @@ class Mirror(QGraphicsScene):
 
     Actuator list is cleared with clear() method (inherited from
     QGraphicsScene). Force Actuators are added with addForceActuator() method.
-    Force Actuator data should be updated with updateForceActuator() call.
+    Force Actuator data should be updated with update_force_actuator() call.
     """
 
     def __init__(self) -> None:
@@ -103,7 +103,7 @@ class Mirror(QGraphicsScene):
                 return item
         raise KeyError(f"Cannot find actuator with ID {actuator_id}")
 
-    def updateForceActuator(
+    def update_force_actuator(
         self, actuator_id: int, data: BaseMsgType, state: int
     ) -> None:
         """Updates actuator value and state.
@@ -123,4 +123,4 @@ class Mirror(QGraphicsScene):
         KeyError
             If actuator with the given ID cannot be found.
         """
-        self.getForceActuator(actuator_id).updateData(data, state)
+        self.getForceActuator(actuator_id).update_data(data, state)

@@ -157,7 +157,7 @@ class MirrorView(QGraphicsView):
             ),
         )
 
-    def updateForceActuator(
+    def update_force_actuator(
         self, actuator_id: int, data: BaseMsgType, state: int
     ) -> None:
         """Update actuator value and state.
@@ -177,7 +177,7 @@ class MirrorView(QGraphicsView):
         KeyError
             If actuator with the given ID cannot be found.
         """
-        self._mirror.updateForceActuator(actuator_id, data, state)
+        self._mirror.update_force_actuator(actuator_id, data, state)
         if self._selected_actuator is None:
             return
         if self._selected_actuator.actuator.actuator_id == actuator_id:

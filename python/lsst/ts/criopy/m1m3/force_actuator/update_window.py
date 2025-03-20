@@ -207,7 +207,7 @@ class UpdateWindow(QSplitter):
         except AttributeError:
             self.resize(700, 600)
 
-        self.mirror_widget.mirrorView.selectionChanged.connect(self.selectionChanged)
+        self.mirror_widget.mirror_view.selectionChanged.connect(self.selectionChanged)
 
         m1m3.reemit_remote()
 
@@ -302,7 +302,7 @@ class UpdateWindow(QSplitter):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
-            self.mirror_widget.mirrorView.addForceActuator(
+            self.mirror_widget.mirror_view.addForceActuator(
                 row,
                 value,
                 data_index,

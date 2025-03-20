@@ -34,30 +34,30 @@ class GraphPageWidget(Widget):
     """
 
     def __init__(self, m1m3: MetaSAL | Simulator):
-        self.mirrorWidget = MirrorWidget()
+        self.mirror_widget = MirrorWidget()
 
         for row in FATable:
-            self.mirrorWidget.mirrorView.addForceActuator(
+            self.mirror_widget.mirror_view.addForceActuator(
                 row,
                 None,
                 None,
                 ForceActuatorItem.STATE_INACTIVE,
             )
 
-        self.mirrorWidget.mirrorView.selectionChanged.connect(
+        self.mirror_widget.mirror_view.selectionChanged.connect(
             self.updateSelectedActuator
         )
 
-        super().__init__(m1m3, self.mirrorWidget)
+        super().__init__(m1m3, self.mirror_widget)
 
-    def changeValues(self) -> None:
+    def change_values(self) -> None:
         """Called when data are changed."""
         if self.field is None:
-            raise RuntimeError("field is None in GraphPageWidget.changeValues")
+            raise RuntimeError("field is None in GraphPageWidget.change_values")
 
-        self.mirrorWidget.setScaleType(self.field.scale_type)
+        self.mirror_widget.setScaleType(self.field.scale_type)
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -65,10 +65,10 @@ class GraphPageWidget(Widget):
         data : `object`
             New data structure, passed from SAL handler.
         """
-        warningData = self.m1m3.remote.evt_forceActuatorWarning.get()
+        warning_data = self.m1m3.remote.evt_forceActuatorWarning.get()
 
         if self.field is None:
-            raise RuntimeError("field is None in GraphPageWidget.updateValues")
+            raise RuntimeError("field is None in GraphPageWidget.update_values")
 
         if data is None:
             values = None
@@ -78,7 +78,7 @@ class GraphPageWidget(Widget):
         def get_warning(index: int) -> int:
             return (
                 ForceActuatorItem.STATE_WARNING
-                if warningData.minorFault[index] or warningData.majorFault[index]
+                if warning_data.minorFault[index] or warning_data.majorFault[index]
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
@@ -93,7 +93,7 @@ class GraphPageWidget(Widget):
                     values[index] = None
             elif values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
-            elif warningData is not None or data_index is None:
+            elif warning_data is not None or data_index is None:
                 state = get_warning(index)
             else:
                 state = ForceActuatorItem.STATE_ACTIVE
@@ -102,23 +102,23 @@ class GraphPageWidget(Widget):
                 None if (values is None or data_index is None) else values[data_index]
             )
 
-            self.mirrorWidget.mirrorView.updateForceActuator(
+            self.mirror_widget.mirror_view.update_force_actuator(
                 row.actuator_id, value, state
             )
 
         if values is None:
-            self.mirrorWidget.setRange(0, 0)
+            self.mirror_widget.setRange(0, 0)
             return
 
         # filter out None values
         values = [v for v in values if v is not None]
-        self.mirrorWidget.setRange(min(values), max(values))
+        self.mirror_widget.setRange(min(values), max(values))
 
-        selected = self.mirrorWidget.mirrorView.selected()
+        selected = self.mirror_widget.mirror_view.selected()
         if selected is not None:
             if selected.data is not None:
                 self.selected_actuator_value_label.setText(selected.getValue())
-            if warningData is not None:
+            if warning_data is not None:
                 self.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))
                 )

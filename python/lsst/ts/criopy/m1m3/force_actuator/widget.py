@@ -47,7 +47,7 @@ from .update_window import UpdateWindow
 class Widget(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement changeValues and updateValues(data)
+    Children classes must implement change_values and update_values(data)
     methods.
 
     Parameters
@@ -57,7 +57,7 @@ class Widget(QSplitter):
         SALComm instance to communicate with SAL.
     userWidget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
-        be update in updateValues(data) method.
+        be update in update_values(data) method.
     """
 
     def __init__(self, m1m3: MetaSAL, userWidget: QWidget):
@@ -80,7 +80,7 @@ class Widget(QSplitter):
         self.selected_actuator_id_label = QLabel()
         self.selected_actuator_value_label = QLabel()
         self.selected_actuator_warning_label = WarningLabel()
-        self.lastUpdatedLabel = TimeDeltaLabel()
+        self.last_updated_label = TimeDeltaLabel()
 
         self.near_selected_ids_label = QLabel()
         self.near_selected_value_label = QLabel()
@@ -132,7 +132,7 @@ class Widget(QSplitter):
         addDetails(
             3,
             "<b>Last Updated</b>",
-            self.lastUpdatedLabel,
+            self.last_updated_label,
             QLabel("<b>Warning</b>"),
             self.selected_actuator_warning_label,
         )
@@ -185,13 +185,13 @@ class Widget(QSplitter):
         self.setStretchFactor(0, 10)
         self.setStretchFactor(1, 1)
 
-    def changeValues(self) -> None:
+    def change_values(self) -> None:
         """Called when new values were selected by the user."""
         raise NotImplementedError(
-            "changeValues method must be implemented in all Widget childrens"
+            "change_values method must be implemented in all Widget childrens"
         )
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -200,7 +200,7 @@ class Widget(QSplitter):
             New data structure, passed from SAL handler.
         """
         raise NotImplementedError(
-            "updateValues method must be implemented in all Widget childrens"
+            "update_values method must be implemented in all Widget childrens"
         )
 
     @Slot()
@@ -263,7 +263,7 @@ class Widget(QSplitter):
         )
 
     def _set_unknown(self) -> None:
-        self.lastUpdatedLabel.set_unknown()
+        self.last_updated_label.set_unknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
         if self._topic is None or self._topic.topic is None or self.field is None:
@@ -356,18 +356,18 @@ class Widget(QSplitter):
         self.__setModifyCommand(self._topic.command)
         self.field = self._topic.fields[fieldIndex]
         try:
-            self.topics.change_topic(topicIndex, self.dataChanged, self.m1m3)
+            self.topics.change_topic(topicIndex, self.data_changed, self.m1m3)
             data = self._get_data()
-            self.changeValues()
-            self.updateValues(data)
-            self.dataChanged(data)
+            self.change_values()
+            self.update_values(data)
+            self.data_changed(data)
         except RuntimeError as err:
             print("ForceActuator.Widget.__change_field", err)
             self._topic = None
             pass
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 
@@ -376,15 +376,15 @@ class Widget(QSplitter):
         data : `class`
             Class holding data. See SALComm for details.
         """
-        self.updateValues(data)
+        self.update_values(data)
         if data is None:
             self._set_unknown()
             return
 
         try:
-            self.lastUpdatedLabel.setValue(data.timestamp)
+            self.last_updated_label.setValue(data.timestamp)
         except AttributeError:
-            self.lastUpdatedLabel.setValue(data.private_sndStamp)
+            self.last_updated_label.setValue(data.private_sndStamp)
 
         for i, axis in enumerate("xyz"):
             try:

@@ -104,7 +104,7 @@ class ForceActuatorItem(QGraphicsItem):
         # ~-4400 .. +4400).
         self._scale_factor = 25
 
-    def updateData(self, data: float, state: int) -> None:
+    def update_data(self, data: float, state: int) -> None:
         """Updates actuator data.
 
         If new data differs from the current data, calls update() to force

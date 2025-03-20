@@ -83,10 +83,10 @@ class HistogramPageWidget(Widget):
         self.histogramView = HistogramView()
         super().__init__(m1m3, self.histogramView)
 
-    def changeValues(self) -> None:
+    def change_values(self) -> None:
         self.histogramView.setName(self.getCurrentFieldName())
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
