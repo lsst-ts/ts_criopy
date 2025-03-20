@@ -37,6 +37,26 @@ class BumpTestScale(EnumScale):
                 BumpTest.TESTINGNEGATIVE: ("Testing -", Qt.yellow),
                 BumpTest.TESTINGNEGATIVEWAIT: ("Testing - Wait", Qt.darkYellow),
                 BumpTest.PASSED: ("Passed", Colors.OK),
-                BumpTest.FAILED: ("Failed", Colors.ERROR),
+                BumpTest.FAILED_TIMEOUT: ("Failed timeout", Colors.ERROR),
+                BumpTest.FAILED_TESTEDPOSITIVE_OVERSHOOT: (
+                    "Failed tested positive overshoot",
+                    Colors.ERROR,
+                ),
+                BumpTest.FAILED_TESTEDPOSITIVE_UNDERSHOOT: (
+                    "Failed tested positive unershoot",
+                    Colors.ERROR,
+                ),
+                BumpTest.FAILED_TESTEDNEGATIVE_OVERSHOOT: (
+                    "Failed tested negative overshoot",
+                    Colors.ERROR,
+                ),
+                BumpTest.FAILED_TESTEDNEGATIVE_UNDERSHOOT: (
+                    "Failed tested negative unershoot",
+                    Colors.ERROR,
+                ),
+                BumpTest.FAILED_NONTESTEDPROBLEM: (
+                    "Failed on non-tested actuator",
+                    Colors.ERROR,
+                ),
             }
         )
