@@ -47,7 +47,7 @@ from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command
 
 
-def actuator_tested(data: BaseMsgType) -> int:
+def actuators_being_tested(data: BaseMsgType) -> int:
     """Returns number of actuators being tested.
 
     Parameters
@@ -63,9 +63,11 @@ def actuator_tested(data: BaseMsgType) -> int:
 
     def is_tested(state: int) -> int:
         if state in [
-            MTM1M3.BumpTest.NOTTESTED,
-            MTM1M3.BumpTest.PASSED,
-            MTM1M3.BumpTest.FAILED,
+            MTM1M3.BumpTest.TRIGGERED,
+            MTM1M3.BumpTest.TESTINGPOSITIVE,
+            MTM1M3.BumpTest.TESTINGPOSITIVEWAIT,
+            MTM1M3.BumpTest.TESTINGNEGATIVE,
+            MTM1M3.BumpTest.TESTINGNEGATIVEWAIT,
         ]:
             return 1
         return 0
@@ -175,13 +177,14 @@ class BumpTestPageWidget(QWidget):
             return pb
 
         self.primary_progress_bar = test_progress_bar()
+        self.secondary_progress_label = QLabel("Secondary")
         self.secondary_progress_bar = test_progress_bar()
 
         self.progress_group = QGroupBox("Test progress")
         progress_layout = QGridLayout()
         progress_layout.addWidget(QLabel("Primary"), 0, 0)
         progress_layout.addWidget(self.primary_progress_bar, 0, 1)
-        progress_layout.addWidget(QLabel("Secondary"), 1, 0)
+        progress_layout.addWidget(self.secondary_progress_label, 1, 0)
         progress_layout.addWidget(self.secondary_progress_bar, 1, 1)
         # progress_layout.addStretch(1)
         self.progress_group.setLayout(progress_layout)
@@ -321,7 +324,7 @@ class BumpTestPageWidget(QWidget):
 
         self.progress_group.setTitle(f"Test progress {self.tested_id}")
         if self.s_index is not None:
-            self.secondaryLabelPB.setText("Y" if self.x_index is None else "X")
+            self.secondary_progress_label.setText("Y" if self.x_index is None else "X")
 
         await command(
             self,
@@ -391,22 +394,25 @@ class BumpTestPageWidget(QWidget):
         actuator reports progress of the bump test."""
 
         test_progress = [
+            "Unknown",
             "Not tested",
-            "Testing start zero",
+            "Triggered",
             "Testing positive",
             "Positive wait zero",
             "Testing negative",
             "Negative wait zero",
             "Passed",
-            "Failed",
+            "Failed timeout",
         ]
 
         # test progress
         if self.z_index is not None:
             self.primary_progress_bar.setEnabled(True)
             val = data.primaryTest[self.z_index]
-            self.primary_progress_bar.setFormat(f"ID {self.tested_id} - {test_progress[val]} - %v")
-            self.primary_progress_bar.setValue(min(6, val))
+            self.primary_progress_bar.setFormat(
+                f"ID {self.tested_id} - {test_progress[val]} - %v"
+            )
+            self.primary_progress_bar.setValue(min(8, val))
         else:
             self.primary_progress_bar.setEnabled(False)
 
@@ -416,7 +422,7 @@ class BumpTestPageWidget(QWidget):
             self.secondary_progress_bar.setFormat(
                 f"ID {self.tested_id} - {test_progress[val]} - %v"
             )
-            self.secondary_progress_bar.setValue(min(6, val))
+            self.secondary_progress_bar.setValue(min(8, val))
         else:
             self.secondary_progress_bar.setEnabled(False)
 
@@ -424,12 +430,16 @@ class BumpTestPageWidget(QWidget):
         for index in range(FATABLE_ZFA):
             actuator_id = FATable[index].actuator_id
             row = (actuator_id % 100) - 1
-            colOffset = 3 * (int(actuator_id / 100) - 1)
+            col_offset = 3 * (int(actuator_id / 100) - 1)
 
             def getColor(value: int) -> QColor:
-                if value == 6:
+                if value == MTM1M3.BumpTest.NOTTESTED:
+                    return Qt.cyan
+                elif value == MTM1M3.BumpTest.TRIGGERED:
+                    return Colors.WARNING
+                elif value == MTM1M3.BumpTest.PASSED:
                     return Colors.OK
-                elif value == 7:
+                elif value >= MTM1M3.BumpTest.FAILED_TIMEOUT:
                     return Colors.ERROR
                 elif not (value == 0):
                     return Qt.magenta
@@ -437,15 +447,15 @@ class BumpTestPageWidget(QWidget):
 
             pColor = getColor(data.primaryTest[index])
 
-            self.actuators_table.item(row, colOffset + 1).setBackground(pColor)
+            self.actuators_table.item(row, col_offset + 1).setBackground(pColor)
             s_index = FATable[index].s_index
             if s_index is not None:
                 sColor = getColor(data.secondaryTest[s_index])
-                self.actuators_table.item(row, colOffset + 2).setBackground(sColor)
+                self.actuators_table.item(row, col_offset + 2).setBackground(sColor)
                 if pColor == sColor:
-                    self.actuators_table.item(row, colOffset).setBackground(pColor)
+                    self.actuators_table.item(row, col_offset).setBackground(pColor)
             else:
-                self.actuators_table.item(row, colOffset).setBackground(pColor)
+                self.actuators_table.item(row, col_offset).setBackground(pColor)
 
         # no tests running..
         # first check that we are still in PARKEDENGINEERING
@@ -458,7 +468,7 @@ class BumpTestPageWidget(QWidget):
             self.kill_bump_test_button.setEnabled(False)
             return
 
-        if data.actuatorId < 0:
+        if actuators_being_tested(data) == 0:
             selected = self.actuators_table.selectedItems()
             if len(selected) > 0:
                 await self._test_item(selected[0])
