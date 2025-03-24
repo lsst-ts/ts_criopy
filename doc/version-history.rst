@@ -5,8 +5,9 @@ Version History
 ===============
 
 v0.8.3
--------
+------
 
+* M1M3 support system remote parameters for swifter Kafka connection
 * More code refactoring
 
 v0.8.2
