@@ -22,7 +22,7 @@ import typing
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -59,22 +59,43 @@ def is_tested(state: int) -> int:
     return 0
 
 
-def actuators_being_tested(data: BaseMsgType) -> int:
-    """Returns number of actuators being tested.
+def get_tested_fas(
+    primary_status: list[int], secondary_status: list[int]
+) -> list[ForceActuatorData]:
+    """Returns currently tested force actuators.
 
     Parameters
     ----------
-    data : BaseMsgType
-        forceActuatorBumpTestStatus data
+    primary_status : list[int]
+        Array of primary cylinder/axis bump test states
+    secondary_status : list[int]
+        List of secondary cylinder/axis bump test states
 
     Returns
     -------
-    num_tested : int
-        Number of force actuators being tested.
+    tested : list[ForceActuatorData]
+        Currently tested force actuators.
     """
-    return sum([is_tested(state) for state in data.primaryTest]) + sum(
-        [is_tested(state) for state in data.secondaryTest]
-    )
+    return [
+        fa
+        for fa in FATable
+        if (
+            is_tested(primary_status[fa.z_index])
+            or (fa.s_index is not None and is_tested(secondary_status[fa.s_index]))
+        )
+    ]
+
+
+def get_min_tested_distance(
+    fa: ForceActuatorData, tested_fas: list[ForceActuatorData]
+) -> float:
+    return 10 if len(tested_fas) == 0 else min([tf.distance(fa) for tf in tested_fas])
+
+
+def can_be_tested(
+    fa: ForceActuatorData, tested_fas: list[ForceActuatorData], test_distance: float
+) -> bool:
+    return get_min_tested_distance(fa, tested_fas) > test_distance
 
 
 class BumpTestPageWidget(QWidget):
@@ -274,25 +295,39 @@ class BumpTestPageWidget(QWidget):
                 ),
                 True,
             )
-        await self._test_item(self.actuators_table.selectedItems()[0])
+        await self._test_items(self.actuators_table.selectedItems())
         self.bump_test_button.setEnabled(False)
 
     @asyncSlot()
     async def send_bump_test_command(self) -> None:
         """Call M1M3 bump test command."""
-        await self._test_item(self.actuators_table.selectedItems()[0])
 
-    async def _test_item(self, item: QTableWidgetItem) -> None:
-        self.actuators_table.scrollToItem(item)
-        self.tested_id = item.data(Qt.UserRole)
-        if self.tested_id is None:
-            return
-        item.setSelected(False)
-        index = actuator_id_to_index(self.tested_id)
-        if index is None:
-            return
+        await self._test_items(self.actuators_table.selectedItems())
 
-        fa = FATable[index]
+    async def _test_items(self, items: list[QTableWidgetItem]) -> None:
+        fa_status = self.m1m3.remote.evt_forceActuatorBumpTestStatus.get()
+        tested_fas = get_tested_fas(fa_status.primaryTest, fa_status.secondaryTest)
+        test_distance = (
+            self.m1m3.remote.evt_forceActuatorSettings.get().bumpTestMinimalDistance
+        )
+
+        for item in items:
+            index = actuator_id_to_index(item.data(Qt.UserRole))
+            if index is None:
+                continue
+
+            fa = FATable[index]
+            if can_be_tested(fa, tested_fas, test_distance):
+                self.actuators_table.scrollToItem(item)
+                item.setSelected(False)
+
+                await self._test_fa(fa, item.text())
+                tested_fas.append(fa)
+
+                await asyncio.sleep(0.1)
+
+    async def _test_fa(self, fa: ForceActuatorData, axis: str) -> None:
+        self.tested_id = fa.actuator_id
         self.z_index = fa.z_index
         self.x_index = fa.x_index
         self.y_index = fa.y_index
@@ -328,8 +363,8 @@ class BumpTestPageWidget(QWidget):
             self,
             self.m1m3.remote.cmd_forceActuatorBumpTest,
             actuatorId=self.tested_id,
-            testPrimary=not (item.text() == "X" or item.text() == "Y"),
-            testSecondary=not (item.text() == "P") and self.s_index is not None,
+            testPrimary=not (axis == "X" or axis == "Y"),
+            testSecondary=not (axis == "P") and self.s_index is not None,
         )
         self.kill_bump_test_button.setText(f"Stop bump test FA ID {self.tested_id}")
 
@@ -424,16 +459,7 @@ class BumpTestPageWidget(QWidget):
         else:
             self.secondary_progress_bar.setEnabled(False)
 
-        tested_fa = [
-            fa
-            for fa in FATable
-            if (
-                is_tested(data.primaryTest[fa.z_index])
-                or (
-                    fa.s_index is not None and is_tested(data.secondaryTest[fa.s_index])
-                )
-            )
-        ]
+        tested_fas = get_tested_fas(data.primaryTest, data.secondaryTest)
 
         test_distance = (
             self.m1m3.remote.evt_forceActuatorSettings.get().bumpTestMinimalDistance
@@ -442,18 +468,17 @@ class BumpTestPageWidget(QWidget):
         # list display
         for fa in FATable:
             actuator_id = fa.actuator_id
-            min_tested_distance = (
-                10
-                if len(tested_fa) == 0
-                else min([tf.distance(fa) for tf in tested_fa])
-            )
 
             row = (actuator_id % 100) - 1
             col_offset = 3 * (int(actuator_id / 100) - 1)
 
             def get_color(value: int) -> QColor:
                 if value == MTM1M3.BumpTest.NOTTESTED:
-                    return Qt.gray if min_tested_distance < test_distance else Qt.cyan
+                    return (
+                        Qt.cyan
+                        if can_be_tested(fa, tested_fas, test_distance)
+                        else Qt.gray
+                    )
                 elif value == MTM1M3.BumpTest.TRIGGERED:
                     return Colors.WARNING
                 elif value == MTM1M3.BumpTest.PASSED:
@@ -486,10 +511,10 @@ class BumpTestPageWidget(QWidget):
             self.kill_bump_test_button.setEnabled(False)
             return
 
-        if actuators_being_tested(data) == 0:
+        if len(get_tested_fas(data.primaryTest, data.secondaryTest)) == 0:
             selected = self.actuators_table.selectedItems()
             if len(selected) > 0:
-                await self._test_item(selected[0])
+                await self._test_items(selected)
             elif self._test_running:
                 self.bump_test_all_button.setEnabled(True)
                 self.bump_test_button.setEnabled(
