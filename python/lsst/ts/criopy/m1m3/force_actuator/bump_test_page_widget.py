@@ -22,7 +22,7 @@ import typing
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -47,6 +47,18 @@ from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command
 
 
+def is_tested(state: int) -> int:
+    if state in [
+        MTM1M3.BumpTest.TRIGGERED,
+        MTM1M3.BumpTest.TESTINGPOSITIVE,
+        MTM1M3.BumpTest.TESTINGPOSITIVEWAIT,
+        MTM1M3.BumpTest.TESTINGNEGATIVE,
+        MTM1M3.BumpTest.TESTINGNEGATIVEWAIT,
+    ]:
+        return 1
+    return 0
+
+
 def actuators_being_tested(data: BaseMsgType) -> int:
     """Returns number of actuators being tested.
 
@@ -60,18 +72,6 @@ def actuators_being_tested(data: BaseMsgType) -> int:
     num_tested : int
         Number of force actuators being tested.
     """
-
-    def is_tested(state: int) -> int:
-        if state in [
-            MTM1M3.BumpTest.TRIGGERED,
-            MTM1M3.BumpTest.TESTINGPOSITIVE,
-            MTM1M3.BumpTest.TESTINGPOSITIVEWAIT,
-            MTM1M3.BumpTest.TESTINGNEGATIVE,
-            MTM1M3.BumpTest.TESTINGNEGATIVEWAIT,
-        ]:
-            return 1
-        return 0
-
     return sum([is_tested(state) for state in data.primaryTest]) + sum(
         [is_tested(state) for state in data.secondaryTest]
     )
@@ -424,15 +424,36 @@ class BumpTestPageWidget(QWidget):
         else:
             self.secondary_progress_bar.setEnabled(False)
 
+        tested_fa = [
+            fa
+            for fa in FATable
+            if (
+                is_tested(data.primaryTest[fa.z_index])
+                or (
+                    fa.s_index is not None and is_tested(data.secondaryTest[fa.s_index])
+                )
+            )
+        ]
+
+        test_distance = (
+            self.m1m3.remote.evt_forceActuatorSettings.get().bumpTestMinimalDistance
+        )
+
         # list display
-        for index in range(FATABLE_ZFA):
-            actuator_id = FATable[index].actuator_id
+        for fa in FATable:
+            actuator_id = fa.actuator_id
+            min_tested_distance = (
+                10
+                if len(tested_fa) == 0
+                else min([tf.distance(fa) for tf in tested_fa])
+            )
+
             row = (actuator_id % 100) - 1
             col_offset = 3 * (int(actuator_id / 100) - 1)
 
-            def getColor(value: int) -> QColor:
+            def get_color(value: int) -> QColor:
                 if value == MTM1M3.BumpTest.NOTTESTED:
-                    return Qt.cyan
+                    return Qt.gray if min_tested_distance < test_distance else Qt.cyan
                 elif value == MTM1M3.BumpTest.TRIGGERED:
                     return Colors.WARNING
                 elif value == MTM1M3.BumpTest.PASSED:
@@ -443,17 +464,16 @@ class BumpTestPageWidget(QWidget):
                     return Qt.magenta
                 return Qt.transparent
 
-            pColor = getColor(data.primaryTest[index])
+            p_color = get_color(data.primaryTest[fa.z_index])
 
-            self.actuators_table.item(row, col_offset + 1).setBackground(pColor)
-            s_index = FATable[index].s_index
-            if s_index is not None:
-                sColor = getColor(data.secondaryTest[s_index])
-                self.actuators_table.item(row, col_offset + 2).setBackground(sColor)
-                if pColor == sColor:
-                    self.actuators_table.item(row, col_offset).setBackground(pColor)
+            self.actuators_table.item(row, col_offset + 1).setBackground(p_color)
+            if fa.s_index is not None:
+                s_color = get_color(data.secondaryTest[fa.s_index])
+                self.actuators_table.item(row, col_offset + 2).setBackground(s_color)
+                if p_color == s_color:
+                    self.actuators_table.item(row, col_offset).setBackground(p_color)
             else:
-                self.actuators_table.item(row, col_offset).setBackground(pColor)
+                self.actuators_table.item(row, col_offset).setBackground(p_color)
 
         # no tests running..
         # first check that we are still in PARKEDENGINEERING
