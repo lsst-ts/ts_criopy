@@ -75,16 +75,16 @@ async def command(parent: QWidget, cmd: typing.Any, **kwargs: typing.Any) -> boo
     except base.AckError as ackE:
         warning(
             parent,
-            f"Error executing {cmd.name}",
+            f"Error executing {cmd.topic_info.attr_name}",
             "Executing SAL/DDS command"
-            f" <i>{cmd.name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
+            f" <i>{cmd.topic_info.attr_name}({kwargs}</i>):<br/>{ackE.ackcmd.result}",
         )
     except RuntimeError as rte:
         warning(
             parent,
-            f"Error executing {cmd.name}",
+            f"Error executing {cmd.topic_info.attr_name}",
             "Executing SAL/DDS command"
-            f" <b>{cmd.name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
+            f" <b>{cmd.topic_info.attr_name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
         )
     return False
 
@@ -117,9 +117,9 @@ async def command_group(
                 parent,
                 "Error executing"
                 f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                f" {cmd.name}",
+                f" {cmd.topic_info.attr_name}",
                 "Executing SAL/DDS command"
-                f" <i>{cmd.name}"
+                f" <i>{cmd.topic_info.attr_name}"
                 f"({kwargs}</i>):<br/>{ackE.ackcmd.result}",
             )
         except RuntimeError as rte:
@@ -127,7 +127,7 @@ async def command_group(
                 parent,
                 "Error executing"
                 f" {comm.remote.salinfo.name}:{comm.remote.salinfo.index}"
-                f" {cmd.name}",
-                f"Executing SAL/DDS command <b>{cmd.name}"
+                f" {cmd.topic_info.attr_name}",
+                f"Executing SAL/DDS command <b>{cmd.topic_info.attr_name}"
                 f"</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
             )

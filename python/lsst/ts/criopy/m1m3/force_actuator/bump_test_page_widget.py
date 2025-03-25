@@ -205,7 +205,7 @@ class BumpTestPageWidget(QWidget):
             "Run bump test", self.send_bump_test_command
         )
         self.kill_bump_test_button = make_button(
-            "Stop bump test", self.issue_command_kill_bump_test
+            "Stop bump test(s)", self.issue_command_kill_bump_test
         )
 
         button_layout = QHBoxLayout()
@@ -235,9 +235,7 @@ class BumpTestPageWidget(QWidget):
         ]:
             self.bump_test_button.setEnabled(False)
         else:
-            self.bump_test_button.setEnabled(
-                test_enabled and not (self._anyCylinderRunning())
-            )
+            self.bump_test_button.setEnabled(test_enabled)
 
     @Slot()
     def item_selection_changed(self) -> None:
@@ -476,7 +474,7 @@ class BumpTestPageWidget(QWidget):
                 self.bump_test_all_button.setEnabled(True)
                 self.bump_test_button.setEnabled(
                     self.actuators_table.currentItem() is not None
-                    and self._anyCylinder()
+                    and self._any_cylinder()
                 )
                 self.kill_bump_test_button.setEnabled(False)
                 self.x_index = self.y_index = self.z_index = None
@@ -485,15 +483,14 @@ class BumpTestPageWidget(QWidget):
                 self._test_running = False
 
         elif self._test_running is False:
-            self.bump_test_button.setEnabled(False)
             self.kill_bump_test_button.setEnabled(True)
             self.m1m3.appliedForces.connect(self.appliedForces)
             self.m1m3.forceActuatorData.connect(self.forceActuatorData)
             self._test_running = True
 
     # helper functions. Helps correctly enable/disable Run bump test button.
-    def _anyCylinderRunning(self) -> bool:
-        return self._test_running is True and self._anyCylinder()
+    def _any_cylinder_running(self) -> bool:
+        return self._test_running is True and self._any_cylinder()
 
-    def _anyCylinder(self) -> bool:
+    def _any_cylinder(self) -> bool:
         return len(self.actuators_table.selectedItems()) > 0
