@@ -1,4 +1,5 @@
 from .bump_test_page_widget import BumpTestPageWidget
+from .bump_test_progress import BumpTestProgressWidget
 from .enabled import Enabled
 from .graph_page_widget import GraphPageWidget
 from .histogram_page_widget import HistogramPageWidget

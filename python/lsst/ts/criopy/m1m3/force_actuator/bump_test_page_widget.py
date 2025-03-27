@@ -34,12 +34,9 @@ from lsst.ts.xml.tables.m1m3 import (
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
-    QLabel,
-    QProgressBar,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -53,6 +50,7 @@ from qasync import asyncSlot
 from ...gui import Colors, TimeChart, TimeChartView
 from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command
+from .bump_test_progress import BumpTestProgressWidget
 
 
 def is_tested(state: int) -> int:
@@ -80,6 +78,9 @@ def can_be_tested(
 
 
 class TestAwaitConfirmation:
+    """Class tracking the force actuators commanded to test are really
+    tested."""
+
     def __init__(self):
         self.reset()
 
@@ -207,24 +208,7 @@ class BumpTestPageWidget(QWidget):
         actuator_layout.addWidget(self.actuators_table)
         actuator_box.setLayout(actuator_layout)
 
-        def test_progress_bar() -> QProgressBar:
-            pb = QProgressBar()
-            pb.setMaximum(6)
-            return pb
-
-        self.primary_progress_bar = test_progress_bar()
-        self.secondary_progress_label = QLabel("Secondary")
-        self.secondary_progress_bar = test_progress_bar()
-
-        self.progress_group = QGroupBox("Test progress")
-        progress_layout = QGridLayout()
-        progress_layout.addWidget(QLabel("Primary"), 0, 0)
-        progress_layout.addWidget(self.primary_progress_bar, 0, 1)
-        progress_layout.addWidget(self.secondary_progress_label, 1, 0)
-        progress_layout.addWidget(self.secondary_progress_bar, 1, 1)
-        # progress_layout.addStretch(1)
-        self.progress_group.setLayout(progress_layout)
-        self.progress_group.setMaximumWidth(410)
+        self.progress_widget = BumpTestProgressWidget()
 
         self.chart: TimeChart | None = None
         self.chart_view = TimeChartView()
@@ -252,7 +236,7 @@ class BumpTestPageWidget(QWidget):
         layout = QVBoxLayout()
         forms = QHBoxLayout()
         forms.addWidget(actuator_box)
-        forms.addWidget(self.progress_group)
+        forms.addWidget(self.progress_widget)
         forms.addWidget(LogWidget(self.m1m3))
         layout.addLayout(forms)
         layout.addWidget(self.chart_view)
@@ -327,7 +311,13 @@ class BumpTestPageWidget(QWidget):
 
             fa = FATable[index]
             if can_be_tested(fa, tested_fas, test_distance):
-                self.actuators_table.scrollToItem(item)
+                # don't proceed if not in PARKEDENGINEERING
+                detailed_state = self.m1m3.remote.evt_detailedState.get()
+                if detailed_state is None or detailed_state.detailedState not in [
+                    MTM1M3.DetailedStates.PARKEDENGINEERING
+                ]:
+                    return
+
                 item.setSelected(False)
 
                 await self._test_fa(fa, item.text())
@@ -367,9 +357,7 @@ class BumpTestPageWidget(QWidget):
 
         asyncio.get_event_loop().call_soon(add_time_chart)
 
-        self.progress_group.setTitle(f"Test progress {self.tested_id}")
-        if self.s_index is not None:
-            self.secondary_progress_label.setText("Y" if self.x_index is None else "X")
+        self.progress_widget.add(fa, False, test_p, test_s)
 
         await command(
             self,
@@ -398,9 +386,7 @@ class BumpTestPageWidget(QWidget):
         enable/disable form buttons."""
         if data.detailedState == MTM1M3.DetailedStates.PARKEDENGINEERING:
             self.bump_test_all_button.setEnabled(True)
-            self.bump_test_button.setEnabled(
-                self.actuators_table.currentItem() is not None
-            )
+            self.bump_test_button.setEnabled(self._any_actuator())
             self.kill_bump_test_button.setEnabled(False)
             self.x_index = self.y_index = self.z_index = None
         else:
@@ -441,39 +427,6 @@ class BumpTestPageWidget(QWidget):
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        test_progress = [
-            "Unknown",
-            "Not tested",
-            "Triggered",
-            "Testing positive",
-            "Positive wait zero",
-            "Testing negative",
-            "Negative wait zero",
-            "Passed",
-            "Failed timeout",
-        ]
-
-        # test progress
-        if self.z_index is not None:
-            self.primary_progress_bar.setEnabled(True)
-            val = data.primaryTest[self.z_index]
-            self.primary_progress_bar.setFormat(
-                f"ID {self.tested_id} - {test_progress[val]} - %v"
-            )
-            self.primary_progress_bar.setValue(min(8, val))
-        else:
-            self.primary_progress_bar.setEnabled(False)
-
-        if self.s_index is not None:
-            self.secondary_progress_bar.setEnabled(True)
-            val = data.secondaryTest[self.s_index]
-            self.secondary_progress_bar.setFormat(
-                f"ID {self.tested_id} - {test_progress[val]} - %v"
-            )
-            self.secondary_progress_bar.setValue(min(8, val))
-        else:
-            self.secondary_progress_bar.setEnabled(False)
-
         tested_fas = self.get_tested_fas(data.primaryTest, data.secondaryTest)
 
         test_distance = self._bump_test_minimal_distance()
@@ -502,21 +455,33 @@ class BumpTestPageWidget(QWidget):
                     return Qt.magenta
                 return Qt.transparent
 
-            p_color = get_color(data.primaryTest[fa.z_index])
+            remove = True
 
             if is_tested(data.primaryTest[fa.z_index]):
                 self._test_await_confirmation.reset_primary(fa.z_index)
-            if fa.s_index is not None and is_tested(data.secondaryTest[fa.s_index]):
-                self._test_await_confirmation.reset_secondary(fa.s_index)
+                self.progress_widget.primary_progress(fa, data.primaryTest[fa.z_index])
+                remove = False
 
+            p_color = get_color(data.primaryTest[fa.z_index])
             self.actuators_table.item(row, col_offset + 1).setBackground(p_color)
+
             if fa.s_index is not None:
-                s_color = get_color(data.secondaryTest[fa.s_index])
+                stage = data.secondaryTest[fa.s_index]
+
+                if is_tested(stage):
+                    self._test_await_confirmation.reset_secondary(fa.s_index)
+                    self.progress_widget.secondary_progress(fa, stage)
+                    remove = False
+
+                s_color = get_color(stage)
                 self.actuators_table.item(row, col_offset + 2).setBackground(s_color)
                 if p_color == s_color:
                     self.actuators_table.item(row, col_offset).setBackground(p_color)
             else:
                 self.actuators_table.item(row, col_offset).setBackground(p_color)
+
+            if remove:
+                self.progress_widget.remove(fa)
 
         # no tests running..
         # first check that we are still in PARKEDENGINEERING
@@ -540,10 +505,7 @@ class BumpTestPageWidget(QWidget):
                 await self._test_items(selected)
             elif self._test_running:
                 self.bump_test_all_button.setEnabled(True)
-                self.bump_test_button.setEnabled(
-                    self.actuators_table.currentItem() is not None
-                    and self._any_cylinder()
-                )
+                self.bump_test_button.setEnabled(self._any_actuator())
                 self.kill_bump_test_button.setEnabled(False)
                 self.x_index = self.y_index = self.z_index = None
                 self.m1m3.appliedForces.disconnect(self.appliedForces)
@@ -552,9 +514,9 @@ class BumpTestPageWidget(QWidget):
 
     # helper functions. Helps correctly enable/disable Run bump test button.
     def _any_cylinder_running(self) -> bool:
-        return self._test_running is True and self._any_cylinder()
+        return self._test_running is True and self._any_actuator()
 
-    def _any_cylinder(self) -> bool:
+    def _any_actuator(self) -> bool:
         return len(self.actuators_table.selectedItems()) > 0
 
     def _bump_test_minimal_distance(self) -> float:
