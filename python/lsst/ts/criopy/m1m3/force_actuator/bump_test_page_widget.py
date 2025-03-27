@@ -18,11 +18,19 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+import time
 import typing
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import (
+    FATABLE_XFA,
+    FATABLE_YFA,
+    FATABLE_ZFA,
+    FATable,
+    ForceActuatorData,
+    actuator_id_to_index,
+)
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -59,33 +67,6 @@ def is_tested(state: int) -> int:
     return 0
 
 
-def get_tested_fas(
-    primary_status: list[int], secondary_status: list[int]
-) -> list[ForceActuatorData]:
-    """Returns currently tested force actuators.
-
-    Parameters
-    ----------
-    primary_status : list[int]
-        Array of primary cylinder/axis bump test states
-    secondary_status : list[int]
-        List of secondary cylinder/axis bump test states
-
-    Returns
-    -------
-    tested : list[ForceActuatorData]
-        Currently tested force actuators.
-    """
-    return [
-        fa
-        for fa in FATable
-        if (
-            is_tested(primary_status[fa.z_index])
-            or (fa.s_index is not None and is_tested(secondary_status[fa.s_index]))
-        )
-    ]
-
-
 def get_min_tested_distance(
     fa: ForceActuatorData, tested_fas: list[ForceActuatorData]
 ) -> float:
@@ -96,6 +77,37 @@ def can_be_tested(
     fa: ForceActuatorData, tested_fas: list[ForceActuatorData], test_distance: float
 ) -> bool:
     return get_min_tested_distance(fa, tested_fas) > test_distance
+
+
+class TestAwaitConfirmation:
+    def __init__(self):
+        self.reset()
+
+    def reset(self) -> None:
+        self.primary: list[int] = [0] * FATABLE_ZFA
+        self.secondary: list[int] = [0] * (FATABLE_XFA + FATABLE_YFA)
+
+    def wait_primary(self, primary_index: int) -> bool:
+        return time.clock_gettime(time.CLOCK_MONOTONIC) < self.primary[primary_index]
+
+    def wait_secondary(self, secondary_index: int) -> bool:
+        return (
+            time.clock_gettime(time.CLOCK_MONOTONIC) < self.secondary[secondary_index]
+        )
+
+    def reset_primary(self, primary_index: int) -> None:
+        self.primary[primary_index] = 0
+
+    def reset_secondary(self, secondary_index: int) -> None:
+        self.secondary[secondary_index] = 0
+
+    def set_wait(
+        self, primary_index: int, primary: bool, secondary_index: int, secondary: bool
+    ) -> None:
+        wait = int(time.clock_gettime(time.CLOCK_MONOTONIC) + 2)
+        self.primary[primary_index] = wait if primary else 0
+        if secondary_index is not None:
+            self.secondary[secondary_index] = wait if secondary else 0
 
 
 class BumpTestPageWidget(QWidget):
@@ -114,6 +126,9 @@ class BumpTestPageWidget(QWidget):
     def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
+
+        self._lock = asyncio.Lock()
+        self._test_await_confirmation = TestAwaitConfirmation()
 
         self.x_index: int | None = None
         self.y_index: int | None = None
@@ -272,10 +287,6 @@ class BumpTestPageWidget(QWidget):
         self._recheck_bump_test_button()
         self.bump_test_button.setText(f"Run bump test for FA ID {actuators}")
 
-    def toggledTest(self, toggled: bool) -> None:
-        """Called when primary or secondary tests check box are toggled."""
-        self._recheck_bump_test_button(self.actuators_table.currentItem() is not None)
-
     @asyncSlot()
     async def bump_test_all(self) -> None:
         for i in range(4):
@@ -306,10 +317,8 @@ class BumpTestPageWidget(QWidget):
 
     async def _test_items(self, items: list[QTableWidgetItem]) -> None:
         fa_status = self.m1m3.remote.evt_forceActuatorBumpTestStatus.get()
-        tested_fas = get_tested_fas(fa_status.primaryTest, fa_status.secondaryTest)
-        test_distance = (
-            self.m1m3.remote.evt_forceActuatorSettings.get().bumpTestMinimalDistance
-        )
+        tested_fas = self.get_tested_fas(fa_status.primaryTest, fa_status.secondaryTest)
+        test_distance = self._bump_test_minimal_distance()
 
         for item in items:
             index = actuator_id_to_index(item.data(Qt.UserRole))
@@ -324,16 +333,19 @@ class BumpTestPageWidget(QWidget):
                 await self._test_fa(fa, item.text())
                 tested_fas.append(fa)
 
-                await asyncio.sleep(0.1)
-
     async def _test_fa(self, fa: ForceActuatorData, axis: str) -> None:
+        test_p = not (axis == "X" or axis == "Y")
+        test_s = not (axis == "P") and fa.s_index is not None
+        if not (test_p) and not (test_s):
+            return
+
         self.tested_id = fa.actuator_id
         self.z_index = fa.z_index
         self.x_index = fa.x_index
         self.y_index = fa.y_index
         self.s_index = fa.s_index
 
-        def add_timeChart() -> None:
+        def add_time_chart() -> None:
             axis: list[str] = []
             if self.x_index is not None:
                 axis.append("X")
@@ -353,7 +365,7 @@ class BumpTestPageWidget(QWidget):
 
             self.chart_view.setChart(self.chart)
 
-        asyncio.get_event_loop().call_soon(add_timeChart)
+        asyncio.get_event_loop().call_soon(add_time_chart)
 
         self.progress_group.setTitle(f"Test progress {self.tested_id}")
         if self.s_index is not None:
@@ -363,9 +375,11 @@ class BumpTestPageWidget(QWidget):
             self,
             self.m1m3.remote.cmd_forceActuatorBumpTest,
             actuatorId=self.tested_id,
-            testPrimary=not (axis == "X" or axis == "Y"),
-            testSecondary=not (axis == "P") and self.s_index is not None,
+            testPrimary=test_p,
+            testSecondary=test_s,
         )
+
+        self._test_await_confirmation.set_wait(fa.z_index, test_p, fa.s_index, test_s)
         self.kill_bump_test_button.setText(f"Stop bump test FA ID {self.tested_id}")
 
     @asyncSlot()
@@ -376,6 +390,7 @@ class BumpTestPageWidget(QWidget):
             False,
         )
         await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
+        self._test_await_confirmation.reset()
 
     @Slot()
     def detailed_state_data(self, data: BaseMsgType) -> None:
@@ -459,11 +474,9 @@ class BumpTestPageWidget(QWidget):
         else:
             self.secondary_progress_bar.setEnabled(False)
 
-        tested_fas = get_tested_fas(data.primaryTest, data.secondaryTest)
+        tested_fas = self.get_tested_fas(data.primaryTest, data.secondaryTest)
 
-        test_distance = (
-            self.m1m3.remote.evt_forceActuatorSettings.get().bumpTestMinimalDistance
-        )
+        test_distance = self._bump_test_minimal_distance()
 
         # list display
         for fa in FATable:
@@ -491,6 +504,11 @@ class BumpTestPageWidget(QWidget):
 
             p_color = get_color(data.primaryTest[fa.z_index])
 
+            if is_tested(data.primaryTest[fa.z_index]):
+                self._test_await_confirmation.reset_primary(fa.z_index)
+            if fa.s_index is not None and is_tested(data.secondaryTest[fa.s_index]):
+                self._test_await_confirmation.reset_secondary(fa.s_index)
+
             self.actuators_table.item(row, col_offset + 1).setBackground(p_color)
             if fa.s_index is not None:
                 s_color = get_color(data.secondaryTest[fa.s_index])
@@ -511,9 +529,14 @@ class BumpTestPageWidget(QWidget):
             self.kill_bump_test_button.setEnabled(False)
             return
 
-        if len(get_tested_fas(data.primaryTest, data.secondaryTest)) == 0:
+        async with self._lock:
             selected = self.actuators_table.selectedItems()
             if len(selected) > 0:
+                self.kill_bump_test_button.setEnabled(True)
+                self.m1m3.appliedForces.connect(self.appliedForces)
+                self.m1m3.forceActuatorData.connect(self.forceActuatorData)
+                self._test_running = True
+
                 await self._test_items(selected)
             elif self._test_running:
                 self.bump_test_all_button.setEnabled(True)
@@ -527,15 +550,50 @@ class BumpTestPageWidget(QWidget):
                 self.m1m3.forceActuatorData.disconnect(self.forceActuatorData)
                 self._test_running = False
 
-        elif self._test_running is False:
-            self.kill_bump_test_button.setEnabled(True)
-            self.m1m3.appliedForces.connect(self.appliedForces)
-            self.m1m3.forceActuatorData.connect(self.forceActuatorData)
-            self._test_running = True
-
     # helper functions. Helps correctly enable/disable Run bump test button.
     def _any_cylinder_running(self) -> bool:
         return self._test_running is True and self._any_cylinder()
 
     def _any_cylinder(self) -> bool:
         return len(self.actuators_table.selectedItems()) > 0
+
+    def _bump_test_minimal_distance(self) -> float:
+        data = self.m1m3.remote.evt_forceActuatorSettings.get()
+        if data is None:
+            return 10
+        return data.bumpTestMinimalDistance
+
+    def get_tested_fas(
+        self, primary_status: list[int], secondary_status: list[int]
+    ) -> list[ForceActuatorData]:
+        """Returns currently tested force actuators.
+
+        Parameters
+        ----------
+        primary_status : list[int]
+            Array of primary cylinder/axis bump test states
+        secondary_status : list[int]
+            List of secondary cylinder/axis bump test states
+
+        Returns
+        -------
+        tested : list[ForceActuatorData]
+            Currently tested force actuators.
+        """
+        return [
+            fa
+            for fa in FATable
+            if (
+                (
+                    is_tested(primary_status[fa.z_index])
+                    or self._test_await_confirmation.wait_primary(fa.z_index)
+                )
+                or (
+                    fa.s_index is not None
+                    and (
+                        is_tested(secondary_status[fa.s_index])
+                        or self._test_await_confirmation.wait_secondary(fa.s_index)
+                    )
+                )
+            )
+        ]
