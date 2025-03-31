@@ -123,7 +123,7 @@ class TopicWindow(DockWindow):
             QLabel("Actuator Value"), self.selected_actuator_value_label
         )
         details_layout.addRow(
-            QLabel("Actuator Warning"), self.selected_atuator_warning_label
+            QLabel("Actuator Warning"), self.selected_actuator_warning_label
         )
         details_layout.addRow(QLabel("Last Updated"), self.last_updated_label)
 
