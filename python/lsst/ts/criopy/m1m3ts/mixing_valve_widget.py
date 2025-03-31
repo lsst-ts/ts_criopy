@@ -68,12 +68,19 @@ class MixingValveWidget(QWidget):
         self.mixing_valve_target.setSuffix("%")
         command_layout.addRow("Target", self.mixing_valve_target)
 
-        self.temperature_target = QDoubleSpinBox()
-        self.temperature_target.setRange(-40, 50)
-        self.temperature_target.setSingleStep(1)
-        self.temperature_target.setDecimals(2)
-        self.temperature_target.setSuffix("°C")
-        command_layout.addRow("Setpoint", self.temperature_target)
+        def temperature_target() -> QDoubleSpinBox:
+            temperature_target_box = QDoubleSpinBox()
+            temperature_target_box.setRange(-40, 50)
+            temperature_target_box.setSingleStep(1)
+            temperature_target_box.setDecimals(2)
+            temperature_target_box.setSuffix("°C")
+            return temperature_target_box
+
+        self.glycol_target = temperature_target()
+        self.heaters_target = temperature_target()
+
+        command_layout.addRow("Glycol setpoint", self.glycol_target)
+        command_layout.addRow("Heaters setpoint", self.heaters_target)
 
         set_mixing_valve = QPushButton("Set")
         set_mixing_valve.clicked.connect(self._set)
@@ -112,7 +119,7 @@ class MixingValveWidget(QWidget):
         self.command_mixing_valve.setChecked(True)
 
         self.m1m3ts.mixingValve.connect(self.mixing_valve)
-        self.m1m3ts.appliedSetpoint.connect(self.applied_setpoint)
+        self.m1m3ts.appliedSetpoints.connect(self.applied_setpoints)
 
     @Slot()
     def mixing_valve(self, data: BaseMsgType) -> None:
@@ -129,17 +136,19 @@ class MixingValveWidget(QWidget):
         )
 
     @Slot()
-    def applied_setpoint(self, data: BaseMsgType) -> None:
-        if math.isnan(data.setpoint):
+    def applied_setpoints(self, data: BaseMsgType) -> None:
+        if math.isnan(data.glycolSetpoint):
             self.command_temperature.setChecked(False)
         else:
             self.command_temperature.setChecked(True)
-            self.temperature_target.setValue(data.setpoint)
+            self.glycol_target.setValue(data.glycolSetpoint)
+            self.heaters_target.setValue(data.heatersSetpoint)
 
     @Slot()
     def _temperature_control(self, checked: bool) -> None:
         self.mixing_valve_target.setEnabled(checked)
-        self.temperature_target.setEnabled(not (checked))
+        self.glycol_target.setEnabled(not (checked))
+        self.heaters_target.setEnabled(not (checked))
 
     @asyncSlot()
     async def _set(self) -> None:
@@ -151,12 +160,14 @@ class MixingValveWidget(QWidget):
             )
             await command(
                 self,
-                self.m1m3ts.remote.cmd_applySetpoint,
-                setpoint=float("nan"),
+                self.m1m3ts.remote.cmd_applySetpoints,
+                glycolSetpoint=float("nan"),
+                heatersSetpoint=float("nan"),
             )
         else:
             await command(
                 self,
-                self.m1m3ts.remote.cmd_applySetpoint,
-                setpoint=self.temperature_target.value(),
+                self.m1m3ts.remote.cmd_applySetpoints,
+                glycolSetpoint=self.glycol_target.value(),
+                heatersSetpoint=self.heaters_target.value(),
             )
