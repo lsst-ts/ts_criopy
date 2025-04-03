@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.9.0
+------
+
+* Support for automatic FCU's heaters PWM (~power) control.
+
 v0.8.3
 ------
 
