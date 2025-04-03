@@ -138,7 +138,7 @@ class CommandWidget(QWidget):
                 self._parent.startEdit(self._kind)
                 self.setText(self._set_title)
             else:
-                await self._parent.heaterFanDemand(self._kind)
+                await self._parent.heater_fan_demand(self._kind)
                 self.setText(self._edit_title)
 
         def cancel(self) -> None:
@@ -150,62 +150,62 @@ class CommandWidget(QWidget):
         self.m1m3ts = m1m3ts
         self.freezed = False
 
-        self.dataWidget = DataWidget()
+        self.data_widget = DataWidget()
 
         self.fans = [0] * 96
         self.heaters = [0] * 96
 
-        self.setHeatersButton = self.SetButton(self, Buttons.HEATERS)
+        self.set_heaters_button = self.SetButton(self, Buttons.HEATERS)
         self.setFansButton = self.SetButton(self, Buttons.FANS)
 
-        self.flatDemand = QSpinBox()
-        self.flatDemand.setRange(0, 255)
+        self.flat_demand = QSpinBox()
+        self.flat_demand.setRange(0, 255)
 
         self.setConstantButton = QPushButton("Set constant")
         self.setConstantButton.setToolTip("Sets all target values to given constant")
         self.setConstantButton.setDisabled(True)
-        self.setConstantButton.clicked.connect(self.setConstant)
+        self.setConstantButton.clicked.connect(self.set_constant)
 
-        self.cancelButton = QPushButton("Cancel")
-        self.cancelButton.setToolTip("Cancel value editing")
-        self.cancelButton.setDisabled(True)
-        self.cancelButton.clicked.connect(self.cancel)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setToolTip("Cancel value editing")
+        self.cancel_button.setDisabled(True)
+        self.cancel_button.clicked.connect(self.cancel)
 
-        commandLayout = QGridLayout()
-        commandLayout.addWidget(self.flatDemand, 0, 0)
-        commandLayout.addWidget(self.setConstantButton, 0, 1)
-        commandLayout.addWidget(self.cancelButton, 0, 2, 2, 1)
-        commandLayout.addWidget(self.setHeatersButton, 1, 0)
-        commandLayout.addWidget(self.setFansButton, 1, 1)
+        command_layout = QGridLayout()
+        command_layout.addWidget(self.flat_demand, 0, 0)
+        command_layout.addWidget(self.setConstantButton, 0, 1)
+        command_layout.addWidget(self.cancel_button, 0, 2, 2, 1)
+        command_layout.addWidget(self.set_heaters_button, 1, 0)
+        command_layout.addWidget(self.setFansButton, 1, 1)
 
         hBox = QHBoxLayout()
-        hBox.addLayout(commandLayout)
+        hBox.addLayout(command_layout)
         hBox.addStretch()
 
         layout = QVBoxLayout()
 
-        layout.addWidget(self.dataWidget)
+        layout.addWidget(self.data_widget)
         layout.addLayout(hBox)
 
         self.setLayout(layout)
 
     @Slot()
-    def setConstant(self) -> None:
-        self.dataWidget.setValues([self.flatDemand.text()] * 96)
+    def set_constant(self) -> None:
+        self.data_widget.setValues([self.flat_demand.text()] * 96)
 
     @Slot()
     def cancel(self) -> None:
         self.freezed = False
-        self.dataWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.data_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setConstantButton.setDisabled(True)
         self.setFansButton.setEnabled(True)
         self.setFansButton.cancel()
-        self.setHeatersButton.setEnabled(True)
-        self.setHeatersButton.cancel()
-        self.cancelButton.setDisabled(True)
+        self.set_heaters_button.setEnabled(True)
+        self.set_heaters_button.cancel()
+        self.cancel_button.setDisabled(True)
 
-    async def _heaterFanDemand(self, **kwargs: typing.Any) -> None:
-        await command(self, self.m1m3ts.remote.cmd_heaterFanDemand, **kwargs)
+    async def _heater_fan_demand(self, **kwargs: typing.Any) -> None:
+        await command(self, self.m1m3ts.remote.cmd_heater_fan_demand, **kwargs)
 
     def startEdit(self, kind: Buttons) -> None:
         if kind == Buttons.HEATERS:
@@ -213,20 +213,20 @@ class CommandWidget(QWidget):
             self.setFansButton.setDisabled(True)
         else:
             self.update_values(self.fans, True)
-            self.setHeatersButton.setDisabled(True)
+            self.set_heaters_button.setDisabled(True)
 
-        self.dataWidget.setEditTriggers(QAbstractItemView.AllEditTriggers)
-        self.dataWidget.setEnabled(True)
-        self.cancelButton.setEnabled(True)
+        self.data_widget.setEditTriggers(QAbstractItemView.AllEditTriggers)
+        self.data_widget.setEnabled(True)
+        self.cancel_button.setEnabled(True)
         self.setConstantButton.setEnabled(True)
 
-    async def heaterFanDemand(self, kind: Buttons) -> None:
-        data = self.dataWidget.getValues()
+    async def heater_fan_demand(self, kind: Buttons) -> None:
+        data = self.data_widget.getValues()
         if kind == Buttons.HEATERS:
-            await self._heaterFanDemand(heaterPWM=data, fanRPM=self.fans)
+            await self._heater_fan_demand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
         else:
-            await self._heaterFanDemand(heaterPWM=self.heaters, fanRPM=data)
+            await self._heater_fan_demand(heaterPWM=self.heaters, fanRPM=data)
             self.fans = data
 
         self.cancel()
@@ -238,10 +238,10 @@ class CommandWidget(QWidget):
         self.freezed = freeze
 
         if values is None:
-            self.dataWidget.empty()
+            self.data_widget.empty()
             return
 
-        self.dataWidget.setValues(values)
+        self.data_widget.setValues(values)
 
 
 class ThermalValuePageWidget(TopicWindow):
@@ -254,12 +254,12 @@ class ThermalValuePageWidget(TopicWindow):
     """
 
     def __init__(self, m1m3ts: MetaSAL):
-        self.commandWidget = CommandWidget(m1m3ts)
+        self.command_widget = CommandWidget(m1m3ts)
 
-        super().__init__("Thermal Values", m1m3ts, Thermals(), self.commandWidget)
+        super().__init__("Thermal Values", m1m3ts, Thermals(), self.command_widget)
 
     def update_values(self, data: BaseMsgType) -> None:
         if data is None or self.field is None:
-            self.commandWidget.update_values(None)
+            self.command_widget.update_values(None)
         else:
-            self.commandWidget.update_values(self.field.getValue(data))
+            self.command_widget.update_values(self.field.getValue(data))

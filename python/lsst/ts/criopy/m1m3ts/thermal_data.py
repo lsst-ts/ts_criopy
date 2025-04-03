@@ -35,8 +35,10 @@ class Thermals(TopicCollection):
             TopicData(
                 "FCU Targets",
                 [
-                    TopicField("Heater PWM", "heaterPWM", self.THERMAL_INDEX),
-                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX),
+                    TopicField(
+                        "Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt=".2f"
+                    ),
+                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX, fmt="d"),
                 ],
                 "fcuTargets",
                 True,
@@ -48,12 +50,14 @@ class Thermals(TopicCollection):
                         "Differential temperature",
                         "differentialTemperature",
                         self.THERMAL_INDEX,
+                        fmt=".3f",
                     ),
                     TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX),
                     TopicField(
                         "Absolute temperature",
                         "absoluteTemperature",
                         self.THERMAL_INDEX,
+                        fmt=".3f",
                     ),
                 ],
                 "thermalData",

@@ -54,7 +54,7 @@ class TopicWindow(DockWindow):
         SAL instance to communicate with SAL.
     collection : `TopicCollection`
         Collections of data associated with widget.
-    userWidget : `QWidget`
+    user_widget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
         be update in update_values(data) method.
 
@@ -72,7 +72,7 @@ class TopicWindow(DockWindow):
         title: str,
         comm: MetaSAL,
         collection: TopicCollection,
-        userWidget: QWidget,
+        user_widget: QWidget,
     ):
         super().__init__(title)
 
@@ -108,14 +108,14 @@ class TopicWindow(DockWindow):
         self.selected_actuator_warning_label = WarningLabel()
         self.last_updated_label = TimeDeltaLabel()
 
-        self.topicList = QListWidget()
-        self.topicList.currentRowChanged.connect(self.currentTopicChanged)
+        self.topic_list = QListWidget()
+        self.topic_list.currentRowChanged.connect(self.current_topic_changed)
         for topic in self.collection.topics:
-            self.topicList.addItem(topic.name)
-        self.fieldList = QListWidget()
-        self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
+            self.topic_list.addItem(topic.name)
+        self.field_list = QListWidget()
+        self.field_list.currentRowChanged.connect(self.current_field_changed)
 
-        plot_layout.addWidget(userWidget)
+        plot_layout.addWidget(user_widget)
 
         details_layout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
         details_layout.addRow(QLabel("Actuator Id"), self.selected_actuator_id_label)
@@ -127,41 +127,41 @@ class TopicWindow(DockWindow):
         )
         details_layout.addRow(QLabel("Last Updated"), self.last_updated_label)
 
-        filter_layout.addWidget(self.topicList)
-        filter_layout.addWidget(self.fieldList)
+        filter_layout.addWidget(self.topic_list)
+        filter_layout.addWidget(self.field_list)
 
-        self.topicList.setCurrentRow(0)
+        self.topic_list.setCurrentRow(0)
 
         self.setWidget(splitter)
 
     @Slot()
-    def currentTopicChanged(self, topic_index: int) -> None:
+    def current_topic_changed(self, topic_index: int) -> None:
         if topic_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
 
-        self.fieldList.clear()
+        self.field_list.clear()
         for field in self.collection.topics[topic_index].fields:
-            self.fieldList.addItem(field.name)
+            self.field_list.addItem(field.name)
 
         field_index = self.collection.topics[topic_index].selectedField
         if field_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
 
-        self.fieldList.setCurrentRow(field_index)
-        self._changeField(topic_index, field_index)
+        self.field_list.setCurrentRow(field_index)
+        self._change_field(topic_index, field_index)
 
     @Slot()
-    def currentFieldChanged(self, field_index: int) -> None:
-        topic_index = self.topicList.currentRow()
+    def current_field_changed(self, field_index: int) -> None:
+        topic_index = self.topic_list.currentRow()
         if topic_index < 0 or field_index < 0:
-            self._setUnknown()
+            self._set_unknown()
             return
-        self._changeField(topic_index, field_index)
+        self._change_field(topic_index, field_index)
         self.collection.topics[topic_index].selectedField = field_index
 
-    def _setUnknown(self) -> None:
+    def _set_unknown(self) -> None:
         self.last_updated_label.set_unknown()
 
     def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
@@ -186,26 +186,26 @@ class TopicWindow(DockWindow):
         self.selected_actuator_value_label.setText(selected_actuator.getValue())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-    def _changeField(self, topic_index: int, field_index: int) -> None:
+    def _change_field(self, topic_index: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
         topic = self.collection.topics[topic_index]
         self.field = topic.fields[field_index]
         try:
-            self.collection.change_topic(topic_index, self.dataChanged, self.comm)
+            self.collection.change_topic(topic_index, self.data_changed, self.comm)
 
             data = getattr(self.comm.remote, topic.getTopic()).get()
-            self.dataChanged(data)
+            self.data_changed(data)
         except RuntimeError as err:
-            print("TopicWindow._changeField:", err)
+            print("TopicWindow._change_field:", err)
             pass
 
     def update_values(self, data: BaseMsgType) -> None:
         raise RuntimeError("Abstract method update_values")
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 
@@ -215,7 +215,7 @@ class TopicWindow(DockWindow):
         """
         self.update_values(data)
         if data is None:
-            self._setUnknown()
+            self._set_unknown()
         else:
             try:
                 self.last_updated_label.setValue(data.timestamp)
