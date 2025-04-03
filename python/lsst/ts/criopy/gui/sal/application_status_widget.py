@@ -32,30 +32,30 @@ class ApplicationStatusWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.layout = QVBoxLayout()
-        self.statusLayout = QGridLayout()
-        self.layout.addLayout(self.statusLayout)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        status_layout = QGridLayout()
+        layout.addLayout(status_layout)
+        self.setLayout(layout)
 
-        self.modeStateLabel = QLabel("---")
-        self.mirrorStateLabel = QLabel("---")
+        self.mode_state_label = QLabel("---")
+        self.mirror_state_label = QLabel("---")
 
         row = 0
         col = 0
-        self.statusLayout.addWidget(QLabel("State"), row, col)
-        self.statusLayout.addWidget(
-            SummaryStateLabel(self.m1m3.summaryState, "summaryState"),
+        status_layout.addWidget(QLabel("State"), row, col)
+        status_layout.addWidget(
+            SummaryStateLabel(self.m1m3.summaryState),
             row,
             col + 1,
         )
         row += 1
-        self.statusLayout.addWidget(QLabel("Mode"), row, col)
-        self.statusLayout.addWidget(self.modeStateLabel, row, col + 1)
+        status_layout.addWidget(QLabel("Mode"), row, col)
+        status_layout.addWidget(self.mode_state_label, row, col + 1)
         row += 1
-        self.statusLayout.addWidget(QLabel("Mirror State"), row, col)
-        self.statusLayout.addWidget(self.mirrorStateLabel, row, col + 1)
+        status_layout.addWidget(QLabel("Mirror State"), row, col)
+        status_layout.addWidget(self.mirror_state_label, row, col + 1)
 
-        self.m1m3.detailedState.connect(self.processEventDetailedState)
+        self.m1m3.detailedState.connect(self.process_event_detailed_state)
 
     @Slot()
     def raisingLoweringInfo(self, data: BaseMsgType) -> None:
@@ -67,9 +67,9 @@ class ApplicationStatusWidget(QWidget):
             or detailedData.detailedState == DetailedStates.RAISINGENGINEERING
         ):
             if data.weightSupportedPercent >= 100:
-                self.mirrorStateLabel.setText("Raising - positioning hardpoints")
+                self.mirror_state_label.setText("Raising - positioning hardpoints")
             else:
-                self.mirrorStateLabel.setText(
+                self.mirror_state_label.setText(
                     f"Raising ({data.weightSupportedPercent:.02f}%)"
                 )
         elif (
@@ -77,24 +77,24 @@ class ApplicationStatusWidget(QWidget):
             or detailedData.detailedState == DetailedStates.LOWERINGENGINEERING
         ):
             if data.weightSupportedPercent <= 0:
-                self.mirrorStateLabel.setText("Lowering - positioning hardpoints")
+                self.mirror_state_label.setText("Lowering - positioning hardpoints")
             else:
-                self.mirrorStateLabel.setText(
+                self.mirror_state_label.setText(
                     f"Lowering ({data.weightSupportedPercent:.02f}%)"
                 )
         elif detailedData.detailedState == DetailedStates.LOWERINGFAULT:
-            self.mirrorStateLabel.setText(
+            self.mirror_state_label.setText(
                 f"Lowering (fault, {data.weightSupportedPercent:.02f}%)"
             )
         else:
-            self._disconnectRaiseLowering()
+            self._disconnect_raise_lowering()
 
-    def _connectRaiseLowering(self) -> None:
+    def _connect_raise_lowering(self) -> None:
         self.m1m3.raisingLoweringInfo.connect(
             self.raisingLoweringInfo, Qt.UniqueConnection
         )
 
-    def _disconnectRaiseLowering(self) -> None:
+    def _disconnect_raise_lowering(self) -> None:
         try:
             self.m1m3.raisingLoweringInfo.disconnect(self.raisingLoweringInfo)
         except RuntimeError:
@@ -103,72 +103,72 @@ class ApplicationStatusWidget(QWidget):
             pass
 
     @Slot()
-    def processEventDetailedState(self, data: BaseMsgType) -> None:
-        modeStateText = "Unknown"
-        mirrorStateText = "Unknown"
+    def process_event_detailed_state(self, data: BaseMsgType) -> None:
+        mode_state_text = "Unknown"
+        mirror_state_text = "Unknown"
         if data.detailedState == DetailedStates.DISABLED:
-            modeStateText = "Automatic"
-            mirrorStateText = "Parked"
+            mode_state_text = "Automatic"
+            mirror_state_text = "Parked"
         elif data.detailedState == DetailedStates.FAULT:
-            modeStateText = "Automatic"
-            mirrorStateText = "Fault"
+            mode_state_text = "Automatic"
+            mirror_state_text = "Fault"
         elif data.detailedState == DetailedStates.OFFLINE:
-            modeStateText = "Offline"
-            mirrorStateText = "Parked"
+            mode_state_text = "Offline"
+            mirror_state_text = "Parked"
         elif data.detailedState == DetailedStates.STANDBY:
-            modeStateText = "Automatic"
-            mirrorStateText = "Parked"
+            mode_state_text = "Automatic"
+            mirror_state_text = "Parked"
         elif data.detailedState == DetailedStates.PARKED:
-            modeStateText = "Automatic"
-            mirrorStateText = "Parked"
-            self._disconnectRaiseLowering()
+            mode_state_text = "Automatic"
+            mirror_state_text = "Parked"
+            self._disconnect_raise_lowering()
         elif data.detailedState == DetailedStates.RAISING:
-            modeStateText = "Automatic"
+            mode_state_text = "Automatic"
             percent = (
                 self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
             )
-            mirrorStateText = f"Raising ({percent:.03f}%)"
-            self._connectRaiseLowering()
+            mirror_state_text = f"Raising ({percent:.03f}%)"
+            self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.ACTIVE:
-            modeStateText = "Automatic"
-            mirrorStateText = "Active"
-            self._disconnectRaiseLowering()
+            mode_state_text = "Automatic"
+            mirror_state_text = "Active"
+            self._disconnect_raise_lowering()
         elif data.detailedState == DetailedStates.LOWERING:
-            modeStateText = "Automatic"
-            mirrorStateText = "Lowering"
-            self._connectRaiseLowering()
+            mode_state_text = "Automatic"
+            mirror_state_text = "Lowering"
+            self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.PARKEDENGINEERING:
-            modeStateText = "Manual"
-            mirrorStateText = "Parked"
-            self._disconnectRaiseLowering()
+            mode_state_text = "Manual"
+            mirror_state_text = "Parked"
+            self._disconnect_raise_lowering()
         elif data.detailedState == DetailedStates.RAISINGENGINEERING:
-            modeStateText = "Manual"
-            mirrorStateText = "Raising"
-            self._connectRaiseLowering()
+            mode_state_text = "Manual"
+            mirror_state_text = "Raising"
+            self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.ACTIVEENGINEERING:
-            modeStateText = "Manual"
-            mirrorStateText = "Active"
-            self._disconnectRaiseLowering()
+            mode_state_text = "Manual"
+            mirror_state_text = "Active"
+            self._disconnect_raise_lowering()
         elif data.detailedState == DetailedStates.LOWERINGENGINEERING:
-            modeStateText = "Manual"
-            mirrorStateText = "Lowering"
-            self._connectRaiseLowering()
+            mode_state_text = "Manual"
+            mirror_state_text = "Lowering"
+            self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.LOWERINGFAULT:
-            modeStateText = "Automatic"
-            mirrorStateText = "Lowering (fault)"
-            self._connectRaiseLowering()
+            mode_state_text = "Automatic"
+            mirror_state_text = "Lowering (fault)"
+            self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.PROFILEHARDPOINTCORRECTIONS:
-            modeStateText = "Profile hardpoint corrections"
-            mirrorStateText = "Active"
-            self._disconnectRaiseLowering()
+            mode_state_text = "Profile hardpoint corrections"
+            mirror_state_text = "Active"
+            self._disconnect_raise_lowering()
         else:
             warning(
                 self,
                 "Unknown state",
                 f"Unknown state received - {data.detailedState}",
             )
-            self._disconnectRaiseLowering()
+            self._disconnect_raise_lowering()
             return
 
-        self.modeStateLabel.setText(modeStateText)
-        self.mirrorStateLabel.setText(mirrorStateText)
+        self.mode_state_label.setText(mode_state_text)
+        self.mirror_state_label.setText(mirror_state_text)
