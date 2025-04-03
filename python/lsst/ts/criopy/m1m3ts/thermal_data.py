@@ -33,6 +33,15 @@ class Thermals(TopicCollection):
     def __init__(self) -> None:
         super().__init__(
             TopicData(
+                "FCU Targets",
+                [
+                    TopicField("Heater PWM", "heaterPWM", self.THERMAL_INDEX),
+                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX),
+                ],
+                "fcuTargets",
+                True,
+            ),
+            TopicData(
                 "Thermal Data",
                 [
                     TopicField(
