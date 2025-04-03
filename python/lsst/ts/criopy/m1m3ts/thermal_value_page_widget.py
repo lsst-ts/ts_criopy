@@ -61,11 +61,14 @@ class DataWidget(QTableWidget):
     def empty(self) -> None:
         self.setValues(range(1, 97))
 
-    def setValues(self, data: BaseMsgType) -> None:
+    def setValues(self, data: BaseMsgType, fmt: str | None = None) -> None:
         r = 0
         c = 0
         for value in data:
-            self.item(r, c).setText(str(value))
+            if fmt is None:
+                self.item(r, c).setText(str(value))
+            else:
+                self.item(r, c).setText(fmt.format(v=value))
             c += 1
             if c >= self.columnCount():
                 c = 0
@@ -135,7 +138,7 @@ class CommandWidget(QWidget):
         @asyncSlot()
         async def edit(self) -> None:
             if self.text() == self._edit_title:
-                self._parent.startEdit(self._kind)
+                self._parent.start_edit(self._kind)
                 self.setText(self._set_title)
             else:
                 await self._parent.heater_fan_demand(self._kind)
@@ -156,15 +159,15 @@ class CommandWidget(QWidget):
         self.heaters = [0] * 96
 
         self.set_heaters_button = self.SetButton(self, Buttons.HEATERS)
-        self.setFansButton = self.SetButton(self, Buttons.FANS)
+        self.set_fans_button = self.SetButton(self, Buttons.FANS)
 
         self.flat_demand = QSpinBox()
         self.flat_demand.setRange(0, 255)
 
-        self.setConstantButton = QPushButton("Set constant")
-        self.setConstantButton.setToolTip("Sets all target values to given constant")
-        self.setConstantButton.setDisabled(True)
-        self.setConstantButton.clicked.connect(self.set_constant)
+        self.set_constant_button = QPushButton("Set constant")
+        self.set_constant_button.setToolTip("Sets all target values to given constant")
+        self.set_constant_button.setDisabled(True)
+        self.set_constant_button.clicked.connect(self.set_constant)
 
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setToolTip("Cancel value editing")
@@ -173,10 +176,10 @@ class CommandWidget(QWidget):
 
         command_layout = QGridLayout()
         command_layout.addWidget(self.flat_demand, 0, 0)
-        command_layout.addWidget(self.setConstantButton, 0, 1)
+        command_layout.addWidget(self.set_constant_button, 0, 1)
         command_layout.addWidget(self.cancel_button, 0, 2, 2, 1)
         command_layout.addWidget(self.set_heaters_button, 1, 0)
-        command_layout.addWidget(self.setFansButton, 1, 1)
+        command_layout.addWidget(self.set_fans_button, 1, 1)
 
         hBox = QHBoxLayout()
         hBox.addLayout(command_layout)
@@ -197,9 +200,9 @@ class CommandWidget(QWidget):
     def cancel(self) -> None:
         self.freezed = False
         self.data_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.setConstantButton.setDisabled(True)
-        self.setFansButton.setEnabled(True)
-        self.setFansButton.cancel()
+        self.set_constant_button.setDisabled(True)
+        self.set_fans_button.setEnabled(True)
+        self.set_fans_button.cancel()
         self.set_heaters_button.setEnabled(True)
         self.set_heaters_button.cancel()
         self.cancel_button.setDisabled(True)
@@ -207,10 +210,10 @@ class CommandWidget(QWidget):
     async def _heater_fan_demand(self, **kwargs: typing.Any) -> None:
         await command(self, self.m1m3ts.remote.cmd_heater_fan_demand, **kwargs)
 
-    def startEdit(self, kind: Buttons) -> None:
+    def start_edit(self, kind: Buttons) -> None:
         if kind == Buttons.HEATERS:
             self.update_values(self.heaters, True)
-            self.setFansButton.setDisabled(True)
+            self.set_fans_button.setDisabled(True)
         else:
             self.update_values(self.fans, True)
             self.set_heaters_button.setDisabled(True)
@@ -218,7 +221,7 @@ class CommandWidget(QWidget):
         self.data_widget.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.data_widget.setEnabled(True)
         self.cancel_button.setEnabled(True)
-        self.setConstantButton.setEnabled(True)
+        self.set_constant_button.setEnabled(True)
 
     async def heater_fan_demand(self, kind: Buttons) -> None:
         data = self.data_widget.getValues()
@@ -231,7 +234,9 @@ class CommandWidget(QWidget):
 
         self.cancel()
 
-    def update_values(self, values: typing.Any, freeze: bool = False) -> None:
+    def update_values(
+        self, values: typing.Any, freeze: bool = False, fmt: str | None = None
+    ) -> None:
         if self.freezed:
             return
 
@@ -241,7 +246,7 @@ class CommandWidget(QWidget):
             self.data_widget.empty()
             return
 
-        self.data_widget.setValues(values)
+        self.data_widget.setValues(values, fmt=fmt)
 
 
 class ThermalValuePageWidget(TopicWindow):
@@ -262,4 +267,6 @@ class ThermalValuePageWidget(TopicWindow):
         if data is None or self.field is None:
             self.command_widget.update_values(None)
         else:
-            self.command_widget.update_values(self.field.getValue(data))
+            self.command_widget.update_values(
+                self.field.getValue(data), fmt=self.field.fmt
+            )

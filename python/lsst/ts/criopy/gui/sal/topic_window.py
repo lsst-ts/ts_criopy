@@ -47,25 +47,30 @@ class TopicWindow(DockWindow):
 
     Parameters
     ----------
-
-    title : `str`
+    title : str
         Dock title and name.
-    comm : `MetaSAL`
+    comm : MetaSAL
         SAL instance to communicate with SAL.
-    collection : `TopicCollection`
+    collection : TopicCollection
         Collections of data associated with widget.
-    user_widget : `QWidget`
+    user_widget : QWidget
         Widget to be displayed on left from value selection. Its content shall
         be update in update_values(data) method.
 
     Methods
     -------
-
     update_values(data)
         Must be defined in every child. This is called when selection is
         changed or when new data become available. If data parameter is None,
         then no data has been received for selected read topic.
+
+    Attributes
+    ----------
+    field : TopicField | None
+        Selected field. Can be used to access details about the field.
     """
+
+    field: TopicField | None = None
 
     def __init__(
         self,
@@ -80,8 +85,6 @@ class TopicWindow(DockWindow):
         self.collection = collection
 
         splitter = QSplitter()
-
-        self.field: TopicField | None = None
 
         plot_layout = QVBoxLayout()
         selection_layout = QVBoxLayout()
@@ -211,7 +214,8 @@ class TopicWindow(DockWindow):
 
         Parameters
         ----------
-
+        data : BaseMsgType
+            New values, retrieved from SAL.
         """
         self.update_values(data)
         if data is None:
