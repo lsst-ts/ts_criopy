@@ -43,7 +43,7 @@ class TopicField:
     scale_type : `Scales`
         Scale type. Select scale used to display field values.
     fmt :  str (optional)
-        Format
+        Format string to display the field value.
     """
 
     def __init__(
