@@ -9,6 +9,7 @@ v0.8.3
 
 * M1M3 support system remote parameters for swifter Kafka connection
 * More code refactoring
+* Update conda builder version for conda package
 
 v0.8.2
 ------
