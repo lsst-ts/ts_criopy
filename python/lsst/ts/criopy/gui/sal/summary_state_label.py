@@ -26,9 +26,9 @@ __all__ = ["SummaryStateLabel"]
 
 
 class SummaryStateLabel(DataLabel):
-    """Display state label."""
+    """Display CSC state label."""
 
-    def __init__(self, signal: Signal = None, field: str | None = None):
+    def __init__(self, signal: Signal = None, field: str = "summaryState"):
         super().__init__(signal, field)
         self.setAlignment(Qt.AlignCenter)
 

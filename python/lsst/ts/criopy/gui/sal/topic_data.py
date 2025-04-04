@@ -42,6 +42,8 @@ class TopicField:
         Variable kind.
     scale_type : `Scales`
         Scale type. Select scale used to display field values.
+    fmt :  str (optional)
+        Format
     """
 
     def __init__(
@@ -50,11 +52,13 @@ class TopicField:
         field_name: str,
         value_index: int,
         scale_type: Scales = Scales.GAUGE,
+        fmt: str | None = None,
     ):
         self.name = name
         self.field_name = field_name
         self.value_index = value_index
         self.scale_type = scale_type
+        self.fmt = fmt
 
     def getValue(self, data: BaseMsgType) -> typing.Any:
         return getattr(data, self.field_name)
