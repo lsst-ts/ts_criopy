@@ -95,15 +95,15 @@ class ActuatorBumpTestProgressBox(QGroupBox):
         self.setLayout(progress_layout)
         self.setMaximumWidth(410)
 
-    def primary_progress(self, primary_state: int) -> None:
+    def primary_progress(self, state: int) -> None:
         assert self.primary is not None
-        reported = min(primary_state, MTM1M3.BumpTest.FAILED_TIMEOUT)
+        reported = min(state, MTM1M3.BumpTest.FAILED_TIMEOUT)
         self.primary.setValue(reported)
         self.primary.setFormat(f"{self.TEST_PROGRESS[reported]} - %v")
 
-    def secondary_progress(self, secondary_state: int) -> None:
+    def secondary_progress(self, state: int) -> None:
         assert self.secondary is not None
-        reported = min(secondary_state, MTM1M3.BumpTest.FAILED_TIMEOUT)
+        reported = min(state, MTM1M3.BumpTest.FAILED_TIMEOUT)
         self.secondary.setValue(reported)
         self.secondary.setFormat(f"{self.TEST_PROGRESS[reported]} - %v")
 
@@ -116,7 +116,7 @@ class BumpTestProgressWidget(QWidget):
 
         layout = QVBoxLayout()
 
-        self.tests: dict[int, ActuatorBumpTestProgressBox] = {}
+        self.tests = {}
 
         self.setMinimumWidth(200)
         self.setMaximumWidth(420)
@@ -144,8 +144,8 @@ class BumpTestProgressWidget(QWidget):
             self.tests[fa.actuator_id].hide()
             del self.tests[fa.actuator_id]
 
-    def primary_progress(self, fa: ForceActuatorData, primary_state: int) -> None:
-        self.tests[fa.actuator_id].primary_progress(primary_state)
+    def primary_progress(self, fa: ForceActuatorData, state: int) -> None:
+        self.tests[fa.actuator_id].primary_progress(state)
 
-    def secondary_progress(self, fa: ForceActuatorData, primary_state: int) -> None:
-        self.tests[fa.actuator_id].secondary_progress(primary_state)
+    def secondary_progress(self, fa: ForceActuatorData, state: int) -> None:
+        self.tests[fa.actuator_id].secondary_progress(state)

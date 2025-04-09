@@ -17,20 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-import time
 import typing
 
+from lsst.ts.m1m3.utils import BumpTestKind, BumpTestRunner, ForceActuatorBumpTest
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import (
-    FATABLE_XFA,
-    FATABLE_YFA,
-    FATABLE_ZFA,
-    FATable,
-    ForceActuatorData,
-    actuator_id_to_index,
-)
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -47,14 +39,14 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ...gui import Colors, TimeChart, TimeChartView
+from ...gui import Colors
 from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command
 from .bump_test_progress import BumpTestProgressWidget
 from .force_actuator_chart import ForceChartWidget
 
 
-def is_tested(state: int) -> int:
+def is_tested(state: int) -> bool:
     if state in [
         MTM1M3.BumpTest.TRIGGERED,
         MTM1M3.BumpTest.TESTINGPOSITIVE,
@@ -62,54 +54,8 @@ def is_tested(state: int) -> int:
         MTM1M3.BumpTest.TESTINGNEGATIVE,
         MTM1M3.BumpTest.TESTINGNEGATIVEWAIT,
     ]:
-        return 1
-    return 0
-
-
-def get_min_tested_distance(
-    fa: ForceActuatorData, tested_fas: list[ForceActuatorData]
-) -> float:
-    return 10 if len(tested_fas) == 0 else min([tf.distance(fa) for tf in tested_fas])
-
-
-def can_be_tested(
-    fa: ForceActuatorData, tested_fas: list[ForceActuatorData], test_distance: float
-) -> bool:
-    return get_min_tested_distance(fa, tested_fas) > test_distance
-
-
-class TestAwaitConfirmation:
-    """Class tracking the force actuators commanded to test are really
-    tested."""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self) -> None:
-        self.primary: list[int] = [0] * FATABLE_ZFA
-        self.secondary: list[int] = [0] * (FATABLE_XFA + FATABLE_YFA)
-
-    def wait_primary(self, primary_index: int) -> bool:
-        return time.clock_gettime(time.CLOCK_MONOTONIC) < self.primary[primary_index]
-
-    def wait_secondary(self, secondary_index: int) -> bool:
-        return (
-            time.clock_gettime(time.CLOCK_MONOTONIC) < self.secondary[secondary_index]
-        )
-
-    def reset_primary(self, primary_index: int) -> None:
-        self.primary[primary_index] = 0
-
-    def reset_secondary(self, secondary_index: int) -> None:
-        self.secondary[secondary_index] = 0
-
-    def set_wait(
-        self, primary_index: int, primary: bool, secondary_index: int, secondary: bool
-    ) -> None:
-        wait = int(time.clock_gettime(time.CLOCK_MONOTONIC) + 2)
-        self.primary[primary_index] = wait if primary else 0
-        if secondary_index is not None:
-            self.secondary[secondary_index] = wait if secondary else 0
+        return True
+    return False
 
 
 class BumpTestPageWidget(QWidget):
@@ -129,10 +75,7 @@ class BumpTestPageWidget(QWidget):
         super().__init__()
         self.m1m3 = m1m3
 
-        self._lock = asyncio.Lock()
-        self._test_await_confirmation = TestAwaitConfirmation()
-
-        self._test_running: bool = False
+        self._runner: BumpTestRunner | None = None
 
         actuator_box = QGroupBox("Actuator")
         self.actuators_table = QTableWidget(
@@ -294,51 +237,66 @@ class BumpTestPageWidget(QWidget):
         await self._test_items(self.actuators_table.selectedItems())
 
     async def _test_items(self, items: list[QTableWidgetItem]) -> None:
-        print("_test_items", len(items))
-        fa_status = self.m1m3.remote.evt_forceActuatorBumpTestStatus.get()
-        tested_fas = self.get_tested_fas(fa_status.primaryTest, fa_status.secondaryTest)
         test_distance = self._bump_test_minimal_distance()
 
+        todo: list[ForceActuatorBumpTest] = []
+
         for item in items:
+            item.setSelected(False)
+
             index = actuator_id_to_index(item.data(Qt.UserRole))
             if index is None:
                 continue
 
             fa = FATable[index]
-            if can_be_tested(fa, tested_fas, test_distance):
-                # don't proceed if not in PARKEDENGINEERING
-                detailed_state = self.m1m3.remote.evt_detailedState.get()
-                if detailed_state is None or detailed_state.detailedState not in [
-                    MTM1M3.DetailedStates.PARKEDENGINEERING
-                ]:
-                    return
 
-                item.setSelected(False)
+            if item.text() == "P":
+                todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_Z))
+            elif item.text() == "X":
+                todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_X))
+            elif item.text() == "Y":
+                todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_Y))
+            else:
+                todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_Z))
+                if fa.x_index is not None:
+                    todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_X))
+                elif fa.y_index is not None:
+                    todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_Y))
 
-                await self._test_fa(fa, item.text())
-                tested_fas.append(fa)
+        self._runner = BumpTestRunner(todo)
 
-    async def _test_fa(self, fa: ForceActuatorData, axis: str) -> None:
-        test_p = not (axis == "X" or axis == "Y")
-        test_s = not (axis == "P") and fa.s_index is not None
-        if not (test_p) and not (test_s):
-            return
+        try:
+            while True:
+                test = await self._runner.next(test_distance, 20)
+                if test is None:
+                    break
+                test_p = False
+                test_s = False
+                if test.kind in [BumpTestKind.AXIS_X, BumpTestKind.AXIS_Y]:
+                    test_s = True
+                else:
+                    test_p = True
 
-        self.progress_widget.add(fa, False, test_p, test_s)
-        self.force_charts.add(fa)
+                self.progress_widget.add(test.actuator, False, test_p, test_s)
 
-        print("_test_fa", fa.actuator_id)
+                await command(
+                    self,
+                    self.m1m3.remote.cmd_forceActuatorBumpTest,
+                    actuatorId=test.actuator.actuator_id,
+                    testPrimary=test_p,
+                    testSecondary=test_s,
+                )
 
-        await command(
-            self,
-            self.m1m3.remote.cmd_forceActuatorBumpTest,
-            actuatorId=fa.actuator_id,
-            testPrimary=test_p,
-            testSecondary=test_s,
-        )
+                self.kill_bump_test_button.setText(
+                    f"Stop bump test FA ID {test.actuator.actuator_id}"
+                )
 
-        self._test_await_confirmation.set_wait(fa.z_index, test_p, fa.s_index, test_s)
-        self.kill_bump_test_button.setText(f"Stop bump test FA ID {fa.actuator_id}")
+            await self._runner.wait_finish(20)
+            print("Passed:", self._runner.passed)
+            print("Failed:", self._runner.failed)
+            self._runner = None
+        except TimeoutError as ex:
+            print(ex)
 
     @asyncSlot()
     async def issue_command_kill_bump_test(self) -> None:
@@ -348,7 +306,6 @@ class BumpTestPageWidget(QWidget):
             False,
         )
         await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
-        self._test_await_confirmation.reset()
 
     @Slot()
     def detailed_state_data(self, data: BaseMsgType) -> None:
@@ -368,8 +325,6 @@ class BumpTestPageWidget(QWidget):
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        tested_fas = self.get_tested_fas(data.primaryTest, data.secondaryTest)
-
         test_distance = self._bump_test_minimal_distance()
 
         # list display
@@ -381,11 +336,12 @@ class BumpTestPageWidget(QWidget):
 
             def get_color(value: int) -> QColor:
                 if value == MTM1M3.BumpTest.NOTTESTED:
-                    return (
-                        Qt.cyan
-                        if can_be_tested(fa, tested_fas, test_distance)
-                        else Qt.gray
-                    )
+                    if (
+                        self._runner is not None
+                        and self._runner.running.distance(fa) <= test_distance
+                    ):
+                        return Qt.gray
+                    return Qt.cyan
                 elif value == MTM1M3.BumpTest.TRIGGERED:
                     return Colors.WARNING
                 elif value == MTM1M3.BumpTest.PASSED:
@@ -399,7 +355,6 @@ class BumpTestPageWidget(QWidget):
             remove = True
 
             if is_tested(data.primaryTest[fa.z_index]):
-                self._test_await_confirmation.reset_primary(fa.z_index)
                 self.progress_widget.primary_progress(fa, data.primaryTest[fa.z_index])
                 remove = False
 
@@ -410,7 +365,6 @@ class BumpTestPageWidget(QWidget):
                 stage = data.secondaryTest[fa.s_index]
 
                 if is_tested(stage):
-                    self._test_await_confirmation.reset_secondary(fa.s_index)
                     self.progress_widget.secondary_progress(fa, stage)
                     remove = False
 
@@ -425,6 +379,9 @@ class BumpTestPageWidget(QWidget):
                 self.progress_widget.remove(fa)
                 self.force_charts.remove(fa)
 
+        if self._runner is not None:
+            self._runner.force_actuator_bump_test_status(data)
+
         # no tests running..
         # first check that we are still in PARKEDENGINEERING
         detailed_state = self.m1m3.remote.evt_detailedState.get()
@@ -436,24 +393,15 @@ class BumpTestPageWidget(QWidget):
             self.kill_bump_test_button.setEnabled(False)
             return
 
-        async with self._lock:
-            selected = self.actuators_table.selectedItems()
-            if len(selected) > 0:
-                self.kill_bump_test_button.setEnabled(True)
-                self._test_running = True
+        if self._runner is not None:
+            self.kill_bump_test_button.setEnabled(True)
 
-                await self._test_items(selected)
-
-            elif self._test_running:
-                self.bump_test_all_button.setEnabled(True)
-                self.bump_test_button.setEnabled(self._any_actuator())
-                self.kill_bump_test_button.setEnabled(False)
-                self._test_running = False
+        else:
+            self.bump_test_all_button.setEnabled(True)
+            self.bump_test_button.setEnabled(self._any_actuator())
+            self.kill_bump_test_button.setEnabled(False)
 
     # helper functions. Helps correctly enable/disable Run bump test button.
-    def _any_cylinder_running(self) -> bool:
-        return self._test_running is True and self._any_actuator()
-
     def _any_actuator(self) -> bool:
         return len(self.actuators_table.selectedItems()) > 0
 
@@ -462,38 +410,3 @@ class BumpTestPageWidget(QWidget):
         if data is None:
             return 10
         return data.bumpTestMinimalDistance
-
-    def get_tested_fas(
-        self, primary_status: list[int], secondary_status: list[int]
-    ) -> list[ForceActuatorData]:
-        """Returns currently tested force actuators.
-
-        Parameters
-        ----------
-        primary_status : list[int]
-            Array of primary cylinder/axis bump test states
-        secondary_status : list[int]
-            List of secondary cylinder/axis bump test states
-
-        Returns
-        -------
-        tested : list[ForceActuatorData]
-            Currently tested force actuators.
-        """
-        return [
-            fa
-            for fa in FATable
-            if (
-                (
-                    is_tested(primary_status[fa.z_index])
-                    or self._test_await_confirmation.wait_primary(fa.z_index)
-                )
-                or (
-                    fa.s_index is not None
-                    and (
-                        is_tested(secondary_status[fa.s_index])
-                        or self._test_await_confirmation.wait_secondary(fa.s_index)
-                    )
-                )
-            )
-        ]

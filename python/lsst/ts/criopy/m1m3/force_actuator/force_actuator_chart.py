@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import Slot
@@ -33,7 +34,7 @@ class ForceActuatorChart(TimeChartView):
 
         self.fa = fa
 
-        def add_chart()->None:
+        def add_chart() -> None:
             axis: list[str] = []
             if fa.x_index is not None:
                 axis.append("X")
@@ -41,7 +42,9 @@ class ForceActuatorChart(TimeChartView):
                 axis.append("Y")
             axis.append("Z")
             items = (
-                ["Applied " + a for a in axis] + [None] + ["Measured " + a for a in axis]
+                ["Applied " + a for a in axis]
+                + [None]
+                + ["Measured " + a for a in axis]
             )
 
             self.setChart(TimeChart({"Force (N)": items}))
@@ -60,7 +63,6 @@ class ForceActuatorChart(TimeChartView):
             chart_data.append(data.zForces[self.fa.z_index])
 
         self.chart().append(data.timestamp, chart_data, cache_index=0, update=True)
-
 
     def force_actuator_data(self, data: BaseMsgType) -> None:
         """Adds measured forces to graph."""
