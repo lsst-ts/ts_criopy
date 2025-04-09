@@ -29,25 +29,24 @@ from ...salcomm import MetaSAL
 
 
 class ForceActuatorChart(TimeChartView):
-    def __init__(self, fa: ForceActuatorData):
+    def __init__(self, fa: ForceActuatorData, ready: asyncio.Event):
         super().__init__()
 
         self.fa = fa
 
-        def add_chart() -> None:
-            axis: list[str] = []
-            if fa.x_index is not None:
-                axis.append("X")
-            if fa.y_index is not None:
-                axis.append("Y")
-            axis.append("Z")
-            items = (
-                ["Applied " + a for a in axis]
-                + [None]
-                + ["Measured " + a for a in axis]
-            )
+        axis: list[str] = []
+        if fa.x_index is not None:
+            axis.append("X")
+        if fa.y_index is not None:
+            axis.append("Y")
+        axis.append("Z")
+        items = (
+            ["Applied " + a for a in axis] + [None] + ["Measured " + a for a in axis]
+        )
 
+        def add_chart() -> None:
             self.setChart(TimeChart({"Force (N)": items}))
+            ready.set()
 
         asyncio.get_event_loop().call_soon(add_chart)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -88,7 +87,7 @@ class ForceChartWidget(QWidget):
         m1m3.appliedForces.connect(self.applied_forces)
         m1m3.forceActuatorData.connect(self.force_actuator_data)
 
-    def add(self, fa: ForceActuatorData) -> None:
+    async def add(self, fa: ForceActuatorData) -> None:
         for count in range(10):
             if self.layout().itemAtPosition(count % 2, int(count / 2)) is None:
                 break
@@ -97,7 +96,10 @@ class ForceChartWidget(QWidget):
             print("Already too much plots - not adding ", fa.actuator_id)
             return
 
-        chart = ForceActuatorChart(fa)
+        finished = asyncio.Event()
+        chart = ForceActuatorChart(fa, finished)
+        await finished.wait()
+
         self.actuators[fa.actuator_id] = chart
 
         self.layout().addWidget(chart, count % 2, int(count / 2))

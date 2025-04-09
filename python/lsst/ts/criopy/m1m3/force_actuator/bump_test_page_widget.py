@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import typing
 
 from lsst.ts.m1m3.utils import BumpTestKind, BumpTestRunner, ForceActuatorBumpTest
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -278,6 +279,7 @@ class BumpTestPageWidget(QWidget):
                     test_p = True
 
                 self.progress_widget.add(test.actuator, False, test_p, test_s)
+                await self.force_charts.add(test.actuator)
 
                 await command(
                     self,
@@ -327,6 +329,10 @@ class BumpTestPageWidget(QWidget):
 
         test_distance = self._bump_test_minimal_distance()
 
+        def remove_fa(fa: ForceActuatorData) -> None:
+            self.progress_widget.remove(fa)
+            self.force_charts.remove(fa)
+
         # list display
         for fa in FATable:
             actuator_id = fa.actuator_id
@@ -375,9 +381,14 @@ class BumpTestPageWidget(QWidget):
             else:
                 self.actuators_table.item(row, col_offset).setBackground(p_color)
 
-            if remove:
-                self.progress_widget.remove(fa)
-                self.force_charts.remove(fa)
+            if remove and (
+                self._runner is None
+                or (
+                    not self._runner.running.contains(fa)
+                    and not self._runner.todo.contains(fa)
+                )
+            ):
+                asyncio.get_event_loop().call_later(3, remove_fa, fa)
 
         if self._runner is not None:
             self._runner.force_actuator_bump_test_status(data)
