@@ -90,7 +90,7 @@ parser.add_argument(
     "-s",
     type=int,
     dest="size",
-    default=None,
+    default=-1,
     help=(
         "number of records to save in a file. Default to 86400 seconds"
         " (assuming --rotate isn't specified)"
