@@ -27,6 +27,7 @@ from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData, actuator_id_to_i
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
+    QCheckBox,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
@@ -158,6 +159,8 @@ class BumpTestPageWidget(QWidget):
             button.clicked.connect(clicked)
             return button
 
+        self.allow_parallel = QCheckBox("Run in parallel")
+
         self.bump_test_all_button = make_button("Bump test all", self.bump_test_all)
         self.bump_test_button = make_button(
             "Run bump test", self.send_bump_test_command
@@ -167,6 +170,7 @@ class BumpTestPageWidget(QWidget):
         )
 
         button_layout = QHBoxLayout()
+        button_layout.addWidget(self.allow_parallel)
         button_layout.addWidget(self.bump_test_all_button)
         button_layout.addWidget(self.bump_test_button)
         button_layout.addWidget(self.kill_bump_test_button)
@@ -238,8 +242,6 @@ class BumpTestPageWidget(QWidget):
         await self._test_items(self.actuators_table.selectedItems())
 
     async def _test_items(self, items: list[QTableWidgetItem]) -> None:
-        test_distance = self._bump_test_minimal_distance()
-
         todo: list[ForceActuatorBumpTest] = []
 
         for item in items:
@@ -268,7 +270,7 @@ class BumpTestPageWidget(QWidget):
 
         try:
             while True:
-                test = await self._runner.next(test_distance, 20)
+                test = await self._runner.next(self.test_distance(), 20)
                 if test is None:
                     break
                 test_p = False
@@ -307,6 +309,8 @@ class BumpTestPageWidget(QWidget):
             QTableWidgetSelectionRange(0, 0, self.actuators_table.rowCount() - 1, 11),
             False,
         )
+        if self._runner is not None:
+            self._runner.todo.clear()
         await command(self, self.m1m3.remote.cmd_killForceActuatorBumpTest)
 
     @Slot()
@@ -327,8 +331,6 @@ class BumpTestPageWidget(QWidget):
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        test_distance = self._bump_test_minimal_distance()
-
         def remove_fa(fa: ForceActuatorData) -> None:
             self.progress_widget.remove(fa)
             self.force_charts.remove(fa)
@@ -344,7 +346,7 @@ class BumpTestPageWidget(QWidget):
                 if value == MTM1M3.BumpTest.NOTTESTED:
                     if (
                         self._runner is not None
-                        and self._runner.running.distance(fa) <= test_distance
+                        and self._runner.running.distance(fa) <= self.test_distance()
                     ):
                         return Qt.gray
                     return Qt.cyan
@@ -416,7 +418,9 @@ class BumpTestPageWidget(QWidget):
     def _any_actuator(self) -> bool:
         return len(self.actuators_table.selectedItems()) > 0
 
-    def _bump_test_minimal_distance(self) -> float:
+    def test_distance(self) -> float:
+        if not self.allow_parallel.isChecked():
+            return 200
         data = self.m1m3.remote.evt_forceActuatorSettings.get()
         if data is None:
             return 10
