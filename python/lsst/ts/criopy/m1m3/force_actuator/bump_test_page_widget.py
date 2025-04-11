@@ -23,7 +23,7 @@ import typing
 from lsst.ts.m1m3.utils import BumpTestKind, BumpTestRunner, ForceActuatorBumpTest
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATable, ForceActuatorData, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -331,9 +331,9 @@ class BumpTestPageWidget(QWidget):
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        def remove_fa(fa: ForceActuatorData) -> None:
-            self.progress_widget.remove(fa)
-            self.force_charts.remove(fa)
+        def remove_fa(actuator_id: int) -> None:
+            self.progress_widget.remove(actuator_id)
+            self.force_charts.remove(actuator_id)
 
         # list display
         for fa in FATable:
@@ -390,7 +390,7 @@ class BumpTestPageWidget(QWidget):
                     and not self._runner.todo.contains(fa)
                 )
             ):
-                asyncio.get_event_loop().call_later(3, remove_fa, fa)
+                asyncio.get_event_loop().call_later(3, remove_fa, fa.actuator_id)
 
         if self._runner is not None:
             self._runner.force_actuator_bump_test_status(data)

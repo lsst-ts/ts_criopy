@@ -104,11 +104,18 @@ class ForceChartWidget(QWidget):
 
         self.layout().addWidget(chart, count % 2, int(count / 2))
 
-    def remove(self, fa: ForceActuatorData) -> None:
-        if fa.actuator_id in self.actuators:
-            self.layout().removeWidget(self.actuators[fa.actuator_id])
-            self.actuators[fa.actuator_id].hide()
-            del self.actuators[fa.actuator_id]
+    def _remove(self, actuator_id: int) -> None:
+        acc = self.actuators[actuator_id]
+        self.layout().removeWidget(acc)
+        acc.hide()
+        del self.actuators[actuator_id]
+
+    def remove(self, actuator_id: int) -> None:
+        if actuator_id in self.actuators.keys():
+            self._remove(actuator_id)
+
+    def clear(self) -> None:
+        map(self._remove, self.actuators.keys())
 
     @Slot()
     def applied_forces(self, data: BaseMsgType) -> None:

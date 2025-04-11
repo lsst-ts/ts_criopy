@@ -42,6 +42,8 @@ class ActuatorBumpTestProgressBox(QGroupBox):
         "Failed timeout",
     ]
 
+    test_count = 0
+
     def __init__(
         self,
         fa: ForceActuatorData,
@@ -51,49 +53,56 @@ class ActuatorBumpTestProgressBox(QGroupBox):
     ):
         super().__init__(f"Actuator {fa.actuator_id}")
 
-        def progress_bar() -> QProgressBar:
-            bar = QProgressBar()
-            bar.setMaximum(MTM1M3.BumpTest.FAILED_TIMEOUT)
-            return bar
-
         self.primary: None | QProgressBar = None
         self.secondary: None | QProgressBar = None
 
-        progress_layout = QGridLayout()
+        self.setLayout(QGridLayout())
+
+        self.append(fa, cylinders, test_primary, test_secondary)
+
+        self.setMaximumWidth(410)
+
+    def append(
+        self,
+        fa: ForceActuatorData,
+        cylinders: bool,
+        test_primary: bool,
+        test_secondary: bool,
+    ) -> None:
+        layout = self.layout()
+
+        def progress_bar(label: str) -> QProgressBar:
+            layout.addWidget(QLabel(label), self.test_count, 0)
+            bar = QProgressBar()
+            bar.setMaximum(MTM1M3.BumpTest.FAILED_TIMEOUT)
+            layout.addWidget(bar, self.test_count, 1)
+            self.test_count += 1
+            return bar
 
         if test_primary:
-            primary_label = QLabel(
+            primary_label = (
                 f"Primary cylinder {fa.actuator_id} - {fa.z_index}"
                 if cylinders
                 else f"Z {fa.actuator_id} - {fa.z_index}"
             )
-            progress_layout.addWidget(primary_label, 0, 0)
-
-            self.primary = progress_bar()
-            progress_layout.addWidget(self.primary, 0, 1)
+            self.primary = progress_bar(primary_label)
 
         if test_secondary:
             if cylinders:
-                secondary_label = QLabel(
+                secondary_label = (
                     f"Secondary cylinder {fa.actuator_id} - {fa.s_index} ({fa.z_index})"
                 )
             else:
                 if fa.x_index is not None:
-                    secondary_label = QLabel(
+                    secondary_label = (
                         f"X {fa.actuator_id} - {fa.x_index} ({fa.z_index})"
                     )
                 else:
-                    secondary_label = QLabel(
+                    secondary_label = (
                         f"Y {fa.actuator_id} - {fa.y_index} ({fa.z_index})"
                     )
 
-            progress_layout.addWidget(secondary_label, 1, 0)
-
-            self.secondary = progress_bar()
-            progress_layout.addWidget(self.secondary, 1, 1)
-
-        self.setLayout(progress_layout)
-        self.setMaximumWidth(410)
+            self.secondary = progress_bar(secondary_label)
 
     def primary_progress(self, state: int) -> None:
         assert self.primary is not None
@@ -111,12 +120,12 @@ class ActuatorBumpTestProgressBox(QGroupBox):
 class BumpTestProgressWidget(QWidget):
     """Holds all tests currenlly in progress."""
 
+    tests: dict[int, ActuatorBumpTestProgressBox] = {}
+
     def __init__(self):
         super().__init__()
 
         layout = QVBoxLayout()
-
-        self.tests = {}
 
         self.setMinimumWidth(200)
         self.setMaximumWidth(420)
@@ -131,6 +140,12 @@ class BumpTestProgressWidget(QWidget):
         primary_test: bool,
         secondary_test: bool,
     ) -> None:
+        if fa.actuator_id in self.tests:
+            self.tests[fa.actuator_id].append(
+                fa, cylinders, primary_test, secondary_test
+            )
+            return
+
         progress = ActuatorBumpTestProgressBox(
             fa, cylinders, primary_test, secondary_test
         )
@@ -138,11 +153,22 @@ class BumpTestProgressWidget(QWidget):
         layout.insertWidget(layout.count() - 1, progress)
         self.tests[fa.actuator_id] = progress
 
-    def remove(self, fa: ForceActuatorData) -> None:
-        if fa.actuator_id in self.tests:
-            self.layout().removeWidget(self.tests[fa.actuator_id])
-            self.tests[fa.actuator_id].hide()
-            del self.tests[fa.actuator_id]
+    def _remove(self, actuator_id: int) -> None:
+        pb = self.tests[actuator_id]
+        self.layout().removeWidget(pb)
+        pb.hide()
+        del self.tests[actuator_id]
+
+    def remove(self, actuator_id: int) -> None:
+        if actuator_id in self.tests.keys():
+            if self.tests[actuator_id].test_count > 1:
+                self.tests[actuator_id].test_count -= 1
+                return
+            self._remove(actuator_id)
+
+    def clear(self) -> None:
+        """Remove all actuators progress boxes."""
+        map(self._remove, self.tests.keys())
 
     def primary_progress(self, fa: ForceActuatorData, state: int) -> None:
         self.tests[fa.actuator_id].primary_progress(state)
