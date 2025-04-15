@@ -52,8 +52,8 @@ class AbstractChart(QChart):
         self._next_update: float = 0.0
         self.update_interval = update_interval
 
-        self.updateTask: asyncio.Future | concurrent.futures.Future = asyncio.Future()
-        self.updateTask.set_result(None)
+        self.update_task: asyncio.Future | concurrent.futures.Future = asyncio.Future()
+        self.update_task.set_result(None)
 
     def findAxis(
         self, titleText: str, axisType: Qt.Orientation = Qt.Vertical
@@ -94,30 +94,30 @@ class AbstractChart(QChart):
             return
         self.removeSeries(s)
 
-    def clearData(self) -> None:
+    def clear_data(self) -> None:
         """Removes all data from the chart."""
         self.removeAllSeries()
         for a in self.axes(Qt.Vertical):
             self.removeAxis(a)
 
-    def _addSerie(self, name: str, axis: typing.Any) -> None:
+    def _add_serie(self, name: str, axis: typing.Any) -> None:
         raise NotImplementedError(
-            "AbstractChart._addSeries should not be instantiated directly"
+            "AbstractChart._add_serie should not be instantiated directly"
         )
 
-    def _attachSeries(self) -> None:
+    def _attach_series(self) -> None:
         raise NotImplementedError(
-            "AbstractChart._attachSeries should not be instantiated directly"
+            "AbstractChart._attach_series should not be instantiated directly"
         )
 
-    def _createCaches(
+    def _create_caches(
         self, items: dict[str, list[str | None]] | None, max_items: int = 50 * 30
     ) -> None:
         # prevents race conditions by processing any outstanding events
         # (paint,..) before manipulating axes. Lock would work as well, but as
         # we really care just about latest diagram repaint, better cancel what
         # shall anyway not make it to screen.
-        self.updateTask.cancel()
+        self.update_task.cancel()
         QApplication.instance().processEvents()
 
         for a in self.axes():
@@ -136,5 +136,5 @@ class AbstractChart(QChart):
                     data = [("timestamp", "f8")]
                 else:
                     data.append((d, "f8"))
-                    self._addSerie(d, axis[0])
+                    self._add_serie(d, axis[0])
             self._caches.append(TimeCache(max_items, data))

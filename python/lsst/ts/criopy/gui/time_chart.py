@@ -65,10 +65,10 @@ class TimeChart(AbstractChart):
         super().__init__(update_interval=update_interval)
         self.timeAxis: QDateTimeAxis | None = None
 
-        self._createCaches(items, max_items)
-        self._attachSeries()
+        self._create_caches(items, max_items)
+        self._attach_series()
 
-    def _addSerie(self, name: str, axis: str) -> None:
+    def _add_serie(self, name: str, axis: str) -> None:
         s = QLineSeries()
         s.setName(name)
         # TODO crashes (core dumps) on some systems. Need to investigate
@@ -84,7 +84,7 @@ class TimeChart(AbstractChart):
         self.addSeries(s)
         s.attachAxis(a)
 
-    def _attachSeries(self) -> None:
+    def _attach_series(self) -> None:
         # Caveat emptor, the order here is important. Hard to find, but the
         # order in which chart, axis and series are constructed and attached
         # should always be:
@@ -178,18 +178,18 @@ class TimeChart(AbstractChart):
 
         # replot if needed
         if update:
-            self.updateTask.cancel()
+            self.update_task.cancel()
             self._next_update = 0
 
         if (
             self._next_update < time.monotonic()
-            and self.updateTask.done()
+            and self.update_task.done()
             and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.updateTask = pool.submit(replot)
+                self.update_task = pool.submit(replot)
 
-    def clearData(self) -> None:
+    def clear_data(self) -> None:
         """Removes all data from the chart."""
         super().removeAllSeries()
 
@@ -233,7 +233,7 @@ class UserSelectedTimeChart(TimeChart):
                     continue
 
                 if self._signal is not None:
-                    self._signal.disconnect(self._appendData)
+                    self._signal.disconnect(self._append_data)
 
                 try:
                     unit_name = obj.formator.unit_name
@@ -243,8 +243,8 @@ class UserSelectedTimeChart(TimeChart):
                     except AttributeError:
                         unit_name = "Y"
 
-                self._createCaches({unit_name: [name]})
-                self._attachSeries()
+                self._create_caches({unit_name: [name]})
+                self._attach_series()
 
                 self._signal = s
                 assert self._signal is not None
@@ -252,13 +252,13 @@ class UserSelectedTimeChart(TimeChart):
                 self._name = name
                 self._index = index
 
-                self._signal.connect(self._appendData)
+                self._signal.connect(self._append_data)
                 self._next_update = 0
 
                 break
 
     @Slot()
-    def _appendData(self, data: BaseMsgType) -> None:
+    def _append_data(self, data: BaseMsgType) -> None:
         if self._name is None:
             return
 
