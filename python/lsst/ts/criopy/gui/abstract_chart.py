@@ -27,7 +27,7 @@ from PySide6.QtCharts import QAbstractAxis, QAbstractSeries, QChart
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QGraphicsItem
 
-from .. import TimeCache
+from ..time_cache import TimeCache
 
 __all__ = ["AbstractChart"]
 

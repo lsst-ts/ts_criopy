@@ -28,7 +28,6 @@ from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
-    QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QPushButton,
@@ -79,7 +78,6 @@ class BumpTestPageWidget(QWidget):
 
         self._runner: BumpTestRunner | None = None
 
-        actuator_box = QGroupBox("Actuator")
         self.actuators_table = QTableWidget(
             int(max([row.actuator_id for row in FATable])) % 100, 12
         )
@@ -136,17 +134,12 @@ class BumpTestPageWidget(QWidget):
         )
 
         self.actuators_table.itemSelectionChanged.connect(self.item_selection_changed)
-        self.actuators_table.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.MinimumExpanding
-        )
-        self.actuators_table.setFixedWidth(
+        self.actuators_table.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.actuators_table.setMinimumWidth(
             sum([self.actuators_table.columnWidth(c) for c in range(12)])
-            + self.actuators_table.verticalScrollBar().geometry().height() / 2
-            + 1
+            + self.actuators_table.verticalScrollBar().geometry().width()
+            + 2
         )
-        actuator_layout = QVBoxLayout()
-        actuator_layout.addWidget(self.actuators_table)
-        actuator_box.setLayout(actuator_layout)
 
         self.progress_widget = BumpTestProgressWidget(self.m1m3)
         self.force_charts = ForceChartWidget()
@@ -157,14 +150,14 @@ class BumpTestPageWidget(QWidget):
             button.clicked.connect(clicked)
             return button
 
-        self.allow_parallel = QCheckBox("Run in parallel")
+        self.allow_parallel = QCheckBox("Run in &parallel")
 
-        self.bump_test_all_button = make_button("Bump test all", self.bump_test_all)
+        self.bump_test_all_button = make_button("Bump test &all", self.bump_test_all)
         self.bump_test_button = make_button(
-            "Run bump test", self.send_bump_test_command
+            "Run &bump test", self.send_bump_test_command
         )
         self.kill_bump_test_button = make_button(
-            "Stop bump test(s)", self.issue_command_kill_bump_test
+            "&Stop bump test(s)", self.issue_command_kill_bump_test
         )
 
         button_layout = QHBoxLayout()
@@ -174,7 +167,7 @@ class BumpTestPageWidget(QWidget):
         button_layout.addWidget(self.kill_bump_test_button)
 
         forms = QHBoxLayout()
-        forms.addWidget(actuator_box)
+        forms.addWidget(self.actuators_table)
         forms.addWidget(self.progress_widget)
         forms.addWidget(LogWidget(self.m1m3))
 
@@ -333,16 +326,18 @@ class BumpTestPageWidget(QWidget):
 
         def remove_fa(actuator_id: int, primary: bool) -> None:
             self.progress_widget.model().remove(actuator_id, primary)
-            # self.force_charts.remove(actuator_id)
 
         def try_remove(actuator_id: int, primary: bool) -> None:
-            if self._runner is None or (
-                not self._runner.running.contains(fa)
-                and not self._runner.todo.contains(fa)
+            if self._runner is None or not (
+                self._runner.running.contains(fa, primary)
+                or self._runner.todo.contains(fa, primary)
             ):
                 asyncio.get_event_loop().call_later(
-                    2, remove_fa, fa.actuator_id, primary
+                    1, remove_fa, fa.actuator_id, primary
                 )
+
+        if self._runner is not None:
+            self._runner.force_actuator_bump_test_status(data)
 
         # list display
         for fa in FATable:
@@ -352,12 +347,14 @@ class BumpTestPageWidget(QWidget):
             col_offset = 3 * (int(actuator_id / 100) - 1)
 
             def get_color(value: int) -> QColor:
+                if (
+                    self._runner is not None
+                    and not (self._runner.running.empty() and self._runner.todo.empty())
+                    and self._runner.todo.contains(fa)
+                    and self._runner.running.distance(fa) <= self.test_distance()
+                ):
+                    return Qt.gray
                 if value == MTM1M3.BumpTest.NOTTESTED:
-                    if (
-                        self._runner is not None
-                        and self._runner.running.distance(fa) <= self.test_distance()
-                    ):
-                        return Qt.gray
                     return Qt.cyan
                 elif value == MTM1M3.BumpTest.TRIGGERED:
                     return Colors.WARNING
@@ -371,6 +368,7 @@ class BumpTestPageWidget(QWidget):
 
             stage = data.primaryTest[fa.z_index]
             self.progress_widget.progress(fa, True, stage)
+            self.force_charts.progress(fa, True, stage)
             if not (is_tested(stage)):
                 try_remove(fa.actuator_id, True)
 
@@ -381,6 +379,7 @@ class BumpTestPageWidget(QWidget):
                 stage = data.secondaryTest[fa.s_index]
 
                 self.progress_widget.progress(fa, False, stage)
+                self.force_charts.progress(fa, False, stage)
 
                 if not (is_tested(stage)):
                     try_remove(fa.actuator_id, False)
@@ -391,9 +390,6 @@ class BumpTestPageWidget(QWidget):
                     self.actuators_table.item(row, col_offset).setBackground(p_color)
             else:
                 self.actuators_table.item(row, col_offset).setBackground(p_color)
-
-        if self._runner is not None:
-            self._runner.force_actuator_bump_test_status(data)
 
         # no tests running..
         # first check that we are still in PARKEDENGINEERING

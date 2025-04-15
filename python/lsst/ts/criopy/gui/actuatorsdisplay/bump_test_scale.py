@@ -32,6 +32,7 @@ class BumpTestScale(EnumScale):
         super().__init__(
             {
                 BumpTest.NOTTESTED: ("Not Tested", Qt.gray),
+                BumpTest.TRIGGERED: ("Triggered", Qt.cyan),
                 BumpTest.TESTINGPOSITIVE: ("Testing +", Qt.blue),
                 BumpTest.TESTINGPOSITIVEWAIT: ("Testing + Wait", Qt.darkBlue),
                 BumpTest.TESTINGNEGATIVE: ("Testing -", Qt.yellow),
@@ -39,23 +40,23 @@ class BumpTestScale(EnumScale):
                 BumpTest.PASSED: ("Passed", Colors.OK),
                 BumpTest.FAILED_TIMEOUT: ("Failed timeout", Colors.ERROR),
                 BumpTest.FAILED_TESTEDPOSITIVE_OVERSHOOT: (
-                    "Failed tested positive overshoot",
+                    "Fai + overshoot",
                     Colors.ERROR,
                 ),
                 BumpTest.FAILED_TESTEDPOSITIVE_UNDERSHOOT: (
-                    "Failed tested positive unershoot",
+                    "Fail + undershoot",
                     Colors.ERROR,
                 ),
                 BumpTest.FAILED_TESTEDNEGATIVE_OVERSHOOT: (
-                    "Failed tested negative overshoot",
+                    "Fail - overshoot",
                     Colors.ERROR,
                 ),
                 BumpTest.FAILED_TESTEDNEGATIVE_UNDERSHOOT: (
-                    "Failed tested negative unershoot",
+                    "Fail - undershoot",
                     Colors.ERROR,
                 ),
                 BumpTest.FAILED_NONTESTEDPROBLEM: (
-                    "Failed on non-tested actuator",
+                    "Fail no-tested",
                     Colors.ERROR,
                 ),
             }

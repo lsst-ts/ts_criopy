@@ -29,6 +29,7 @@ from PySide6.QtCore import QDateTime, QPointF, Qt, Signal, Slot
 from PySide6.QtGui import QContextMenuEvent, QPainter
 from PySide6.QtWidgets import QMenu
 
+from ..time_cache import TimeCache
 from .abstract_chart import AbstractChart
 from .custom_labels import UnitLabel
 
@@ -116,7 +117,8 @@ class TimeChart(AbstractChart):
         update: bool = False,
     ) -> None:
         """Add data to a serie. Creates axis and serie if needed. Shrink if
-        more than expected elements are stored.
+        more than expected elements are stored. Redraw plot data if needed or
+        requested.
 
         Parameters
         ----------
@@ -139,43 +141,6 @@ class TimeChart(AbstractChart):
 
         cache.append(tuple([timestamp * 1000.0] + data))
 
-        def replot() -> None:
-            if self.timeAxis is None:
-                return
-
-            axis = self.axes(Qt.Vertical)[axis_index]
-            d_min = d_max = None
-            for n in cache.columns()[1:]:
-                serie = self.findSerie(n)
-                if serie is None or serie.isVisible() is False:
-                    continue
-
-                data = cache[n]
-                if d_min is None:
-                    d_min = min(data)
-                    d_max = max(data)
-                else:
-                    d_min = min(d_min, min(data))
-                    d_max = max(d_max, max(data))
-                points = [QPointF(*i) for i in zip(cache["timestamp"], data)]
-
-                serie.replace(points)
-
-            self.timeAxis.setRange(
-                *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()]
-            )
-            if d_min == d_max:
-                if d_min == 0 or d_min is None or d_max is None:
-                    d_min = -1
-                    d_max = 1
-                else:
-                    d_min -= d_min * 0.05
-                    d_max += d_max * 0.05
-
-            axis.setRange(d_min, d_max)
-
-            self._next_update = time.monotonic() + self.update_interval
-
         # replot if needed
         if update:
             self.update_task.cancel()
@@ -187,7 +152,72 @@ class TimeChart(AbstractChart):
             and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.update_task = pool.submit(replot)
+                self.update_task = pool.submit(self._replot, axis_index, cache)
+
+            self._next_update = time.monotonic() + self.update_interval
+
+    def replace(self, caches: list[TimeCache]) -> None:
+        self._caches = caches
+        self.resync()
+
+    def resync(self) -> None:
+        def update_all():
+            try:
+                for cache in self._caches:
+                    self._replot(0, cache)
+            except Exception as ex:
+                print("Exception updating", str(ex), str(cache))
+
+        self.update_task.cancel()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            self.update_task = pool.submit(update_all)
+        self._next_update = time.monotonic() + self.update_interval
+
+    def _replot(self, axis_index: int, cache: TimeCache) -> None:
+        """Updates given cache.
+
+        Parameters
+        ----------
+        cache : TimeCache
+            Time cache from which data shall be updated.
+        """
+        if self.timeAxis is None:
+            return
+
+        axis = self.axes(Qt.Vertical)[axis_index]
+        d_min = d_max = None
+        for n in cache.columns()[1:]:
+            serie = self.findSerie(n)
+            if serie is None or serie.isVisible() is False:
+                continue
+
+            if cache.empty():
+                continue
+
+            data = cache[n]
+            if d_min is None:
+                d_min = min(data)
+                d_max = max(data)
+            else:
+                d_min = min(d_min, min(data))
+                d_max = max(d_max, max(data))
+
+            points = [QPointF(*i) for i in zip(cache["timestamp"], data)]
+
+            serie.replace(points)
+
+        self.timeAxis.setRange(
+            *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()]
+        )
+        if d_min == d_max:
+            if d_min == 0 or d_min is None or d_max is None:
+                d_min = -1
+                d_max = 1
+            else:
+                d_min -= d_min * 0.05
+                d_max += d_max * 0.05
+
+        axis.setRange(d_min, d_max)
 
     def clear_data(self) -> None:
         """Removes all data from the chart."""

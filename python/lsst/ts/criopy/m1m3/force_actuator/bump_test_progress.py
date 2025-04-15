@@ -30,11 +30,12 @@ from .bump_test_status_item import BumpTestStatusItem
 
 
 class BumpTestModel(QStandardItemModel):
+    APPLIED_DATA = Qt.UserRole + 1
+    MEASURED_DATA = Qt.UserRole + 2
+
     def __init__(self, m1m3: MetaSAL):
         super().__init__(0, 4)
-        self.setHorizontalHeaderLabels(
-            ["Actuator ID", "Axis Index", "Kind", "Progress"]
-        )
+        self.setHorizontalHeaderLabels(["AccID", "Index", "Kind", "Progress"])
 
         m1m3.appliedForces.connect(self.applied_forces)
         m1m3.forceActuatorData.connect(self.force_actuator_data)
@@ -42,15 +43,12 @@ class BumpTestModel(QStandardItemModel):
     def append(
         self, fa: ForceActuatorData, kind: BumpTestKind
     ) -> tuple[TimeCache, TimeCache]:
-        fields = [("timestamp", "f8")]
+        time_field = [("timestamp", "f8")]
         if kind == BumpTestKind.AXIS_X:
-            fields.append(("X force", "f4"))
             axis_index = fa.x_index
         elif kind == BumpTestKind.AXIS_Y:
-            fields.append(("Y force", "f4"))
             axis_index = fa.y_index
         elif kind == BumpTestKind.AXIS_Z:
-            fields.append(("Z force", "f4"))
             axis_index = fa.z_index
 
         row = [
@@ -62,12 +60,18 @@ class BumpTestModel(QStandardItemModel):
 
         row[3].setBackground(Qt.GlobalColor.gray)
 
-        row[3].setData(TimeCache(1000, fields), Qt.UserRole + 1)
-        row[3].setData(TimeCache(1000, fields), Qt.UserRole + 2)
+        row[3].setData(
+            TimeCache(1000, time_field + [(f"Applied {str(kind)}", "f4")]),
+            self.APPLIED_DATA,
+        )
+        row[3].setData(
+            TimeCache(1000, time_field + [(f"Measured {str(kind)}", "f4")]),
+            self.MEASURED_DATA,
+        )
 
         self.appendRow(row)
 
-        return (row[3].data(Qt.UserRole + 1), row[3].data(Qt.UserRole + 2))
+        return (row[3].data(self.APPLIED_DATA), row[3].data(self.MEASURED_DATA))
 
     def find_tests(self, actuator_id: int, primary: bool) -> int | None:
         items = self.findItems(str(actuator_id), column=0)
@@ -94,8 +98,8 @@ class BumpTestModel(QStandardItemModel):
         row = self.find_tests(actuator_id, primary)
         if row is not None:
             return (
-                self.item(row, 3).data(Qt.UserRole + 1),
-                self.item(row, 3).data(Qt.UserRole + 2),
+                self.item(row, 3).data(self.APPLIED_DATA),
+                self.item(row, 3).data(self.MEASURED_DATA),
             )
         return None
 
@@ -107,7 +111,7 @@ class BumpTestModel(QStandardItemModel):
     @Slot()
     def applied_forces(self, data: BaseMsgType) -> None:
         for r in range(self.rowCount()):
-            new = [data.timestamp]
+            new = [data.timestamp * 1000.0]
             fa = self.item(r, 0).data()
             kind = self.item(r, 2).data()
             if kind == BumpTestKind.AXIS_X:
@@ -117,12 +121,12 @@ class BumpTestModel(QStandardItemModel):
             else:
                 new.append(data.zForces[fa.z_index])
 
-            self.item(r, 3).data(Qt.UserRole + 1).append(tuple(new))
+            self.item(r, 3).data(self.APPLIED_DATA).append(tuple(new))
 
     @Slot()
     def force_actuator_data(self, data: BaseMsgType) -> None:
         for r in range(self.rowCount()):
-            new = [data.timestamp]
+            new = [data.timestamp * 1000.0]
             fa = self.item(r, 0).data()
             kind = self.item(r, 2).data()
             if kind == BumpTestKind.AXIS_X:
@@ -132,7 +136,7 @@ class BumpTestModel(QStandardItemModel):
             else:
                 new.append(data.zForce[fa.z_index])
 
-            self.item(r, 3).data(Qt.UserRole + 2).append(tuple(new))
+            self.item(r, 3).data(self.MEASURED_DATA).append(tuple(new))
 
 
 class BumpTestProgressWidget(QTreeView):
@@ -145,6 +149,8 @@ class BumpTestProgressWidget(QTreeView):
 
         self.setModel(BumpTestModel(self.m1m3))
         self.setSortingEnabled(True)
+        for col in range(self.model().columnCount()):
+            self.resizeColumnToContents(col)
 
         self.setMinimumWidth(200)
         self.setMaximumWidth(420)
