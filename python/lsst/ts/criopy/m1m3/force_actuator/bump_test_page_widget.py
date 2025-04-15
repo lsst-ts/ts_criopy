@@ -148,10 +148,8 @@ class BumpTestPageWidget(QWidget):
         actuator_layout.addWidget(self.actuators_table)
         actuator_box.setLayout(actuator_layout)
 
-        self.progress_widget = BumpTestProgressWidget()
-        self.force_charts = ForceChartWidget(self.m1m3)
-        self.force_charts.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.force_charts.setMinimumSize(200, 400)
+        self.progress_widget = BumpTestProgressWidget(self.m1m3)
+        self.force_charts = ForceChartWidget()
 
         def make_button(text: str, clicked: typing.Callable[[], None]) -> QPushButton:
             button = QPushButton(text)
@@ -175,14 +173,16 @@ class BumpTestPageWidget(QWidget):
         button_layout.addWidget(self.bump_test_button)
         button_layout.addWidget(self.kill_bump_test_button)
 
-        layout = QVBoxLayout()
         forms = QHBoxLayout()
         forms.addWidget(actuator_box)
         forms.addWidget(self.progress_widget)
         forms.addWidget(LogWidget(self.m1m3))
+
+        layout = QVBoxLayout()
         layout.addLayout(forms)
-        layout.addWidget(self.force_charts)
         layout.addLayout(button_layout)
+        layout.addWidget(self.force_charts)
+
         self.setLayout(layout)
 
         self.m1m3.detailedState.connect(self.detailed_state_data)
@@ -280,8 +280,8 @@ class BumpTestPageWidget(QWidget):
                 else:
                     test_p = True
 
-                self.progress_widget.add(test.actuator, False, test_p, test_s)
-                await self.force_charts.add(test.actuator)
+                (applied, measured) = self.progress_widget.add(test.actuator, test.kind)
+                self.force_charts.add(test.actuator, test.kind, applied, measured)
 
                 await command(
                     self,
@@ -331,9 +331,18 @@ class BumpTestPageWidget(QWidget):
         """Received when an actuator finish/start running bump tests or the
         actuator reports progress of the bump test."""
 
-        def remove_fa(actuator_id: int) -> None:
-            self.progress_widget.remove(actuator_id)
-            self.force_charts.remove(actuator_id)
+        def remove_fa(actuator_id: int, primary: bool) -> None:
+            self.progress_widget.model().remove(actuator_id, primary)
+            # self.force_charts.remove(actuator_id)
+
+        def try_remove(actuator_id: int, primary: bool) -> None:
+            if self._runner is None or (
+                not self._runner.running.contains(fa)
+                and not self._runner.todo.contains(fa)
+            ):
+                asyncio.get_event_loop().call_later(
+                    2, remove_fa, fa.actuator_id, primary
+                )
 
         # list display
         for fa in FATable:
@@ -360,21 +369,21 @@ class BumpTestPageWidget(QWidget):
                     return Qt.magenta
                 return Qt.transparent
 
-            remove = True
+            stage = data.primaryTest[fa.z_index]
+            self.progress_widget.progress(fa, True, stage)
+            if not (is_tested(stage)):
+                try_remove(fa.actuator_id, True)
 
-            if is_tested(data.primaryTest[fa.z_index]):
-                self.progress_widget.primary_progress(fa, data.primaryTest[fa.z_index])
-                remove = False
-
-            p_color = get_color(data.primaryTest[fa.z_index])
+            p_color = get_color(stage)
             self.actuators_table.item(row, col_offset + 1).setBackground(p_color)
 
             if fa.s_index is not None:
                 stage = data.secondaryTest[fa.s_index]
 
-                if is_tested(stage):
-                    self.progress_widget.secondary_progress(fa, stage)
-                    remove = False
+                self.progress_widget.progress(fa, False, stage)
+
+                if not (is_tested(stage)):
+                    try_remove(fa.actuator_id, False)
 
                 s_color = get_color(stage)
                 self.actuators_table.item(row, col_offset + 2).setBackground(s_color)
@@ -382,15 +391,6 @@ class BumpTestPageWidget(QWidget):
                     self.actuators_table.item(row, col_offset).setBackground(p_color)
             else:
                 self.actuators_table.item(row, col_offset).setBackground(p_color)
-
-            if remove and (
-                self._runner is None
-                or (
-                    not self._runner.running.contains(fa)
-                    and not self._runner.todo.contains(fa)
-                )
-            ):
-                asyncio.get_event_loop().call_later(3, remove_fa, fa.actuator_id)
 
         if self._runner is not None:
             self._runner.force_actuator_bump_test_status(data)

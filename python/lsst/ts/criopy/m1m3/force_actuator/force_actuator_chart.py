@@ -19,110 +19,130 @@
 
 import asyncio
 
-from lsst.ts.salobj import BaseMsgType
+from lsst.ts.m1m3.utils import BumpTestKind
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
-from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QGridLayout, QSizePolicy, QWidget
+from PySide6.QtCore import QItemSelection, Qt, Slot
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QTreeView, QWidget
 
 from ...gui import TimeChart, TimeChartView
-from ...salcomm import MetaSAL
+from ...time_cache import TimeCache
 
 
 class ForceActuatorChart(TimeChartView):
-    def __init__(self, fa: ForceActuatorData, ready: asyncio.Event):
+    def __init__(
+        self,
+        fa: ForceActuatorData,
+        kind: BumpTestKind,
+        applied: TimeCache,
+        measured: TimeCache,
+    ):
         super().__init__()
 
-        self.fa = fa
-
-        axis: list[str] = []
-        if fa.x_index is not None:
-            axis.append("X")
-        if fa.y_index is not None:
-            axis.append("Y")
-        axis.append("Z")
-        items = (
-            ["Applied " + a for a in axis] + [None] + ["Measured " + a for a in axis]
-        )
+        axis = str(kind)
 
         def add_chart() -> None:
-            self.setChart(TimeChart({"Force (N)": items}))
-            ready.set()
+            self.setChart(
+                TimeChart(
+                    {"Force (N)": [f"Applied {axis}", f"Measured {axis}"]}, 50 * 9, 2
+                )
+            )
 
         asyncio.get_event_loop().call_soon(add_chart)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
-    def applied_forces(self, data: BaseMsgType) -> None:
-        """Adds applied forces to graph."""
-        chart_data: list[float] = []
-        if self.fa.x_index is not None:
-            chart_data.append(data.xForces[self.fa.x_index])
-        if self.fa.y_index is not None:
-            chart_data.append(data.yForces[self.fa.y_index])
-        if self.fa.z_index is not None:
-            chart_data.append(data.zForces[self.fa.z_index])
+        # self.chart().append(data.timestamp, chart_data,
+        # cache_index=0, update=True)
+        # self.chart().append(data.timestamp,
+        # chart_data, cache_index=1, update=True)
 
-        self.chart().append(data.timestamp, chart_data, cache_index=0, update=True)
 
-    def force_actuator_data(self, data: BaseMsgType) -> None:
-        """Adds measured forces to graph."""
-        chart_data: list[float] = []
-        if self.fa.x_index is not None:
-            chart_data.append(data.xForce[self.fa.x_index])
-        if self.fa.y_index is not None:
-            chart_data.append(data.yForce[self.fa.y_index])
-        if self.fa.z_index is not None:
-            chart_data.append(data.zForce[self.fa.z_index])
+class ChartModel(QStandardItemModel):
 
-        self.chart().append(data.timestamp, chart_data, cache_index=1, update=True)
+    def __init__(self):
+        super().__init__(0, 5)
+        self.setHorizontalHeaderLabels(["Actuator ID", "Kind", "State", "Start", "End"])
+
+
+class ChartView(QTreeView):
+    def __init__(self):
+        super().__init__()
+
+        self.setSelectionBehavior(QTreeView.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
+
+    def add(
+        self,
+        fa: ForceActuatorData,
+        kind: BumpTestKind,
+        applied_forces: TimeCache,
+        measured_forces: TimeCache,
+    ) -> None:
+        row = [
+            QStandardItem(s) for s in [str(fa.actuator_id), str(kind), "--", "--", "--"]
+        ]
+        row[0].setData(fa)
+        row[1].setData(kind)
+        row[2].setData(applied_forces, Qt.UserRole + 1)
+        row[2].setData(measured_forces, Qt.UserRole + 2)
+
+        self.model().appendRow(row)
+
+    @Slot(QItemSelection, QItemSelection)
+    def selectionChanged(
+        self, selected: QItemSelection, deselected: QItemSelection
+    ) -> None:
+        super().selectionChanged(selected, deselected)
+        if selected.count() > 0:
+            row = selected.front().indexes()[0].row()
+            self.parent().new_data(
+                self.model().item(row, 0).data(),
+                self.model().item(row, 1).data(),
+                self.model().item(row, 2).data(Qt.UserRole + 1),
+                self.model().item(row, 2).data(Qt.UserRole + 2),
+            )
 
 
 class ForceChartWidget(QWidget):
-    def __init__(self, m1m3: MetaSAL):
+    def __init__(self):
         super().__init__()
 
-        self.actuators: dict[int, ForceActuatorChart] = {}
+        layout = QHBoxLayout()
 
-        self.setLayout(QGridLayout())
+        self.caches = ChartView()
+        self.caches.setModel(ChartModel())
+        self.caches.setSortingEnabled(True)
+        self.caches.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
-        m1m3.appliedForces.connect(self.applied_forces)
-        m1m3.forceActuatorData.connect(self.force_actuator_data)
+        self.chart = QWidget()
+        self.chart.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
 
-    async def add(self, fa: ForceActuatorData) -> None:
-        for count in range(10):
-            if self.layout().itemAtPosition(count % 2, int(count / 2)) is None:
-                break
+        layout.addWidget(self.caches)
+        layout.addWidget(self.chart)
 
-        if count >= 10:
-            print("Already too much plots - not adding ", fa.actuator_id)
-            return
+        self.setLayout(layout)
 
-        finished = asyncio.Event()
-        chart = ForceActuatorChart(fa, finished)
-        await finished.wait()
-
-        self.actuators[fa.actuator_id] = chart
-
-        self.layout().addWidget(chart, count % 2, int(count / 2))
-
-    def _remove(self, actuator_id: int) -> None:
-        acc = self.actuators[actuator_id]
-        self.layout().removeWidget(acc)
-        acc.hide()
-        del self.actuators[actuator_id]
-
-    def remove(self, actuator_id: int) -> None:
-        if actuator_id in self.actuators.keys():
-            self._remove(actuator_id)
+    def add(
+        self,
+        fa: ForceActuatorData,
+        kind: BumpTestKind,
+        applied_forces: TimeCache,
+        measured_forces: TimeCache,
+    ) -> None:
+        self.caches.add(fa, kind, applied_forces, measured_forces)
 
     def clear(self) -> None:
-        map(self._remove, self.actuators.keys())
+        self.caches.setModel(ChartModel())
 
-    @Slot()
-    def applied_forces(self, data: BaseMsgType) -> None:
-        for actuator in self.actuators.values():
-            actuator.applied_forces(data)
-
-    @Slot()
-    def force_actuator_data(self, data: BaseMsgType) -> None:
-        for actuator in self.actuators.values():
-            actuator.force_actuator_data(data)
+    def new_data(
+        self,
+        fa: ForceActuatorData,
+        kind: BumpTestKind,
+        applied: TimeChart,
+        measured: TimeChart,
+    ) -> None:
+        new_chart = ForceActuatorChart(fa, kind, applied, measured)
+        self.layout().replaceWidget(self.chart, new_chart)
+        self.chart = new_chart
