@@ -101,61 +101,64 @@ class TimeCache:
         self.data[self.current_index] = data
         self.current_index += 1
 
-    def startTime(self) -> float:
+    def start_time(self) -> float:
         """Return timestamp of the last data point.
 
         Returns
         -------
-        startTime : `float`
-            None if cache is empty. Otherwise timestamp of the first data
-            point.
+        start_time : `float`
+            Timestamp of the first data point.
 
         Raises
         ------
-        RuntimeError
+        ValueError
             When cache is empty.
 
         """
         if self.filled is False:
             if self.current_index > 0:
                 return self.data[0]["timestamp"]
-            raise RuntimeError("Cannot retrieve start time from empty TimeCache.")
+            raise ValueError("Cannot retrieve start time from empty TimeCache.")
 
         if self.current_index >= self._size:
             return self.data[0]["timestamp"]
         return self.data[self.current_index]["timestamp"]
 
-    def endTime(self) -> float:
+    def end_time(self) -> float:
         """Return timestamp of the last data point.
 
         Returns
         -------
-        endTime : `float`
-            None if cache is empty. Otherwise timestamp of the last data
-            point.
+        end_time : float
+            Timestamp of the last data point.
 
         Raises
         ------
-        RuntimeError
+        ValueError
             When cache is empty.
         """
         if self.current_index == 0:
             if self.filled is False:
-                raise RuntimeError("Cannot retrieve end time from empty TimeCache.")
+                raise ValueError("Cannot retrieve end time from empty TimeCache.")
             return self.data[-1]["timestamp"]
         return self.data[self.current_index - 1]["timestamp"]
 
-    def timeRange(self) -> tuple[float, float]:
+    def time_range(self) -> tuple[float, float]:
         """Returns timestamp range.
 
         Returns
         -------
-        startTime : `float`
-            Equals startTime() call.
-        endTime : `float`
-            Equals endTime() call.
+        start_time : float
+            Equals start_time() call.
+        end_time : float | None
+            Equals end_time() call.
+
+        Raises
+        ------
+        ValueError
+            When cache is empty.
         """
-        return (self.startTime(), self.endTime())
+        return (self.start_time(), self.end_time())
 
     def _mapIndex(self, index: int) -> int:
         """Returns array index of item with index (from array start) index.
@@ -320,7 +323,7 @@ class TimeCache:
 
         Returns
         -------
-        columns : `[str]`
+        columns : [str]
             Columns names as specified in constructor.
         """
         return self.data.dtype.names
@@ -335,3 +338,13 @@ class TimeCache:
 
     def __len__(self) -> int:
         return self._size if self.filled else self.current_index
+
+    def empty(self) -> bool:
+        """Returns true if the cache is empty.
+
+        Returns
+        -------
+        empty : bool
+            True if the cache is empty.
+        """
+        return self.__len__() == 0

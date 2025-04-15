@@ -208,7 +208,7 @@ class CommandWidget(QWidget):
         self.cancel_button.setDisabled(True)
 
     async def _heater_fan_demand(self, **kwargs: typing.Any) -> None:
-        await command(self, self.m1m3ts.remote.cmd_heater_fan_demand, **kwargs)
+        await command(self, self.m1m3ts.remote.cmd_heaterFanDemand, **kwargs)
 
     def start_edit(self, kind: Buttons) -> None:
         if kind == Buttons.HEATERS:

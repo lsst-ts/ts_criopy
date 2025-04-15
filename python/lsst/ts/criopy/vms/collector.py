@@ -180,7 +180,7 @@ class Collector:
             if self.next_rotate is None:
                 if len(self.cache) == 0:
                     return False
-                self._need_rotate(self.cache.startTime())
+                self._need_rotate(self.cache.start_time())
 
             next_index = self.cache.timestampIndex(self.next_rotate)
             if next_index is None:
@@ -205,7 +205,9 @@ class Collector:
             self.h5file.close()
 
     def _h5_filled(self) -> bool:
-        et = self.cache.endTime()
+        if self.cache.empty():
+            return False
+        et = self.cache.end_time()
         if et is not None and self._need_rotate(et):
             return True
         return self.cache.h5_filled()

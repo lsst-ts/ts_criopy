@@ -114,7 +114,7 @@ class CacheWidget(DockWindow):
 
     @Slot()
     def cacheUpdated(
-        self, index: int, length: int, startTime: float, endTime: float
+        self, index: int, length: int, start_time: float, end_time: float
     ) -> None:
         """Process and plot data. Signaled when new data become available.
 
@@ -124,9 +124,9 @@ class CacheWidget(DockWindow):
             VMS index (1 - M1M3, 2 - M2, 3 - CameraRotator)
         length : `int`
             Number of points in cache.
-        startTime : `float`
+        start_time : `float`
             Start timestamp.
-        endTime : `float`
+        end_time : `float`
             End timestamp.
         """
         if self.callSetupAxes is True:

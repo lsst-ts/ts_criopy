@@ -31,20 +31,18 @@ fi
 par=$(echo $1 | tr [:lower:] [:upper:])
 shift
 
-cd repos/ts_criopy/bin
-
 case $par in
   SSGUI)
-    ./M1M3GUI
+    M1M3GUI
     ;;
   TSGUI)
-    ./M1M3TSGUI
+    M1M3TSGUI
     ;;
   VMSGUI)
-    ./VMSGUI
+    VMSGUI
     ;;
   VMSLOGGER)
-    ./VMSlogger $*
+    VMSlogger $*
     ;;
   *)
     echo "${Y}Unknown argument $par, executing shell${N}"
