@@ -87,12 +87,11 @@ class GraphPageWidget(Widget):
         for row in FATable:
             index = row.index
             data_index = row.get_index(self.field.value_index)
-            if enabled is not None and not enabled.forceActuatorEnabled[index]:
+            if values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
-                if values is not None:
-                    values[index] = None
-            elif values is None or data_index is None:
+            elif enabled is not None and not enabled.forceActuatorEnabled[index]:
                 state = ForceActuatorItem.STATE_INACTIVE
+                values[data_index] = None
             elif warning_data is not None or data_index is None:
                 state = get_warning(index)
             else:
