@@ -42,7 +42,7 @@ from qasync import asyncSlot
 
 from ...gui import Colors
 from ...gui.sal import LogWidget
-from ...salcomm import MetaSAL, command
+from ...salcomm import MetaSAL, command, warning
 from .bump_test_progress import BumpTestProgressWidget
 from .force_actuator_chart import ForceChartWidget
 
@@ -237,11 +237,24 @@ class BumpTestPageWidget(QWidget):
     async def _test_items(self, items: list[QTableWidgetItem]) -> None:
         todo: list[ForceActuatorBumpTest] = []
 
+        enabled_force_actuators = self.m1m3.remote.evt_enabledForceActuators.get()
+        if enabled_force_actuators is None:
+            warning(
+                self,
+                "Cannot retrieve disabled actuators.",
+                "<center><p>Cannot retrieve disabled actuators "
+                "(MTM1M3_logevent_enabledForceActuators).</p></center>",
+            )
+            return
+
         for item in items:
             item.setSelected(False)
 
             index = actuator_id_to_index(item.data(Qt.UserRole))
             if index is None:
+                continue
+
+            if not (enabled_force_actuators.forceActuatorEnabled[index]):
                 continue
 
             fa = FATable[index]
