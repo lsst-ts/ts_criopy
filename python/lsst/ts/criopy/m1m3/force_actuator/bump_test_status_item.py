@@ -42,10 +42,13 @@ class BumpTestStatusItem(QStandardItem):
         "Failed other FA",
     ]
 
+    STATE_DATA = Qt.UserRole + 10
+
     def __init__(self, text: str):
         super().__init__(text)
 
     def set_progress(self, state: int) -> None:
+        self.setData(state, self.STATE_DATA)
         self.setText(self.TEST_PROGRESS[state])
         if state < int(BumpTest.PASSED):
             self.setBackground(Qt.GlobalColor.yellow)
@@ -53,3 +56,6 @@ class BumpTestStatusItem(QStandardItem):
             self.setBackground(Qt.GlobalColor.green)
         else:
             self.setBackground(Qt.GlobalColor.red)
+
+    def state(self) -> int:
+        return self.data(self.STATE_DATA)

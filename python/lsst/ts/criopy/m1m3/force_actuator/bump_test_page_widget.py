@@ -315,6 +315,8 @@ class BumpTestPageWidget(QWidget):
     @asyncSlot()
     async def issue_command_kill_bump_test(self) -> None:
         """Kill bump test."""
+        self.force_charts.freeze()
+
         self.actuators_table.setRangeSelected(
             QTableWidgetSelectionRange(0, 0, self.actuators_table.rowCount() - 1, 11),
             False,

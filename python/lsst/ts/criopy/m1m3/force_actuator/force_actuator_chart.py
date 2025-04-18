@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-
 from lsst.ts.m1m3.utils import BumpTestKind
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QDateTime, QItemSelection, Qt, QTimer, Slot
@@ -38,7 +36,12 @@ from .bump_test_status_item import BumpTestStatusItem
 
 
 class ForceActuatorChart(TimeChartView):
-    def __init__(
+    def __init__(self):
+        super().__init__()
+
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+    def new_chart(
         self,
         fa: ForceActuatorData,
         kind: BumpTestKind,
@@ -50,19 +53,15 @@ class ForceActuatorChart(TimeChartView):
             50 * 9,
             2,
         )
-
-        super().__init__(chart)
-
-        def add_chart() -> None:
-            chart.replace([applied, measured])
-
-        asyncio.get_event_loop().call_soon(add_chart)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        chart.setTitle(f"FA {fa.actuator_id} {kind}")
+        chart.replace([applied, measured])
+        self.setChart(chart)
 
 
 class ChartModel(QStandardItemModel):
     APPLIED_DATA = Qt.UserRole + 1
     MEASURED_DATA = Qt.UserRole + 2
+    FREEZE_DATA = Qt.UserRole + 3
 
     def __init__(self):
         super().__init__(0, 5)
@@ -81,6 +80,7 @@ class ChartModel(QStandardItemModel):
         row[1].setData(kind)
         row[2].setData(applied_forces, self.APPLIED_DATA)
         row[2].setData(measured_forces, self.MEASURED_DATA)
+        row[2].setData(False, self.FREEZE_DATA)
 
         self.appendRow(row)
 
@@ -155,9 +155,12 @@ class ChartView(QTreeView):
         self.setMinimumWidth(270)
 
     def progress(self, actuator_id: int, primary: bool, state: int) -> None:
-        row = self.model().find_latest(actuator_id, primary)
+        model = self.model()
+        row = model.find_latest(actuator_id, primary)
         if row is not None:
-            self.model().item(row, 2).set_progress(state)
+            di = model.item(row, 2)
+            if not (di.data(ChartModel.FREEZE_DATA)):
+                di.set_progress(state)
 
     @Slot(QItemSelection, QItemSelection)
     def selectionChanged(
@@ -191,10 +194,8 @@ class ForceChartWidget(QWidget):
         cache_layout.addWidget(self.caches)
         cache_layout.addWidget(reset_button)
 
-        self.chart = QWidget()
-        self.chart.setSizePolicy(
-            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
-        )
+        self.chart = ForceActuatorChart()
+        self.chart.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
         layout.addLayout(cache_layout)
         layout.addWidget(self.chart)
@@ -233,6 +234,11 @@ class ForceChartWidget(QWidget):
     def progress(self, fa: ForceActuatorData, primary: bool, state: int) -> None:
         self.caches.progress(fa.actuator_id, primary, state)
 
+    def freeze(self):
+        model = self.caches.model()
+        for row in range(model.rowCount()):
+            model.item(row, 2).setData(True, ChartModel.FREEZE_DATA)
+
     def new_data(
         self,
         fa: ForceActuatorData,
@@ -240,7 +246,9 @@ class ForceChartWidget(QWidget):
         applied: TimeChart,
         measured: TimeChart,
     ) -> None:
-        new_chart = ForceActuatorChart(fa, kind, applied, measured)
-        self.layout().replaceWidget(self.chart, new_chart)
-        self.chart = new_chart
+        self._update_timer.stop()
+
+        self.chart.new_chart(fa, kind, applied, measured)
         self._last_update = 0
+
+        self._update_timer.start(200)

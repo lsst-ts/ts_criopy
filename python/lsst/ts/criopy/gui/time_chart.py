@@ -161,6 +161,11 @@ class TimeChart(AbstractChart):
         self.resync()
 
     def resync(self) -> None:
+        """Reload data from cache and plot those. This is usefull when data in
+        externally supplied TimeCaches are update outside of the graph - this
+        then replot data based on the current cache content.
+        """
+
         def update_all():
             try:
                 for cache in self._caches:
