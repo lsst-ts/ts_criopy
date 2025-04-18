@@ -43,17 +43,16 @@ class ForceActuatorChart(TimeChartView):
 
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
-    """Change chart data.
-
-    Parameters
-    ----------
-    applied : TimeCache
-        New applied forces.
-    measured : TimeCache
-        New measured forces.
-    """
-
     def new_data(self, applied: TimeCache, measured: TimeCache) -> None:
+        """Change chart data.
+
+        Parameters
+        ----------
+        applied : TimeCache
+            New applied forces.
+        measured : TimeCache
+            New measured forces.
+        """
         chart = TimeChart(
             {"Force (N)": [applied.columns()[1], None, measured.columns()[1]]},
             50 * 9,
