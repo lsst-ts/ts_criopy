@@ -61,11 +61,17 @@ class BumpTestModel(QStandardItemModel):
         row[3].setBackground(Qt.GlobalColor.gray)
 
         row[3].setData(
-            TimeCache(1000, time_field + [(f"Applied {str(kind)}", "f4")]),
+            TimeCache(
+                1000,
+                time_field + [(f"FA {fa.actuator_id} {kind} Applied", "f4")],
+            ),
             self.APPLIED_DATA,
         )
         row[3].setData(
-            TimeCache(1000, time_field + [(f"Measured {str(kind)}", "f4")]),
+            TimeCache(
+                1000,
+                time_field + [(f"FA {fa.actuator_id} {kind} Measured", "f4")],
+            ),
             self.MEASURED_DATA,
         )
 

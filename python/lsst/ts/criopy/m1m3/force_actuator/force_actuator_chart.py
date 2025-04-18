@@ -36,29 +36,46 @@ from .bump_test_status_item import BumpTestStatusItem
 
 
 class ForceActuatorChart(TimeChartView):
+    """Display chart with the actuator profile."""
+
     def __init__(self):
         super().__init__()
 
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
-    def new_chart(
-        self,
-        fa: ForceActuatorData,
-        kind: BumpTestKind,
-        applied: TimeCache,
-        measured: TimeCache,
-    ):
+    """Change chart data.
+
+    Parameters
+    ----------
+    applied : TimeCache
+        New applied forces.
+    measured : TimeCache
+        New measured forces.
+    """
+
+    def new_data(self, applied: TimeCache, measured: TimeCache) -> None:
         chart = TimeChart(
             {"Force (N)": [applied.columns()[1], None, measured.columns()[1]]},
             50 * 9,
             2,
         )
-        chart.setTitle(f"FA {fa.actuator_id} {kind}")
         chart.replace([applied, measured])
         self.setChart(chart)
 
 
 class ChartModel(QStandardItemModel):
+    """Model for storing force actuator test progress.
+
+    Attributes
+    ----------
+    APPLIED_DATA : int
+        Custom role of the applied data TimeCache.
+    MEASURED_DATA : int
+        Custom role of the measured data TimeCache.
+    FREEZE_DATA : int
+        Custom role turn to true when data shall not be updated.
+    """
+
     APPLIED_DATA = Qt.UserRole + 1
     MEASURED_DATA = Qt.UserRole + 2
     FREEZE_DATA = Qt.UserRole + 3
@@ -74,6 +91,19 @@ class ChartModel(QStandardItemModel):
         applied_forces: TimeCache,
         measured_forces: TimeCache,
     ) -> None:
+        """Add new row to data stored in the model.
+
+        Parameters
+        ----------
+        fa : ForceActuatorData
+            Force actuator being tested.
+        kind : BumpTestKind
+            Kind of the bump tests.
+        applied_forces : TimeCache
+            TimeCache with recorded applied data.
+        measured_forces : TimeCache
+            TimeCache with reocrded measured data.
+        """
         row = [QStandardItem(s) for s in [str(fa.actuator_id), str(kind), "--", "--"]]
         row.insert(2, BumpTestStatusItem("--"))
         row[0].setData(fa)
@@ -121,6 +151,20 @@ class ChartModel(QStandardItemModel):
                 self.item(row, 4).setText(end.toString("hh:mm:ss"))
 
     def find_latest(self, actuator_id: int, primary: bool) -> int | None:
+        """Find latest entry for given actuator and kind.
+
+        Parameters
+        ----------
+        actuator_id : int
+            ID of searched actuator.
+        primary : bool
+            True if requested entry is for the primary axis/cylinder.
+
+        Returns
+        -------
+        row : int | None
+            Row of the latest record with the given actuator.
+        """
         items = self.findItems(str(actuator_id), column=0)
         items.reverse()
         for i in items:
@@ -170,8 +214,6 @@ class ChartView(QTreeView):
         if selected.count() > 0:
             row = selected.front().indexes()[0].row()
             self.parent().new_data(
-                self.model().item(row, 0).data(),
-                self.model().item(row, 1).data(),
                 self.model().item(row, 2).data(ChartModel.APPLIED_DATA),
                 self.model().item(row, 2).data(ChartModel.MEASURED_DATA),
             )
@@ -239,16 +281,10 @@ class ForceChartWidget(QWidget):
         for row in range(model.rowCount()):
             model.item(row, 2).setData(True, ChartModel.FREEZE_DATA)
 
-    def new_data(
-        self,
-        fa: ForceActuatorData,
-        kind: BumpTestKind,
-        applied: TimeChart,
-        measured: TimeChart,
-    ) -> None:
+    def new_data(self, applied: TimeChart, measured: TimeChart) -> None:
         self._update_timer.stop()
 
-        self.chart.new_chart(fa, kind, applied, measured)
+        self.chart.new_data(applied, measured)
         self._last_update = 0
 
         self._update_timer.start(200)
