@@ -20,7 +20,12 @@
 import asyncio
 import typing
 
-from lsst.ts.m1m3.utils import BumpTestKind, BumpTestRunner, ForceActuatorBumpTest
+from lsst.ts.m1m3.utils import (
+    BumpTestKind,
+    BumpTestRunner,
+    BumpTestsList,
+    ForceActuatorBumpTest,
+)
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums import MTM1M3
 from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
@@ -151,6 +156,7 @@ class BumpTestPageWidget(QWidget):
             return button
 
         self.allow_parallel = QCheckBox("Run in &parallel")
+        self.allow_parallel.setChecked(True)
 
         self.bump_test_all_button = make_button("Bump test &all", self.bump_test_all)
         self.bump_test_button = make_button(
@@ -208,25 +214,8 @@ class BumpTestPageWidget(QWidget):
 
     @asyncSlot()
     async def bump_test_all(self) -> None:
-        for i in range(4):
-            colOffset = i * 3
-            self.actuators_table.setRangeSelected(
-                QTableWidgetSelectionRange(
-                    0,
-                    1 + colOffset,
-                    self.actuators_table.rowCount() - 1,
-                    2 + colOffset,
-                ),
-                False,
-            )
-            self.actuators_table.setRangeSelected(
-                QTableWidgetSelectionRange(
-                    0, colOffset, self.actuators_table.rowCount() - 1, colOffset
-                ),
-                True,
-            )
-        await self._test_items(self.actuators_table.selectedItems())
         self.bump_test_button.setEnabled(False)
+        await self._test_fa(BumpTestsList.all_tests(self.m1m3.remote))
 
     @asyncSlot()
     async def send_bump_test_command(self) -> None:
@@ -235,6 +224,11 @@ class BumpTestPageWidget(QWidget):
         await self._test_items(self.actuators_table.selectedItems())
 
     async def _test_items(self, items: list[QTableWidgetItem]) -> None:
+        """Test selected items.
+
+        Parameters
+        ----------
+        items : QSelectedItems"""
         todo: list[ForceActuatorBumpTest] = []
 
         enabled_force_actuators = self.m1m3.remote.evt_enabledForceActuators.get()
@@ -272,6 +266,16 @@ class BumpTestPageWidget(QWidget):
                 elif fa.y_index is not None:
                     todo.append(ForceActuatorBumpTest(fa, BumpTestKind.AXIS_Y))
 
+        await self._test_fa(todo)
+
+    async def _test_fa(self, todo: list[ForceActuatorBumpTest]) -> None:
+        """Run force actuator bump tests on the supplied list.
+
+        Parameters
+        ----------
+        todo : list[ForceActuatorBumpTest]
+            List of the force actuator to bump tests.
+        """
         self._runner = BumpTestRunner(todo)
 
         try:
@@ -367,7 +371,9 @@ class BumpTestPageWidget(QWidget):
                     and self._runner.running.distance(fa) <= self.test_distance()
                 ):
                     return Qt.gray
-                if value == MTM1M3.BumpTest.NOTTESTED:
+                if value is None:
+                    return Qt.darkRed
+                elif value == MTM1M3.BumpTest.NOTTESTED:
                     return Qt.cyan
                 elif value == MTM1M3.BumpTest.TRIGGERED:
                     return Colors.WARNING
