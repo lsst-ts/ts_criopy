@@ -38,10 +38,10 @@ from .bump_test_status_item import BumpTestStatusItem
 class ForceActuatorChart(TimeChartView):
     """Display chart with the actuator profile."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     """Change chart data.
 
@@ -80,7 +80,7 @@ class ChartModel(QStandardItemModel):
     MEASURED_DATA = Qt.UserRole + 2
     FREEZE_DATA = Qt.UserRole + 3
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(0, 5)
         self.setHorizontalHeaderLabels(["Acc", "Kn", "State", "Start", "End"])
 
@@ -136,7 +136,7 @@ class ChartModel(QStandardItemModel):
 
         return None
 
-    def timed_update(self):
+    def timed_update(self) -> None:
         for row in range(self.rowCount()):
             di = self.item(row, 2)
             applied = di.data(self.APPLIED_DATA)
@@ -186,7 +186,7 @@ class ChartModel(QStandardItemModel):
 
 
 class ChartView(QTreeView):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.setModel(ChartModel())
@@ -220,7 +220,7 @@ class ChartView(QTreeView):
 
 
 class ForceChartWidget(QWidget):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         layout = QHBoxLayout()
@@ -276,7 +276,7 @@ class ForceChartWidget(QWidget):
     def progress(self, fa: ForceActuatorData, primary: bool, state: int) -> None:
         self.caches.progress(fa.actuator_id, primary, state)
 
-    def freeze(self):
+    def freeze(self) -> None:
         model = self.caches.model()
         for row in range(model.rowCount()):
             model.item(row, 2).setData(True, ChartModel.FREEZE_DATA)

@@ -166,7 +166,7 @@ class TimeChart(AbstractChart):
         then replot data based on the current cache content.
         """
 
-        def update_all():
+        def update_all() -> None:
             try:
                 for cache in self._caches:
                     self._replot(0, cache)

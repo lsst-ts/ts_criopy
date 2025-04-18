@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.10.0
+-------
+
+* M1M3 FA parallel bump tests
+
 v0.9.0
 ------
 
