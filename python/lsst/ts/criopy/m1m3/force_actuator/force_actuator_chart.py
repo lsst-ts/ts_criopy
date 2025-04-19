@@ -41,6 +41,8 @@ class ForceActuatorChart(TimeChartView):
     def __init__(self) -> None:
         super().__init__()
 
+        self.setRubberBand(TimeChartView.RectangleRubberBand)
+
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     def new_data(self, applied: TimeCache, measured: TimeCache) -> None:
@@ -236,7 +238,6 @@ class ForceChartWidget(QWidget):
         cache_layout.addWidget(reset_button)
 
         self.chart = ForceActuatorChart()
-        self.chart.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
 
         layout.addLayout(cache_layout)
         layout.addWidget(self.chart)

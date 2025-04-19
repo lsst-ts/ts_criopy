@@ -26,7 +26,7 @@ import typing
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QChart, QChartView, QDateTimeAxis, QLineSeries, QValueAxis
 from PySide6.QtCore import QDateTime, QPointF, Qt, Signal, Slot
-from PySide6.QtGui import QContextMenuEvent, QPainter
+from PySide6.QtGui import QContextMenuEvent, QPainter, QWheelEvent
 from PySide6.QtWidgets import QMenu
 
 from ..time_cache import TimeCache
@@ -64,7 +64,7 @@ class TimeChart(AbstractChart):
         update_interval: float = 0.1,
     ):
         super().__init__(update_interval=update_interval)
-        self.timeAxis: QDateTimeAxis | None = None
+        self.time_axis: QDateTimeAxis | None = None
 
         self._create_caches(items, max_items)
         self._attach_series()
@@ -96,17 +96,17 @@ class TimeChart(AbstractChart):
         # likely the axis or even graph not shown. It's irrelevant when you
         # fill series with data. See QtChart::createDefaultAxes in QtChart
         # source code for details.
-        self.timeAxis = QDateTimeAxis()
-        self.timeAxis.setReverse(True)
-        self.timeAxis.setTickCount(5)
-        self.timeAxis.setFormat("h:mm:ss.zzz")
-        self.timeAxis.setTitleText("Time (TAI)")
-        self.timeAxis.setGridLineVisible(True)
+        self.time_axis = QDateTimeAxis()
+        self.time_axis.setReverse(False)
+        self.time_axis.setTickCount(5)
+        self.time_axis.setFormat("h:mm:ss.zzz")
+        self.time_axis.setTitleText("Time (TAI)")
+        self.time_axis.setGridLineVisible(True)
 
-        self.addAxis(self.timeAxis, Qt.AlignBottom)
+        self.addAxis(self.time_axis, Qt.AlignBottom)
 
         for serie in self.series():
-            serie.attachAxis(self.timeAxis)
+            serie.attachAxis(self.time_axis)
 
     def append(
         self,
@@ -186,7 +186,7 @@ class TimeChart(AbstractChart):
         cache : TimeCache
             Time cache from which data shall be updated.
         """
-        if self.timeAxis is None:
+        if self.time_axis is None:
             return
 
         axis = self.axes(Qt.Vertical)[axis_index]
@@ -211,7 +211,7 @@ class TimeChart(AbstractChart):
 
             serie.replace(points)
 
-        self.timeAxis.setRange(
+        self.time_axis.setRange(
             *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()]
         )
         if d_min == d_max:
@@ -320,19 +320,55 @@ class TimeChartView(QChartView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QChartView.HorizontalRubberBand)
 
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """Zoom on mouse wheel action."""
+        self.chart().zoom(1.1 if event.angleDelta().y() > 0 else 0.9)
+
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        contextMenu = QMenu()
+        context_menu = QMenu()
 
         for s in self.chart().series():
-            action = contextMenu.addAction(s.name())
+            action = context_menu.addAction(s.name())
             action.setCheckable(True)
             action.setChecked(s.isVisible())
 
-        action = contextMenu.exec_(event.globalPos())
-        if action.text() is None:
+        context_menu.addSeparator()
+
+        # add actions for different zooming
+        actions_rb = {
+            "Verical": QChartView.VerticalRubberBand,
+            "Horizontal": QChartView.HorizontalRubberBand,
+            "Rectangle": QChartView.RectangleRubberBand,
+        }
+
+        rb = self.rubberBand()
+
+        for title, a_rb in actions_rb.items():
+            action = context_menu.addAction(title)
+            action.setCheckable(True)
+            action.setChecked(rb == a_rb)
+
+        context_menu.addSeparator()
+
+        context_menu.addAction("Zoom &in")
+        context_menu.addAction("Zoom &out")
+        context_menu.addAction("&Reset zoom")
+
+        selected = context_menu.exec_(event.globalPos())
+
+        if selected is None or selected.text() is None:
             return
 
         for s in self.chart().series():
-            if action.text() == s.name():
-                s.setVisible(action.isChecked())
+            if selected.text() == s.name():
+                s.setVisible(selected.isChecked())
                 return
+
+        if selected.text() in actions_rb:
+            self.setRubberBand(actions_rb[selected.text()])
+        elif selected.text() == "Zoom &in":
+            self.chart().zoomIn()
+        elif selected.text() == "Zoom &out":
+            self.chart().zoomOut()
+        elif selected.text() == "&Reset zoom":
+            self.chart().zoomReset()
