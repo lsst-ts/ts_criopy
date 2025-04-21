@@ -8,12 +8,14 @@ v0.10.0
 -------
 
 * M1M3 FA parallel bump tests
+* WaitComression state
 
 v0.9.0
 ------
 
 * Support for automatic FCU's heaters PWM (~power) control.
 * VMSLogger Kafka
+* Hardpoint Compression waiting state
 
 v0.8.3
 ------
