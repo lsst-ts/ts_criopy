@@ -62,7 +62,7 @@ class CacheWidget(DockWindow):
 
         self.chart = AbstractChart()
 
-        self.updateTask = make_done_future()
+        self.update_task = make_done_future()
 
         self.update_after: float = 0.0
 
@@ -133,9 +133,9 @@ class CacheWidget(DockWindow):
             self.setupAxes()
             self.update_after = 0
 
-        if self.update_after < time.monotonic() and self.updateTask.done():
+        if self.update_after < time.monotonic() and self.update_task.done():
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.updateTask = pool.submit(self._plotAll)
+                self.update_task = pool.submit(self._plotAll)
 
     @Slot()
     def frequencyChanged(self, lowFrequency: float, highFrequency: float) -> None:

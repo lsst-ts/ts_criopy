@@ -74,11 +74,11 @@ class Axis:
         self.fields[name] = AxisValue(field, scale=scale)
         return self
 
-    def addArrayValue(self: AxisVar, name: str, field: str, index: int) -> AxisVar:
+    def addArrayValue(self, name: str, field: str, index: int) -> typing.Self:
         self.fields[name] = AxisValue(field, index)
         return self
 
-    def add_values(self: AxisVar, fields: dict[str, AxisValue]) -> AxisVar:
+    def add_values(self, fields: dict[str, AxisValue]) -> typing.Self:
         self.fields = {**self.fields, **fields}
         return self
 
@@ -142,12 +142,12 @@ class ChartWidget(TimeChartView):
             except AttributeError:
                 self._has_timestamp = False
 
-        displayData = []
+        display_data = []
         for f in fields:
-            displayData.append(f.get_value(data))
+            display_data.append(f.get_value(data))
 
         self.chart.append(
             data.timestamp if self._has_timestamp else data.private_sndStamp,
-            displayData,
+            display_data,
             axis_index=axis_index,
         )
