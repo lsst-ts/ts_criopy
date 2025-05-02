@@ -189,9 +189,9 @@ class SimulatorWidget(QWidget):
             DegreeTimeEntry(" °/sec"),
         ]
         self.accelerations = [
-            DegreeTimeEntry(" °/sec\u00B2"),
-            DegreeTimeEntry(" °/sec\u00B2"),
-            DegreeTimeEntry(" °/sec\u00B2"),
+            DegreeTimeEntry(" °/sec\u00b2"),
+            DegreeTimeEntry(" °/sec\u00b2"),
+            DegreeTimeEntry(" °/sec\u00b2"),
         ]
 
         for hp in range(6):
