@@ -20,9 +20,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from math import sqrt
+
 from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import CENTER_HOLE_R, M1_R, M3_R, FATable, FCUTable
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QPen
 from PySide6.QtWidgets import QGraphicsScene
 
+from .fcu_item import FCUItem
 from .force_actuator_item import ForceActuatorItem
 from .gauge_scale import GaugeScale
 
@@ -33,10 +39,103 @@ class Mirror(QGraphicsScene):
     Actuator list is cleared with clear() method (inherited from
     QGraphicsScene). Force Actuators are added with add_force_actuator()
     method. Force Actuator data should be updated with update_force_actuator()
-    call."""
+    call.
 
-    def __init__(self) -> None:
+    Attributes
+    ----------
+
+    fa : [ForceActuatorItem]
+        Mirror support system force actuators.
+    fcu : [FCUItem]
+        Mirror thermal system FCU (Fan Coil Units).
+
+    Parameters
+    ----------
+    support : bool, optional
+        Populate mirror view with support actuators.
+    thermal : bool, optional
+        Populate mirror view with thermal actuators.
+    """
+
+    def __init__(self, support: bool = False, thermal: bool = False) -> None:
         super().__init__()
+
+        pen = QPen(Qt.black, 15, Qt.DashLine)
+
+        # Plots mirror boundaries
+        M2MM = 1000
+        R_HOLE = CENTER_HOLE_R * M2MM
+        R_M3 = M3_R * M2MM
+        R_M1 = M1_R * M2MM
+        self.addEllipse(-R_HOLE, -R_HOLE, R_HOLE * 2, R_HOLE * 2, pen)
+        self.addEllipse(-R_M3, -R_M3, R_M3 * 2, R_M3 * 2, pen)
+        self.addEllipse(-R_M1, -R_M1, R_M1 * 2, R_M1 * 2, pen)
+
+        # Plots axes
+        def vector(
+            x: float,
+            y: float,
+            dx: float,
+            dy: float,
+            pen: QPen,
+            text: str,
+            tx: float,
+            ty: float,
+        ) -> None:
+            self.addLine(x, y, x + dx, y + dy, pen)
+
+            norm = sqrt(dx**2 + dy**2)
+            udx = dx / norm
+            udy = dy / norm
+
+            wf = sqrt(3) * 0.5
+
+            ax = udx * wf - udy * 0.5
+            ay = udx * 0.5 + udy * wf
+            bx = udx * wf + udy * 0.5
+            by = -udx * 0.5 + udy * wf
+
+            x += dx
+            y += dy
+
+            self.addLine(x, y, x - 100 * ax, y - 100 * ay, pen)
+            self.addLine(x, y, x - 100 * bx, y - 100.0 * by, pen)
+
+            font = QFont("Helvetica", 100)
+
+            ti = self.addSimpleText(text, font)
+            ti.setPos(x + tx, y + ty)
+
+        pen = QPen(Qt.black, 10, Qt.SolidLine, Qt.RoundCap)
+
+        xo = -R_M1
+        yo = -R_M1 + 1000
+
+        vector(xo, yo, 0, -1000, pen, "+Y", 100, -50)
+        vector(xo, yo, 1000, 0, pen, "+X", 100, -100)
+        self.addLine(xo - 100, yo - 100, xo + 100, yo + 100, pen)
+        self.addLine(xo - 100, yo + 100, xo + 100, yo - 100, pen)
+
+        self.fa: list[ForceActuatorItem] = []
+        self.fcu: list[FCUItem] = []
+
+        if support:
+            for fa in FATable:
+                self.add_fa(ForceActuatorItem(fa))
+
+        if thermal:
+            for fcu in FCUTable:
+                self.add_fcu(FCUItem(fcu))
+
+    def add_fa(self, fa: ForceActuatorItem) -> None:
+        self.fa.append(fa)
+        fa.setZValue(9)
+        self.addItem(fa)
+
+    def add_fcu(self, fcu: FCUItem) -> None:
+        self.fcu.append(fcu)
+        fcu.setZValue(10)
+        self.addItem(fcu)
 
     def set_color_scale(self, scale: GaugeScale) -> None:
         """Set display color scale. Provides getColor method, returning color
@@ -47,38 +146,13 @@ class Mirror(QGraphicsScene):
         scale : `GaugeScale`
             Data scale.
         """
-        for a in self.items():
-            a.set_color_scale(scale)
+        for fa in self.fa:
+            fa.set_color_scale(scale)
 
-    def getForceActuator(self, actuator_id: int) -> ForceActuatorItem:
-        """Returns actuator with given ID.
+        for fcu in self.fcu:
+            fcu.set_color_scale(scale)
 
-        Parameters
-        ----------
-        actuator_id : `int`
-            Force Actuator ID.
-
-        Returns
-        -------
-        `ForceActuatorItem`
-            Force Actuator with matched ID.
-
-        Raises
-        ------
-        KeyError
-            When actuator with given ID is not found.
-        """
-        for item in self.items():
-            if (
-                isinstance(item, ForceActuatorItem)
-                and item.actuator.actuator_id == actuator_id
-            ):
-                return item
-        raise KeyError(f"Cannot find actuator with ID {actuator_id}")
-
-    def update_force_actuator(
-        self, actuator_id: int, data: BaseMsgType, state: int
-    ) -> None:
+    def update_force_actuator(self, index: int, data: BaseMsgType, state: int) -> None:
         """Updates actuator value and state.
 
         Parameters
@@ -96,4 +170,4 @@ class Mirror(QGraphicsScene):
         KeyError
             If actuator with the given ID cannot be found.
         """
-        self.getForceActuator(actuator_id).update_data(data, state)
+        self.fa[index].update_data(data, state)

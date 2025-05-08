@@ -20,7 +20,6 @@
 
 import enum
 
-from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QPointF, QRect, Qt
 from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPalette, QPen, QTransform
@@ -53,10 +52,6 @@ class ForceActuatorItem(QGraphicsItem):
         Row from force actuator table.
     data : `float`
         Data associated with the actuator (actual force, calculated force, ..).
-    data_index : `int`
-        Index in value arrays. Points to selected actuator value.
-    scale: `object`
-        Object providing getColor(value) method.
     state : `int`
         Force Actuator state. 0 for inactive/unused, 1 for active OK, 2 for
         active warning.
@@ -80,10 +75,8 @@ class ForceActuatorItem(QGraphicsItem):
     def __init__(
         self,
         actuator: ForceActuatorData,
-        data: BaseMsgType,
-        data_index: int | None,
-        state: int,
-        kind: FASelection,
+        state: int = STATE_INACTIVE,
+        kind: FASelection = FASelection.NORMAL,
     ):
         super().__init__()
         self.actuator = actuator
@@ -92,8 +85,7 @@ class ForceActuatorItem(QGraphicsItem):
             actuator.x_position * 1000.0, -actuator.y_position * 1000.0
         )
         # actuator data
-        self._data = data
-        self.data_index = data_index
+        self._data: float | None = None
         self._state = state
         self._kind = kind
         # scale. Provides getColor(data) object, returning brush to fill data
@@ -140,6 +132,7 @@ class ForceActuatorItem(QGraphicsItem):
     @property
     def data(self) -> float:
         """Value associated with the actuator (`float`)."""
+        assert self._data is not None
         return self._data
 
     @data.setter
@@ -259,6 +252,7 @@ class ForceActuatorItem(QGraphicsItem):
         if self._state == self.STATE_WARNING:
             painter.setBrush(Colors.ERROR)
         else:
+            assert self._data is not None
             color = self._color_scale.getColor(self._data)
             if color is None:
                 brush = QBrush(Qt.red, Qt.DiagCrossPattern)

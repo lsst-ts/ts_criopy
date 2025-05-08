@@ -21,6 +21,7 @@ import enum
 import typing
 
 from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import FCUTable
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -45,6 +46,15 @@ class Buttons(enum.IntEnum):
     HEATERS = 2
 
 
+M3_R = 2.5337
+
+
+class ByteSpin(QSpinBox):
+    def __init__(self):
+        super().__init__()
+        self.setRange(0, 255)
+
+
 class DataWidget(QTableWidget):
     """Table with ILC values. Stores ILC values."""
 
@@ -59,9 +69,12 @@ class DataWidget(QTableWidget):
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def empty(self) -> None:
-        self.setValues(range(1, 97))
+        self.set_values(range(1, 97))
 
-    def setValues(self, data: BaseMsgType, fmt: str | None = None) -> None:
+    def set_value(self, index: int, value: str) -> None:
+        self.item(int(index / 10), index % 10).setText(str(value))
+
+    def set_values(self, data: BaseMsgType, fmt: str | None = None) -> None:
         r = 0
         c = 0
         for value in data:
@@ -74,7 +87,7 @@ class DataWidget(QTableWidget):
                 c = 0
                 r += 1
 
-    def getValues(self) -> list[int]:
+    def get_values(self) -> list[int]:
         data: list[int] = []
         for r in range(0, 10):
             for c in range(0, 10):
@@ -161,13 +174,24 @@ class CommandWidget(QWidget):
         self.set_heaters_button = self.SetButton(self, Buttons.HEATERS)
         self.set_fans_button = self.SetButton(self, Buttons.FANS)
 
-        self.flat_demand = QSpinBox()
-        self.flat_demand.setRange(0, 255)
+        self.flat_demand = ByteSpin()
+        self.m1_demand = ByteSpin()
+        self.m3_demand = ByteSpin()
 
         self.set_constant_button = QPushButton("Set constant")
         self.set_constant_button.setToolTip("Sets all target values to given constant")
         self.set_constant_button.setDisabled(True)
         self.set_constant_button.clicked.connect(self.set_constant)
+
+        self.set_m1_button = QPushButton("Set M1")
+        self.set_m1_button.setToolTip("Sets M1 FCUs values to given value")
+        self.set_m1_button.setDisabled(True)
+        self.set_m1_button.clicked.connect(self.set_m1)
+
+        self.set_m3_button = QPushButton("Set M3")
+        self.set_m3_button.setToolTip("Sets M3 FCUs values to given value")
+        self.set_m3_button.setDisabled(True)
+        self.set_m3_button.clicked.connect(self.set_m3)
 
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setToolTip("Cancel value editing")
@@ -180,6 +204,11 @@ class CommandWidget(QWidget):
         command_layout.addWidget(self.cancel_button, 0, 2, 2, 1)
         command_layout.addWidget(self.set_heaters_button, 1, 0)
         command_layout.addWidget(self.set_fans_button, 1, 1)
+
+        command_layout.addWidget(self.m1_demand, 0, 4)
+        command_layout.addWidget(self.m3_demand, 1, 4)
+        command_layout.addWidget(self.set_m1_button, 0, 5)
+        command_layout.addWidget(self.set_m3_button, 1, 5)
 
         hBox = QHBoxLayout()
         hBox.addLayout(command_layout)
@@ -194,13 +223,29 @@ class CommandWidget(QWidget):
 
     @Slot()
     def set_constant(self) -> None:
-        self.data_widget.setValues([self.flat_demand.text()] * 96)
+        self.data_widget.set_values([self.flat_demand.text()] * 96)
+
+    @Slot()
+    def set_m1(self) -> None:
+        value = self.m1_demand.text()
+        for fcu in FCUTable:
+            if fcu.center_distance() >= M3_R:
+                self.data_widget.set_value(fcu.index, value)
+
+    @Slot()
+    def set_m3(self) -> None:
+        value = self.m3_demand.text()
+        for fcu in FCUTable:
+            if fcu.center_distance() < M3_R:
+                self.data_widget.set_value(fcu.index, value)
 
     @Slot()
     def cancel(self) -> None:
         self.freezed = False
         self.data_widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.set_constant_button.setDisabled(True)
+        self.set_m1_button.setDisabled(True)
+        self.set_m3_button.setDisabled(True)
         self.set_fans_button.setEnabled(True)
         self.set_fans_button.cancel()
         self.set_heaters_button.setEnabled(True)
@@ -222,9 +267,11 @@ class CommandWidget(QWidget):
         self.data_widget.setEnabled(True)
         self.cancel_button.setEnabled(True)
         self.set_constant_button.setEnabled(True)
+        self.set_m1_button.setEnabled(True)
+        self.set_m3_button.setEnabled(True)
 
     async def heater_fan_demand(self, kind: Buttons) -> None:
-        data = self.data_widget.getValues()
+        data = self.data_widget.get_values()
         if kind == Buttons.HEATERS:
             await self._heater_fan_demand(heaterPWM=data, fanRPM=self.fans)
             self.heaters = data
@@ -246,7 +293,7 @@ class CommandWidget(QWidget):
             self.data_widget.empty()
             return
 
-        self.data_widget.setValues(values, fmt=fmt)
+        self.data_widget.set_values(values, fmt=fmt)
 
 
 class ThermalValuePageWidget(TopicWindow):

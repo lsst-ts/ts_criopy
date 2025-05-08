@@ -34,15 +34,7 @@ class GraphPageWidget(Widget):
     """
 
     def __init__(self, m1m3: MetaSAL | Simulator):
-        self.mirror_widget = MirrorWidget()
-
-        for row in FATable:
-            self.mirror_widget.mirror_view.add_force_actuator(
-                row,
-                None,
-                None,
-                ForceActuatorItem.STATE_INACTIVE,
-            )
+        self.mirror_widget = MirrorWidget(support=True)
 
         self.mirror_widget.mirror_view.selectionChanged.connect(
             self.updateSelectedActuator
@@ -84,9 +76,9 @@ class GraphPageWidget(Widget):
 
         enabled = self.m1m3.remote.evt_enabledForceActuators.get()
 
-        for row in FATable:
-            index = row.index
-            data_index = row.get_index(self.field.value_index)
+        for fa in FATable:
+            index = fa.index
+            data_index = fa.get_index(self.field.value_index)
             if values is None or data_index is None:
                 state = ForceActuatorItem.STATE_INACTIVE
             elif enabled is not None and not enabled.forceActuatorEnabled[index]:
@@ -101,9 +93,7 @@ class GraphPageWidget(Widget):
                 None if (values is None or data_index is None) else values[data_index]
             )
 
-            self.mirror_widget.mirror_view.update_force_actuator(
-                row.actuator_id, value, state
-            )
+            self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 
         if values is None:
             self.mirror_widget.setRange(0, 0)

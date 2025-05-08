@@ -41,12 +41,19 @@ class MirrorWidget(QWidget):
         Widget displaying mirror with actuators and gauge showing color scale.
     gauge : `GaugeScale`
         Gauge showing color scale used in actuators.
+
+    Parameters
+    ----------
+    support : bool, optional
+        Populate mirror view with support actuators.
+    thermal : bool, optional
+        Populate mirror view with thermal actuators.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, support: bool = False, thermal: bool = False) -> None:
         super().__init__()
 
-        self.mirror_view = MirrorView()
+        self.mirror_view = MirrorView(support, thermal)
         self._bumpTest = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()

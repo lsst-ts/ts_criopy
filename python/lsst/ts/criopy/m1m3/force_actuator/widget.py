@@ -88,12 +88,12 @@ class Widget(QSplitter):
         self.far_selected_ids_label = QLabel()
         self.far_selected_value_label = QLabel()
 
-        self.topicList = QListWidget()
-        self.topicList.setFixedWidth(256)
-        self.topicList.currentRowChanged.connect(self.currentTopicChanged)
+        self.topic_list = QListWidget()
+        self.topic_list.setFixedWidth(256)
+        self.topic_list.currentRowChanged.connect(self.currentTopicChanged)
         self.topics = Topics()
         for topic in self.topics.topics:
-            self.topicList.addItem(topic.name)
+            self.topic_list.addItem(topic.name)
         self.fieldList = QListWidget()
         self.fieldList.setFixedWidth(256)
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
@@ -168,10 +168,10 @@ class Widget(QSplitter):
 
         filter_layout.addWidget(QLabel("Topic"), 1, 1)
         filter_layout.addWidget(QLabel("Field"), 1, 2)
-        filter_layout.addWidget(self.topicList, 2, 1)
+        filter_layout.addWidget(self.topic_list, 2, 1)
         filter_layout.addWidget(self.fieldList, 2, 2)
 
-        self.topicList.setCurrentRow(0)
+        self.topic_list.setCurrentRow(0)
 
         w_left = QWidget()
         w_left.setLayout(plot_layout)
@@ -204,31 +204,31 @@ class Widget(QSplitter):
         )
 
     @Slot()
-    def currentTopicChanged(self, topicIndex: int) -> None:
-        if topicIndex < 0:
+    def currentTopicChanged(self, topic_index: int) -> None:
+        if topic_index < 0:
             self._set_unknown()
             return
 
         self.fieldList.clear()
-        for field in self.topics.topics[topicIndex].fields:
+        for field in self.topics.topics[topic_index].fields:
             self.fieldList.addItem(field.name)
 
-        field_index = self.topics.topics[topicIndex].selected_field
+        field_index = self.topics.topics[topic_index].selected_field
         if field_index < 0:
             self._set_unknown()
             return
 
         self.fieldList.setCurrentRow(field_index)
-        self.__change_field(topicIndex, field_index)
+        self.__change_field(topic_index, field_index)
 
     @Slot()
     def currentFieldChanged(self, field_index: int) -> None:
-        topicIndex = self.topicList.currentRow()
-        if topicIndex < 0 or field_index < 0:
+        topic_index = self.topic_list.currentRow()
+        if topic_index < 0 or field_index < 0:
             self._set_unknown()
             return
-        self.__change_field(topicIndex, field_index)
-        self.topics.topics[topicIndex].selected_field = field_index
+        self.__change_field(topic_index, field_index)
+        self.topics.topics[topic_index].selected_field = field_index
 
     @Slot()
     def editValues(self) -> None:
@@ -348,23 +348,23 @@ class Widget(QSplitter):
         self.editButton.setEnabled(enabled)
         self.clearButton.setEnabled(enabled)
 
-    def __change_field(self, topicIndex: int, field_index: int) -> None:
+    def __change_field(self, topic_index: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
-        self._topic = self.topics.topics[topicIndex]
+        self._topic = self.topics.topics[topic_index]
         self.__setModifyCommand(self._topic.command)
         self.field = self._topic.fields[field_index]
-        try:
-            self.topics.change_topic(topicIndex, self.data_changed, self.m1m3)
-            data = self._get_data()
-            self.change_values()
-            self.update_values(data)
-            self.data_changed(data)
-        except RuntimeError as err:
-            print("ForceActuator.Widget.__change_field", err)
-            self._topic = None
-            pass
+        # try:
+        self.topics.change_topic(topic_index, self.data_changed, self.m1m3)
+        data = self._get_data()
+        self.change_values()
+        self.update_values(data)
+        self.data_changed(data)
+        # except RuntimeError as err:
+        #    print("ForceActuator.Widget.__change_field", err)
+        #    self._topic = None
+        #    pass
 
     @Slot()
     def data_changed(self, data: BaseMsgType) -> None:

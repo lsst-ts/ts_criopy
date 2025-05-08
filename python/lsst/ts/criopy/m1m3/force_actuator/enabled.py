@@ -44,7 +44,7 @@ class Enabled(StateEnabledWidget):
     """
 
     def __init__(self, m1m3: MetaSAL):
-        self.mirror_widget = MirrorWidget()
+        self.mirror_widget = MirrorWidget(support=True)
         self.mirror_widget.setScaleType(Scales.ENABLED_DISABLED)
         super().__init__(
             m1m3,
@@ -112,7 +112,7 @@ class Enabled(StateEnabledWidget):
 
         self.selectedActuatorId.setEditText(str(s.actuator.actuator_id))
         self.selectedActuatorValueLabel.setText(str(s.data))
-        self._updateSelected()
+        self._update_selected()
 
     def getSelectedID(self) -> int | None:
         """Returns selected FA ID.
@@ -126,7 +126,7 @@ class Enabled(StateEnabledWidget):
             return int(self.selectedActuatorId.currentText())
         return None
 
-    def _updateSelected(self) -> None:
+    def _update_selected(self) -> None:
         actuator_id = self.getSelectedID()
         if actuator_id is not None:
             index = actuator_id_to_index(actuator_id)
@@ -168,32 +168,15 @@ class Enabled(StateEnabledWidget):
     @Slot()
     def enabledForceActuators(self, data: BaseMsgType) -> None:
         """Callback with enabled FA data. Triggers display update."""
-        if len(self.mirror_widget.mirror_view.items()) == 0:
-            new = True  # need to add force actuators
-            self.mirror_widget.clear()
-        else:
-            new = False
-
-        for row in FATable:
-            index = row.z_index
-            actuator_id = row.actuator_id
+        for fa in FATable:
+            index = fa.index
             value = None if data is None else data.forceActuatorEnabled[index]
             state = (
                 ForceActuatorItem.STATE_INACTIVE
                 if data is None
                 else ForceActuatorItem.STATE_ACTIVE
             )
-            if new:
-                self.mirror_widget.mirror_view.add_force_actuator(
-                    row,
-                    value,
-                    index,
-                    state,
-                )
-            else:
-                self.mirror_widget.mirror_view.update_force_actuator(
-                    actuator_id, value, state
-                )
+            self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 
         self.mirror_widget.set_color_scale()
-        self._updateSelected()
+        self._update_selected()

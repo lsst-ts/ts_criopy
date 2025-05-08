@@ -21,7 +21,6 @@
 
 __all__ = ["FCUDisplayWidget"]
 
-from lsst.ts.xml.tables.m1m3 import FCUTable
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from ..gui.actuatorsdisplay import MirrorWidget
@@ -31,10 +30,7 @@ from ..salcomm import MetaSAL
 class FCUDisplayWidget(QWidget):
     def __init__(self, m1m3ts: MetaSAL):
         super().__init__()
-        self.mirror_widget = MirrorWidget()
-
-        for row in FCUTable:
-            self.mirror_widget.mirror_view.add_fcu(row)
+        self.mirror_widget = MirrorWidget(thermal=True)
 
         plot_layout = QVBoxLayout()
         plot_layout.addWidget(self.mirror_widget)
