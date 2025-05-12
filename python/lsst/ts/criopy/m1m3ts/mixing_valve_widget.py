@@ -33,7 +33,7 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..gui import DataFormWidget, Percent, TimeChart, TimeChartView, Volt
+from ..gui import DataDegC, DataFormWidget, Percent, TimeChart, TimeChartView, Volt
 from ..salcomm import MetaSAL, command
 
 
@@ -96,6 +96,37 @@ class MixingValveWidget(QWidget):
                 ],
             )
         )
+        vlayout.addWidget(
+            DataFormWidget(
+                m1m3ts.appliedSetpoints,
+                [
+                    ("Glycol Setpoint", DataDegC(field="glycolSetpoint")),
+                    ("Heaters Setpoint", DataDegC(field="heatersSetpoint")),
+                ],
+            )
+        )
+        vlayout.addWidget(
+            DataFormWidget(
+                m1m3ts.glycolLoopTemperature,
+                [
+                    ("Above Mirror", DataDegC(field="aboveMirrorTemperature")),
+                    ("Inside 1", DataDegC(field="insideCellTemperature1")),
+                    ("Inside 2", DataDegC(field="insideCellTemperature2")),
+                    ("Inside 3", DataDegC(field="insideCellTemperature3")),
+                    (
+                        "Telescope Supply",
+                        DataDegC(field="telescopeCoolantSupplyTemperature"),
+                    ),
+                    ("Cell Supply", DataDegC(field="mirrorCoolantSupplyTemperature")),
+                    ("Cell Return", DataDegC(field="mirrorCoolantReturnTemperature")),
+                    (
+                        "Telescope Return",
+                        DataDegC(field="telescopeCoolantReturnTemperature"),
+                    ),
+                ],
+            )
+        )
+
         vlayout.addSpacing(20)
         vlayout.addWidget(selection_group)
         vlayout.addLayout(command_layout)
