@@ -71,7 +71,7 @@ class MixingValveWidget(QWidget):
         def temperature_target() -> QDoubleSpinBox:
             temperature_target_box = QDoubleSpinBox()
             temperature_target_box.setRange(-40, 50)
-            temperature_target_box.setSingleStep(1)
+            temperature_target_box.setSingleStep(0.05)
             temperature_target_box.setDecimals(2)
             temperature_target_box.setSuffix("°C")
             return temperature_target_box
@@ -86,6 +86,12 @@ class MixingValveWidget(QWidget):
         set_mixing_valve.clicked.connect(self._set)
         command_layout.addRow(set_mixing_valve)
 
+        self.delta_t = temperature_target()
+        command_layout.addRow("\u0394 T", self.delta_t)
+        self.set_delta_t = QPushButton("Do \u0394 T")
+        self.set_delta_t.clicked.connect(self._delta)
+        command_layout.addRow(self.set_delta_t)
+
         vlayout = QVBoxLayout()
         vlayout.addWidget(
             DataFormWidget(
@@ -96,6 +102,11 @@ class MixingValveWidget(QWidget):
                 ],
             )
         )
+
+        vlayout.addSpacing(20)
+        vlayout.addWidget(selection_group)
+        vlayout.addLayout(command_layout)
+
         vlayout.addWidget(
             DataFormWidget(
                 m1m3ts.appliedSetpoints,
@@ -127,9 +138,6 @@ class MixingValveWidget(QWidget):
             )
         )
 
-        vlayout.addSpacing(20)
-        vlayout.addWidget(selection_group)
-        vlayout.addLayout(command_layout)
         vlayout.addStretch()
 
         hlayout = QHBoxLayout()
@@ -180,6 +188,8 @@ class MixingValveWidget(QWidget):
         self.mixing_valve_target.setEnabled(checked)
         self.glycol_target.setEnabled(not (checked))
         self.heaters_target.setEnabled(not (checked))
+        self.delta_t.setEnabled(not (checked))
+        self.set_delta_t.setEnabled(not (checked))
 
     @asyncSlot()
     async def _set(self) -> None:
@@ -202,3 +212,14 @@ class MixingValveWidget(QWidget):
                 glycolSetpoint=self.glycol_target.value(),
                 heatersSetpoint=self.heaters_target.value(),
             )
+
+    @asyncSlot()
+    async def _delta(self) -> None:
+        self.glycol_target.setValue(self.glycol_target.value() + self.delta_t.value())
+        self.heaters_target.setValue(self.heaters_target.value() + self.delta_t.value())
+        await command(
+            self,
+            self.m1m3ts.remote.cmd_applySetpoints,
+            glycolSetpoint=self.glycol_target.value(),
+            heatersSetpoint=self.heaters_target.value(),
+        )
