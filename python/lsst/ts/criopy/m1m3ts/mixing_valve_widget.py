@@ -33,7 +33,8 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..gui import DataDegC, DataFormWidget, Percent, TimeChart, TimeChartView, Volt
+from ..gui import DataDegC, DataFormWidget, Percent, Volt
+from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL, command
 
 
@@ -143,36 +144,47 @@ class MixingValveWidget(QWidget):
         hlayout = QHBoxLayout()
         hlayout.addLayout(vlayout)
 
-        self.mixing_valve_chart = TimeChart(
-            {
-                "Raw (V)": ["Raw Position"],
-                "Percent (%)": ["Position"],
-            }
+        plot_layout = QVBoxLayout()
+
+        a1 = Axis("Raw (V)", m1m3ts.mixingValve)
+        a1.addValue("Raw (V)", "rawValvePosition")
+
+        a2 = Axis("Percent (%)", m1m3ts.mixingValve)
+        a2.addValue("Percent (%)", "valvePosition")
+
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("Raw (V)", m1m3ts.mixingValve).addValue("Raw", "rawValvePosition"),
+                Axis("Percent (%)", m1m3ts.mixingValve).addValue(
+                    "Percent", "valvePosition"
+                ),
+            )
         )
 
-        hlayout.addWidget(TimeChartView(self.mixing_valve_chart))
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("M1M3 Glycol (\u00B0C)", m1m3ts.glycolLoopTemperature)
+                .addValue("M1M3 Supply", "mirrorCoolantSupplyTemperature")
+                .addValue("M1M3 Return", "mirrorCoolantReturnTemperature")
+            )
+        )
+
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("Telescope Glycol (\u00B0C)", m1m3ts.glycolLoopTemperature)
+                .addValue("Telescope Supply", "telescopeCoolantSupplyTemperature")
+                .addValue("Telescope Return", "telescopeCoolantReturnTemperature")
+            )
+        )
+
+        hlayout.addLayout(plot_layout)
 
         self.setLayout(hlayout)
 
         self.command_mixing_valve.toggled.connect(self._temperature_control)
         self.command_mixing_valve.setChecked(True)
 
-        self.m1m3ts.mixingValve.connect(self.mixing_valve)
         self.m1m3ts.appliedSetpoints.connect(self.applied_setpoints)
-
-    @Slot()
-    def mixing_valve(self, data: BaseMsgType) -> None:
-        self.mixing_valve_chart.append(
-            data.private_sndStamp,
-            [data.rawValvePosition],
-            axis_index=0,
-        )
-
-        self.mixing_valve_chart.append(
-            data.private_sndStamp,
-            [data.valvePosition],
-            axis_index=1,
-        )
 
     @Slot()
     def applied_setpoints(self, data: BaseMsgType) -> None:
