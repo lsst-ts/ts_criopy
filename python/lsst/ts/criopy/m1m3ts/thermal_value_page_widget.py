@@ -46,9 +46,6 @@ class Buttons(enum.IntEnum):
     HEATERS = 2
 
 
-M3_R = 2.5337
-
-
 class ByteSpin(QSpinBox):
     def __init__(self):
         super().__init__()
@@ -228,16 +225,14 @@ class CommandWidget(QWidget):
     @Slot()
     def set_m1(self) -> None:
         value = self.m1_demand.text()
-        for fcu in FCUTable:
-            if fcu.center_distance() >= M3_R:
-                self.data_widget.set_value(fcu.index, value)
+        for fcu in [fcu for fcu in FCUTable if fcu.is_m1()]:
+            self.data_widget.set_value(fcu.index, value)
 
     @Slot()
     def set_m3(self) -> None:
         value = self.m3_demand.text()
-        for fcu in FCUTable:
-            if fcu.center_distance() < M3_R:
-                self.data_widget.set_value(fcu.index, value)
+        for fcu in [fcu for fcu in FCUTable if fcu.is_m3()]:
+            self.data_widget.set_value(fcu.index, value)
 
     @Slot()
     def cancel(self) -> None:
