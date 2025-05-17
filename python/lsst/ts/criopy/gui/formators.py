@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import math
 import re
 import typing
 
@@ -118,6 +119,9 @@ class Formator:
         str
             Formatted value.
         """
+        if math.isnan(value):
+            return f"---{self.unit_name}"
+
         text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
 
         if self.error_function is not None and self.error_function(value):

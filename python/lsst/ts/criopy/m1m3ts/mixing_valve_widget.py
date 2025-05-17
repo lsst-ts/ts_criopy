@@ -80,8 +80,8 @@ class MixingValveWidget(QWidget):
         self.glycol_target = temperature_target()
         self.heaters_target = temperature_target()
 
-        command_layout.addRow("Glycol setpoint", self.glycol_target)
-        command_layout.addRow("Heaters setpoint", self.heaters_target)
+        command_layout.addRow("Glycol Setpoint", self.glycol_target)
+        command_layout.addRow("Heaters Setpoint", self.heaters_target)
 
         set_mixing_valve = QPushButton("Set")
         set_mixing_valve.clicked.connect(self._set)
@@ -192,8 +192,6 @@ class MixingValveWidget(QWidget):
             self.command_temperature.setChecked(False)
         else:
             self.command_temperature.setChecked(True)
-            self.glycol_target.setValue(data.glycolSetpoint)
-            self.heaters_target.setValue(data.heatersSetpoint)
 
     @Slot()
     def _temperature_control(self, checked: bool) -> None:
