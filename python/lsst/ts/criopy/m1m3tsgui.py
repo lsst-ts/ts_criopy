@@ -21,36 +21,59 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from lsst.ts.xml.tables.m1m3 import Scanner
+
 from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar
 from .m1m3ts import (
     CoolantCirculationWidget,
     M1M3TSCSCControlWidget,
     MixingValveWidget,
     PowerPageWidget,
+    ThermalScannersWidget,
     ThermalValuePageWidget,
 )
 from .salcomm import MetaSAL
 
 
 class EUI(EUIWindow):
-    def __init__(self, m1m3ts: MetaSAL):
+    def __init__(
+        self,
+        m1m3ts: MetaSAL,
+        ts_1: MetaSAL,
+        ts_2: MetaSAL,
+        ts_3: MetaSAL,
+        ts_4: MetaSAL,
+    ):
         super().__init__(
-            "M1M3TSGUI", [m1m3ts], (700, 400), M1M3TSCSCControlWidget(m1m3ts)
+            "M1M3TSGUI",
+            [m1m3ts, ts_1, ts_2, ts_3, ts_4],
+            (700, 400),
+            M1M3TSCSCControlWidget(m1m3ts),
         )
 
-        self.m1m3ts = m1m3ts
+        self.add_page("Power status", PowerPageWidget, m1m3ts)
+        self.add_page("Thermal values", ThermalValuePageWidget, m1m3ts)
+        self.add_page("Mixing valve", MixingValveWidget, m1m3ts)
+        self.add_page("Coolant circulations", CoolantCirculationWidget, m1m3ts)
+        self.add_page(
+            "Thermal Scanners",
+            ThermalScannersWidget,
+            ts_1,
+            ts_2,
+            ts_3,
+            ts_4,
+        )
+        self.add_page("SAL Log", LogWidget, m1m3ts)
+        self.add_page("SAL Errors", SALErrorCodeWidget, m1m3ts)
 
-        self.add_page("Power status", PowerPageWidget, self.m1m3ts)
-        self.add_page("Thermal values", ThermalValuePageWidget, self.m1m3ts)
-        self.add_page("Mixing valve", MixingValveWidget, self.m1m3ts)
-        self.add_page("Coolant circulations", CoolantCirculationWidget, self.m1m3ts)
-        self.add_page("SAL Log", LogWidget, self.m1m3ts)
-        self.add_page("SAL Errors", SALErrorCodeWidget, self.m1m3ts)
-
-        self.setStatusBar(SALStatusBar([self.m1m3ts]))
+        self.setStatusBar(SALStatusBar([m1m3ts]))
 
 
 def run() -> None:
     app = Application(EUI)
     app.add_comm("MTM1M3TS")
+    app.add_comm("ESS", index=int(Scanner.TS_01), include=["temperature"])
+    app.add_comm("ESS", index=int(Scanner.TS_02), include=["temperature"])
+    app.add_comm("ESS", index=int(Scanner.TS_03), include=["temperature"])
+    app.add_comm("ESS", index=int(Scanner.TS_04), include=["temperature"])
     app.run()
