@@ -61,6 +61,12 @@ class Thermals(TopicCollection):
                         self.THERMAL_INDEX,
                         fmt="{v:.3f} °C",
                     ),
+                    WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
+                    WarningField(
+                        "Heater Disabled", "heaterDisabled", self.THERMAL_INDEX
+                    ),
+                    WarningField("Heater Breaker", "heaterBreaker", self.THERMAL_INDEX),
+                    WarningField("Fan Breaker", "fanBreaker", self.THERMAL_INDEX),
                 ],
                 "thermalData",
                 False,

@@ -98,7 +98,7 @@ class MixingValveWidget(QWidget):
             DataFormWidget(
                 m1m3ts.mixingValve,
                 [
-                    ("Raw Position", Volt(field="rawValvePosition")),
+                    ("Raw Position", Volt(field="rawValvePosition", fmt="0.05f")),
                     ("Position", Percent(field="valvePosition")),
                 ],
             )

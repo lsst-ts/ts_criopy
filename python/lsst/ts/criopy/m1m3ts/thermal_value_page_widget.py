@@ -19,10 +19,12 @@
 
 import enum
 import typing
+from math import isnan
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FCUTable
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QGridLayout,
@@ -57,28 +59,38 @@ class DataWidget(QTableWidget):
 
     def __init__(self) -> None:
         super().__init__(10, 10)
-        for r in range(0, 10):
-            self.setVerticalHeaderItem(r, QTableWidgetItem(str(r * 10)))
-            for c in range(0, 10):
-                item = QTableWidgetItem("---")
-                self.setItem(r, c, item)
+        for c in range(10):
+            self.setVerticalHeaderItem(c, QTableWidgetItem(str(c * 10)))
+        for index in range(96):
+            item = QTableWidgetItem("---")
+            self.setItem(int(index / 10), index % 10, item)
         self.empty()
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def empty(self) -> None:
         self.set_values(range(1, 97))
+        self.reset_background()
+
+    def reset_background(self) -> None:
+        d_b = self.palette().base()
+        for index in range(96):
+            self.get_item(index).setBackground(d_b)
+
+    def get_item(self, index: int) -> QTableWidgetItem:
+        return self.item(int(index / 10), index % 10)
 
     def set_value(self, index: int, value: str) -> None:
-        self.item(int(index / 10), index % 10).setText(str(value))
+        self.get_item(index).setText(str(value))
 
     def set_values(self, data: BaseMsgType, fmt: str | None = None) -> None:
         r = 0
         c = 0
         for value in data:
+            item = self.item(r, c)
             if fmt is None:
-                self.item(r, c).setText(str(value))
+                item.setText(str(value))
             else:
-                self.item(r, c).setText(fmt.format(v=value))
+                item.setText(fmt.format(v=value))
             c += 1
             if c >= self.columnCount():
                 c = 0
@@ -92,6 +104,11 @@ class DataWidget(QTableWidget):
                 if index < 96:
                     data.append(int(self.item(r, c).text()))
         return data
+
+    def mask_backround(self, mask: list[bool], brush: QBrush) -> None:
+        for index, masked in enumerate(mask):
+            if masked:
+                self.get_item(index).setBackground(brush)
 
 
 class CommandWidget(QWidget):
@@ -277,7 +294,7 @@ class CommandWidget(QWidget):
         self.cancel()
 
     def update_values(
-        self, values: typing.Any, freeze: bool = False, fmt: str | None = None
+        self, values: None | BaseMsgType, freeze: bool = False, fmt: str | None = None
     ) -> None:
         if self.freezed:
             return
@@ -289,6 +306,9 @@ class CommandWidget(QWidget):
             return
 
         self.data_widget.set_values(values, fmt=fmt)
+
+    def mask_backround(self, mask: list[bool], background: QBrush) -> None:
+        self.data_widget.mask_backround(mask, background)
 
 
 class ThermalValuePageWidget(TopicWindow):
@@ -309,6 +329,48 @@ class ThermalValuePageWidget(TopicWindow):
         if data is None or self.field is None:
             self.command_widget.update_values(None)
         else:
-            self.command_widget.update_values(
-                self.field.getValue(data), fmt=self.field.fmt
-            )
+            values = self.field.getValue(data)
+            self.command_widget.data_widget.reset_background()
+            self.command_widget.update_values(values, fmt=self.field.fmt)
+            if self.field.field_name in ["heaterPWM"]:
+                self.command_widget.mask_backround(
+                    [heater == 0 for heater in values], Qt.red
+                )
+                self.command_widget.mask_backround(
+                    [heater == 100 for heater in values], Qt.blue
+                )
+            if self.field.field_name in "absoluteTemperature":
+                self.command_widget.mask_backround(
+                    [isnan(t) for t in values], Qt.darkRed
+                )
+                target = self.comm.remote.evt_appliedSetpoints.get()
+                if target is not None and not isnan(target.heatersSetpoint):
+                    tt = target.heatersSetpoint
+                    t_diff = [t - tt for t in values]
+                    self.command_widget.mask_backround(
+                        [td < -0.025 for td in t_diff], QColor("#99CCFF")
+                    )
+                    self.command_widget.mask_backround(
+                        [td > 0.025 for td in t_diff], QColor("#FF9999")
+                    )
+                    self.command_widget.mask_backround(
+                        [td < -0.05 for td in t_diff], Qt.blue
+                    )
+                    self.command_widget.mask_backround(
+                        [td > 0.05 for td in t_diff], Qt.red
+                    )
+            if self.field.field_name in ["heaterPWM", "fanRPM", "absoluteTemperature"]:
+                t_w = self.comm.remote.evt_thermalWarning.get()
+                if t_w is not None:
+                    self.command_widget.mask_backround(
+                        t_w.breakerHeater1Error, QBrush(Qt.red, Qt.Dense6Pattern)
+                    )
+            elif isinstance(values[0], bool):
+                self.command_widget.mask_backround(
+                    values, QBrush(Qt.red, Qt.Dense3Pattern)
+                )
+            thermal_settings = self.comm.remote.evt_thermalSettings.get()
+            if thermal_settings is not None:
+                self.command_widget.mask_backround(
+                    [not (d) for d in thermal_settings.enabledFCU], QBrush(Qt.gray)
+                )
