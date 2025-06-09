@@ -355,16 +355,11 @@ class Widget(QSplitter):
         self._topic = self.topics.topics[topic_index]
         self.__setModifyCommand(self._topic.command)
         self.field = self._topic.fields[field_index]
-        # try:
         self.topics.change_topic(topic_index, self.data_changed, self.m1m3)
         data = self._get_data()
         self.change_values()
         self.update_values(data)
         self.data_changed(data)
-        # except RuntimeError as err:
-        #    print("ForceActuator.Widget.__change_field", err)
-        #    self._topic = None
-        #    pass
 
     @Slot()
     def data_changed(self, data: BaseMsgType) -> None:

@@ -84,6 +84,7 @@ class TopicWindow(QSplitter):
 
         self.comm = comm
         self.collection = collection
+        self.user_widget = user_widget
 
         self.field: TopicField | None = None
 
@@ -134,7 +135,7 @@ class TopicWindow(QSplitter):
         self.field_list = QListWidget()
         self.field_list.currentRowChanged.connect(self.current_field_changed)
 
-        plot_layout.addWidget(user_widget)
+        plot_layout.addWidget(self.user_widget)
 
         filter_layout.addWidget(self.topic_list)
         filter_layout.addWidget(self.field_list)
@@ -167,6 +168,16 @@ class TopicWindow(QSplitter):
             return
         self._change_field(topic_index, field_index)
         self.collection.topics[topic_index].selected_field = field_index
+
+    def field_changed(self, field: TopicField) -> None:
+        """Should be overwritten in child classes to setup scaling etc.
+
+        Parameters
+        ----------
+        field : TopicField
+            New topic.
+        """
+        pass
 
     def _set_unknown(self) -> None:
         self.last_updated_label.set_unknown()
@@ -201,6 +212,7 @@ class TopicWindow(QSplitter):
         self.field = topic.fields[field_index]
         try:
             self.collection.change_topic(topic_index, self.data_changed, self.comm)
+            self.field_changed(self.field)
 
             data = getattr(self.comm.remote, topic.getTopic()).get()
             self.data_changed(data)
@@ -221,6 +233,9 @@ class TopicWindow(QSplitter):
         data : BaseMsgType
             New values, retrieved from SAL.
         """
+        if self.field is None:
+            raise RuntimeError("update_values was called with empty field.")
+
         self.update_values(data)
         if data is None:
             self._set_unknown()

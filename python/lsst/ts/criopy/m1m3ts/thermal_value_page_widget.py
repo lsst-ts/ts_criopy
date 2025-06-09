@@ -49,7 +49,7 @@ class Buttons(enum.IntEnum):
 
 
 class ByteSpin(QSpinBox):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setRange(0, 255)
 

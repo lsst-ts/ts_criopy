@@ -21,12 +21,19 @@
 
 
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
+from lsst.ts.xml.tables.m1m3 import (
+    FATable,
+    FCUData,
+    ForceActuatorData,
+    actuator_id_to_index,
+)
 from PySide6.QtCore import QEvent, Signal
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsView
 
-from .force_actuator_item import FASelection, ForceActuatorData, ForceActuatorItem
+from .data_item import DataItemState
+from .fcu_item import FCUItem
+from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 from .mirror import Mirror
 
@@ -34,14 +41,14 @@ from .mirror import Mirror
 class MirrorView(QGraphicsView):
     """View on mirror populated by actuators."""
 
-    selectionChanged = Signal(ForceActuatorItem)
+    selectionChanged = Signal(QGraphicsItem)
     """Signal raised when another actuator is selected by a mouse click.
 
     Parameters
     ----------
-    support : bool, optional
+    support : `bool`, optional
         Populate mirror view with support actuators.
-    thermal : bool, optional
+    thermal : `bool`, optional
         Populate mirror view with thermal actuators.
     """
 
@@ -75,7 +82,7 @@ class MirrorView(QGraphicsView):
             for i in self._mirror.items():
                 i.setEnabled(self.isEnabled())
 
-    def _setNeighbour(self, index: int, activate: bool) -> None:
+    def _set_fa_neighbour(self, index: int, activate: bool) -> None:
         for fids in FATable[index].far_neighbors:
             fa = self.get_force_actuator(fids)
             if activate:
@@ -94,17 +101,18 @@ class MirrorView(QGraphicsView):
 
     def clear_selected(self) -> None:
         if self._selected_actuator is not None:
-            self._setNeighbour(self._selected_actuator.actuator.index, False)
+            self._set_fa_neighbour(self._selected_actuator.actuator.index, False)
             self._selected_actuator.setKind(FASelection.NORMAL)
             self._selected_actuator = None
 
-    def set_selected(self, selected_actuator: ForceActuatorItem) -> None:
+    def set_selected(self, selected_actuator: ForceActuatorItem | FCUItem) -> None:
         self.clear_selected()
 
-        selected_actuator.setKind(FASelection.SELECTED)
-        self._setNeighbour(selected_actuator.actuator.index, True)
-        self.selectionChanged.emit(selected_actuator)
-        self._selected_actuator = selected_actuator
+        if isinstance(ForceActuatorItem, selected_actuator):
+            selected_actuator.setKind(FASelection.SELECTED)
+            self._set_fa_neighbour(selected_actuator.actuator.index, True)
+            self.selectionChanged.emit(selected_actuator)
+            self._selected_actuator = selected_actuator
 
     def set_color_scale(self, scale: GaugeScale) -> None:
         """Sets scale used for color scaling.
@@ -127,7 +135,7 @@ class MirrorView(QGraphicsView):
         self.scale(s, s)
 
     def update_force_actuator(
-        self, fa: ForceActuatorData, data: BaseMsgType, state: int
+        self, fa: ForceActuatorData, data: BaseMsgType, state: DataItemState
     ) -> None:
         """Update actuator value and state.
 
@@ -137,7 +145,7 @@ class MirrorView(QGraphicsView):
             Force Actuator record.
         data : BaseMsgType
             Update actuator value.
-        state : int
+        state : DataItemState
             Updated actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
@@ -147,9 +155,34 @@ class MirrorView(QGraphicsView):
             If actuator with the given ID cannot be found.
         """
         self._mirror.fa[fa.index].update_data(data, state)
-        if self._selected_actuator is None:
+        if not (isinstance(self._selected_actuator, ForceActuatorItem)):
             return
         if self._selected_actuator.actuator.actuator_id == fa.actuator_id:
+            self.selectionChanged.emit(
+                self._selected_actuator if self._selected_actuator.active else None
+            )
+
+    def update_fcu(self, fcu: FCUData, value: float, state: DataItemState) -> None:
+        """Update FCU value and state.
+
+        Parameters
+        ----------
+        fcu : FCUData
+            Force Actuator record.
+        value : float
+            Update actuator value.
+        state : DataItemState
+            Updated actuator state.
+
+        Raises
+        ------
+        KeyError
+            If actuator with the given ID cannot be found.
+        """
+        self._mirror.fcu[fcu.index].update_data(value, state)
+        if not isinstance(self._selected_actuator, FCUItem):
+            return
+        if self._selected_actuator.actuator.index == fcu.index:
             self.selectionChanged.emit(
                 self._selected_actuator if self._selected_actuator.active else None
             )

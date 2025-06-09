@@ -43,7 +43,7 @@ class GaugeScale(QWidget):
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
-    def setRange(self, min_range: float, max_range: float) -> None:
+    def set_range(self, min_range: float, max_range: float) -> None:
         """Set value range. Color is mapped between min and max values, using
         change in hue.
 
@@ -62,13 +62,13 @@ class GaugeScale(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
-    def formatValue(self, value: float) -> str:
+    def format_value(self, value: float) -> str:
         ret = f"{value:{self._fmt}}"
         if ret == self._formated_zero:
             return str(value)
         return ret
 
-    def getColor(self, value: float) -> QColor | None:
+    def get_brush(self, value: float) -> QBrush:
         """Returns color for given value.
 
         Parameters
@@ -78,16 +78,16 @@ class GaugeScale(QWidget):
 
         Returns
         -------
-        color : `QColor`
-            QColor representing the value on scale. None - use default color.
+        brush : QBrush
+            QBrush representing the value on scale.
         """
         if self._min == self._max:
-            return None
+            return QBrush(Qt.red, Qt.DiagCrossPattern)
         # draw using value as index into possible colors in HSV model
         hue = 1 - (value - self._min) / (self._max - self._min)
-        return self.getHueColor(hue)
+        return self.get_color(hue)
 
-    def getHueColor(self, hue: float) -> QColor:
+    def get_color(self, hue: float) -> QColor:
         """Returns color from "hue" (0-1 range).
 
         Parameters
@@ -121,12 +121,12 @@ class GaugeScale(QWidget):
                     self.width() - swidth,
                     sheight,
                     int(Qt.AlignCenter),
-                    self.formatValue(self._min),
+                    self.format_value(self._min),
                 )
             return
 
         for x in range(0, sheight):
-            painter.setPen(self.getHueColor(x / sheight))
+            painter.setPen(self.get_color(x / sheight))
             painter.drawLine(0, x, swidth, x)
 
         painter.setPen(Qt.black)
@@ -136,7 +136,7 @@ class GaugeScale(QWidget):
             self.width() - swidth,
             30,
             int(Qt.AlignCenter),
-            self.formatValue(self._max),
+            self.format_value(self._max),
         )
         painter.drawText(
             0,
@@ -144,7 +144,7 @@ class GaugeScale(QWidget):
             self.width() - swidth,
             30,
             int(Qt.AlignCenter),
-            self.formatValue((self._max + self._min) / 2.0),
+            self.format_value((self._max + self._min) / 2.0),
         )
         painter.drawText(
             0,
@@ -152,5 +152,5 @@ class GaugeScale(QWidget):
             self.width() - swidth,
             30,
             int(Qt.AlignCenter),
-            self.formatValue(self._min),
+            self.format_value(self._min),
         )

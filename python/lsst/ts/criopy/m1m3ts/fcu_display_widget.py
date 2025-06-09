@@ -21,18 +21,49 @@
 
 __all__ = ["FCUDisplayWidget"]
 
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+import math
 
-from ..gui.actuatorsdisplay import MirrorWidget
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import FCUTable
+
+from ..gui.actuatorsdisplay import DataItemState, MirrorWidget
+from ..gui.sal import TopicField, TopicWindow
 from ..salcomm import MetaSAL
+from .thermal_data import Thermals
 
 
-class FCUDisplayWidget(QWidget):
+class FCUDisplayWidget(TopicWindow):
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__()
         self.mirror_widget = MirrorWidget(thermal=True)
 
-        plot_layout = QVBoxLayout()
-        plot_layout.addWidget(self.mirror_widget)
+        super().__init__(m1m3ts, Thermals(), self.mirror_widget)
 
-        self.setLayout(plot_layout)
+    def field_changed(self, field: TopicField) -> None:
+        """Called when data are changed."""
+        if field is not None:
+            self.mirror_widget.set_scale_type(field.scale_type)
+
+    def update_values(self, data: BaseMsgType) -> None:
+        if data is None:
+            values = None
+        else:
+            assert self.field is not None
+            values = self.field.getValue(data)
+
+        enabled = self.comm.remote.evt_enabledILC.get()
+
+        for fcu in FCUTable:
+            value = math.nan if values is None else float(values[fcu.index])
+            state = (
+                DataItemState.INACTIVE
+                if enabled is None or enabled.enabled[fcu.index] is False
+                else DataItemState.ACTIVE
+            )
+            self.mirror_widget.mirror_view.update_fcu(fcu, value, state)
+
+        if values is None:
+            self.mirror_widget.set_range(0, 0)
+            return
+
+        values = [v for v in values if v is not None]
+        self.mirror_widget.set_range(min(values), max(values))

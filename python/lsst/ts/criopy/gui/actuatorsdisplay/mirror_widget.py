@@ -54,7 +54,7 @@ class MirrorWidget(QWidget):
         super().__init__()
 
         self.mirror_view = MirrorView(support, thermal)
-        self._bumpTest = BumpTestScale()
+        self._bump_test = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
         self._gauge = GaugeScale()
         self._integer = IntegerScale()
@@ -64,16 +64,18 @@ class MirrorWidget(QWidget):
 
         layout = QHBoxLayout()
         layout.addWidget(self.mirror_view)
-        layout.addWidget(self._gauge)
-        layout.addWidget(self._bumpTest)
+        layout.addWidget(self._bump_test)
         layout.addWidget(self._enabled_disabled)
+        layout.addWidget(self._gauge)
+        layout.addWidget(self._integer)
         layout.addWidget(self._onoff)
         layout.addWidget(self._waiting)
         layout.addWidget(self._warning)
 
-        self._curentWidget = self._gauge
-        self._bumpTest.hide()
+        self._curent_gauge = self._gauge
+        self._bump_test.hide()
         self._enabled_disabled.hide()
+        self._integer.hide()
         self._onoff.hide()
         self._waiting.hide()
         self._warning.hide()
@@ -84,14 +86,16 @@ class MirrorWidget(QWidget):
         self.mirror_view.resetTransform()
         self.mirror_view.update_scale()
 
-    def _replace(self, newWidget: QWidget) -> None:
-        if self._curentWidget == newWidget:
+    def _replace_gauge(self, new_gauge: GaugeScale) -> None:
+        if self._curent_gauge == new_gauge:
             return
-        self._curentWidget.hide()
-        self._curentWidget = newWidget
-        self._curentWidget.show()
+        self._curent_gauge.hide()
+        self._curent_gauge = new_gauge
+        self._curent_gauge.show()
 
-    def setScaleType(self, scale: Scales) -> None:
+        self.set_color_scale()
+
+    def set_scale_type(self, scale: Scales) -> None:
         """Sets scale type.
 
         Parameters
@@ -100,21 +104,21 @@ class MirrorWidget(QWidget):
             One of the Scales enum number.
         """
         if scale == Scales.BUMP_TEST:
-            self._replace(self._bumpTest)
+            self._replace_gauge(self._bump_test)
         elif scale == Scales.ONOFF:
-            self._replace(self._onoff)
+            self._replace_gauge(self._onoff)
         elif scale == Scales.WARNING:
-            self._replace(self._warning)
+            self._replace_gauge(self._warning)
         elif scale == Scales.ENABLED_DISABLED:
-            self._replace(self._enabled_disabled)
+            self._replace_gauge(self._enabled_disabled)
         elif scale == Scales.WAITING:
-            self._replace(self._waiting)
+            self._replace_gauge(self._waiting)
         elif scale == Scales.INTEGER:
-            self._replace(self._integer)
+            self._replace_gauge(self._integer)
         else:
-            self._replace(self._gauge)
+            self._replace_gauge(self._gauge)
 
-    def setRange(self, min_value: float, max_value: float) -> None:
+    def set_range(self, min_value: float, max_value: float) -> None:
         """Sets range used for color scaling.
 
         Parameters
@@ -124,12 +128,12 @@ class MirrorWidget(QWidget):
         max_value : `float`
            Maximal value.
         """
-        if self._curentWidget == self._gauge:
-            self._gauge.setRange(min_value, max_value)
+        if self._curent_gauge in [self._gauge, self._integer]:
+            self._curent_gauge.set_range(min_value, max_value)
         self.set_color_scale()
 
     def set_color_scale(self) -> None:
-        self.mirror_view.set_color_scale(self._curentWidget)
+        self.mirror_view.set_color_scale(self._curent_gauge)
 
     def set_selected(self, actuator_id: int) -> None:
         """Sets current selected force actuators. Emits update signals.

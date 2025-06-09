@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QPainter, QPaintEvent
+
 from .gauge_scale import GaugeScale
 
 
@@ -26,3 +29,56 @@ class IntegerScale(GaugeScale):
 
     def __init__(self) -> None:
         super().__init__(".0f")
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        """Overridden method. Paint gauge as series of lines, and adds text
+        labels."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        swidth = max(self.width() - 100, 20)
+        sheight = self.height()
+        if self._min == self._max:
+            painter.setBrush(QBrush(Qt.red, Qt.DiagCrossPattern))
+            painter.drawRect(0, 0, swidth, sheight)
+            painter.setPen(Qt.black)
+            if self._min is not None:
+                painter.drawText(
+                    0,
+                    0,
+                    self.width() - swidth,
+                    sheight,
+                    int(Qt.AlignCenter),
+                    self.format_value(self._min),
+                )
+            return
+
+        for x in range(0, sheight):
+            painter.setPen(self.get_color(round(x / sheight)))
+            painter.drawLine(0, x, swidth, x)
+
+        painter.setPen(Qt.black)
+        painter.drawText(
+            0,
+            0,
+            self.width() - swidth,
+            30,
+            int(Qt.AlignCenter),
+            self.format_value(self._max),
+        )
+        painter.drawText(
+            0,
+            sheight / 2.0 - 30,
+            self.width() - swidth,
+            30,
+            int(Qt.AlignCenter),
+            self.format_value((self._max + self._min) / 2.0),
+        )
+        painter.drawText(
+            0,
+            sheight - 30,
+            self.width() - swidth,
+            30,
+            int(Qt.AlignCenter),
+            self.format_value(self._min),
+        )

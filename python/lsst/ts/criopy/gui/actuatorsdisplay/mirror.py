@@ -28,6 +28,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QPen
 from PySide6.QtWidgets import QGraphicsScene
 
+from .data_item import DataItemState
 from .fcu_item import FCUItem
 from .force_actuator_item import ForceActuatorItem
 from .gauge_scale import GaugeScale
@@ -43,7 +44,6 @@ class Mirror(QGraphicsScene):
 
     Attributes
     ----------
-
     fa : [ForceActuatorItem]
         Mirror support system force actuators.
     fcu : [FCUItem]
@@ -125,7 +125,7 @@ class Mirror(QGraphicsScene):
 
         if thermal:
             for fcu in FCUTable:
-                self.add_fcu(FCUItem(fcu))
+                self.add_fcu(FCUItem(fcu, DataItemState.INACTIVE))
 
     def add_fa(self, fa: ForceActuatorItem) -> None:
         self.fa.append(fa)
@@ -138,7 +138,7 @@ class Mirror(QGraphicsScene):
         self.addItem(fcu)
 
     def set_color_scale(self, scale: GaugeScale) -> None:
-        """Set display color scale. Provides getColor method, returning color
+        """Set display color scale. Provides get_brush method, returning brush
         to be used with value.
 
         Parameters
@@ -152,16 +152,18 @@ class Mirror(QGraphicsScene):
         for fcu in self.fcu:
             fcu.set_color_scale(scale)
 
-    def update_force_actuator(self, index: int, data: BaseMsgType, state: int) -> None:
+    def update_force_actuator(
+        self, index: int, data: BaseMsgType, state: DataItemState
+    ) -> None:
         """Updates actuator value and state.
 
         Parameters
         ----------
-        actuator_id : `int`
+        actuator_id : int
             Force Actuator ID number.
-        data : `Any`
+        data : BaseMsgType
             Update actuator value.
-        state : `int`
+        state : DataItemState
             Updated actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
