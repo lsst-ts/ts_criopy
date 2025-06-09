@@ -20,11 +20,14 @@
 
 from lsst.ts.xml.tables.m1m3 import FCUData
 from PySide6.QtCore import QPointF, QRect, Qt
-from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPen
-from PySide6.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
+from PySide6.QtGui import QGuiApplication, QPainter, QPen
+from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
+
+from .data_item import DataItem, DataItemState
+from .gauge_scale import GaugeScale
 
 
-class FCUItem(QGraphicsItem):
+class FCUItem(DataItem):
     """Combines graphical display of an FCU with its data. Record if an
     actuator is selected by a mouse click.
 
@@ -43,7 +46,7 @@ class FCUItem(QGraphicsItem):
     data_index : `int`
         Index in value arrays. Points to selected actuator value.
     scale: `object`
-        Object providing getColor(value) method.
+        Object providing get_brush(value) method.
     state : `int`
         Force Actuator state. 0 for inactive/unused, 1 for active OK, 2 for
         active warning.
@@ -51,29 +54,29 @@ class FCUItem(QGraphicsItem):
         FA kind - normal, selected or neighbour of selected.
     """
 
-    STATE_INACTIVE = 0
-    """Force Actuator value is not relevant for the current display (`int`).
-    """
-
-    STATE_ACTIVE = 1
-    """Force Actuator is active and healthy (`int`).
-    """
-
-    STATE_WARNING = 2
-    """Force Actuator is active, but the value / actuator has some warning
-    attached (`int`).
-    """
-
-    def __init__(self, fcu: FCUData):
-        super().__init__()
+    def __init__(self, fcu: FCUData, state: DataItemState):
+        super().__init__(state)
         self.fcu = fcu
         # actuator position
         self._center = QPointF(fcu.x_position * 1000.0, -fcu.y_position * 1000.0)
+        # scale. Provides get_brush(data) object, returning brush to fill data
         # scalign factor. The actuator default size is 20x20 units. As
         # actuators are placed on mirror, the size needs to be adjusted to show
         # properly actuator on display in e.g. mm (where X and Y ranges are
         # ~-4400 .. +4400).
         self._scale_factor = 25
+
+    def set_color_scale(self, scale: GaugeScale) -> None:
+        """Set actuator data display scale. This is used for setting display
+        color and formatting values.
+
+        Parameters
+        ----------
+        scale : `object`
+            Scaling object. Should provide formatValue() and get_brush()
+            methods."""
+        self._color_scale = scale
+        self.update()
 
     def boundingRect(self) -> QRect:
         """Returns rectangle occupied by drawing. Overridden method."""
@@ -88,6 +91,7 @@ class FCUItem(QGraphicsItem):
         self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget
     ) -> None:
         """Paint actuator. Overridden method."""
+        assert self._color_scale is not None
 
         palette = QGuiApplication.palette()
         if not self.isEnabled():
@@ -99,14 +103,9 @@ class FCUItem(QGraphicsItem):
         lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
         painter.setPen(QPen(Qt.red, self._scale_factor, lineStyle))
 
-        # color = self._color_scale.getColor(self._data)
-        color = Qt.green
-        painter.setBrush(
-            QBrush(
-                color,
-                Qt.SolidPattern if self.isEnabled() else Qt.Dense4Pattern,
-            )
-        )
+        brush = self._color_scale.get_brush(self._data)
+        painter.setBrush(brush)
+
         # draw actuator, write value
         painter.drawRect(
             self._center.x() - 8 * self._scale_factor,
@@ -128,4 +127,23 @@ class FCUItem(QGraphicsItem):
             10 * self._scale_factor,
             int(Qt.AlignBottom) | int(Qt.AlignHCenter),
             str(self.fcu.name),
+        )
+
+        vstr = self.get_value()
+        if len(vstr) > 6:
+            font.setPixelSize(3.5 * self._scale_factor)
+        elif len(vstr) > 3:
+            font.setPixelSize(4.5 * self._scale_factor)
+
+        font.setItalic(False)
+        font.setBold(True)
+        painter.setFont(font)
+        # draw value
+        painter.drawText(
+            self._center.x() - 10 * self._scale_factor,
+            self._center.y(),
+            20 * self._scale_factor,
+            10 * self._scale_factor,
+            int(Qt.AlignTop) | int(Qt.AlignHCenter),
+            vstr,
         )

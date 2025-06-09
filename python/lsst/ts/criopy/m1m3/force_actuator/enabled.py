@@ -27,7 +27,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
 
-from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget, Scales
+from ...gui.actuatorsdisplay import DataItemState, MirrorWidget, Scales
 from ...gui.sal import StateEnabledWidget
 from ...salcomm import MetaSAL, command
 from .combo_box import ComboBox
@@ -45,7 +45,7 @@ class Enabled(StateEnabledWidget):
 
     def __init__(self, m1m3: MetaSAL):
         self.mirror_widget = MirrorWidget(support=True)
-        self.mirror_widget.setScaleType(Scales.ENABLED_DISABLED)
+        self.mirror_widget.set_scale_type(Scales.ENABLED_DISABLED)
         super().__init__(
             m1m3,
             [
@@ -171,11 +171,7 @@ class Enabled(StateEnabledWidget):
         for fa in FATable:
             index = fa.index
             value = None if data is None else data.forceActuatorEnabled[index]
-            state = (
-                ForceActuatorItem.STATE_INACTIVE
-                if data is None
-                else ForceActuatorItem.STATE_ACTIVE
-            )
+            state = DataItemState.INACTIVE if data is None else DataItemState.ACTIVE
             self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 
         self.mirror_widget.set_color_scale()
