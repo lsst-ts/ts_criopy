@@ -22,7 +22,7 @@ from lsst.ts.m1m3.utils import Simulator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
 
-from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
+from ...gui.actuatorsdisplay import DataItemState, MirrorWidget
 from ...salcomm import MetaSAL
 from .widget import Widget
 
@@ -34,15 +34,7 @@ class GraphPageWidget(Widget):
     """
 
     def __init__(self, m1m3: MetaSAL | Simulator):
-        self.mirror_widget = MirrorWidget()
-
-        for row in FATable:
-            self.mirror_widget.mirror_view.addForceActuator(
-                row,
-                None,
-                None,
-                ForceActuatorItem.STATE_INACTIVE,
-            )
+        self.mirror_widget = MirrorWidget(support=True)
 
         self.mirror_widget.mirror_view.selectionChanged.connect(
             self.updateSelectedActuator
@@ -52,10 +44,8 @@ class GraphPageWidget(Widget):
 
     def change_values(self) -> None:
         """Called when data are changed."""
-        if self.field is None:
-            raise RuntimeError("field is None in GraphPageWidget.change_values")
-
-        self.mirror_widget.setScaleType(self.field.scale_type)
+        assert self.field is not None
+        self.mirror_widget.set_scale_type(self.field.scale_type)
 
     def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
@@ -75,43 +65,41 @@ class GraphPageWidget(Widget):
         else:
             values = self.field.getValue(data)
 
-        def get_warning(index: int) -> int:
+        def get_warning(index: int) -> DataItemState:
             return (
-                ForceActuatorItem.STATE_WARNING
+                DataItemState.WARNING
                 if warning_data.minorFault[index] or warning_data.majorFault[index]
-                else ForceActuatorItem.STATE_ACTIVE
+                else DataItemState.ACTIVE
             )
 
         enabled = self.m1m3.remote.evt_enabledForceActuators.get()
 
-        for row in FATable:
-            index = row.index
-            data_index = row.get_index(self.field.value_index)
+        for fa in FATable:
+            index = fa.index
+            data_index = fa.get_index(self.field.value_index)
             if values is None or data_index is None:
-                state = ForceActuatorItem.STATE_INACTIVE
+                state = DataItemState.INACTIVE
             elif enabled is not None and not enabled.forceActuatorEnabled[index]:
-                state = ForceActuatorItem.STATE_INACTIVE
+                state = DataItemState.INACTIVE
                 values[data_index] = None
             elif warning_data is not None or data_index is None:
                 state = get_warning(index)
             else:
-                state = ForceActuatorItem.STATE_ACTIVE
+                state = DataItemState.ACTIVE
 
             value = (
                 None if (values is None or data_index is None) else values[data_index]
             )
 
-            self.mirror_widget.mirror_view.update_force_actuator(
-                row.actuator_id, value, state
-            )
+            self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 
         if values is None:
-            self.mirror_widget.setRange(0, 0)
+            self.mirror_widget.set_range(0, 0)
             return
 
         # filter out None values
         values = [v for v in values if v is not None]
-        self.mirror_widget.setRange(min(values), max(values))
+        self.mirror_widget.set_range(min(values), max(values))
 
         selected = self.mirror_widget.mirror_view.selected()
         if selected is not None:

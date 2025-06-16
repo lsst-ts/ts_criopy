@@ -47,6 +47,5 @@ else:
     except ImportError:
         __version__ = "?"
 
-from .duration_parser import parseDuration
 from .exit_error_codes import ExitErrorCodes
 from .time_cache import TimeCache

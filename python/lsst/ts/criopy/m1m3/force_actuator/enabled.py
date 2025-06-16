@@ -27,7 +27,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
 
-from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget, Scales
+from ...gui.actuatorsdisplay import DataItemState, MirrorWidget, Scales
 from ...gui.sal import StateEnabledWidget
 from ...salcomm import MetaSAL, command
 from .combo_box import ComboBox
@@ -44,8 +44,8 @@ class Enabled(StateEnabledWidget):
     """
 
     def __init__(self, m1m3: MetaSAL):
-        self.mirrorWidget = MirrorWidget()
-        self.mirrorWidget.setScaleType(Scales.ENABLED_DISABLED)
+        self.mirror_widget = MirrorWidget(support=True)
+        self.mirror_widget.set_scale_type(Scales.ENABLED_DISABLED)
         super().__init__(
             m1m3,
             [
@@ -59,7 +59,7 @@ class Enabled(StateEnabledWidget):
 
         self.m1m3.enabledForceActuators.connect(self.enabledForceActuators)
 
-        self.mirrorWidget.mirror_view.selectionChanged.connect(self.selectionChanged)
+        self.mirror_widget.mirror_view.selectionChanged.connect(self.selectionChanged)
 
         self.selectedActuatorId = ComboBox()
         self.selectedActuatorId.editTextChanged.connect(self._actuatorChanged)
@@ -83,7 +83,7 @@ class Enabled(StateEnabledWidget):
         vLayout.addWidget(self.disableButton)
 
         layout = QHBoxLayout()
-        layout.addWidget(self.mirrorWidget)
+        layout.addWidget(self.mirror_widget)
         layout.addLayout(vLayout)
         self.setLayout(layout)
 
@@ -112,7 +112,7 @@ class Enabled(StateEnabledWidget):
 
         self.selectedActuatorId.setEditText(str(s.actuator.actuator_id))
         self.selectedActuatorValueLabel.setText(str(s.data))
-        self._updateSelected()
+        self._update_selected()
 
     def getSelectedID(self) -> int | None:
         """Returns selected FA ID.
@@ -126,7 +126,7 @@ class Enabled(StateEnabledWidget):
             return int(self.selectedActuatorId.currentText())
         return None
 
-    def _updateSelected(self) -> None:
+    def _update_selected(self) -> None:
         actuator_id = self.getSelectedID()
         if actuator_id is not None:
             index = actuator_id_to_index(actuator_id)
@@ -143,7 +143,7 @@ class Enabled(StateEnabledWidget):
 
     @Slot()
     def _actuatorChanged(self, text: str) -> None:
-        self.mirrorWidget.set_selected(int(text))
+        self.mirror_widget.set_selected(int(text))
 
     @asyncSlot()
     async def _enable_all_force_actuators(self) -> None:
@@ -168,32 +168,11 @@ class Enabled(StateEnabledWidget):
     @Slot()
     def enabledForceActuators(self, data: BaseMsgType) -> None:
         """Callback with enabled FA data. Triggers display update."""
-        if len(self.mirrorWidget.mirror_view.items()) == 0:
-            new = True  # need to add force actuators
-            self.mirrorWidget.clear()
-        else:
-            new = False
-
-        for row in FATable:
-            index = row.z_index
-            actuator_id = row.actuator_id
+        for fa in FATable:
+            index = fa.index
             value = None if data is None else data.forceActuatorEnabled[index]
-            state = (
-                ForceActuatorItem.STATE_INACTIVE
-                if data is None
-                else ForceActuatorItem.STATE_ACTIVE
-            )
-            if new:
-                self.mirrorWidget.mirror_view.addForceActuator(
-                    row,
-                    value,
-                    index,
-                    state,
-                )
-            else:
-                self.mirrorWidget.mirror_view.update_force_actuator(
-                    actuator_id, value, state
-                )
+            state = DataItemState.INACTIVE if data is None else DataItemState.ACTIVE
+            self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 
-        self.mirrorWidget.set_color_scale()
-        self._updateSelected()
+        self.mirror_widget.set_color_scale()
+        self._update_selected()

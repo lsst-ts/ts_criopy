@@ -4,6 +4,14 @@
 Version History
 ===============
 
+v0.11.0
+-------
+
+* Display FCU values in M1M3TSGU
+* Show mirror boundaries (M1, M3, center hole)
+* Improved M1M3TSGUI Mixing valve display
+* M1M3TSGUI table backgrounds colors for FCU with problems
+
 v0.10.0
 -------
 
