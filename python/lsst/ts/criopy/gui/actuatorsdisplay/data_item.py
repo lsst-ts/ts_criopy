@@ -61,7 +61,7 @@ class DataItem(QGraphicsItem):
         data : `float`
              New data associated with the actuator (actual force, calculated
              force, ..).
-        state : DataItemState
+        state : `DataItemState`
              New actuator state value.
         """
         if self._data != data or self._state != state:
@@ -70,7 +70,7 @@ class DataItem(QGraphicsItem):
             self.update()
 
     def get_value(self) -> str:
-        """Returns current value, string formated to scale.
+        """Returns current value, string formatted to scale.
 
         Returns
         -------
@@ -80,14 +80,14 @@ class DataItem(QGraphicsItem):
         assert self._data is not None
         return self.format_value(self._data)
 
-    def format_value(self, v: float) -> str:
+    def format_value(self, v: float | int | bool) -> str:
         """Returns
 
         Parameters
         ----------
-        v : float
+        v : `float | int | bool`
             Value to format. Type can vary depending on which value is being
-            formated (boolean, float, int,..).
+            formated.
 
         Returns
         -------

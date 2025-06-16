@@ -163,7 +163,7 @@ class MixingValveWidget(QWidget):
 
         plot_layout.addWidget(
             ChartWidget(
-                Axis("M1M3 Glycol (\u00B0C)", m1m3ts.glycolLoopTemperature)
+                Axis("M1M3 Glycol (\u00b0C)", m1m3ts.glycolLoopTemperature)
                 .addValue("M1M3 Supply", "mirrorCoolantSupplyTemperature")
                 .addValue("M1M3 Return", "mirrorCoolantReturnTemperature")
             )
@@ -171,7 +171,7 @@ class MixingValveWidget(QWidget):
 
         plot_layout.addWidget(
             ChartWidget(
-                Axis("Telescope Glycol (\u00B0C)", m1m3ts.glycolLoopTemperature)
+                Axis("Telescope Glycol (\u00b0C)", m1m3ts.glycolLoopTemperature)
                 .addValue("Telescope Supply", "telescopeCoolantSupplyTemperature")
                 .addValue("Telescope Return", "telescopeCoolantReturnTemperature")
             )

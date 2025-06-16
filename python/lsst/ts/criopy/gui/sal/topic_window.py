@@ -47,11 +47,11 @@ class TopicWindow(QSplitter):
 
     Parameters
     ----------
-    comm : MetaSAL
+    comm : `MetaSAL`
         SAL instance to communicate with SAL.
-    collection : TopicCollection
+    collection : `TopicCollection`
         Collections of data associated with widget.
-    user_widget : QWidget
+    user_widget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
         be update in update_values(data) method.
     detail_widget : `QWidget`, optional
@@ -67,7 +67,7 @@ class TopicWindow(QSplitter):
 
     Attributes
     ----------
-    field : TopicField | None
+    field : `TopicField | None`
         Selected field. Can be used to access details about the field.
     """
 
@@ -170,11 +170,12 @@ class TopicWindow(QSplitter):
         self.collection.topics[topic_index].selected_field = field_index
 
     def field_changed(self, field: TopicField) -> None:
-        """Should be overwritten in child classes to setup scaling etc.
+        """
+        May be overwritten in child classes to setup scaling etc.
 
         Parameters
         ----------
-        field : TopicField
+        field : `TopicField`
             New topic.
         """
         pass
@@ -188,7 +189,6 @@ class TopicWindow(QSplitter):
 
         Parameters
         ----------
-
         selected_actuator : `ForceActuatorItem`
             Contains actuator ID (selected actuator ID), data (selected
             actuator current value) and warning (boolean, true if value is in
@@ -206,7 +206,9 @@ class TopicWindow(QSplitter):
 
     def _change_field(self, topic_index: int, field_index: int) -> None:
         """
-        Redraw actuators with new values.
+        Redraw actuators with new values fields.
+
+        Para
         """
         topic = self.collection.topics[topic_index]
         self.field = topic.fields[field_index]
@@ -230,7 +232,7 @@ class TopicWindow(QSplitter):
 
         Parameters
         ----------
-        data : BaseMsgType
+        data : `BaseMsgType`
             New values, retrieved from SAL.
         """
         if self.field is None:

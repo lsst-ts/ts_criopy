@@ -62,7 +62,7 @@ class GaugeScale(QWidget):
         """Overridden method."""
         return QSize(100, 100)
 
-    def format_value(self, value: float) -> str:
+    def format_value(self, value: float | int | bool) -> str:
         ret = f"{value:{self._fmt}}"
         if ret == self._formated_zero:
             return str(value)

@@ -51,7 +51,7 @@ class ForceActuatorItem(DataItem):
     ----------
     actuator : `ForceActuatorData`
         Row from force actuator table.
-    state : DataItemState
+    state : `DataItemState`
         Force Actuator state.
     kind : `FASelection`
         FA kind - normal, selected or neighbour of selected.
