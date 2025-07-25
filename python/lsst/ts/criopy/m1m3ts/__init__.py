@@ -1,5 +1,6 @@
 from .coolant_circulation_widget import CoolantCirculationWidget
 from .csc_control_widget import M1M3TSCSCControlWidget
+from .egw_pump_errors import EGWPumpErrors
 from .fcu_display_widget import FCUDisplayWidget
 from .glycol_loop_temperature_widget import GlycolLoopTemperatureWidget
 from .mixing_valve_widget import MixingValveWidget
