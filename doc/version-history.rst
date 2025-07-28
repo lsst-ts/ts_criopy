@@ -11,6 +11,7 @@ v0.11.0
 * Show mirror boundaries (M1, M3, center hole)
 * Improved M1M3TSGUI Mixing valve display
 * M1M3TSGUI table backgrounds colors for FCU with problems
+* Show Glycol/EGW pump errors
 
 v0.10.0
 -------
