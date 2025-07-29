@@ -12,12 +12,13 @@ v0.11.0
 * Improved M1M3TSGUI Mixing valve display
 * M1M3TSGUI table backgrounds colors for FCU with problems
 * Show Glycol/EGW pump errors
+* Display far neighbor factor
 
 v0.10.0
 -------
 
 * M1M3 FA parallel bump tests
-* WaitComression state
+* WaitCompression state
 
 v0.9.0
 ------

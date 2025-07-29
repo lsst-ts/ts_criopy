@@ -19,6 +19,9 @@
 
 import typing
 
+import numpy as np
+from lsst.ts.m1m3.utils import ForceCalculator
+from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 
 from ...gui.actuatorsdisplay import Scales
@@ -35,8 +38,36 @@ __all__ = ["Topics"]
 
 
 class BumpTestField(TopicField):
+    """Class displaying bump test status."""
+
     def __init__(self, name: str, fieldName: str, valueIndex: int):
         super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
+
+
+class NearNeighborsDifferencesField(TopicField):
+
+    def __init__(self, name: str):
+        super().__init__(name, "__calculated__", FAIndex.Z)
+
+    def getValue(self, data: BaseMsgType) -> typing.Any:
+        near_diff = ForceCalculator.SALAppliedForces(data)
+        near_diff.calculate_near_neighbors_forces()
+        return np.array(near_diff.zForces) - np.array(near_diff.near_neighbors_forces)
+
+
+class FarNeighborsFactorsField(TopicField):
+    """Class displaying calculated far neighbosr factors."""
+
+    def __init__(self, name: str):
+        super().__init__(name, "__calculated__", FAIndex.Z)
+
+    def getValue(self, data: BaseMsgType) -> typing.Any:
+        fn_factors = ForceCalculator.SALAppliedForces(data)
+        fn_factors.calculate_far_neighbors_magnitudes()
+        return (
+            np.array(fn_factors.far_neighbors_magnitudes)
+            - fn_factors.global_average_force
+        ) / fn_factors.global_average_force
 
 
 class FAIndicesData(TopicData):
@@ -158,6 +189,8 @@ class Topics(TopicCollection):
                     TopicField("Z Forces", "zForces", FAIndex.Z),
                     TopicField("Y Forces", "yForces", FAIndex.Y),
                     TopicField("X Forces", "xForces", FAIndex.X),
+                    NearNeighborsDifferencesField("Near neighbors factor"),
+                    FarNeighborsFactorsField("Far neighbors factor"),
                 ],
                 "appliedForces",
                 False,
