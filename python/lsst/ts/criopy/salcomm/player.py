@@ -21,7 +21,6 @@
 
 __all__ = ["Player"]
 
-import numpy as np
 import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
@@ -42,18 +41,43 @@ class Player(QObject):
         self.cache: dict[str, pd.DataFrame] = {}
 
     async def replay(self, timepoint: Time) -> None:
-        time64 = pd.to_datetime(timepoint.isot).value
-        for tel in self.sal.telemetry():
+        timestr = str(timepoint.isot) + "+00:00"
+        timestr = timestr.replace("T", " ")
+
+        start = timepoint - TimeDelta(10, format="sec")
+        end = timepoint + TimeDelta(10, format="sec")
+
+        for tel in self.sal.telemetry()[:2]:
             if tel not in self.cache.keys():
-                start = timepoint + TimeDelta(10, format="sec")
-                end = timepoint + TimeDelta(20, format="sec")
                 self.cache[tel] = await self.efd_client.select_time_series(
-                    "lsst.sal.MTM1M3." + tel, "*", start, end
+                    "lsst.sal.MTM1M3." + tel,
+                    "*",
+                    start,
+                    end,
                 )
             data = self.cache[tel]
-            print(data.index)
-            row = data[data.index <= time64][0]
-            send = {}
-            for column in row.columns.values:
-                send[column] = row[column]
+            if data.empty:
+                continue
+
+            row = data.loc[:timestr].tail(n=1)  # type:ignore[misc]
+            print("Row")
+            print(row)
+
+            class Empty:
+                pass
+
+            send = Empty()
+            last = None
+            for c in row.columns.values:
+                print(c, row[c])
+                if c[-1] == "0":
+                    last = c[:-1]
+                    setattr(send, last, [row[c]])
+                elif last is not None and c.startswith(last):
+                    getattr(send, last).append(row[c])
+                else:
+                    last = None
+                    setattr(send, c, row[c])
+
+            print(send)
             getattr(self.sal, tel).emit(send)
