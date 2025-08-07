@@ -21,6 +21,8 @@
 
 __all__ = ["ReplayWidget"]
 
+from astropy.time import Time
+from lsst_efd_client import EfdClient
 from PySide6.QtCore import QDateTime, Qt, Slot
 from PySide6.QtWidgets import (
     QDateTimeEdit,
@@ -32,6 +34,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
+
+from ...salcomm import MetaSAL, Player
 
 
 class MSecDateTimeEdit(QDateTimeEdit):
@@ -43,8 +48,11 @@ class MSecDateTimeEdit(QDateTimeEdit):
 class ReplayWidget(QWidget):
     """Widget controlling data replay."""
 
-    def __init__(self):
+    def __init__(self, sal: MetaSAL):
         super().__init__()
+        self.sal = sal
+        self.player: Player | None = None
+
         self.setWindowTitle("Replay")
 
         now = QDateTime.currentDateTime()
@@ -63,6 +71,7 @@ class ReplayWidget(QWidget):
         self.slider = QSlider(Qt.Horizontal)
 
         self.current = MSecDateTimeEdit(self.start)
+        self.current.dateTimeChanged.connect(self.replay)
 
         current_layout = QHBoxLayout()
         current_layout.addWidget(QLabel("Current time"))
@@ -127,5 +136,14 @@ class ReplayWidget(QWidget):
         self.slider.setValue(0)
         self.slider_value_changed(0)
 
+    @Slot()
     def slider_value_changed(self, value: int) -> None:
         self.current.setDateTime(self.start.dateTime().addMSecs(value))
+
+    @asyncSlot()
+    async def replay(self, date_time: QDateTime) -> None:
+        if self.player is None:
+            self.player = Player(self.sal, EfdClient("usdf_efd"))
+        await self.player.replay(
+            Time(date_time.toMSecsSinceEpoch() / 1000.0, format="unix")
+        )

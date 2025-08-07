@@ -89,6 +89,7 @@ class EUIWindow(QMainWindow):
 
         replay_window = QPushButton("&Replay")
         replay_window.clicked.connect(self.replay_window)
+
         self.replay_widget: ReplayWidget | None = None
 
         self.pages: dict[str, typing.Callable[..., QWidget]] = {}
@@ -186,7 +187,7 @@ class EUIWindow(QMainWindow):
     @Slot()
     def replay_window(self, checked: bool) -> None:
         if self.replay_widget is None:
-            self.replay_widget = ReplayWidget()
+            self.replay_widget = ReplayWidget(self.comms[0])
         self.replay_widget.show()
 
     @Slot()

@@ -47,7 +47,7 @@ from PySide6.QtCore import QObject, Signal
 __all__ = ["MetaSAL", "create"]
 
 
-def _filterEvtTel(m: str) -> bool:
+def _filter_evt_tel(m: str) -> bool:
     return m.startswith("tel_") or m.startswith("evt_")
 
 
@@ -90,19 +90,27 @@ class MetaSAL(type(QObject)):  # type: ignore
                 )
 
         for m in [
-            evttel for evttel in dir(dictionary["remote"]) if _filterEvtTel(evttel)
+            evttel for evttel in dir(dictionary["remote"]) if _filter_evt_tel(evttel)
         ]:
             dictionary[m[4:]] = Signal(map)
 
         def connect_callbacks(self) -> None:  # type: ignore
-            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
+            for m in [evttel for evttel in dir(self.remote) if _filter_evt_tel(evttel)]:
                 getattr(self.remote, m).callback = getattr(self, m[4:]).emit
+
+        def telemetry(self) -> list[str]:
+            """Return remote telemetry topics names."""
+            return [tel[4:] for tel in dir(self.remote) if tel.startswith("tel_")]
+
+        def events(self) -> list[str]:
+            """Return remote events topics names."""
+            return [evt[4:] for evt in dir(self.remote) if evt.startswith("evt_")]
 
         def reemit_remote(self) -> None:  # type: ignore
             """Re-emits all telemetry and event data from a single remote as Qt
             messages.
             """
-            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
+            for m in [evttel for evttel in dir(self.remote) if _filter_evt_tel(evttel)]:
                 data = getattr(self.remote, m).get()
                 if data is not None:
                     getattr(self, m[4:]).emit(data)
@@ -117,6 +125,9 @@ class MetaSAL(type(QObject)):  # type: ignore
         setattr(newclass, connect_callbacks.__name__, connect_callbacks)
         setattr(newclass, reemit_remote.__name__, reemit_remote)
         setattr(newclass, close.__name__, close)
+
+        setattr(newclass, telemetry.__name__, telemetry)
+        setattr(newclass, events.__name__, events)
 
         return newclass
 
