@@ -38,6 +38,7 @@ from qasync import asyncClose
 
 from ...salcomm import MetaSAL
 from .csc_control_widget import CSCControlWidget
+from .replay_widget import ReplayWidget
 
 
 class EUIWindow(QMainWindow):
@@ -86,6 +87,10 @@ class EUIWindow(QMainWindow):
         make_window = QPushButton("Open in &Window")
         make_window.clicked.connect(self.make_window)
 
+        replay_window = QPushButton("&Replay")
+        replay_window.clicked.connect(self.replay_window)
+        self.replay_widget: ReplayWidget | None = None
+
         self.pages: dict[str, typing.Callable[..., QWidget]] = {}
         self.windows: dict[str, list[QWidget]] = {}
 
@@ -95,6 +100,7 @@ class EUIWindow(QMainWindow):
         left_layout = QVBoxLayout()
         left_layout.addWidget(control_widget)
         left_layout.addWidget(make_window)
+        left_layout.addWidget(replay_window)
         left_layout.addWidget(self.application_pagination)
 
         self.tab_widget = QTabWidget()
@@ -176,6 +182,12 @@ class EUIWindow(QMainWindow):
         widget.setWindowTitle(f"{name}:{len(self.windows[name])+1}")
         widget.show()
         self.windows[name].append(widget)
+
+    @Slot()
+    def replay_window(self, checked: bool) -> None:
+        if self.replay_widget is None:
+            self.replay_widget = ReplayWidget()
+        self.replay_widget.show()
 
     @Slot()
     def change_page(self, row: int) -> None:
