@@ -21,6 +21,8 @@
 
 __all__ = ["ReplayWidget"]
 
+import logging
+
 from astropy.time import Time
 from lsst_efd_client import EfdClient
 from PySide6.QtCore import QDateTime, Qt, Slot
@@ -37,6 +39,7 @@ from PySide6.QtWidgets import (
 from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, Player
+from ..logging import LoggingWidget
 
 
 class MSecDateTimeEdit(QDateTimeEdit):
@@ -70,6 +73,11 @@ class ReplayWidget(QWidget):
 
         self.slider = QSlider(Qt.Horizontal)
 
+        logging_widget = LoggingWidget()
+
+        logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+        logging.getLogger().addHandler(logging_widget)
+
         self.current = MSecDateTimeEdit(self.start)
         self.current.dateTimeChanged.connect(self.replay)
 
@@ -97,6 +105,7 @@ class ReplayWidget(QWidget):
         player_layout.addWidget(self.forward_button)
 
         layout.addLayout(start_end_layout)
+        layout.addWidget(logging_widget)
         layout.addWidget(self.slider)
         layout.addLayout(current_layout)
         layout.addLayout(player_layout)

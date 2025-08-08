@@ -87,9 +87,15 @@ class GraphPageWidget(Widget):
             else:
                 state = DataItemState.ACTIVE
 
-            value = (
-                None if (values is None or data_index is None) else values[data_index]
-            )
+            try:
+                value = (
+                    None
+                    if (values is None or data_index is None)
+                    else values[data_index]
+                )
+            except IndexError as err:
+                print("Error", data, data_index, values, self.field)
+                raise err
 
             self.mirror_widget.mirror_view.update_force_actuator(fa, value, state)
 

@@ -21,6 +21,8 @@
 
 __all__ = ["Player"]
 
+import logging
+
 import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
@@ -47,8 +49,9 @@ class Player(QObject):
         start = timepoint - TimeDelta(10, format="sec")
         end = timepoint + TimeDelta(10, format="sec")
 
-        for tel in self.sal.telemetry()[:2]:
+        for tel in self.sal.telemetry():
             if tel not in self.cache.keys():
+                logging.info("Fetching %s - %s to %s", tel, start.isot, end.isot)
                 self.cache[tel] = await self.efd_client.select_time_series(
                     "lsst.sal.MTM1M3." + tel,
                     "*",
@@ -60,24 +63,20 @@ class Player(QObject):
                 continue
 
             row = data.loc[:timestr].tail(n=1)  # type:ignore[misc]
-            print("Row")
-            print(row)
 
-            class Empty:
-                pass
-
-            send = Empty()
-            last = None
-            for c in row.columns.values:
-                print(c, row[c])
-                if c[-1] == "0":
-                    last = c[:-1]
-                    setattr(send, last, [row[c]])
-                elif last is not None and c.startswith(last):
-                    getattr(send, last).append(row[c])
-                else:
+            class RowClass:
+                def __init__(self, row: pd.Series):
                     last = None
-                    setattr(send, c, row[c])
+                    for c in row.columns.values:
+                        v = row[c].item()
+                        if last is not None and c.startswith(last):
+                            getattr(self, last).append(v)
+                        elif c[-1] == "0":
+                            last = c[:-1]
+                            setattr(self, last, [v])
+                        else:
+                            last = None
+                            setattr(self, c, v)
 
-            print(send)
+            send = RowClass(row)
             getattr(self.sal, tel).emit(send)

@@ -167,7 +167,7 @@ class Messages(QPlainTextEdit):
         level = min(int(data.level / 10), 5)
         self.appendHtml(
             f"{date} [<b>{self.LEVELS_IDS[level]}</b>]"
-            f" <span style='{self.LEVEL_TEXT_STYLE[level]}'>"
+            f"<span style='{self.LEVEL_TEXT_STYLE[level]}'>"
             f"{escape(data.message)}"
             "</span>"
         )
