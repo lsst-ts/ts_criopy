@@ -21,62 +21,70 @@
 
 __all__ = ["Player"]
 
-import logging
+import asyncio
 
 import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
 from PySide6.QtCore import QObject
 
+from .efd_cache import EfdCache
 from .meta_sal import MetaSAL
 
 
 class Player(QObject):
     """Queries EFD for telemetry and events, build up a cache and replay the
-    events."""
+    events.
+
+    Parameters
+    ----------
+    sal : MetaSAL
+        SAL objects to replay. The topics in this fields are used to query EFD.
+    efd_client : EfdClient
+
+    """
 
     def __init__(self, sal: MetaSAL, efd_client: EfdClient):
         super().__init__()
         self.sal = sal
-        self.efd_client = efd_client
 
-        self.cache: dict[str, pd.DataFrame] = {}
+        self.cache = EfdCache(sal, efd_client)
+        self.sem = asyncio.Semaphore(10)
 
     async def replay(self, timepoint: Time) -> None:
-        timestr = str(timepoint.isot) + "+00:00"
-        timestr = timestr.replace("T", " ")
+        await self.cache.cleanup()
+        for request in self.cache.new_requests(timepoint, TimeDelta(60, format="sec")):
+            async with self.sem:
+                await self.cache.load(request)
 
-        start = timepoint - TimeDelta(10, format="sec")
-        end = timepoint + TimeDelta(10, format="sec")
+        timestr = timepoint.iso + "+00:00"
 
-        for tel in self.sal.telemetry():
-            if tel not in self.cache.keys():
-                logging.info("Fetching %s - %s to %s", tel, start.isot, end.isot)
-                self.cache[tel] = await self.efd_client.select_time_series(
-                    "lsst.sal.MTM1M3." + tel,
-                    "*",
-                    start,
-                    end,
-                )
-            data = self.cache[tel]
-            if data.empty:
+        class RowClass:
+            def __init__(self, row: pd.Series):
+                last = None
+                last_len = 0
+                for c in row.columns.values:
+                    v = row[c].item()
+                    if (
+                        last is not None
+                        and c.startswith(last)
+                        and c[last_len].isnumeric()
+                    ):
+                        getattr(self, last).append(v)
+                    elif c[-1] == "0":
+                        last = c[:-1]
+                        last_len = len(last)
+                        setattr(self, last, [v])
+                    else:
+                        last = None
+                        setattr(self, c, v)
+
+        for topic in self.cache.telemetry.keys():
+            cache = self.cache[topic]
+            if cache is None or cache.empty:
                 continue
+            assert cache.data is not None
 
-            row = data.loc[:timestr].tail(n=1)  # type:ignore[misc]
-
-            class RowClass:
-                def __init__(self, row: pd.Series):
-                    last = None
-                    for c in row.columns.values:
-                        v = row[c].item()
-                        if last is not None and c.startswith(last):
-                            getattr(self, last).append(v)
-                        elif c[-1] == "0":
-                            last = c[:-1]
-                            setattr(self, last, [v])
-                        else:
-                            last = None
-                            setattr(self, c, v)
-
+            row = cache.data.loc[:timestr].tail(n=1)  # type:ignore[misc]
             send = RowClass(row)
-            getattr(self.sal, tel).emit(send)
+            getattr(self.sal, topic).emit(send)

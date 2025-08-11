@@ -39,7 +39,7 @@ from PySide6.QtWidgets import (
 from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, Player
-from ..logging import LoggingWidget
+from ..logging_widget import LoggingWidget
 
 
 class MSecDateTimeEdit(QDateTimeEdit):
