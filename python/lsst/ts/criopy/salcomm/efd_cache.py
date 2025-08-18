@@ -26,7 +26,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from time import monotonic
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 import pandas as pd
 from astropy.time import Time, TimeDelta
@@ -43,17 +43,43 @@ class RowClass:
 
         last = None
         last_len = 0
+        current_map: dict[int, Any] = {}
+
+        def add_map(last) -> None:
+            arr = [None] * len(current_map)
+            for i in range(len(current_map)):
+                if i in current_map.keys():
+                    arr[i] = current_map[i]
+                else:
+                    logging.warn(
+                        "Uncomplete array in EFD data - %s map %s",
+                        last,
+                        current_map,
+                    )
+                    return
+            setattr(self, last, arr)
+
         for c in row.columns.values:
             v = row[c].item()
-            if last is not None and c.startswith(last) and c[last_len].isnumeric():
-                getattr(self, last).append(v)
-            elif c[-1] == "0":
-                last = c[:-1]
-                last_len = len(last)
-                setattr(self, last, [v])
+            # see if an array shall be created, appended or this is a new
+            # attribute
+            if last is not None and c.startswith(last) and c[last_len:].isnumeric():
+                current_map[int(c[last_len:])] = v
             else:
-                last = None
-                setattr(self, c, v)
+                if last is not None:
+                    add_map(last)
+
+                if c[-1] == "0":
+
+                    last = c[:-1]
+                    last_len = len(last)
+                    current_map = {0: v}
+                else:
+                    last = None
+                    setattr(self, c, v)
+
+        if last is not None:
+            add_map(last)
 
 
 class EfdTopicCache:
@@ -314,6 +340,9 @@ class EfdCache:
         requests : [EfdCacheRequest]
         """
         for t, c in self.telemetry.items():
+            if t != "forceActuatorData":
+                continue
+
             start, end = c.interval(timepoint, interval, self.max_span)
             if start is None:
                 logging.debug("Already fetched %s at time %s.", t, timepoint.isot)
@@ -321,6 +350,7 @@ class EfdCache:
             yield EfdCacheRequest(
                 t, c, start, end, interval + TimeDelta(0.05, format="sec")
             )
+        return
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)

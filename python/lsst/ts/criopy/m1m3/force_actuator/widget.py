@@ -80,7 +80,7 @@ class Widget(QSplitter):
         self.selected_actuator_id_label = QLabel()
         self.selected_actuator_value_label = QLabel()
         self.selected_actuator_warning_label = WarningLabel()
-        self.last_updated_label = TimeDeltaLabel()
+        self.last_updated_label = TimeDeltaLabel(time_delta=60)
 
         self.near_selected_ids_label = QLabel()
         self.near_selected_value_label = QLabel()
