@@ -75,7 +75,7 @@ class TimeDeltaLabel(DataLabel):
         else:
             delta = Time.now() - self.event_time
             if self.time_delta is not None and abs(delta) > self.time_delta:
-                self.setText(f"{self.event_time.isot}")
+                self.setText(f"{Time(self.event_time, scale='utc').iso}")
             else:
                 self.setText(f"{delta.sec:.2f}")
 

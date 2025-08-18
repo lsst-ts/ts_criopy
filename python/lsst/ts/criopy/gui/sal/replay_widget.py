@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSlider,
+    QSpinBox,
     QStyle,
     QVBoxLayout,
     QWidget,
@@ -57,6 +58,7 @@ class ReplayControlWidget(QWidget):
 
         self.play_interval = 0
         self.play_timer = None
+        self.play_step_time = 100  # time for one play step in ms
 
         now = QDateTime.currentDateTime()
 
@@ -86,22 +88,40 @@ class ReplayControlWidget(QWidget):
         self.current = MSecDateTimeEdit(self.start)
         self.current.dateTimeChanged.connect(self.replay)
 
+        self.step_size_box = QSpinBox()
+        self.step_size_box.setRange(1, 500)
+        self.step_size_box.setSuffix(" ms")
+        self.step_size_box.setSingleStep(10)
+        self.step_size_box.setValue(20)
+
+        play_speed_box = QSpinBox()
+        play_speed_box.setRange(1, 100)
+        play_speed_box.setSuffix("%")
+        play_speed_box.setSingleStep(5)
+        play_speed_box.setValue(50)
+
+        play_speed_box.valueChanged.connect(self.change_play_speed)
+
         current_layout = QHBoxLayout()
         current_layout.addWidget(QLabel("Current time"))
         current_layout.addWidget(self.current)
+        current_layout.addStretch()
+        current_layout.addWidget(QLabel("Step size"))
+        current_layout.addWidget(self.step_size_box)
+        current_layout.addWidget(QLabel("Play speed"))
+        current_layout.addWidget(play_speed_box)
+
+        play_icon = self.style().standardIcon(QStyle.SP_MediaPlay)
 
         backward_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaSeekBackward), "Backward"
         )
+        step_backward_button = QPushButton(play_icon, "Step Backward")
         pause_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaPause), "Pause"
         )
-        step_button = QPushButton(
-            self.style().standardIcon(QStyle.SP_MediaPlay), "Step"
-        )
-        play_button = QPushButton(
-            self.style().standardIcon(QStyle.SP_MediaPlay), "Play"
-        )
+        step_forward_button = QPushButton(play_icon, "Step Forward")
+        play_button = QPushButton(play_icon, "Play")
         forward_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaSeekForward), "Forward"
         )
@@ -110,8 +130,9 @@ class ReplayControlWidget(QWidget):
 
         player_layout = QHBoxLayout()
         player_layout.addWidget(backward_button)
+        player_layout.addWidget(step_backward_button)
         player_layout.addWidget(pause_button)
-        player_layout.addWidget(step_button)
+        player_layout.addWidget(step_forward_button)
         player_layout.addWidget(play_button)
         player_layout.addWidget(forward_button)
 
@@ -123,8 +144,9 @@ class ReplayControlWidget(QWidget):
         self.setLayout(layout)
 
         backward_button.clicked.connect(self.backward)
+        step_backward_button.clicked.connect(self.step_backward)
         pause_button.clicked.connect(self.pause)
-        step_button.clicked.connect(self.step)
+        step_forward_button.clicked.connect(self.step_forward)
         play_button.clicked.connect(self.play)
         forward_button.clicked.connect(self.forward)
 
@@ -145,11 +167,25 @@ class ReplayControlWidget(QWidget):
             self.killTimer(self.play_timer)
         self.play_interval = new_interval
         self.play_time = self.current.dateTime()
-        self.play_timer = self.startTimer(100)
+        self.play_timer = self.startTimer(self.play_step_time)
+
+    @Slot()
+    def change_play_speed(self, value: int) -> None:
+        self.play_step_time = int(20 / (float(value) / 100.0))
+        if self.play_timer is not None:
+            self.killTimer(self.play_timer)
+        self.play_timer = self.startTimer(self.play_step_time)
 
     @Slot()
     def backward(self, checked: bool) -> None:
         self.__change_timer(-500)
+
+    @Slot()
+    def step_backward(self, checked: bool) -> None:
+        next_time = self.current.dateTime().addMSecs(-self.step_size_box.value())
+        start = self.start.dateTime()
+        if start <= next_time <= start.addMSecs(int(self.duration.value() * 1000)):
+            self.current.setDateTime(next_time)
 
     @Slot()
     def pause(self, checked: bool) -> None:
@@ -158,8 +194,8 @@ class ReplayControlWidget(QWidget):
             self.play_timer = None
 
     @Slot()
-    def step(self, checked: bool) -> None:
-        next_time = self.current.dateTime().addMSecs(20)
+    def step_forward(self, checked: bool) -> None:
+        next_time = self.current.dateTime().addMSecs(self.step_size_box.value())
         start = self.start.dateTime()
         if start <= next_time <= start.addMSecs(int(self.duration.value() * 1000)):
             self.current.setDateTime(next_time)

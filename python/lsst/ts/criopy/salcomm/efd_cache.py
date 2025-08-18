@@ -340,9 +340,6 @@ class EfdCache:
         requests : [EfdCacheRequest]
         """
         for t, c in self.telemetry.items():
-            if t != "forceActuatorData":
-                continue
-
             start, end = c.interval(timepoint, interval, self.max_span)
             if start is None:
                 logging.debug("Already fetched %s at time %s.", t, timepoint.isot)
@@ -350,7 +347,6 @@ class EfdCache:
             yield EfdCacheRequest(
                 t, c, start, end, interval + TimeDelta(0.05, format="sec")
             )
-        return
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)
