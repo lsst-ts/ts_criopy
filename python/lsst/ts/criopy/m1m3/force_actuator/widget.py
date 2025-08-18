@@ -305,10 +305,10 @@ class Widget(QSplitter):
         self.selected_actuator_id_label.setText(
             str(selected_actuator.actuator.actuator_id)
         )
-        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-        data = self.field.getValue(self._get_data())
+        data = self.field.get_value(self._get_data())
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors

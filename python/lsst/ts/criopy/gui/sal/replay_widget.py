@@ -24,8 +24,7 @@ __all__ = ["ReplayWidget"]
 import logging
 
 from astropy.time import Time
-from lsst_efd_client import EfdClient
-from PySide6.QtCore import QDateTime, Qt, Slot
+from PySide6.QtCore import QDateTime, Qt, QTimerEvent, Slot
 from PySide6.QtWidgets import (
     QDateTimeEdit,
     QHBoxLayout,
@@ -48,23 +47,22 @@ class MSecDateTimeEdit(QDateTimeEdit):
         self.setDisplayFormat(self.displayFormat() + ".zzz")
 
 
-class ReplayWidget(QWidget):
-    """Widget controlling data replay."""
-
-    def __init__(self, sal: MetaSAL):
+class ReplayControlWidget(QWidget):
+    def __init__(self, sal: MetaSAL, efd: str):
         super().__init__()
         self.sal = sal
         self.player: Player | None = None
+        self.efd = efd
 
-        self.setWindowTitle("Replay")
+        self.play_interval = 0
+        self.play_timer = None
 
         now = QDateTime.currentDateTime()
 
+        self.play_time = now
+
         self.start = MSecDateTimeEdit(now.addSecs(-10))
         self.end = MSecDateTimeEdit(now)
-
-        layout = QVBoxLayout()
-        self.setLayout(layout)
 
         start_end_layout = QHBoxLayout()
         start_end_layout.addWidget(self.start)
@@ -73,11 +71,6 @@ class ReplayWidget(QWidget):
 
         self.slider = QSlider(Qt.Horizontal)
 
-        logging_widget = LoggingWidget()
-
-        logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
-        logging.getLogger().addHandler(logging_widget)
-
         self.current = MSecDateTimeEdit(self.start)
         self.current.dateTimeChanged.connect(self.replay)
 
@@ -85,55 +78,87 @@ class ReplayWidget(QWidget):
         current_layout.addWidget(QLabel("Current time"))
         current_layout.addWidget(self.current)
 
-        self.backward_button = QPushButton(
+        backward_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaSeekBackward), "Backward"
         )
-        self.pause_button = QPushButton(
+        pause_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaPause), "Pause"
         )
-        self.play_button = QPushButton(
+        step_button = QPushButton(
+            self.style().standardIcon(QStyle.SP_MediaPlay), "Step"
+        )
+        play_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaPlay), "Play"
         )
-        self.forward_button = QPushButton(
+        forward_button = QPushButton(
             self.style().standardIcon(QStyle.SP_MediaSeekForward), "Forward"
         )
 
+        layout = QVBoxLayout()
+
         player_layout = QHBoxLayout()
-        player_layout.addWidget(self.backward_button)
-        player_layout.addWidget(self.pause_button)
-        player_layout.addWidget(self.play_button)
-        player_layout.addWidget(self.forward_button)
+        player_layout.addWidget(backward_button)
+        player_layout.addWidget(pause_button)
+        player_layout.addWidget(step_button)
+        player_layout.addWidget(play_button)
+        player_layout.addWidget(forward_button)
 
         layout.addLayout(start_end_layout)
-        layout.addWidget(logging_widget)
         layout.addWidget(self.slider)
         layout.addLayout(current_layout)
         layout.addLayout(player_layout)
 
-        self.backward_button.clicked.connect(self.backward)
-        self.pause_button.clicked.connect(self.pause)
-        self.play_button.clicked.connect(self.play)
-        self.forward_button.clicked.connect(self.forward)
+        self.setLayout(layout)
 
-        self.slider.valueChanged.connect(self.slider_value_changed)
+        backward_button.clicked.connect(self.backward)
+        pause_button.clicked.connect(self.pause)
+        step_button.clicked.connect(self.step)
+        play_button.clicked.connect(self.play)
+        forward_button.clicked.connect(self.forward)
+
+        self.slider.sliderMoved.connect(self.slider_moved)
 
         self.update_slider_range()
 
+    def timerEvent(self, event: QTimerEvent) -> None:
+        self.play_time = self.play_time.addMSecs(self.play_interval)
+        if self.start.dateTime() <= self.play_time <= self.end.dateTime():
+            self.current.setDateTime(self.play_time)
+        else:
+            self.killTimer(self.play_timer)
+            self.play_timer = None
+            self.play_time = self.start.dateTime()
+
+    def __change_timer(self, new_interval: int) -> None:
+        if self.play_timer is not None:
+            self.killTimer(self.play_timer)
+        self.play_interval = new_interval
+        self.play_time = self.current.dateTime()
+        self.play_timer = self.startTimer(100)
+
     @Slot()
     def backward(self, checked: bool) -> None:
-        pass
+        self.__change_timer(-500)
 
     @Slot()
     def pause(self, checked: bool) -> None:
-        pass
+        if self.play_timer is not None:
+            self.killTimer(self.play_timer)
+            self.play_timer = None
+
+    @Slot()
+    def step(self, checked: bool) -> None:
+        next_time = self.current.dateTime().addMSecs(20)
+        if self.start.dateTime() <= next_time <= self.end.dateTime():
+            self.current.setDateTime(next_time)
 
     @Slot()
     def play(self, checked: bool) -> None:
-        pass
+        self.__change_timer(10)
 
     @Slot()
     def forward(self, checked: bool) -> None:
-        pass
+        self.__change_timer(500)
 
     @Slot()
     def update_slider_range(self) -> None:
@@ -143,16 +168,65 @@ class ReplayWidget(QWidget):
             - self.start.dateTime().toMSecsSinceEpoch()
         )
         self.slider.setValue(0)
-        self.slider_value_changed(0)
+        self.slider_moved(0)
+        self.play_time = self.start.dateTime()
 
     @Slot()
-    def slider_value_changed(self, value: int) -> None:
-        self.current.setDateTime(self.start.dateTime().addMSecs(value))
+    def slider_moved(self, value: int) -> None:
+        new = self.start.dateTime().addMSecs(value)
+        if new != self.current.dateTime():
+            self.current.setDateTime(new)
+
+    @Slot()
+    def download_started(self) -> None:
+        self.setEnabled(False)
+
+    @Slot()
+    def download_finished(self) -> None:
+        self.setEnabled(True)
 
     @asyncSlot()
     async def replay(self, date_time: QDateTime) -> None:
         if self.player is None:
-            self.player = Player(self.sal, EfdClient("usdf_efd"))
+            self.player = Player(self.sal, self.efd)
+            self.player.downloadStarted.connect(self.download_started)
+            self.player.downloadFinished.connect(self.download_finished)
+
+            self.sal.freeze(self.player.cache)
+
+        timepoint = (
+            date_time.toMSecsSinceEpoch() - self.start.dateTime().toMSecsSinceEpoch()
+        )
+        if timepoint < 0:
+            date_time = self.start.dateTime()
+            timepoint = 0
+        elif timepoint > self.slider.maximum():
+            date_time = self.end.dateTime()
+            timepoint = self.slider.maximum()
+
+        self.slider.setValue(timepoint)
         await self.player.replay(
             Time(date_time.toMSecsSinceEpoch() / 1000.0, format="unix")
         )
+
+
+class ReplayWidget(QWidget):
+    """Widget controlling data replay."""
+
+    def __init__(self, sal: MetaSAL):
+        super().__init__()
+        self.setWindowTitle("Replay")
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        self.replay_control = ReplayControlWidget(sal, "usdf_efd")
+        layout.addWidget(self.replay_control)
+
+        logging_widget = LoggingWidget()
+        logging_widget.setMinimumWidth(self.fontMetrics().averageCharWidth() * 115)
+
+        logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+        logging.getLogger().addHandler(logging_widget)
+
+        layout.addWidget(logging_widget)

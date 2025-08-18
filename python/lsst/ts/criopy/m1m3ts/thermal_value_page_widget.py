@@ -329,7 +329,7 @@ class ThermalValuePageWidget(TopicWindow):
         if data is None or self.field is None:
             self.command_widget.update_values(None)
         else:
-            values = self.field.getValue(data)
+            values = self.field.get_value(data)
             self.command_widget.data_widget.reset_background()
             self.command_widget.update_values(values, fmt=self.field.fmt)
             if self.field.field_name in ["heaterPWM"]:

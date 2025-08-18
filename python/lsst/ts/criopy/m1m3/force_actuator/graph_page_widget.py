@@ -63,7 +63,7 @@ class GraphPageWidget(Widget):
         if data is None:
             values = None
         else:
-            values = self.field.getValue(data)
+            values = self.field.get_value(data)
 
         def get_warning(index: int) -> DataItemState:
             return (
@@ -110,7 +110,7 @@ class GraphPageWidget(Widget):
         selected = self.mirror_widget.mirror_view.selected()
         if selected is not None:
             if selected.data is not None:
-                self.selected_actuator_value_label.setText(selected.getValue())
+                self.selected_actuator_value_label.setText(selected.get_value())
             if warning_data is not None:
                 self.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))

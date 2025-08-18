@@ -22,11 +22,12 @@
 __all__ = ["Player"]
 
 import asyncio
+import logging
+import time
 
-import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 
 from .efd_cache import EfdCache
 from .meta_sal import MetaSAL
@@ -44,47 +45,58 @@ class Player(QObject):
 
     """
 
-    def __init__(self, sal: MetaSAL, efd_client: EfdClient):
+    downloadStarted = Signal()
+    downloadFinished = Signal()
+
+    def __init__(self, sal: MetaSAL, efd: str):
         super().__init__()
         self.sal = sal
 
-        self.cache = EfdCache(sal, efd_client)
-        self.sem = asyncio.Semaphore(10)
+        self.cache = EfdCache(sal, EfdClient(efd))
 
     async def replay(self, timepoint: Time) -> None:
         await self.cache.cleanup()
-        for request in self.cache.new_requests(timepoint, TimeDelta(60, format="sec")):
-            async with self.sem:
-                await self.cache.load(request)
 
-        timestr = timepoint.iso + "+00:00"
+        start_time = time.monotonic()
+        downloads = 0
 
-        class RowClass:
-            def __init__(self, row: pd.Series):
-                last = None
-                last_len = 0
-                for c in row.columns.values:
-                    v = row[c].item()
-                    if (
-                        last is not None
-                        and c.startswith(last)
-                        and c[last_len].isnumeric()
-                    ):
-                        getattr(self, last).append(v)
-                    elif c[-1] == "0":
-                        last = c[:-1]
-                        last_len = len(last)
-                        setattr(self, last, [v])
-                    else:
-                        last = None
-                        setattr(self, c, v)
+        async with asyncio.TaskGroup() as tg:
+            for request in self.cache.new_requests(
+                timepoint, TimeDelta(60, format="sec")
+            ):
+                tg.create_task(self.cache.load(request))
+                if downloads == 0:
+                    self.downloadStarted.emit()
+                downloads += 1
 
-        for topic in self.cache.telemetry.keys():
-            cache = self.cache[topic]
+        if downloads > 0:
+            duration = time.monotonic() - start_time
+            logging.info(
+                "Downloaded %d topics in %.2f seconds (%.2f topics/second).",
+                downloads,
+                duration,
+                downloads / duration,
+            )
+            self.downloadFinished.emit()
+
+        for topic, cache in self.cache.telemetry.items():
+            cache.set_current_time(timepoint)
+
+        for topic, cache in self.cache.events.items():
+            cache.set_current_time(timepoint)
+
+        for topic, cache in self.cache.telemetry.items():
             if cache is None or cache.empty:
                 continue
             assert cache.data is not None
 
-            row = cache.data.loc[:timestr].tail(n=1)  # type:ignore[misc]
-            send = RowClass(row)
-            getattr(self.sal, topic).emit(send)
+            getattr(self.sal, topic).emit(cache.get())
+
+        for topic, cache in self.cache.events.items():
+            if cache is None or cache.empty:
+                continue
+            assert cache.data is not None
+
+            data = cache.get()
+            if data is not None and data._changed:
+                getattr(self.sal, topic).emit(data)

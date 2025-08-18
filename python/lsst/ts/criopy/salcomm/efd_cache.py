@@ -26,17 +26,39 @@ import logging
 import traceback
 from dataclasses import dataclass
 from time import monotonic
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 import pandas as pd
 from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
 
-from .meta_sal import MetaSAL
+if TYPE_CHECKING:
+    from .meta_sal import MetaSAL
+
+
+class RowClass:
+    def __init__(self, row: pd.Series, changed: bool):
+        self._changed = changed
+        self.private_sndStamp = None
+
+        last = None
+        last_len = 0
+        for c in row.columns.values:
+            v = row[c].item()
+            if last is not None and c.startswith(last) and c[last_len].isnumeric():
+                getattr(self, last).append(v)
+            elif c[-1] == "0":
+                last = c[:-1]
+                last_len = len(last)
+                setattr(self, last, [v])
+            else:
+                last = None
+                setattr(self, c, v)
 
 
 class EfdTopicCache:
     data: pd.DataFrame | None = None
+    current_data: RowClass | None = None
     start: Time | None = None
     end: Time | None = None
 
@@ -96,6 +118,30 @@ class EfdTopicCache:
     def empty(self) -> bool:
         return self.data is None or self.data.empty
 
+    def get(self) -> RowClass | None:
+        return self.current_data
+
+    def set_current_time(self, timepoint: Time) -> None:
+        if self.empty:
+            self.current_data = None
+            return
+
+        assert self.data is not None
+        timestr = timepoint.iso + "+00:00"
+
+        row = self.data.loc[:timestr].tail(n=1)
+        if row.empty:
+            self.current_data = None
+            return
+
+        changed = False
+
+        if self.current_data is not None:
+            if self.current_data.private_sndStamp != row["private_sndStamp"].item():
+                changed = True
+
+        self.current_data = RowClass(row, changed)
+
     def clear(self) -> None:
         self.data = None
 
@@ -126,6 +172,8 @@ class EfdTopicCache:
             self.start = start
         if self.end is None or end > self.end:
             self.end = end
+        if self.current_data is None:
+            self.set_current_time(self.start)
 
 
 @dataclass
@@ -144,11 +192,12 @@ class EfdCache:
     """Caches data available from SAL, so those can be quickly accessed in
     downloaded DataFrames."""
 
-    def __init__(self, sal: MetaSAL, efd_client: EfdClient):
+    def __init__(self, sal: "MetaSAL", efd_client: EfdClient):
         super().__init__()
         self.name = sal.remote.salinfo.name
         self.efd_client = efd_client
         self.max_span = TimeDelta(600, format="sec")
+        self.sem = asyncio.Semaphore(10)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
         self.events = {e: EfdTopicCache() for e in sal.events()}
@@ -162,10 +211,18 @@ class EfdCache:
             return self.events[key]
         return None
 
+    def __getattr__(self, name: str) -> EfdTopicCache | None:
+        key = name[4:]
+        if name.startswith("tel_"):
+            return self.telemetry[key]
+        elif name.startswith("evt_"):
+            return self.events[key]
+        raise AttributeError(f"Unknow cache attribute: {name}")
+
     async def load(self, request: EfdCacheRequest) -> None:
         async def chunk(request, start, end) -> None:
             try:
-                logging.info(
+                logging.debug(
                     "Fetching %s - %s to %s.",
                     request.topic,
                     start.isot,
@@ -173,7 +230,10 @@ class EfdCache:
                 )
                 query_start = monotonic()
                 data = await self.efd_client.select_time_series(
-                    f"lsst.sal.{self.name}.{request.topic}", "*", start, end
+                    f"lsst.sal.{self.name}.{request.topic}",
+                    "*, private_sndStamp",
+                    start,
+                    end,
                 )
                 duration = monotonic() - query_start
                 request.cache.merge(data)
@@ -186,9 +246,11 @@ class EfdCache:
                     data_len / duration,
                 )
                 request.cache.update(start, end)
-            except ValueError:
+            except ValueError as er:
                 logging.warn(
-                    "Event %s is not in the efd - will be ignored.", request.topic
+                    "Event %s is not in the efd - will be ignored: %s.",
+                    request.topic,
+                    str(er),
                 )
                 async with self.delete_lock:
                     if request.topic not in [r.topic for r in self.shall_delete]:
@@ -219,11 +281,12 @@ class EfdCache:
                     await chunk(request, i_start, i_end)
                     i_end = i_start
 
-        async with request.cache.lock:
-            if request.cache.start is None or request.end == request.cache.start:
-                await load_interval(request, request.interval)
-            else:
-                await load_interval(request, -request.interval)
+        async with self.sem:
+            async with request.cache.lock:
+                if request.cache.start is None or request.end == request.cache.start:
+                    await load_interval(request, request.interval)
+                else:
+                    await load_interval(request, -request.interval)
 
     async def cleanup(self) -> None:
         async with self.delete_lock:

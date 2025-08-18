@@ -48,7 +48,7 @@ class FCUDisplayWidget(TopicWindow):
             values = None
         else:
             assert self.field is not None
-            values = self.field.getValue(data)
+            values = self.field.get_value(data)
 
         enabled = self.comm.remote.evt_enabledILC.get()
 

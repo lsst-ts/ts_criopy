@@ -176,7 +176,7 @@ class ValuePageWidget(Widget):
             return
 
         i = -1
-        values = self.field.getValue(data)
+        values = self.field.get_value(data)
         for row in FATable:
             i += 1
             index = row.get_index(self.field.value_index)
