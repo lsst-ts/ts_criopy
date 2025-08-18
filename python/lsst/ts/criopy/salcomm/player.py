@@ -54,19 +54,25 @@ class Player(QObject):
 
         self.cache = EfdCache(sal, EfdClient(efd))
 
-    async def replay(self, timepoint: Time) -> None:
+    async def replay(self, timepoint: Time, duration: TimeDelta) -> None:
         await self.cache.cleanup()
 
         start_time = time.monotonic()
         downloads = 0
 
+        reported_ranges: list[tuple[Time, Time]] = []
+
         async with asyncio.TaskGroup() as tg:
-            for request in self.cache.new_requests(
-                timepoint, TimeDelta(60, format="sec")
-            ):
+            for request in self.cache.new_requests(timepoint, duration):
                 tg.create_task(self.cache.load(request))
                 if downloads == 0:
                     self.downloadStarted.emit()
+                if (request.start, request.end) not in reported_ranges:
+                    logging.info(
+                        "Loading %s - %s.", request.start.isot, request.end.isot
+                    )
+                    reported_ranges.append((request.start, request.end))
+
                 downloads += 1
 
         if downloads > 0:
@@ -90,13 +96,15 @@ class Player(QObject):
                 continue
             assert cache.data is not None
 
-            getattr(self.sal, topic).emit(cache.get())
+            send = cache.get()
+            if send is not None:
+                getattr(self.sal, topic).emit(send)
 
         for topic, cache in self.cache.events.items():
             if cache is None or cache.empty:
                 continue
             assert cache.data is not None
 
-            data = cache.get()
-            if data is not None and data._changed:
-                getattr(self.sal, topic).emit(data)
+            send = cache.get()
+            if send is not None and send._changed:
+                getattr(self.sal, topic).emit(send)

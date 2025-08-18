@@ -93,12 +93,15 @@ class EfdTopicCache:
         """
         half_duration = min_duration / 2
 
+        new_start = timepoint - TimeDelta(0.05, format="sec")
+        new_end = timepoint + min_duration
+
         if self.start is None or self.end is None:
-            return timepoint - half_duration, timepoint + half_duration
+            return new_start, new_end
         elif timepoint < self.start:
             duration = self.start - timepoint
             if duration >= max_span:
-                return timepoint - half_duration, timepoint + half_duration
+                return new_start, new_end
             if duration < min_duration:
                 return (
                     self.start - min_duration,
@@ -108,7 +111,7 @@ class EfdTopicCache:
         elif timepoint > self.end:
             duration = timepoint - self.end
             if duration >= max_span:
-                return timepoint - half_duration, timepoint + half_duration
+                return new_start, new_end
             if duration < min_duration:
                 return self.end, self.end + min_duration
             return self.end, timepoint + half_duration
@@ -196,7 +199,7 @@ class EfdCache:
         super().__init__()
         self.name = sal.remote.salinfo.name
         self.efd_client = efd_client
-        self.max_span = TimeDelta(600, format="sec")
+        self.max_span = TimeDelta(65, format="sec")
         self.sem = asyncio.Semaphore(10)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
@@ -315,11 +318,15 @@ class EfdCache:
             if start is None:
                 logging.debug("Already fetched %s at time %s.", t, timepoint.isot)
                 continue
-            yield EfdCacheRequest(t, c, start, end, interval)
+            yield EfdCacheRequest(
+                t, c, start, end, interval + TimeDelta(0.05, format="sec")
+            )
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)
             if start is None:
                 logging.debug("Already fetched logevent_%s at time %s.", t, timepoint)
                 continue
-            yield EfdCacheRequest("logevent_" + e, c, start, end, interval)
+            yield EfdCacheRequest(
+                "logevent_" + e, c, start, end, interval + TimeDelta(0.05, format="sec")
+            )

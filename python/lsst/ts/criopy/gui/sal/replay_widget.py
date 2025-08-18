@@ -23,10 +23,11 @@ __all__ = ["ReplayWidget"]
 
 import logging
 
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 from PySide6.QtCore import QDateTime, Qt, QTimerEvent, Slot
 from PySide6.QtWidgets import (
     QDateTimeEdit,
+    QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -61,13 +62,24 @@ class ReplayControlWidget(QWidget):
 
         self.play_time = now
 
-        self.start = MSecDateTimeEdit(now.addSecs(-10))
-        self.end = MSecDateTimeEdit(now)
+        self.start = MSecDateTimeEdit(now.addSecs(-600))
+        self.duration = QDoubleSpinBox()
+        self.duration.setRange(1, 120)
+        self.duration.setDecimals(3)
+        self.duration.setSingleStep(10)
+        self.duration.setValue(60)
+
+        retrieve_data_button = QPushButton("&Retrieve data")
+        retrieve_data_button.clicked.connect(self.retrieve_data)
 
         start_end_layout = QHBoxLayout()
+        start_end_layout.addWidget(QLabel("From"))
         start_end_layout.addWidget(self.start)
-        start_end_layout.addWidget(QLabel("-"))
-        start_end_layout.addWidget(self.end)
+        start_end_layout.addWidget(QLabel("for"))
+        start_end_layout.addWidget(self.duration)
+        start_end_layout.addWidget(QLabel("s"))
+        start_end_layout.addStretch()
+        start_end_layout.addWidget(retrieve_data_button)
 
         self.slider = QSlider(Qt.Horizontal)
 
@@ -118,11 +130,10 @@ class ReplayControlWidget(QWidget):
 
         self.slider.sliderMoved.connect(self.slider_moved)
 
-        self.update_slider_range()
-
     def timerEvent(self, event: QTimerEvent) -> None:
         self.play_time = self.play_time.addMSecs(self.play_interval)
-        if self.start.dateTime() <= self.play_time <= self.end.dateTime():
+        start = self.start.dateTime()
+        if start <= self.play_time <= start.addMSecs(int(self.duration.value() * 1000)):
             self.current.setDateTime(self.play_time)
         else:
             self.killTimer(self.play_timer)
@@ -149,7 +160,8 @@ class ReplayControlWidget(QWidget):
     @Slot()
     def step(self, checked: bool) -> None:
         next_time = self.current.dateTime().addMSecs(20)
-        if self.start.dateTime() <= next_time <= self.end.dateTime():
+        start = self.start.dateTime()
+        if start <= next_time <= start.addMSecs(int(self.duration.value() * 1000)):
             self.current.setDateTime(next_time)
 
     @Slot()
@@ -161,12 +173,9 @@ class ReplayControlWidget(QWidget):
         self.__change_timer(500)
 
     @Slot()
-    def update_slider_range(self) -> None:
+    def retrieve_data(self) -> None:
         self.slider.setMinimum(0)
-        self.slider.setMaximum(
-            self.end.dateTime().toMSecsSinceEpoch()
-            - self.start.dateTime().toMSecsSinceEpoch()
-        )
+        self.slider.setMaximum(self.duration.value() * 1000)
         self.slider.setValue(0)
         self.slider_moved(0)
         self.play_time = self.start.dateTime()
@@ -201,13 +210,12 @@ class ReplayControlWidget(QWidget):
             date_time = self.start.dateTime()
             timepoint = 0
         elif timepoint > self.slider.maximum():
-            date_time = self.end.dateTime()
+            date_time = self.start.dateTime.addMSecs(int(self.duration.value() * 1000))
             timepoint = self.slider.maximum()
 
         self.slider.setValue(timepoint)
-        await self.player.replay(
-            Time(date_time.toMSecsSinceEpoch() / 1000.0, format="unix")
-        )
+        start = Time(date_time.toMSecsSinceEpoch() / 1000.0, format="unix")
+        await self.player.replay(start, TimeDelta(self.duration.value(), format="sec"))
 
 
 class ReplayWidget(QWidget):

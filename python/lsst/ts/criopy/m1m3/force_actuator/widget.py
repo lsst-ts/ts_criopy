@@ -322,7 +322,7 @@ class Widget(QSplitter):
         else:
             self.near_selected_ids_label.setText(",".join(map(str, near_ids)))
             self.near_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in near_indices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in near_indices]))}"
             )
 
         far_ids = filter(
@@ -340,7 +340,7 @@ class Widget(QSplitter):
         else:
             self.far_selected_ids_label.setText(",".join(map(str, far_ids)))
             self.far_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in farIndices]))}"
             )
 
     def __setModifyCommand(self, command: str | None) -> None:
