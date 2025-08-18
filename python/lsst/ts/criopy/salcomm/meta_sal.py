@@ -57,26 +57,33 @@ class MetaSAL(type(QObject)):  # type: ignore
     read topics. Remote arguments are read from class variable _args. SALObj
     remote is accessible through 'remote' class variable.
 
+    The class also provides methods to ingore SAL callbacks. This can be used
+    to hijack the Qt Signal infrastructure to emit messages with historical
+    data. This is used during replay functions.
+
     Methods
     -------
-    connect_callbacks
-    =================
-
-    reemit_remote
-    =============
-
-    close
-    =====
-
-    telemetry
-    =========
-
-    events
-    ======
-
-    freeze
-    ======
-
+    freeze()
+        Freeze SAL messages. Shall be called when hijacking the signals to emit
+        historical telemetry from a cache.
+    thaw()
+        Returns control back SAL. On new SAL telemetry, signals with the data
+        will be emitted.
+    telemetry()
+        Returns list of telemetry topics names.
+    events()
+        Returns list of event (logevent) topics names.
+    reemit_remote()
+        Re-emit remote signals. This is used when SAL connection is established
+        (or re-established), to emit signals with the last historic data.
+    close()
+        Shall be called when the program ends. Closes SAL remote and domain.
+    connect_callbacks()
+        Connect SAL topic callbacks. Qt Signals will be then emitted when new
+        telemetry is received.
+    disconnect_callbacks()
+        Disconnet SAL topic callbacks. Qt Signals will not be emitted when new
+        telemetry is received. This is called in freeze method.
     """
 
     def __new__(cls, classname, bases, dictionary):  # type: ignore
@@ -127,17 +134,15 @@ class MetaSAL(type(QObject)):  # type: ignore
         dictionary["remote"] = dictionary["sal_remote"]
         dictionary["freezed_cache"] = None
 
-        def connect_callbacks(self) -> None:
-            for t in [
-                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
-            ]:
-                getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
+        def freeze(self, cache: EfdCache) -> None:
+            self.remote = self.freezed_cache = cache
+            self.disconnect_callbacks()
+            self.reemit_remote()
 
-        def disconnect_callbacks(self) -> None:
-            for t in [
-                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
-            ]:
-                getattr(self.sal_remote, t).callback = None
+        def thaw(self) -> None:
+            self.remote = self.sal_remote
+            self.connect_callbacks()
+            self.reemit_remote()
 
         def telemetry(self) -> list[str]:
             """Return remote telemetry topics names."""
@@ -156,32 +161,36 @@ class MetaSAL(type(QObject)):  # type: ignore
                 if data is not None:
                     getattr(self, t[4:]).emit(data)
 
-        def freeze(self, cache: EfdCache) -> None:
-            self.remote = self.freezed_cache = cache
-            self.disconnect_callbacks()
-            self.reemit_remote()
-
-        def thaw(self) -> None:
-            self.remote = self.sal_remote
-            self.connect_callbacks()
-            self.reemit_remote()
-
         async def close(self) -> None:
             await self.sal_remote.close()
             await self.domain.close()
 
+        def connect_callbacks(self) -> None:
+            for t in [
+                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
+            ]:
+                getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
+
+        def disconnect_callbacks(self) -> None:
+            for t in [
+                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
+            ]:
+                getattr(self.sal_remote, t).callback = None
+
         newclass = super(MetaSAL, cls).__new__(cls, classname, bases, dictionary)
 
         # creates class methods
-        setattr(newclass, connect_callbacks.__name__, connect_callbacks)
-        setattr(newclass, disconnect_callbacks.__name__, disconnect_callbacks)
-        setattr(newclass, reemit_remote.__name__, reemit_remote)
-        setattr(newclass, close.__name__, close)
+        setattr(newclass, freeze.__name__, freeze)
+        setattr(newclass, thaw.__name__, thaw)
 
         setattr(newclass, telemetry.__name__, telemetry)
         setattr(newclass, events.__name__, events)
-        setattr(newclass, freeze.__name__, freeze)
-        setattr(newclass, thaw.__name__, thaw)
+
+        setattr(newclass, reemit_remote.__name__, reemit_remote)
+        setattr(newclass, close.__name__, close)
+
+        setattr(newclass, connect_callbacks.__name__, connect_callbacks)
+        setattr(newclass, disconnect_callbacks.__name__, disconnect_callbacks)
 
         return newclass
 

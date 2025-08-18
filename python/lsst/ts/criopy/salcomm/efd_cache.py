@@ -23,7 +23,6 @@ __all__ = ["EfdCache"]
 
 import asyncio
 import logging
-import traceback
 from dataclasses import dataclass
 from time import monotonic
 from typing import TYPE_CHECKING, Any, Iterable
@@ -36,7 +35,31 @@ if TYPE_CHECKING:
     from .meta_sal import MetaSAL
 
 
-class RowClass:
+class EfdTopic:
+    """
+    Contains single topic data. The constructor sets class attributes, so
+    the EFD row (pandas.Series) si transformed to SAL Topic-like structure.
+    This class objects can be passed to emit function to send data around as
+    SAL signal.  Assuming SAL triggered updates are disabled (see the
+    `MetaSAL.freeze` method), this highjack the SAL topics to send to EUI
+    historic data instead of the latest observatory telemetry.
+
+    Attributes
+    ----------
+    topic_name.. : `float | int | str | list[float] | list[int]`
+        Topics extracted from EFD row data. Created dynamically as encountred
+        in the passed row parametr to the constructor.
+
+    Parameters
+    ----------
+    row : `pd.Series`
+        Data serie representing EFD row. This is transformed to SAL Topic-like
+        structure, with EFD columns-stored arrays turned into array attributes.
+    changed : `bool`
+        If True, data were changed from tha last call. This is stored as
+        _changed attribute.
+    """
+
     def __init__(self, row: pd.Series, changed: bool):
         self._changed = changed
         self.private_sndStamp = None
@@ -83,8 +106,26 @@ class RowClass:
 
 
 class EfdTopicCache:
+    """
+    Caches single EFD topic. Stores EFD data. Provides access to the current
+    row / SAL Topic-like EfdTopic object. Manages reloading new data blocks
+    from the EFD. Implements get method (and can implement other methods, if
+    needed) to replace SAL Topic object used in GUIs.
+
+    Attributes
+    ----------
+    data : `pd.DataFrame | None`
+        Cached EFD data.
+    current_data : `EfdTopic | None`
+        Current row. Updated with a call to set_current_time method.
+    start : `Time | None`
+        Cache start time. Used to record cache extend.
+    end : `Time | none`
+        Cache end time. Included for the same reason as start time.
+    """
+
     data: pd.DataFrame | None = None
-    current_data: RowClass | None = None
+    current_data: EfdTopic | None = None
     start: Time | None = None
     end: Time | None = None
 
@@ -145,12 +186,42 @@ class EfdTopicCache:
 
     @property
     def empty(self) -> bool:
+        """
+        Returns true when the cache is empty.
+
+        Returns
+        -------
+        empty : bool
+            True if cache is empty.
+        """
         return self.data is None or self.data.empty
 
-    def get(self) -> RowClass | None:
+    def get(self) -> EfdTopic | None:
+        """
+        Retrieves current data. Mimics SAL Topic get method, but returns
+        EfdTopic.
+
+        Retuns
+        ------
+        data : EfdTopic
+            Current (as set with call to set_current_time) data.
+
+        See also
+        --------
+        lsst.ts.salobj.topics.ReadTopic.get()
+        """
         return self.current_data
 
     def set_current_time(self, timepoint: Time) -> None:
+        """
+        Sets current timepoint in historical data.
+
+        Parameters
+        ----------
+        timepoint : `Time`
+            The cache topic entry will be set to mimics SAL topic at the given
+            time.
+        """
         if self.empty:
             self.current_data = None
             return
@@ -163,18 +234,29 @@ class EfdTopicCache:
             self.current_data = None
             return
 
-        changed = False
+        changed = True
 
         if self.current_data is not None:
-            if self.current_data.private_sndStamp != row["private_sndStamp"].item():
-                changed = True
+            if self.current_data.private_sndStamp == row["private_sndStamp"].item():
+                changed = False
 
-        self.current_data = RowClass(row, changed)
+        self.current_data = EfdTopic(row, changed)
 
     def clear(self) -> None:
+        """
+        Clear cached data.
+        """
         self.data = None
 
     def merge(self, data: pd.DataFrame) -> None:
+        """
+        Merge current date with a new EFD data frame.
+
+        Parameters
+        ----------
+        data : `pd.DataFrame`
+            Newly added data frame. Data
+        """
         if self.data is None:
             self.data = data
         elif not (data.empty):
@@ -186,17 +268,21 @@ class EfdTopicCache:
 
                 self.data = pd.merge_ordered(self.data, data, how="left")
                 self.data.sort_index(inplace=True)
-            except Exception:
-                print(
-                    "Merge\n",
-                    self.data,
-                    "\n++++++++++++++++",
-                    data,
-                    "\n=======================",
-                )
-                traceback.print_exc()
+            except Exception as er:
+                logging.error("Exception when merging two DataFrames: %", str(er))
 
     def update(self, start: Time, end: Time) -> None:
+        """
+        Updates cache start and end times. Data retrieved from the EFD for the
+        given time range shall be merged to Cache by calling the merge method.
+
+        Parameters
+        ----------
+        start : `Time`
+            Newly added block start time.
+        end: `Time`
+            Newly added block end time.
+        """
         if self.start is None or start < self.start:
             self.start = start
         if self.end is None or end > self.end:
@@ -207,11 +293,30 @@ class EfdTopicCache:
 
 @dataclass
 class EfdCacheRequest:
+    """
+    Holds data for a single EFD request.
+
+    Attributes
+    ----------
+    topic : `str`
+        Name of the topics. As stored in EFD, e.g. telemetry topics without
+        prefix, events with logevent_ prefix.
+    cache : `EfdTopicCache`
+        Cache object associated with the topic.
+    start : `Time`
+        Start time of the requested interval.
+    end : `Time`
+        End time of the requested interval.
+    max_chunk : `TimeDelta`
+        Maximal chunk duration. Used to split loading into smaller chunks, that
+        can be handled by EFD.
+    """
+
     topic: str
     cache: EfdTopicCache
     start: Time
     end: Time
-    interval: TimeDelta
+    max_chunk: TimeDelta
 
     def is_event(self) -> bool:
         return self.topic.startswith("logevent_")
@@ -219,7 +324,12 @@ class EfdCacheRequest:
 
 class EfdCache:
     """Caches data available from SAL, so those can be quickly accessed in
-    downloaded DataFrames."""
+    downloaded DataFrames. Substitutes SAL Remote when SAL ingest hijacking is
+    active.
+
+    Implements both __getitem__ (for dictionary-like access) and __getattr__
+    (for record-like access).
+    """
 
     def __init__(self, sal: "MetaSAL", efd_client: EfdClient):
         super().__init__()
@@ -234,6 +344,16 @@ class EfdCache:
         self.delete_lock = asyncio.Lock()
 
     def __getitem__(self, key: str) -> EfdTopicCache | None:
+        """
+        Access topics as class dictionary entries. Provides convenient way to
+        access topics by names without prefix.
+
+        Parameters
+        ----------
+        key : `str`
+            Topic name in EFD. Without any prefix.
+        """
+
         if key in self.telemetry.keys():
             return self.telemetry[key]
         elif key in self.events.keys():
@@ -241,6 +361,18 @@ class EfdCache:
         return None
 
     def __getattr__(self, name: str) -> EfdTopicCache | None:
+        """
+        Implements record-like access to topics stored in Cache. This is needed
+        so the EfdCache can be used in lieu of the SAL Remote for SAL
+        hijacking.
+
+        Parameters
+        ----------
+        name : `str`
+            Requested topic name. As SAL uses prefixes (evt_ for logevents and
+            tel_ for telemetry), those are strip from the name. If topic is
+            hold by the cache, it is returned.
+        """
         key = name[4:]
         if name.startswith("tel_"):
             return self.telemetry[key]
@@ -249,6 +381,15 @@ class EfdCache:
         raise AttributeError(f"Unknow cache attribute: {name}")
 
     async def load(self, request: EfdCacheRequest) -> None:
+        """
+        Fill cache specified in request with data obtained from the EFD.
+
+        Parameters
+        ----------
+        request : `EfdCacheRequest`
+           Request data.
+        """
+
         async def chunk(request, start, end) -> None:
             try:
                 logging.debug(
@@ -285,15 +426,15 @@ class EfdCache:
                     if request.topic not in [r.topic for r in self.shall_delete]:
                         self.shall_delete.append(request)
 
-        async def load_interval(request: EfdCacheRequest, interval: TimeDelta) -> None:
-            if interval > TimeDelta(0, format="sec"):
+        async def load_interval(request: EfdCacheRequest, max_chunk: TimeDelta) -> None:
+            if max_chunk > TimeDelta(0, format="sec"):
                 if request.cache.end is not None and request.cache.end != request.start:
                     request.cache.clear()
 
                 i_start = i_end = request.start
-                i_end += interval
+                i_end += max_chunk
                 while i_start < i_end:
-                    i_end = min(i_start + interval, request.end)
+                    i_end = min(i_start + max_chunk, request.end)
                     await chunk(request, i_start, i_end)
                     i_start = i_end
             else:
@@ -304,20 +445,27 @@ class EfdCache:
                     request.cache.clear()
 
                 i_start = i_end = request.end
-                i_start += interval
+                i_start += max_chunk
                 while i_start != i_end:
-                    i_start = max(i_end + interval, request.start)
+                    i_start = max(i_end + max_chunk, request.start)
                     await chunk(request, i_start, i_end)
                     i_end = i_start
 
         async with self.sem:
             async with request.cache.lock:
                 if request.cache.start is None or request.end == request.cache.start:
-                    await load_interval(request, request.interval)
+                    await load_interval(request, request.max_chunk)
                 else:
-                    await load_interval(request, -request.interval)
+                    await load_interval(request, -request.max_chunk)
 
     async def cleanup(self) -> None:
+        """
+        Called after data are loaded to clean any bad topic. EFD doesn't create
+        timeseries for SAL topics that were defined in XML schemas but never
+        published. Calling cleanup assures EfdTopicCache entries for those
+        topics are removed from future processing.
+        """
+
         async with self.delete_lock:
             for r in self.shall_delete:
                 if r.is_event():
@@ -329,30 +477,47 @@ class EfdCache:
     def new_requests(
         self, timepoint: Time, interval: TimeDelta
     ) -> Iterable[EfdCacheRequest]:
-        """Retuns new EfdCacheRequest needed to load data in the interval.
+        """
+        Retuns new EfdCacheRequest needed to load data in the interval
+        around timepoint. If a topic's cache is empty or its data are too far
+        from the requested timepoint, assumes (timepoint - small offset,
+        timepoint + interval) would be needed.
+
         Parameters
         ----------
         timepoint : Time
+            Requested time.
         interval : TimeDelta
+            Expected length of the interval.
 
         Returns
         -------
         requests : [EfdCacheRequest]
+            Requests for new topic data. Those shall be passed to load
+            function, running as tasks from the controlling process.
         """
         for t, c in self.telemetry.items():
             start, end = c.interval(timepoint, interval, self.max_span)
             if start is None:
-                logging.debug("Already fetched %s at time %s.", t, timepoint.isot)
+                logging.debug(
+                    "Already fetched %s at time %s for %s seconds.",
+                    t,
+                    timepoint.isot,
+                    interval.sec,
+                )
                 continue
-            yield EfdCacheRequest(
-                t, c, start, end, interval + TimeDelta(0.05, format="sec")
-            )
+            yield EfdCacheRequest(t, c, start, end, TimeDelta(30, format="sec"))
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)
             if start is None:
-                logging.debug("Already fetched logevent_%s at time %s.", t, timepoint)
+                logging.debug(
+                    "Already fetched logevent_%s at time %s for %s seconds.",
+                    t,
+                    timepoint,
+                    interval.sec,
+                )
                 continue
             yield EfdCacheRequest(
-                "logevent_" + e, c, start, end, interval + TimeDelta(0.05, format="sec")
+                "logevent_" + e, c, start, end, TimeDelta(200, format="sec")
             )

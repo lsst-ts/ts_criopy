@@ -29,7 +29,7 @@ from astropy.time import Time, TimeDelta
 from lsst_efd_client import EfdClient
 from PySide6.QtCore import QObject, Signal
 
-from .efd_cache import EfdCache
+from .efd_cache import EfdCache, EfdTopicCache
 from .meta_sal import MetaSAL
 
 
@@ -52,6 +52,7 @@ class Player(QObject):
         super().__init__()
         self.sal = sal
 
+        logging.info("Initializing the EFD connection client.")
         self.cache = EfdCache(sal, EfdClient(efd))
 
     async def replay(self, timepoint: Time, duration: TimeDelta) -> None:
@@ -85,26 +86,26 @@ class Player(QObject):
             )
             self.downloadFinished.emit()
 
+        # First, the cached topics must be updated to contain actual new data.
         for topic, cache in self.cache.telemetry.items():
             cache.set_current_time(timepoint)
 
         for topic, cache in self.cache.events.items():
             cache.set_current_time(timepoint)
 
-        for topic, cache in self.cache.telemetry.items():
-            if cache is None or cache.empty:
-                continue
-            assert cache.data is not None
+        # When data are update, signals are distributed -
 
-            send = cache.get()
-            if send is not None:
-                getattr(self.sal, topic).emit(send)
-
-        for topic, cache in self.cache.events.items():
+        def send_cache(topic: str, cache: EfdTopicCache) -> None:
             if cache is None or cache.empty:
-                continue
+                return
             assert cache.data is not None
 
             send = cache.get()
             if send is not None and send._changed:
                 getattr(self.sal, topic).emit(send)
+
+        for topic, cache in self.cache.telemetry.items():
+            send_cache(topic, cache)
+
+        for topic, cache in self.cache.events.items():
+            send_cache(topic, cache)

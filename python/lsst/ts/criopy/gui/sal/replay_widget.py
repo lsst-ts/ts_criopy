@@ -24,13 +24,15 @@ __all__ = ["ReplayWidget"]
 import logging
 
 from astropy.time import Time, TimeDelta
-from PySide6.QtCore import QDateTime, Qt, QTimerEvent, Slot
+from PySide6.QtCore import QDateTime, QSettings, Qt, QTimerEvent, Slot
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QDateTimeEdit,
     QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QSlider,
     QSpinBox,
     QStyle,
@@ -50,6 +52,18 @@ class MSecDateTimeEdit(QDateTimeEdit):
 
 
 class ReplayControlWidget(QWidget):
+    """
+    Widget for controlling salcomm.player. Contains slider and buttons to
+    replay retrieved data on EUI.
+
+    Parameters
+    ----------
+    sal : MetaSAL
+       SAL CSC connection.
+    efd : str
+       Name of the EFD to queury data.
+    """
+
     def __init__(self, sal: MetaSAL, efd: str):
         super().__init__()
         self.sal = sal
@@ -255,11 +269,18 @@ class ReplayControlWidget(QWidget):
 
 
 class ReplayWidget(QWidget):
-    """Widget controlling data replay."""
+    """Widget containing control for data replay and a GUI log widget.
+
+    Parameters
+    ----------
+    sal : MetaSAL
+        SAL CSC connection.
+    """
 
     def __init__(self, sal: MetaSAL):
         super().__init__()
         self.setWindowTitle("Replay")
+        self.app_name = "LSST.TS.REPLAY"
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -268,9 +289,23 @@ class ReplayWidget(QWidget):
         layout.addWidget(self.replay_control)
 
         logging_widget = LoggingWidget()
-        logging_widget.setMinimumWidth(self.fontMetrics().averageCharWidth() * 115)
+        a_ch = self.fontMetrics().averageCharWidth()
+        logging_widget.setMinimumWidth(a_ch * 40)
+        logging_widget.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
 
         logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
         logging.getLogger().addHandler(logging_widget)
 
         layout.addWidget(logging_widget)
+
+        settings = QSettings(self.app_name, "ReplayWindow")
+        try:
+            self.restoreGeometry(settings.value("geometry"))
+        except AttributeError:
+            self.resize(a_ch * 115, 600)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        settings = QSettings(self.app_name, "ReplayWindow")
+        settings.setValue("geometry", self.saveGeometry())
