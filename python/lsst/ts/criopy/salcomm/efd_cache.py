@@ -257,17 +257,17 @@ class EfdTopicCache:
         data : `pd.DataFrame`
             Newly added data frame. Data
         """
-        if self.data is None:
+        if self.data is None or self.data.empty:
             self.data = data
-        elif not (data.empty):
+        elif data.empty:
+            return
+        else:
             try:
                 if data.index[0] == self.data.index[-1]:
                     data.drop(data.index[0], inplace=True)
                 elif self.data.index[0] == data.index[-1]:
                     data.drop(data.index[-1], inplace=True)
-
-                self.data = pd.merge_ordered(self.data, data, how="left")
-                self.data.sort_index(inplace=True)
+                self.data = pd.concat([self.data, data], sort=True)
             except Exception as er:
                 logging.error("Exception when merging two DataFrames: %", str(er))
 
@@ -335,7 +335,7 @@ class EfdCache:
         super().__init__()
         self.name = sal.remote.salinfo.name
         self.efd_client = efd_client
-        self.max_span = TimeDelta(65, format="sec")
+        self.max_span = TimeDelta(3605, format="sec")
         self.sem = asyncio.Semaphore(10)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
@@ -426,15 +426,15 @@ class EfdCache:
                     if request.topic not in [r.topic for r in self.shall_delete]:
                         self.shall_delete.append(request)
 
-        async def load_interval(request: EfdCacheRequest, max_chunk: TimeDelta) -> None:
-            if max_chunk > TimeDelta(0, format="sec"):
+        async def load_interval(request: EfdCacheRequest, interval: TimeDelta) -> None:
+            if interval.sec > 0:
                 if request.cache.end is not None and request.cache.end != request.start:
                     request.cache.clear()
 
                 i_start = i_end = request.start
-                i_end += max_chunk
-                while i_start < i_end:
-                    i_end = min(i_start + max_chunk, request.end)
+                i_end += interval
+                while i_start < request.end:
+                    i_end = min(i_start + interval, request.end)
                     await chunk(request, i_start, i_end)
                     i_start = i_end
             else:
@@ -445,9 +445,9 @@ class EfdCache:
                     request.cache.clear()
 
                 i_start = i_end = request.end
-                i_start += max_chunk
-                while i_start != i_end:
-                    i_start = max(i_end + max_chunk, request.start)
+                i_start += interval
+                while i_start != request.start:
+                    i_start = max(i_end + interval, request.start)
                     await chunk(request, i_start, i_end)
                     i_end = i_start
 
@@ -506,7 +506,7 @@ class EfdCache:
                     interval.sec,
                 )
                 continue
-            yield EfdCacheRequest(t, c, start, end, TimeDelta(30, format="sec"))
+            yield EfdCacheRequest(t, c, start, end, TimeDelta(120.05, format="sec"))
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)
@@ -519,5 +519,5 @@ class EfdCache:
                 )
                 continue
             yield EfdCacheRequest(
-                "logevent_" + e, c, start, end, TimeDelta(200, format="sec")
+                "logevent_" + e, c, start, end, TimeDelta(600.05, format="sec")
             )

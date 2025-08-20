@@ -80,7 +80,7 @@ class ReplayControlWidget(QWidget):
 
         self.start = MSecDateTimeEdit(now.addSecs(-600))
         self.duration = QDoubleSpinBox()
-        self.duration.setRange(1, 120)
+        self.duration.setRange(1, 3600)
         self.duration.setDecimals(3)
         self.duration.setSingleStep(10)
         self.duration.setValue(60)
