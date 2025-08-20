@@ -34,15 +34,18 @@ from .meta_sal import MetaSAL
 
 
 class Player(QObject):
-    """Queries EFD for telemetry and events, build up a cache and replay the
+    """
+    Queries EFD for telemetry and events, build up a cache and replay the
     events.
+
+
 
     Parameters
     ----------
     sal : MetaSAL
         SAL objects to replay. The topics in this fields are used to query EFD.
-    efd_client : EfdClient
-
+    efd : str
+        EFD name. Shall be either usdf_edf or summit_edf.
     """
 
     downloadStarted = Signal()
@@ -56,6 +59,15 @@ class Player(QObject):
         self.cache = EfdCache(sal, EfdClient(efd))
 
     async def replay(self, timepoint: Time, duration: TimeDelta) -> None:
+        """
+        Load data into cache. Starts multiple tasks to load data to speed up
+        the process.
+
+        Parameters
+        ----------
+        timepoint : `Time`
+        duration : `TimeDelta`
+        """
         await self.cache.cleanup()
 
         start_time = time.monotonic()

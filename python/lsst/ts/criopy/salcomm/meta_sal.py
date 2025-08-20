@@ -134,25 +134,25 @@ class MetaSAL(type(QObject)):  # type: ignore
         dictionary["remote"] = dictionary["sal_remote"]
         dictionary["freezed_cache"] = None
 
-        def freeze(self, cache: EfdCache) -> None:
+        def freeze(self, cache: EfdCache) -> None:  # type: ignore
             self.remote = self.freezed_cache = cache
             self.disconnect_callbacks()
             self.reemit_remote()
 
-        def thaw(self) -> None:
+        def thaw(self) -> None:  # type: ignore
             self.remote = self.sal_remote
             self.connect_callbacks()
             self.reemit_remote()
 
-        def telemetry(self) -> list[str]:
+        def telemetry(self) -> list[str]:  # type: ignore
             """Return remote telemetry topics names."""
             return [tel[4:] for tel in dir(self.sal_remote) if tel.startswith("tel_")]
 
-        def events(self) -> list[str]:
+        def events(self) -> list[str]:  # type: ignore
             """Return remote events topics names."""
             return [evt[4:] for evt in dir(self.sal_remote) if evt.startswith("evt_")]
 
-        def reemit_remote(self) -> None:
+        def reemit_remote(self) -> None:  # type: ignore
             """Re-emits all telemetry and event data from a single remote as Qt
             messages.
             """
@@ -161,17 +161,17 @@ class MetaSAL(type(QObject)):  # type: ignore
                 if data is not None:
                     getattr(self, t[4:]).emit(data)
 
-        async def close(self) -> None:
+        async def close(self) -> None:  # type: ignore
             await self.sal_remote.close()
             await self.domain.close()
 
-        def connect_callbacks(self) -> None:
+        def connect_callbacks(self) -> None:  # type: ignore
             for t in [
                 evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
             ]:
                 getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
 
-        def disconnect_callbacks(self) -> None:
+        def disconnect_callbacks(self) -> None:  # type: ignore
             for t in [
                 evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
             ]:

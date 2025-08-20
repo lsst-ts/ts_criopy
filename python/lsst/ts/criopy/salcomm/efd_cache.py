@@ -68,7 +68,7 @@ class EfdTopic:
         last_len = 0
         current_map: dict[int, Any] = {}
 
-        def add_map(last) -> None:
+        def add_map(last: str) -> None:
             arr = [None] * len(current_map)
             for i in range(len(current_map)):
                 if i in current_map.keys():
@@ -129,7 +129,7 @@ class EfdTopicCache:
     start: Time | None = None
     end: Time | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.lock = asyncio.Lock()
 
@@ -329,19 +329,48 @@ class EfdCache:
 
     Implements both __getitem__ (for dictionary-like access) and __getattr__
     (for record-like access).
+
+    Parameters
+    ----------
+    sal : `MetaSAL`
+        SAL object. Provideds topics names.
+    efd_client `EfdClient`
+        Client for EFD access.
+    max_span : `float`, optional
+        Maximum cache size in seconds. When data further from the current cache
+        start or end are requested, the cache content will be deleted. Default
+        to 600 seconds = 10 minutes.
+    num_tasks : int, optional
+        Number of allowed parallel tasks. Task execution is guarded by self.sem
+        semaphore. Defaults to 10.
+
+    Attributes
+    ----------
+    name : `str`
+        SAL remote name. Used in query to query the right data.
+    efd_client : `EfdClient`
+        EFD access client.
+    sem : `Semaphore`
+        Semaphore guarding tasks execution.
     """
 
-    def __init__(self, sal: "MetaSAL", efd_client: EfdClient):
+    def __init__(
+        self,
+        sal: "MetaSAL",
+        efd_client: EfdClient,
+        max_span: float = 600,
+        num_tasks: int = 10,
+    ):
         super().__init__()
         self.name = sal.remote.salinfo.name
         self.efd_client = efd_client
-        self.max_span = TimeDelta(3605, format="sec")
-        self.sem = asyncio.Semaphore(10)
+        self.max_span = TimeDelta(max_span, format="sec")
+        self.sem = asyncio.Semaphore(num_tasks)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
         self.events = {e: EfdTopicCache() for e in sal.events()}
-        self.shall_delete: list[EfdCacheRequest] = []
-        self.delete_lock = asyncio.Lock()
+        self.__shall_delete: list[EfdCacheRequest] = []
+        self.__delete_lock = asyncio.Lock()
 
     def __getitem__(self, key: str) -> EfdTopicCache | None:
         """
@@ -390,7 +419,7 @@ class EfdCache:
            Request data.
         """
 
-        async def chunk(request, start, end) -> None:
+        async def chunk(request: EfdCacheRequest, start: Time, end: Time) -> None:
             try:
                 logging.debug(
                     "Fetching %s - %s to %s.",
@@ -422,9 +451,9 @@ class EfdCache:
                     request.topic,
                     str(er),
                 )
-                async with self.delete_lock:
-                    if request.topic not in [r.topic for r in self.shall_delete]:
-                        self.shall_delete.append(request)
+                async with self.__delete_lock:
+                    if request.topic not in [r.topic for r in self.__shall_delete]:
+                        self.__shall_delete.append(request)
 
         async def load_interval(request: EfdCacheRequest, interval: TimeDelta) -> None:
             if interval.sec > 0:
@@ -466,13 +495,13 @@ class EfdCache:
         topics are removed from future processing.
         """
 
-        async with self.delete_lock:
-            for r in self.shall_delete:
+        async with self.__delete_lock:
+            for r in self.__shall_delete:
                 if r.is_event():
                     del self.events[r.topic[9:]]
                 else:
                     del self.telemetry[r.topic]
-            self.shall_delete = []
+            self.__shall_delete = []
 
     def new_requests(
         self, timepoint: Time, interval: TimeDelta

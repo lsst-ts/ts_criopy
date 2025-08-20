@@ -29,7 +29,7 @@ from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
 class LoggingWidget(QWidget, Handler):
     """Class to display system log messages."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         QWidget.__init__(self)
         Handler.__init__(self)
 

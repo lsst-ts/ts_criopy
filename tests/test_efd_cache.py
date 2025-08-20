@@ -23,11 +23,13 @@ import unittest
 
 from astropy.time import Time, TimeDelta
 from lsst.ts.criopy.salcomm import EfdCache, create
+from lsst.ts.salobj import set_test_topic_subname
 from lsst_efd_client import EfdClient
 
 
 class EfdCacheTestCase(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
+        set_test_topic_subname()
         self.sal = create("MTM1M3TS")
         self.client = EfdClient("usdf_efd")
 
