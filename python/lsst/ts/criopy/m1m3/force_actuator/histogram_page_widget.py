@@ -97,4 +97,4 @@ class HistogramPageWidget(Widget):
         if data is None or self.field is None:
             return
 
-        self.histogramView.update(self.field.getValue(data))
+        self.histogramView.update(self.field.get_value(data))

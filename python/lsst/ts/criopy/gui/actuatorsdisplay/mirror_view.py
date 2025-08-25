@@ -108,7 +108,7 @@ class MirrorView(QGraphicsView):
     def set_selected(self, selected_actuator: ForceActuatorItem | FCUItem) -> None:
         self.clear_selected()
 
-        if isinstance(ForceActuatorItem, selected_actuator):
+        if isinstance(selected_actuator, ForceActuatorItem):
             selected_actuator.setKind(FASelection.SELECTED)
             self._set_fa_neighbour(selected_actuator.actuator.index, True)
             self.selectionChanged.emit(selected_actuator)

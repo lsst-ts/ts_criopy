@@ -23,6 +23,7 @@ import os
 import sys
 
 from .. import ExitErrorCodes
+from .efd_cache import EfdCache
 
 try:
     qt_api = os.environ["QT_API"]
@@ -47,42 +48,75 @@ from PySide6.QtCore import QObject, Signal
 __all__ = ["MetaSAL", "create"]
 
 
-def _filterEvtTel(m: str) -> bool:
+def _filter_evt_tel(m: str) -> bool:
     return m.startswith("tel_") or m.startswith("evt_")
 
 
 class MetaSAL(type(QObject)):  # type: ignore
     """Metaclass for Qt<->SAL/DDS glue class. Creates Qt Signal objects for all
     read topics. Remote arguments are read from class variable _args. SALObj
-    remote is accessible through 'remote' class variable."""
+    remote is accessible through 'remote' class variable.
+
+    The class also provides methods to ingore SAL callbacks. This can be used
+    to hijack the Qt Signal infrastructure to emit messages with historical
+    data. This is used during replay functions.
+
+    Methods
+    -------
+    freeze()
+        Freeze SAL messages. Shall be called when hijacking the signals to emit
+        historical telemetry from a cache.
+    thaw()
+        Returns control back SAL. On new SAL telemetry, signals with the data
+        will be emitted.
+    telemetry()
+        Returns list of telemetry topics names.
+    events()
+        Returns list of event (logevent) topics names.
+    reemit_remote()
+        Re-emit remote signals. This is used when SAL connection is established
+        (or re-established), to emit signals with the last historic data.
+    close()
+        Shall be called when the program ends. Closes SAL remote and domain.
+    connect_callbacks()
+        Connect SAL topic callbacks. Qt Signals will be then emitted when new
+        telemetry is received.
+    disconnect_callbacks()
+        Disconnet SAL topic callbacks. Qt Signals will not be emitted when new
+        telemetry is received. This is called in freeze method.
+    """
 
     def __new__(cls, classname, bases, dictionary):  # type: ignore
         dictionary["domain"] = Domain()
 
         if dictionary["_manual"] is None:
-            dictionary["remote"] = Remote(dictionary["domain"], **dictionary["_args"])
+            dictionary["sal_remote"] = Remote(
+                dictionary["domain"], **dictionary["_args"]
+            )
         else:
-            dictionary["remote"] = Remote(
+            dictionary["sal_remote"] = Remote(
                 dictionary["domain"],
                 start=False,
                 exclude=dictionary["_manual"].keys(),
                 **dictionary["_args"],
             )
             for name, args in dictionary["_manual"].items():
-                if name in dictionary["remote"].salinfo.telemetry_names:
-                    tel = RemoteTelemetry(dictionary["remote"].salinfo, name, **args)
-                    setattr(dictionary["remote"], tel.attr_name, tel)
-                elif name in dictionary["remote"].salinfo.event_names:
-                    evt = RemoteEvent(dictionary["remote"].salinfo, name, **args)
-                    setattr(dictionary["remote"], evt.attr_name, evt)
+                if name in dictionary["sal_remote"].salinfo.telemetry_names:
+                    tel = RemoteTelemetry(
+                        dictionary["sal_remote"].salinfo, name, **args
+                    )
+                    setattr(dictionary["sal_remote"], tel.attr_name, tel)
+                elif name in dictionary["sal_remote"].salinfo.event_names:
+                    evt = RemoteEvent(dictionary["sal_remote"].salinfo, name, **args)
+                    setattr(dictionary["sal_remote"], evt.attr_name, evt)
                 else:
                     print(f"Unknown manual {name} - is not a telemetry or event topics")
 
-            dictionary["remote"].start_task = asyncio.create_task(
-                dictionary["remote"].start()
+            dictionary["sal_remote"].start_task = asyncio.create_task(
+                dictionary["sal_remote"].start()
             )
 
-        if dictionary["remote"].salinfo.indexed:
+        if dictionary["sal_remote"].salinfo.indexed:
             if "index" not in dictionary["_args"].keys():
                 raise RuntimeError(
                     f"CSC Remote {dictionary['_args']['name']} is indexed, but "
@@ -90,33 +124,73 @@ class MetaSAL(type(QObject)):  # type: ignore
                 )
 
         for m in [
-            evttel for evttel in dir(dictionary["remote"]) if _filterEvtTel(evttel)
+            evttel
+            for evttel in dir(dictionary["sal_remote"])
+            if _filter_evt_tel(evttel)
         ]:
             dictionary[m[4:]] = Signal(map)
 
-        def connect_callbacks(self) -> None:  # type: ignore
-            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
-                getattr(self.remote, m).callback = getattr(self, m[4:]).emit
+        # remote for storing data in freeze method
+        dictionary["remote"] = dictionary["sal_remote"]
+        dictionary["freezed_cache"] = None
+
+        def freeze(self, cache: EfdCache) -> None:  # type: ignore
+            self.remote = self.freezed_cache = cache
+            self.disconnect_callbacks()
+            self.reemit_remote()
+
+        def thaw(self) -> None:  # type: ignore
+            self.remote = self.sal_remote
+            self.connect_callbacks()
+            self.reemit_remote()
+
+        def telemetry(self) -> list[str]:  # type: ignore
+            """Return remote telemetry topics names."""
+            return [tel[4:] for tel in dir(self.sal_remote) if tel.startswith("tel_")]
+
+        def events(self) -> list[str]:  # type: ignore
+            """Return remote events topics names."""
+            return [evt[4:] for evt in dir(self.sal_remote) if evt.startswith("evt_")]
 
         def reemit_remote(self) -> None:  # type: ignore
             """Re-emits all telemetry and event data from a single remote as Qt
             messages.
             """
-            for m in [evttel for evttel in dir(self.remote) if _filterEvtTel(evttel)]:
-                data = getattr(self.remote, m).get()
+            for t in [evttel for evttel in dir(self.remote) if _filter_evt_tel(evttel)]:
+                data = getattr(self.remote, t).get()
                 if data is not None:
-                    getattr(self, m[4:]).emit(data)
+                    getattr(self, t[4:]).emit(data)
 
         async def close(self) -> None:  # type: ignore
-            await self.remote.close()
+            await self.sal_remote.close()
             await self.domain.close()
+
+        def connect_callbacks(self) -> None:  # type: ignore
+            for t in [
+                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
+            ]:
+                getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
+
+        def disconnect_callbacks(self) -> None:  # type: ignore
+            for t in [
+                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
+            ]:
+                getattr(self.sal_remote, t).callback = None
 
         newclass = super(MetaSAL, cls).__new__(cls, classname, bases, dictionary)
 
         # creates class methods
-        setattr(newclass, connect_callbacks.__name__, connect_callbacks)
+        setattr(newclass, freeze.__name__, freeze)
+        setattr(newclass, thaw.__name__, thaw)
+
+        setattr(newclass, telemetry.__name__, telemetry)
+        setattr(newclass, events.__name__, events)
+
         setattr(newclass, reemit_remote.__name__, reemit_remote)
         setattr(newclass, close.__name__, close)
+
+        setattr(newclass, connect_callbacks.__name__, connect_callbacks)
+        setattr(newclass, disconnect_callbacks.__name__, disconnect_callbacks)
 
         return newclass
 

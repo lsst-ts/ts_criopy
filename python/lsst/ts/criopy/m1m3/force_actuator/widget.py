@@ -80,7 +80,7 @@ class Widget(QSplitter):
         self.selected_actuator_id_label = QLabel()
         self.selected_actuator_value_label = QLabel()
         self.selected_actuator_warning_label = WarningLabel()
-        self.last_updated_label = TimeDeltaLabel()
+        self.last_updated_label = TimeDeltaLabel(time_delta=60)
 
         self.near_selected_ids_label = QLabel()
         self.near_selected_value_label = QLabel()
@@ -305,10 +305,10 @@ class Widget(QSplitter):
         self.selected_actuator_id_label.setText(
             str(selected_actuator.actuator.actuator_id)
         )
-        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-        data = self.field.getValue(self._get_data())
+        data = self.field.get_value(self._get_data())
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors
@@ -322,7 +322,7 @@ class Widget(QSplitter):
         else:
             self.near_selected_ids_label.setText(",".join(map(str, near_ids)))
             self.near_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in near_indices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in near_indices]))}"
             )
 
         far_ids = filter(
@@ -340,7 +340,7 @@ class Widget(QSplitter):
         else:
             self.far_selected_ids_label.setText(",".join(map(str, far_ids)))
             self.far_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in farIndices]))}"
             )
 
     def __setModifyCommand(self, command: str | None) -> None:

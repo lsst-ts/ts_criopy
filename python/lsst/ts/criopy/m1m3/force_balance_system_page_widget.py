@@ -188,15 +188,7 @@ class ForceBalanceSystemPageWidget(QWidget):
 
     @Slot()
     def preclippedBalanceForces(self, data: BaseMsgType) -> None:
-        try:
-            self.balance_forces_clipped.setClipped(
-                (
-                    self.m1m3.remote.evt_balanceForcesApplied.get().timestamp
-                    == self.m1m3.remote.evt_preclippedBalanceForces.get().timestamp
-                )
-            )
-        except AttributeError:
-            self.balance_forces_clipped.setClipped(False)
+        self.balance_forces_clipped.setClipped(True)
 
     @Slot()
     def force_controller_state(self, data: BaseMsgType) -> None:

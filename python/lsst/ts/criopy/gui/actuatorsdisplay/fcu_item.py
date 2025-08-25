@@ -65,7 +65,7 @@ class FCUItem(DataItem):
         Parameters
         ----------
         scale : `object`
-            Scaling object. Should provide formatValue() and get_brush()
+            Scaling object. Should provide format_value() and get_brush()
             methods."""
         self._color_scale = scale
         self.update()

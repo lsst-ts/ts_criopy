@@ -4,10 +4,15 @@
 Version History
 ===============
 
+v0.12.0
+-------
+
+* Replay widget - replays historic data in GUIs.
+
 v0.11.0
 -------
 
-* Display FCU values in M1M3TSGU
+* Display FCU values in M1M3TSGUI
 * Show mirror boundaries (M1, M3, center hole)
 * Improved M1M3TSGUI Mixing valve display
 * M1M3TSGUI table backgrounds colors for FCU with problems

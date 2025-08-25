@@ -60,7 +60,7 @@ class TopicField:
         self.scale_type = scale_type
         self.fmt = fmt
 
-    def getValue(self, data: BaseMsgType) -> typing.Any:
+    def get_value(self, data: BaseMsgType) -> typing.Any:
         return getattr(data, self.field_name)
 
 

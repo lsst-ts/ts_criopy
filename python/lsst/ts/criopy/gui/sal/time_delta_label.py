@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.utils import current_tai
+from astropy.time import Time, TimeDelta
 from PySide6.QtCore import QTimerEvent, Signal, Slot
 
 from ..custom_labels import DataLabel
@@ -38,37 +38,67 @@ class TimeDeltaLabel(DataLabel):
         Signal to which the data shall be connected. If specified, widget will
         connect to this signal wit the update. Defaults to None, no signal
         connected.
-
     field : `str`, optional
         SAL field that contains time float. Usually private_sndStamp or
         timestamp. Defaults to None, not field selected.
-
     timeout : `int`, optional
         Timeout value in ms. After this time expires, the label will turn red.
         Defaults to 50 ms.
+    time_delta : int, optional
+        If not None and the calculated timeout (in seconds) is greater than
+        this value, full date-time string will be displayed instead of time
+        delta. Defaults to None.
     """
 
     def __init__(
-        self, signal: Signal | None = None, field: str | None = None, timeout: int = 50
+        self,
+        signal: Signal | None = None,
+        field: str | None = None,
+        timeout: int = 50,
+        time_delta: float | None = None,
     ) -> None:
         super().__init__(signal, field)
-        self.event_time: float | None = None
+        self.event_time: Time | None = None
         self.timeout = timeout
+        if time_delta is None:
+            self.time_delta = None
+        else:
+            self.time_delta = TimeDelta(float(time_delta), format="sec")
         self.timer = None
 
     def update(self) -> None:
+        """
+        Called when data in label shall be updated, either because time has
+        changed, or from timer after same time has elapsed.
+        """
         if self.event_time is None:
             self.setText("---")
         else:
-            self.setText(f"{current_tai() - self.event_time:.2f}")
+            delta = Time.now() - self.event_time
+            if self.time_delta is not None and abs(delta) > self.time_delta:
+                self.setText(f"{Time(self.event_time, scale='utc').iso}")
+            else:
+                self.setText(f"{delta.sec:.2f}")
 
     @Slot()
     def setValue(self, time: float) -> None:
+        """
+        Connected to a signal in DataLabel, called when new value shall be set.
+        Connect update timer if it hasn't been connected.
+
+        Parameters
+        ==========
+        time : `float`
+            Time value (as TAI seconds).
+        """
         if self.event_time is None:
             self.timer = self.startTimer(self.timeout)
-        self.event_time = time
+        self.event_time = Time(time, format="unix_tai")
 
     def set_unknown(self) -> None:
+        """
+        Set time value to unknow. Stops update timer, if it's running.
+        """
         self.event_time = None
         if self.timer is not None:
             self.killTimer(self.timer)
@@ -76,4 +106,7 @@ class TimeDeltaLabel(DataLabel):
         self.update()
 
     def timerEvent(self, event: QTimerEvent) -> None:
+        """
+        Called when time expires. Updates time since reported event.
+        """
         self.update()

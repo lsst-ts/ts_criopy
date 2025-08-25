@@ -3,6 +3,7 @@ from .application_status_widget import ApplicationStatusWidget
 from .chart_widget import Axis, AxisValue, ChartWidget
 from .csc_control_widget import CSCControlWidget
 from .eui_window import EUIWindow
+from .replay_widget import ReplayWidget
 from .sal_error_code_widget import SALErrorCodeWidget
 from .sal_log import LogDock, LogWidget
 from .sal_status_bar import SALStatusBar

@@ -19,6 +19,7 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 import enum
+import math
 
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QPointF, QRect, Qt
@@ -95,7 +96,9 @@ class ForceActuatorItem(DataItem):
     @property
     def data(self) -> float:
         """Value associated with the actuator (`float`)."""
-        assert self._data is not None
+        if self._data is None:
+            return math.nan
+
         return self._data
 
     @data.setter

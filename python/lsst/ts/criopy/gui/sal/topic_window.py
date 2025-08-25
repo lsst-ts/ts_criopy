@@ -201,7 +201,7 @@ class TopicWindow(QSplitter):
             return
 
         self.selected_actuator_id_label.setText(str(selected_actuator.actuator_id))
-        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
     def _change_field(self, topic_index: int, field_index: int) -> None:
