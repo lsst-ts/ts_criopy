@@ -38,8 +38,6 @@ class Player(QObject):
     Queries EFD for telemetry and events, build up a cache and replay the
     events.
 
-
-
     Parameters
     ----------
     sal : MetaSAL
@@ -66,7 +64,11 @@ class Player(QObject):
         Parameters
         ----------
         timepoint : `Time`
+            Requested (exact) time. After replay ends, the call guarantees data
+            (telemetry and events) for this time will be loaded in the cache.
         duration : `TimeDelta`
+            Interval length. This is the prefered length of the cache around
+            timepoint.
         """
         await self.cache.cleanup()
 

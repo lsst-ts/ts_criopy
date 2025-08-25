@@ -257,11 +257,12 @@ class EfdTopicCache:
         data : `pd.DataFrame`
             Newly added data frame. Data
         """
-        if self.data is None or self.data.empty:
+        if self.empty:
             self.data = data
         elif data.empty:
             return
         else:
+            assert self.data is not None
             try:
                 if data.index[0] == self.data.index[-1]:
                     data.drop(data.index[0], inplace=True)
@@ -280,7 +281,7 @@ class EfdTopicCache:
         ----------
         start : `Time`
             Newly added block start time.
-        end: `Time`
+        end : `Time`
             Newly added block end time.
         """
         if self.start is None or start < self.start:

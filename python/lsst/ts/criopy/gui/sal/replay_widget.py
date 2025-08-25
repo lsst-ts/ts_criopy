@@ -285,6 +285,7 @@ class ReplayWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        # TODO: shall be user-selectable. OSW-927
         self.replay_control = ReplayControlWidget(sal, "usdf_efd")
         layout.addWidget(self.replay_control)
 
