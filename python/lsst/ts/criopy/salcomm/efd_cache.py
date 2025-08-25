@@ -74,12 +74,12 @@ class EfdTopic:
                 if i in current_map.keys():
                     arr[i] = current_map[i]
                 else:
+                    arr[i] = None
                     logging.warn(
                         "Uncomplete array in EFD data - %s map %s",
                         last,
                         current_map,
                     )
-                    return
             setattr(self, last, arr)
 
         for c in row.columns.values:
@@ -335,8 +335,8 @@ class EfdCache:
     ----------
     sal : `MetaSAL`
         SAL object. Provideds topics names.
-    efd_client `EfdClient`
-        Client for EFD access.
+    efd : `str`
+        EFD name.
     max_span : `float`, optional
         Maximum cache size in seconds. When data further from the current cache
         start or end are requested, the cache content will be deleted. Default
@@ -358,13 +358,15 @@ class EfdCache:
     def __init__(
         self,
         sal: "MetaSAL",
-        efd_client: EfdClient,
+        efd: str,
         max_span: float = 600,
         num_tasks: int = 10,
     ):
         super().__init__()
         self.name = sal.remote.salinfo.name
-        self.efd_client = efd_client
+        self.efd = efd
+
+        self.efd_client = EfdClient(self.efd)
         self.max_span = TimeDelta(max_span, format="sec")
         self.sem = asyncio.Semaphore(num_tasks)
 

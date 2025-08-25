@@ -135,11 +135,17 @@ class MetaSAL(type(QObject)):  # type: ignore
         dictionary["freezed_cache"] = None
 
         def freeze(self, cache: EfdCache) -> None:  # type: ignore
+            if self.remote == cache:
+                return
+
             self.remote = self.freezed_cache = cache
             self.disconnect_callbacks()
             self.reemit_remote()
 
         def thaw(self) -> None:  # type: ignore
+            if self.remote == self.sal_remote:
+                return
+
             self.remote = self.sal_remote
             self.connect_callbacks()
             self.reemit_remote()

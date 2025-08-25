@@ -24,9 +24,11 @@ __all__ = ["ReplayWidget"]
 import logging
 
 from astropy.time import Time, TimeDelta
+from lsst_efd_client import EfdClient
 from PySide6.QtCore import QDateTime, QSettings, Qt, QTimerEvent, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QComboBox,
     QDateTimeEdit,
     QDoubleSpinBox,
     QHBoxLayout,
@@ -64,11 +66,23 @@ class ReplayControlWidget(QWidget):
        Name of the EFD to queury data.
     """
 
-    def __init__(self, sal: MetaSAL, efd: str):
+    def __init__(self, sal: MetaSAL):
         super().__init__()
         self.sal = sal
         self.player: Player | None = None
-        self.efd = efd
+
+        efd_layout = QHBoxLayout()
+
+        self.select_efd = QComboBox()
+
+        efd_names = EfdClient.list_efd_names()
+        self.select_efd.clear()
+        for name in sorted(efd_names):
+            self.select_efd.addItem(name)
+
+        efd_layout.addWidget(QLabel("EFD:"))
+        efd_layout.addWidget(self.select_efd)
+        efd_layout.addStretch()
 
         self.play_interval = 0
         self.play_timer = None
@@ -150,6 +164,7 @@ class ReplayControlWidget(QWidget):
         player_layout.addWidget(play_button)
         player_layout.addWidget(forward_button)
 
+        layout.addLayout(efd_layout)
         layout.addLayout(start_end_layout)
         layout.addWidget(self.slider)
         layout.addLayout(current_layout)
@@ -165,6 +180,10 @@ class ReplayControlWidget(QWidget):
         forward_button.clicked.connect(self.forward)
 
         self.slider.sliderMoved.connect(self.slider_moved)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.player = None
+        self.sal.thaw()
 
     def timerEvent(self, event: QTimerEvent) -> None:
         self.play_time = self.play_time.addMSecs(self.play_interval)
@@ -242,16 +261,16 @@ class ReplayControlWidget(QWidget):
 
     @Slot()
     def download_finished(self) -> None:
+        assert self.player is not None
+        self.sal.freeze(self.player.cache)
         self.setEnabled(True)
 
     @asyncSlot()
     async def replay(self, date_time: QDateTime) -> None:
         if self.player is None:
-            self.player = Player(self.sal, self.efd)
+            self.player = Player(self.sal)
             self.player.downloadStarted.connect(self.download_started)
             self.player.downloadFinished.connect(self.download_finished)
-
-            self.sal.freeze(self.player.cache)
 
         timepoint = (
             date_time.toMSecsSinceEpoch() - self.start.dateTime().toMSecsSinceEpoch()
@@ -265,7 +284,13 @@ class ReplayControlWidget(QWidget):
 
         self.slider.setValue(timepoint)
         start = Time(date_time.toMSecsSinceEpoch() / 1000.0, format="unix")
-        await self.player.replay(start, TimeDelta(self.duration.value(), format="sec"))
+
+        assert self.player is not None
+        await self.player.replay(
+            self.select_efd.currentText(),
+            start,
+            TimeDelta(self.duration.value(), format="sec"),
+        )
 
 
 class ReplayWidget(QWidget):
@@ -285,8 +310,7 @@ class ReplayWidget(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # TODO: shall be user-selectable. OSW-927
-        self.replay_control = ReplayControlWidget(sal, "usdf_efd")
+        self.replay_control = ReplayControlWidget(sal)
         layout.addWidget(self.replay_control)
 
         logging_widget = LoggingWidget()
@@ -307,6 +331,13 @@ class ReplayWidget(QWidget):
         except AttributeError:
             self.resize(a_ch * 115, 600)
 
+        try:
+            self.replay_control.select_efd.setCurrentText(settings.value("efd_name"))
+        except AttributeError:
+            # a bit arbitrary - usfd_efd is preferred for queries
+            self.replay_control.select_efd.setCurrentText("usdf_efd")
+
     def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings(self.app_name, "ReplayWindow")
         settings.setValue("geometry", self.saveGeometry())
+        settings.setValue("efd_name", self.replay_control.select_efd.currentText())

@@ -26,7 +26,6 @@ import logging
 import time
 
 from astropy.time import Time, TimeDelta
-from lsst_efd_client import EfdClient
 from PySide6.QtCore import QObject, Signal
 
 from .efd_cache import EfdCache, EfdTopicCache
@@ -38,31 +37,37 @@ class Player(QObject):
     Queries EFD for telemetry and events, build up a cache and replay the
     events.
 
+    Signals
+    -------
+    downloadStarted
+        Emmited when data download starts.
+    downloadFinished
+        Emmited when data download ends.
+
     Parameters
     ----------
-    sal : MetaSAL
+    sal : `MetaSAL`
         SAL objects to replay. The topics in this fields are used to query EFD.
-    efd : str
-        EFD name. Shall be either usdf_edf or summit_edf.
     """
 
     downloadStarted = Signal()
     downloadFinished = Signal()
 
-    def __init__(self, sal: MetaSAL, efd: str):
+    def __init__(self, sal: MetaSAL):
         super().__init__()
         self.sal = sal
 
-        logging.info("Initializing the EFD connection client.")
-        self.cache = EfdCache(sal, EfdClient(efd))
+        self.cache: EfdCache | None = None
 
-    async def replay(self, timepoint: Time, duration: TimeDelta) -> None:
+    async def replay(self, efd: str, timepoint: Time, duration: TimeDelta) -> None:
         """
         Load data into cache. Starts multiple tasks to load data to speed up
         the process.
 
         Parameters
         ----------
+        efd : `str`
+            EFD name.
         timepoint : `Time`
             Requested (exact) time. After replay ends, the call guarantees data
             (telemetry and events) for this time will be loaded in the cache.
@@ -70,6 +75,10 @@ class Player(QObject):
             Interval length. This is the prefered length of the cache around
             timepoint.
         """
+        if self.cache is None or self.cache.efd != efd:
+            logging.info("Initializing the EFD connection client to %s.", efd)
+            self.cache = EfdCache(self.sal, efd)
+
         await self.cache.cleanup()
 
         start_time = time.monotonic()
