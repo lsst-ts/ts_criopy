@@ -8,6 +8,7 @@ v0.12.0
 -------
 
 * Replay widget - replays historic data in GUIs.
+* Allow user select the EFD instance.
 
 v0.11.0
 -------
