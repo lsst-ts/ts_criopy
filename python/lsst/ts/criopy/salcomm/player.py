@@ -57,23 +57,33 @@ class Player(QObject):
 
     def __init__(self, sal: MetaSAL, num_tasks: int = 10):
         super().__init__()
+
+        self.downloads = 0
+        self.num_tasks = num_tasks
         self.sal = sal
 
         self.cache: EfdCache | None = None
 
         self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
-        self.workers = [
-            asyncio.create_task(self.worker(f"Worker-{i}")) for i in range(num_tasks)
-        ]
+        self.create_workers()
 
     async def worker(self, name: str) -> None:
         while True:
             request, timepoint = await self.worker_queue.get()
-            assert self.cache is not None
-            await self.cache.load(request)
-            request.cache.set_current_time(timepoint)
-            self.send_cache(request.topic, request.cache)
-            self.worker_queue.task_done()
+            try:
+                assert self.cache is not None
+                await self.cache.load(request)
+                request.cache.set_current_time(timepoint)
+                self.send_cache(request.topic, request.cache)
+            finally:
+                self.downloads += 1
+                self.worker_queue.task_done()
+
+    def create_workers(self) -> None:
+        self.workers = [
+            asyncio.create_task(self.worker(f"Worker-{i}"))
+            for i in range(self.num_tasks)
+        ]
 
     def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
         if cache is None or cache.empty:
@@ -107,29 +117,27 @@ class Player(QObject):
         await self.cache.cleanup()
 
         start_time = time.monotonic()
-        downloads = 0
+        self.downloads = 0
 
         reported_ranges: list[tuple[Time, Time]] = []
 
         for request in self.cache.new_requests(timepoint, duration):
             await self.worker_queue.put((request, timepoint))
-            if downloads == 0:
+            if self.downloads == 0:
                 self.downloadStarted.emit()
             if (request.start, request.end) not in reported_ranges:
                 logging.info("Loading %s - %s.", request.start.isot, request.end.isot)
                 reported_ranges.append((request.start, request.end))
 
-            downloads += 1
-
         await self.worker_queue.join()
 
-        if downloads > 0:
+        if self.downloads > 0:
             duration = time.monotonic() - start_time
             logging.info(
                 "Downloaded %d topics in %.2f seconds (%.2f topics/second).",
-                downloads,
+                self.downloads,
                 duration,
-                downloads / duration,
+                self.downloads / duration,
             )
             self.downloadFinished.emit()
 
@@ -147,3 +155,13 @@ class Player(QObject):
 
         for topic, cache in self.cache.events.items():
             self.send_cache(topic, cache)
+
+    def stop(self) -> None:
+        while not self.worker_queue.empty():
+            self.worker_queue.get_nowait()
+            self.worker_queue.task_done()
+
+        for worker in self.workers:
+            worker.cancel("Requested to stop download.")
+
+        self.create_workers()

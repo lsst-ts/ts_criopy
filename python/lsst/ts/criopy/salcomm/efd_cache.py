@@ -334,7 +334,7 @@ class EfdCacheRequest:
         """
 
         async def chunk(start: Time, end: Time) -> None:
-            logging.info(
+            logging.debug(
                 "Fetching %s - %s to %s.",
                 self.topic,
                 start.isot,
