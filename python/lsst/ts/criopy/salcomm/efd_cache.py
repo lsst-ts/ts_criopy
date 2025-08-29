@@ -406,9 +406,6 @@ class EfdCache:
         Maximum cache size in seconds. When data further from the current cache
         start or end are requested, the cache content will be deleted. Default
         to 600 seconds = 10 minutes.
-    num_tasks : int, optional
-        Number of allowed parallel tasks. Task execution is guarded by self.sem
-        semaphore. Defaults to 10.
 
     Attributes
     ----------
@@ -416,8 +413,6 @@ class EfdCache:
         SAL remote name. Used in query to query the right data.
     efd_client : `EfdClient`
         EFD access client.
-    sem : `Semaphore`
-        Semaphore guarding tasks execution.
     """
 
     def __init__(
@@ -433,7 +428,6 @@ class EfdCache:
 
         self.efd_client = EfdClient(self.efd)
         self.max_span = TimeDelta(max_span, format="sec")
-        self.sem = asyncio.Semaphore(1)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
         self.events = {e: EfdTopicCache() for e in sal.events()}
@@ -478,8 +472,7 @@ class EfdCache:
 
     async def load(self, request: EfdCacheRequest) -> None:
         try:
-            async with self.sem:
-                await request.load(self.efd_client)
+            await request.load(self.efd_client)
         except ValueError as er:
             logging.warn(
                 "Event %s is not in the efd - will be ignored: %s.",
@@ -490,7 +483,7 @@ class EfdCache:
                 self.__shall_delete.append(request)
         except Exception as ex:
             logging.error(
-                "Error while fetching %s - not data retrieved: %s",
+                "Error while fetching %s - no data retrieved: %s",
                 request.topic,
                 str(ex),
             )

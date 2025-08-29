@@ -28,7 +28,7 @@ import time
 from astropy.time import Time, TimeDelta
 from PySide6.QtCore import QObject, Signal
 
-from .efd_cache import EfdCache, EfdTopicCache
+from .efd_cache import EfdCache, EfdCacheRequest, EfdTopicCache
 from .meta_sal import MetaSAL
 
 
@@ -48,16 +48,41 @@ class Player(QObject):
     ----------
     sal : `MetaSAL`
         SAL objects to replay. The topics in this fields are used to query EFD.
+    num_tasks: `int`, optional
+        Number of allowed parallel tasks. Defaults to 10.
     """
 
     downloadStarted = Signal()
     downloadFinished = Signal()
 
-    def __init__(self, sal: MetaSAL):
+    def __init__(self, sal: MetaSAL, num_tasks: int = 10):
         super().__init__()
         self.sal = sal
 
         self.cache: EfdCache | None = None
+
+        self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
+        self.workers = [
+            asyncio.create_task(self.worker(f"Worker-{i}")) for i in range(num_tasks)
+        ]
+
+    async def worker(self, name: str) -> None:
+        while True:
+            request, timepoint = await self.worker_queue.get()
+            assert self.cache is not None
+            await self.cache.load(request)
+            request.cache.set_current_time(timepoint)
+            self.send_cache(request.topic, request.cache)
+            self.worker_queue.task_done()
+
+    def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
+        if cache is None or cache.empty:
+            return
+        assert cache.data is not None
+
+        send = cache.get()
+        if send is not None and send._changed:
+            getattr(self.sal, topic).emit(send)
 
     async def replay(self, efd: str, timepoint: Time, duration: TimeDelta) -> None:
         """
@@ -86,18 +111,17 @@ class Player(QObject):
 
         reported_ranges: list[tuple[Time, Time]] = []
 
-        async with asyncio.TaskGroup() as tg:
-            for request in self.cache.new_requests(timepoint, duration):
-                tg.create_task(self.cache.load(request))
-                if downloads == 0:
-                    self.downloadStarted.emit()
-                if (request.start, request.end) not in reported_ranges:
-                    logging.info(
-                        "Loading %s - %s.", request.start.isot, request.end.isot
-                    )
-                    reported_ranges.append((request.start, request.end))
+        for request in self.cache.new_requests(timepoint, duration):
+            await self.worker_queue.put((request, timepoint))
+            if downloads == 0:
+                self.downloadStarted.emit()
+            if (request.start, request.end) not in reported_ranges:
+                logging.info("Loading %s - %s.", request.start.isot, request.end.isot)
+                reported_ranges.append((request.start, request.end))
 
-                downloads += 1
+            downloads += 1
+
+        await self.worker_queue.join()
 
         if downloads > 0:
             duration = time.monotonic() - start_time
@@ -116,19 +140,10 @@ class Player(QObject):
         for topic, cache in self.cache.events.items():
             cache.set_current_time(timepoint)
 
-        # When data are update, signals are distributed -
-
-        def send_cache(topic: str, cache: EfdTopicCache) -> None:
-            if cache is None or cache.empty:
-                return
-            assert cache.data is not None
-
-            send = cache.get()
-            if send is not None and send._changed:
-                getattr(self.sal, topic).emit(send)
+        # When data are update, signals are distributed
 
         for topic, cache in self.cache.telemetry.items():
-            send_cache(topic, cache)
+            self.send_cache(topic, cache)
 
         for topic, cache in self.cache.events.items():
-            send_cache(topic, cache)
+            self.send_cache(topic, cache)
