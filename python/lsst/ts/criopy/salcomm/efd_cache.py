@@ -313,6 +313,7 @@ class EfdCacheRequest:
         can be handled by EFD.
     """
 
+    csc_name: str
     topic: str
     cache: EfdTopicCache
     start: Time
@@ -321,6 +322,70 @@ class EfdCacheRequest:
 
     def is_event(self) -> bool:
         return self.topic.startswith("logevent_")
+
+    async def load(self, efd_client: EfdClient) -> None:
+        """
+        Fill cache specified in request with data obtained from the EFD.
+
+        Parameters
+        ----------
+        request : `EfdCacheRequest`
+           Request data.
+        """
+
+        async def chunk(start: Time, end: Time) -> None:
+            logging.info(
+                "Fetching %s - %s to %s.",
+                self.topic,
+                start.isot,
+                end.isot,
+            )
+            query_start = monotonic()
+            data = await efd_client.select_time_series(
+                f"lsst.sal.{self.csc_name}.{self.topic}",
+                "*, private_sndStamp",
+                start,
+                end,
+            )
+            duration = monotonic() - query_start
+            self.cache.merge(data)
+            data_len = len(data.index)
+            logging.info(
+                "Fetched %d rows from %s in %.3f seconds - %.2f rows/second.",
+                data_len,
+                self.topic,
+                duration,
+                data_len / duration,
+            )
+            self.cache.update(start, end)
+
+        async def load_interval(interval: TimeDelta) -> None:
+            if interval.sec > 0:
+                if self.cache.end is not None and self.cache.end != self.start:
+                    self.cache.clear()
+
+                i_start = i_end = self.start
+                i_end += interval
+                while i_start < self.end:
+                    i_end = min(i_start + interval, self.end)
+                    await chunk(i_start, i_end)
+                    i_start = i_end
+            else:
+                if self.cache.start is not None and self.cache.start != self.end:
+                    self.cache.clear()
+
+                i_start = i_end = self.end
+                i_start += interval
+                while i_start != self.start:
+                    i_start = max(i_end + interval, self.start)
+                    await chunk(i_start, i_end)
+                    i_end = i_start
+
+        async with self.cache.lock:
+            if self.cache.start is None or self.end == self.cache.start:
+                await load_interval(self.max_chunk)
+            else:
+                await load_interval(-self.max_chunk)
 
 
 class EfdCache:
@@ -368,12 +433,11 @@ class EfdCache:
 
         self.efd_client = EfdClient(self.efd)
         self.max_span = TimeDelta(max_span, format="sec")
-        self.sem = asyncio.Semaphore(num_tasks)
+        self.sem = asyncio.Semaphore(1)
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
         self.events = {e: EfdTopicCache() for e in sal.events()}
         self.__shall_delete: list[EfdCacheRequest] = []
-        self.__delete_lock = asyncio.Lock()
 
     def __getitem__(self, key: str) -> EfdTopicCache | None:
         """
@@ -413,82 +477,23 @@ class EfdCache:
         raise AttributeError(f"Unknow cache attribute: {name}")
 
     async def load(self, request: EfdCacheRequest) -> None:
-        """
-        Fill cache specified in request with data obtained from the EFD.
-
-        Parameters
-        ----------
-        request : `EfdCacheRequest`
-           Request data.
-        """
-
-        async def chunk(request: EfdCacheRequest, start: Time, end: Time) -> None:
-            try:
-                logging.debug(
-                    "Fetching %s - %s to %s.",
-                    request.topic,
-                    start.isot,
-                    end.isot,
-                )
-                query_start = monotonic()
-                data = await self.efd_client.select_time_series(
-                    f"lsst.sal.{self.name}.{request.topic}",
-                    "*, private_sndStamp",
-                    start,
-                    end,
-                )
-                duration = monotonic() - query_start
-                request.cache.merge(data)
-                data_len = len(data.index)
-                logging.info(
-                    "Fetched %d rows from %s in %.3f seconds - %.2f rows/second.",
-                    data_len,
-                    request.topic,
-                    duration,
-                    data_len / duration,
-                )
-                request.cache.update(start, end)
-            except ValueError as er:
-                logging.warn(
-                    "Event %s is not in the efd - will be ignored: %s.",
-                    request.topic,
-                    str(er),
-                )
-                async with self.__delete_lock:
-                    if request.topic not in [r.topic for r in self.__shall_delete]:
-                        self.__shall_delete.append(request)
-
-        async def load_interval(request: EfdCacheRequest, interval: TimeDelta) -> None:
-            if interval.sec > 0:
-                if request.cache.end is not None and request.cache.end != request.start:
-                    request.cache.clear()
-
-                i_start = i_end = request.start
-                i_end += interval
-                while i_start < request.end:
-                    i_end = min(i_start + interval, request.end)
-                    await chunk(request, i_start, i_end)
-                    i_start = i_end
-            else:
-                if (
-                    request.cache.start is not None
-                    and request.cache.start != request.end
-                ):
-                    request.cache.clear()
-
-                i_start = i_end = request.end
-                i_start += interval
-                while i_start != request.start:
-                    i_start = max(i_end + interval, request.start)
-                    await chunk(request, i_start, i_end)
-                    i_end = i_start
-
-        async with self.sem:
-            async with request.cache.lock:
-                if request.cache.start is None or request.end == request.cache.start:
-                    await load_interval(request, request.max_chunk)
-                else:
-                    await load_interval(request, -request.max_chunk)
+        try:
+            async with self.sem:
+                await request.load(self.efd_client)
+        except ValueError as er:
+            logging.warn(
+                "Event %s is not in the efd - will be ignored: %s.",
+                request.topic,
+                str(er),
+            )
+            if request.topic not in [r.topic for r in self.__shall_delete]:
+                self.__shall_delete.append(request)
+        except Exception as ex:
+            logging.error(
+                "Error while fetching %s - not data retrieved: %s",
+                request.topic,
+                str(ex),
+            )
 
     async def cleanup(self) -> None:
         """
@@ -498,13 +503,12 @@ class EfdCache:
         topics are removed from future processing.
         """
 
-        async with self.__delete_lock:
-            for r in self.__shall_delete:
-                if r.is_event():
-                    del self.events[r.topic[9:]]
-                else:
-                    del self.telemetry[r.topic]
-            self.__shall_delete = []
+        for r in self.__shall_delete:
+            if r.is_event():
+                del self.events[r.topic[9:]]
+            else:
+                del self.telemetry[r.topic]
+        self.__shall_delete = []
 
     def new_requests(
         self, timepoint: Time, interval: TimeDelta
@@ -538,7 +542,9 @@ class EfdCache:
                     interval.sec,
                 )
                 continue
-            yield EfdCacheRequest(t, c, start, end, TimeDelta(120.05, format="sec"))
+            yield EfdCacheRequest(
+                self.name, t, c, start, end, TimeDelta(120.05, format="sec")
+            )
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)
@@ -551,5 +557,10 @@ class EfdCache:
                 )
                 continue
             yield EfdCacheRequest(
-                "logevent_" + e, c, start, end, TimeDelta(600.05, format="sec")
+                self.name,
+                "logevent_" + e,
+                c,
+                start,
+                end,
+                TimeDelta(600.05, format="sec"),
             )
