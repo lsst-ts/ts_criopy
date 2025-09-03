@@ -339,7 +339,7 @@ class ThermalValuePageWidget(TopicWindow):
                 self.command_widget.mask_backround(
                     [heater == 100 for heater in values], Qt.blue
                 )
-            if self.field.field_name in "absoluteTemperature":
+            if self.field.field_name in ["absoluteTemperature"]:
                 self.command_widget.mask_backround(
                     [isnan(t) for t in values], Qt.darkRed
                 )

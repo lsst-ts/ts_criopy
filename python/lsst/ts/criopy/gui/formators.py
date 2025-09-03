@@ -122,7 +122,20 @@ class Formator:
         if math.isnan(value):
             return f"---{self.unit_name}"
 
-        text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
+        try:
+            text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
+        except Exception as ex:
+            print(
+                "Error while formating",
+                value,
+                "scale",
+                self.scale,
+                "with format",
+                self.fmt,
+                ":",
+                str(ex),
+            )
+            text = str(value * self.scale)
 
         if self.error_function is not None and self.error_function(value):
             text = f"<font color='{Colors.ERROR.name()}'>{text}</font>"

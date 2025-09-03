@@ -49,6 +49,11 @@ class MSecDateTimeEdit(QDateTimeEdit):
 class PlayerWidget(QWidget):
     """
     Widget for interactive player control.
+
+    Parameters
+    ----------
+    sal : `MetaSAL`
+        SAL CSC connection.
     """
 
     def __init__(self, sal: MetaSAL, start: MSecDateTimeEdit, duration: QDoubleSpinBox):

@@ -49,7 +49,7 @@ class NearNeighborsDifferencesField(TopicField):
     def __init__(self, name: str):
         super().__init__(name, "__calculated__", FAIndex.Z)
 
-    def getValue(self, data: BaseMsgType) -> typing.Any:
+    def get_value(self, data: BaseMsgType) -> typing.Any:
         near_diff = ForceCalculator.SALAppliedForces(data)
         near_diff.calculate_near_neighbors_forces()
         return np.array(near_diff.zForces) - np.array(near_diff.near_neighbors_forces)
@@ -61,7 +61,7 @@ class FarNeighborsFactorsField(TopicField):
     def __init__(self, name: str):
         super().__init__(name, "__calculated__", FAIndex.Z)
 
-    def getValue(self, data: BaseMsgType) -> typing.Any:
+    def get_value(self, data: BaseMsgType) -> typing.Any:
         fn_factors = ForceCalculator.SALAppliedForces(data)
         fn_factors.calculate_far_neighbors_magnitudes()
         return (
