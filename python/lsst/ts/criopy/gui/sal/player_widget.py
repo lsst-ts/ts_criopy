@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, Player
+from .load_progress_widget import LoadProgressWidget
 
 
 class MSecDateTimeEdit(QDateTimeEdit):
@@ -56,11 +57,18 @@ class PlayerWidget(QWidget):
         SAL CSC connection.
     """
 
-    def __init__(self, sal: MetaSAL, start: MSecDateTimeEdit, duration: QDoubleSpinBox):
+    def __init__(
+        self,
+        sal: MetaSAL,
+        start: MSecDateTimeEdit,
+        duration: QDoubleSpinBox,
+        load_progress: LoadProgressWidget,
+    ):
         super().__init__()
         self.sal = sal
         self.start = start
         self.duration = duration
+        self.load_progress = load_progress
 
         self.efd_name: str | None = None
 
@@ -225,6 +233,8 @@ class PlayerWidget(QWidget):
             self.player = Player(self.sal)
             self.player.downloadStarted.connect(self.download_started)
             self.player.downloadFinished.connect(self.download_finished)
+
+            self.load_progress.connect_player(self.player)
 
         timepoint = (
             date_time.toMSecsSinceEpoch() - self.start.dateTime().toMSecsSinceEpoch()

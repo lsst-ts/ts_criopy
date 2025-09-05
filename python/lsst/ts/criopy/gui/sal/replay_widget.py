@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 
 from ...salcomm import MetaSAL
 from ..logging_widget import LoggingWidget
+from .load_progress_widget import LoadProgressWidget
 from .player_widget import MSecDateTimeEdit, PlayerWidget
 
 
@@ -98,7 +99,11 @@ class ReplayControlWidget(QWidget):
         start_end_layout.addWidget(stop_button)
         start_end_layout.addWidget(retrieve_data_button)
 
-        self.player_widget = PlayerWidget(self.sal, self.start, self.duration)
+        self.load_progress = LoadProgressWidget()
+
+        self.player_widget = PlayerWidget(
+            self.sal, self.start, self.duration, self.load_progress
+        )
         self.player_widget.setEnabled(False)
 
         layout = QVBoxLayout()
@@ -106,6 +111,8 @@ class ReplayControlWidget(QWidget):
         layout.addLayout(efd_layout)
         layout.addLayout(start_end_layout)
         layout.addWidget(self.player_widget)
+
+        layout.addWidget(self.load_progress)
 
         self.setLayout(layout)
 

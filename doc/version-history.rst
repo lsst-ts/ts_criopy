@@ -7,7 +7,7 @@ Version History
 v0.12.0
 -------
 
-* Replay widget - replays historic data in GUIs.
+* Replay widget - replays historic data in GUIs, displays replay progress.
 * Allow user select the EFD instance.
 
 v0.11.0

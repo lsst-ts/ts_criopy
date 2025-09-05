@@ -43,6 +43,12 @@ class Player(QObject):
         Emmited when data download starts.
     downloadFinished
         Emmited when data download ends.
+    requestStarted(request, worker)
+        Emmited when request processing is started.
+    requestTerminated(request, worker)
+        Emmited when request processign is terminated (stopped).
+    requestFinished(request, worker)
+        Emmited when request processing is finished.
 
     Parameters
     ----------
@@ -54,6 +60,10 @@ class Player(QObject):
 
     downloadStarted = Signal()
     downloadFinished = Signal()
+
+    requestStarted = Signal(EfdCacheRequest, int)
+    requestTerminated = Signal(EfdCacheRequest, int)
+    requestFinished = Signal(EfdCacheRequest, int)
 
     def __init__(self, sal: MetaSAL, num_tasks: int = 10):
         super().__init__()
@@ -67,25 +77,53 @@ class Player(QObject):
         self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
         self.create_workers()
 
-    async def worker(self, name: str) -> None:
+    async def worker(self, number: int) -> None:
+        """
+        Worker thread. Request new tasks from worker_queue and execute those.
+
+        Parameters
+        ----------
+        number : `int`
+            Worker internal number.
+        """
         while True:
             request, timepoint = await self.worker_queue.get()
             try:
                 assert self.cache is not None
+
+                self.requestStarted.emit(request, number)
+
                 await self.cache.load(request)
                 request.cache.set_current_time(timepoint)
                 self.send_cache(request.topic, request.cache)
+
+                self.requestFinished.emit(request, number)
+            except asyncio.CancelledError:
+                self.requestTerminated.emit(request, number)
             finally:
                 self.downloads += 1
                 self.worker_queue.task_done()
 
     def create_workers(self) -> None:
+        """
+        Create workers to execute EfdCacheRequest from worker_queue.
+        """
         self.workers = [
-            asyncio.create_task(self.worker(f"Worker-{i}"))
-            for i in range(self.num_tasks)
+            asyncio.create_task(self.worker(i)) for i in range(self.num_tasks)
         ]
 
     def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
+        """
+        Send cached values to EUI. Emits signal associated with the topic, with
+        data from the cache.
+
+        Parameters
+        ----------
+        topic : `str`
+            Topic name.
+        cache : `EfdTopicCache`
+            Cache content.
+        """
         if cache is None or cache.empty:
             return
         assert cache.data is not None
@@ -157,6 +195,9 @@ class Player(QObject):
             self.send_cache(topic, cache)
 
     def stop(self) -> None:
+        """
+        Stops all requests.
+        """
         while not self.worker_queue.empty():
             self.worker_queue.get_nowait()
             self.worker_queue.task_done()
