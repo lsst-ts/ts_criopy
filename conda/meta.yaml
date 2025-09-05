@@ -35,6 +35,7 @@ test:
     - pandas
     - pyyaml
     - qt6-charts
+    - vcrpy
   script_env:
     - QT_API=pyside6
   source_files:

@@ -164,11 +164,9 @@ class ReplayWidget(QWidget):
         except AttributeError:
             self.resize(a_ch * 115, 600)
 
-        try:
-            self.replay_control.select_efd.setCurrentText(settings.value("efd_name"))
-        except AttributeError:
-            # a bit arbitrary - usfd_efd is preferred for queries
-            self.replay_control.select_efd.setCurrentText("usdf_efd")
+        self.replay_control.select_efd.setCurrentText(
+            settings.value("efd_name", "usdf_efd")
+        )
 
     def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings(self.app_name, "ReplayWindow")
