@@ -71,7 +71,7 @@ class FarNeighborsFactorsField(TopicField):
         ) / fn_factors.global_average_force
 
 
-class XForces(TopicField):
+class XFEForces(TopicField):
     """Provides calculated X forces. Usefull for fields where only primary and
     secondary cylinder forces are provided."""
 
@@ -80,12 +80,12 @@ class XForces(TopicField):
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         forces = ForceCalculator.CylinderForces(
-            data.primaryCylinderForce, data.secondaryCylinderForce
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
         )
         return forces.xForces
 
 
-class YForces(TopicField):
+class YFEForces(TopicField):
     """Provides calculated Y forces. Usefull for fields where only primary and
     secondary cylinder forces are provided."""
 
@@ -94,12 +94,12 @@ class YForces(TopicField):
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         forces = ForceCalculator.CylinderForces(
-            data.primaryCylinderForce, data.secondaryCylinderForce
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
         )
         return forces.yForces
 
 
-class ZForces(TopicField):
+class ZFEForces(TopicField):
     """Provides calculated Z forces. Usefull for fields where only primary and
     secondary cylinder forces are provided."""
 
@@ -108,7 +108,7 @@ class ZForces(TopicField):
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         forces = ForceCalculator.CylinderForces(
-            data.primaryCylinderForce, data.secondaryCylinderForce
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
         )
         return forces.zForces
 
@@ -424,9 +424,9 @@ class Topics(TopicCollection):
                         "secondaryCylinderFollowingError",
                         FAIndex.SECONDARY,
                     ),
-                    XForces("X Forces"),
-                    YForces("Y Forces"),
-                    ZForces("Z Forces"),
+                    XFEForces("X Forces"),
+                    YFEForces("Y Forces"),
+                    ZFEForces("Z Forces"),
                 ],
                 "forceActuatorData",
                 False,
