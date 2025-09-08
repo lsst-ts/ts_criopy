@@ -1028,7 +1028,7 @@ class Topics(TopicCollection):
                 "forceActuatorBumpTestStatus",
             ),
             TopicData(
-                "FA enabled",
+                "FA Enabled",
                 [
                     EnabledDisabledField(
                         "Enabled FAs",
