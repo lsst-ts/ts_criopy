@@ -82,7 +82,7 @@ class PlayerWidget(QWidget):
 
         self.slider = QSlider(Qt.Horizontal)
 
-        self.current = MSecDateTimeEdit(self.start)
+        self.current = MSecDateTimeEdit(self.start.dateTime())
         self.current.dateTimeChanged.connect(self.replay)
 
         self.step_size_box = QSpinBox()
@@ -243,7 +243,9 @@ class PlayerWidget(QWidget):
             date_time = self.start.dateTime()
             timepoint = 0
         elif timepoint > self.slider.maximum():
-            date_time = self.start.dateTime.addMSecs(int(self.duration.value() * 1000))
+            date_time = self.start.dateTime().addMSecs(
+                int(self.duration.value() * 1000)
+            )
             timepoint = self.slider.maximum()
 
         self.slider.setValue(timepoint)

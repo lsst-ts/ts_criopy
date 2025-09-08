@@ -34,7 +34,7 @@ class LoadProgressModel(QStandardItemModel):
     Model for QTreeView showing loading progress.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setHorizontalHeaderLabels(
             ["Worker", "CSC", "Topic", "Start", "Elapsed time"]
@@ -150,7 +150,7 @@ class LoadProgressWidget(QWidget):
     being executed.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.in_progress = QTreeView()
