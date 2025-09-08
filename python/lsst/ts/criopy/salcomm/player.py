@@ -159,9 +159,15 @@ class Player(QObject):
             Interval length. This is the prefered length of the cache around
             timepoint.
         """
+
+        async def create_efd_cache(efd: str) -> None:
+            self.cache = EfdCache(self.sal, efd)
+
         if self.cache is None or self.cache.efd != efd:
             logging.info("Initializing the EFD connection client to %s.", efd)
-            self.cache = EfdCache(self.sal, efd)
+            cache_create_task = asyncio.create_task(create_efd_cache(efd))
+            await cache_create_task
+            assert self.cache is not None
 
         await self.cache.cleanup()
 
