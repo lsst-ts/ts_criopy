@@ -45,29 +45,72 @@ class BumpTestField(TopicField):
 
 
 class NearNeighborsDifferencesField(TopicField):
+    """Class providing calculated near neighbors factors."""
 
     def __init__(self, name: str):
-        super().__init__(name, "__calculated__", FAIndex.Z)
+        super().__init__(name, None, FAIndex.Z)
 
-    def getValue(self, data: BaseMsgType) -> typing.Any:
+    def get_value(self, data: BaseMsgType) -> typing.Any:
         near_diff = ForceCalculator.SALAppliedForces(data)
         near_diff.calculate_near_neighbors_forces()
         return np.array(near_diff.zForces) - np.array(near_diff.near_neighbors_forces)
 
 
 class FarNeighborsFactorsField(TopicField):
-    """Class displaying calculated far neighbosr factors."""
+    """Class providing calculated far neighbors factors."""
 
     def __init__(self, name: str):
-        super().__init__(name, "__calculated__", FAIndex.Z)
+        super().__init__(name, None, FAIndex.Z)
 
-    def getValue(self, data: BaseMsgType) -> typing.Any:
+    def get_value(self, data: BaseMsgType) -> typing.Any:
         fn_factors = ForceCalculator.SALAppliedForces(data)
         fn_factors.calculate_far_neighbors_magnitudes()
         return (
             np.array(fn_factors.far_neighbors_magnitudes)
             - fn_factors.global_average_force
         ) / fn_factors.global_average_force
+
+
+class XFEForces(TopicField):
+    """Provides calculated X forces. Usefull for fields where only primary and
+    secondary cylinder forces are provided."""
+
+    def __init__(self, name: str):
+        super().__init__(name, None, FAIndex.X)
+
+    def get_value(self, data: BaseMsgType) -> typing.Any:
+        forces = ForceCalculator.CylinderForces(
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
+        )
+        return forces.xForces
+
+
+class YFEForces(TopicField):
+    """Provides calculated Y forces. Usefull for fields where only primary and
+    secondary cylinder forces are provided."""
+
+    def __init__(self, name: str):
+        super().__init__(name, None, FAIndex.Y)
+
+    def get_value(self, data: BaseMsgType) -> typing.Any:
+        forces = ForceCalculator.CylinderForces(
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
+        )
+        return forces.yForces
+
+
+class ZFEForces(TopicField):
+    """Provides calculated Z forces. Usefull for fields where only primary and
+    secondary cylinder forces are provided."""
+
+    def __init__(self, name: str):
+        super().__init__(name, None, FAIndex.Z)
+
+    def get_value(self, data: BaseMsgType) -> typing.Any:
+        forces = ForceCalculator.CylinderForces(
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
+        )
+        return forces.zForces
 
 
 class FAIndicesData(TopicData):
@@ -381,6 +424,9 @@ class Topics(TopicCollection):
                         "secondaryCylinderFollowingError",
                         FAIndex.SECONDARY,
                     ),
+                    XFEForces("X Forces"),
+                    YFEForces("Y Forces"),
+                    ZFEForces("Z Forces"),
                 ],
                 "forceActuatorData",
                 False,

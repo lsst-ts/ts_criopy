@@ -36,8 +36,9 @@ class TopicField:
     ----------
     name : `str`
         Text displayed in selection list box.
-    field_name : `str`
-        Name of field inside SAL/DDS topic.
+    field_name : `str` | None
+        Name of field inside SAL/DDS topic. None can be used for special
+        topics, calculated on-fly, not available in SAL/EFD data.
     value_index : `int`
         Variable kind.
     scale_type : `Scales`
@@ -49,7 +50,7 @@ class TopicField:
     def __init__(
         self,
         name: str,
-        field_name: str,
+        field_name: str | None,
         value_index: int,
         scale_type: Scales = Scales.GAUGE,
         fmt: str | None = None,
@@ -61,6 +62,8 @@ class TopicField:
         self.fmt = fmt
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
+        # if None, get_value must be overwritten
+        assert self.field_name is not None
         return getattr(data, self.field_name)
 
 

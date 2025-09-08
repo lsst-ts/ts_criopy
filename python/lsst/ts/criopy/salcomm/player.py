@@ -28,7 +28,7 @@ import time
 from astropy.time import Time, TimeDelta
 from PySide6.QtCore import QObject, Signal
 
-from .efd_cache import EfdCache, EfdTopicCache
+from .efd_cache import EfdCache, EfdCacheRequest, EfdTopicCache
 from .meta_sal import MetaSAL
 
 
@@ -43,21 +43,94 @@ class Player(QObject):
         Emmited when data download starts.
     downloadFinished
         Emmited when data download ends.
+    requestStarted(request, worker)
+        Emmited when request processing is started.
+    requestTerminated(request, worker)
+        Emmited when request processign is terminated (stopped).
+    requestFinished(request, worker)
+        Emmited when request processing is finished.
 
     Parameters
     ----------
     sal : `MetaSAL`
         SAL objects to replay. The topics in this fields are used to query EFD.
+    num_tasks: `int`, optional
+        Number of allowed parallel tasks. Defaults to 10.
     """
 
     downloadStarted = Signal()
     downloadFinished = Signal()
 
-    def __init__(self, sal: MetaSAL):
+    requestStarted = Signal(EfdCacheRequest, int)
+    requestTerminated = Signal(EfdCacheRequest, int)
+    requestFinished = Signal(EfdCacheRequest, int)
+
+    def __init__(self, sal: MetaSAL, num_tasks: int = 10):
         super().__init__()
+
+        self.downloads = 0
+        self.num_tasks = num_tasks
         self.sal = sal
 
         self.cache: EfdCache | None = None
+
+        self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
+        self.create_workers()
+
+    async def worker(self, number: int) -> None:
+        """
+        Worker thread. Request new tasks from worker_queue and execute those.
+
+        Parameters
+        ----------
+        number : `int`
+            Worker internal number.
+        """
+        while True:
+            request, timepoint = await self.worker_queue.get()
+            try:
+                assert self.cache is not None
+
+                self.requestStarted.emit(request, number)
+
+                await self.cache.load(request)
+                request.cache.set_current_time(timepoint)
+                self.send_cache(request.topic, request.cache)
+
+                self.requestFinished.emit(request, number)
+            except asyncio.CancelledError:
+                self.requestTerminated.emit(request, number)
+            finally:
+                self.downloads += 1
+                self.worker_queue.task_done()
+
+    def create_workers(self) -> None:
+        """
+        Create workers to execute EfdCacheRequest from worker_queue.
+        """
+        self.workers = [
+            asyncio.create_task(self.worker(i)) for i in range(self.num_tasks)
+        ]
+
+    def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
+        """
+        Send cached values to EUI. Emits signal associated with the topic, with
+        data from the cache.
+
+        Parameters
+        ----------
+        topic : `str`
+            Topic name.
+        cache : `EfdTopicCache`
+            Cache content.
+        """
+        if cache is None or cache.empty:
+            return
+        assert cache.data is not None
+
+        send = cache.get()
+        if send is not None and send._changed:
+            getattr(self.sal, topic).emit(send)
 
     async def replay(self, efd: str, timepoint: Time, duration: TimeDelta) -> None:
         """
@@ -82,30 +155,27 @@ class Player(QObject):
         await self.cache.cleanup()
 
         start_time = time.monotonic()
-        downloads = 0
+        self.downloads = 0
 
         reported_ranges: list[tuple[Time, Time]] = []
 
-        async with asyncio.TaskGroup() as tg:
-            for request in self.cache.new_requests(timepoint, duration):
-                tg.create_task(self.cache.load(request))
-                if downloads == 0:
-                    self.downloadStarted.emit()
-                if (request.start, request.end) not in reported_ranges:
-                    logging.info(
-                        "Loading %s - %s.", request.start.isot, request.end.isot
-                    )
-                    reported_ranges.append((request.start, request.end))
+        for request in self.cache.new_requests(timepoint, duration):
+            await self.worker_queue.put((request, timepoint))
+            if self.downloads == 0:
+                self.downloadStarted.emit()
+            if (request.start, request.end) not in reported_ranges:
+                logging.info("Loading %s - %s.", request.start.isot, request.end.isot)
+                reported_ranges.append((request.start, request.end))
 
-                downloads += 1
+        await self.worker_queue.join()
 
-        if downloads > 0:
+        if self.downloads > 0:
             duration = time.monotonic() - start_time
             logging.info(
                 "Downloaded %d topics in %.2f seconds (%.2f topics/second).",
-                downloads,
+                self.downloads,
                 duration,
-                downloads / duration,
+                self.downloads / duration,
             )
             self.downloadFinished.emit()
 
@@ -116,19 +186,23 @@ class Player(QObject):
         for topic, cache in self.cache.events.items():
             cache.set_current_time(timepoint)
 
-        # When data are update, signals are distributed -
-
-        def send_cache(topic: str, cache: EfdTopicCache) -> None:
-            if cache is None or cache.empty:
-                return
-            assert cache.data is not None
-
-            send = cache.get()
-            if send is not None and send._changed:
-                getattr(self.sal, topic).emit(send)
+        # When data are update, signals are distributed
 
         for topic, cache in self.cache.telemetry.items():
-            send_cache(topic, cache)
+            self.send_cache(topic, cache)
 
         for topic, cache in self.cache.events.items():
-            send_cache(topic, cache)
+            self.send_cache(topic, cache)
+
+    def stop(self) -> None:
+        """
+        Stops all requests.
+        """
+        while not self.worker_queue.empty():
+            self.worker_queue.get_nowait()
+            self.worker_queue.task_done()
+
+        for worker in self.workers:
+            worker.cancel("Requested to stop download.")
+
+        self.create_workers()
