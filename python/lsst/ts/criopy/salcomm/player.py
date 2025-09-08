@@ -96,11 +96,22 @@ class Player(QObject):
                 await self.cache.load(request)
                 request.cache.set_current_time(timepoint)
                 self.send_cache(request.topic, request.cache)
-
                 self.requestFinished.emit(request, number)
             except asyncio.CancelledError:
                 self.requestTerminated.emit(request, number)
+            except Exception as ex:
+                logging.warn(
+                    "While loading %s (%s to %s): %s.",
+                    request.topic,
+                    request.start.isot,
+                    request.end.isot,
+                    str(ex),
+                )
+                self.requestTerminated.emit(request, number)
             finally:
+                if request.topic == "logevent_ilcWarning":
+                    print("ILC warning fin")
+
                 self.downloads += 1
                 self.worker_queue.task_done()
 

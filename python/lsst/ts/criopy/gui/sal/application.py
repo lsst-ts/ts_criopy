@@ -200,7 +200,8 @@ class Application:
                                 or m.startswith("tel_")
                                 or m.startswith("evt_")
                             ):
-                                print(getattr(c.remote, m).dds_name)
+                                ti = getattr(c.remote, m).topic_info
+                                print(ti.component_name, ti.sal_name, ti.get_revcode())
                     self._app.quit()
 
         splash = AppSplashScreen(*self._comms_args, show=self._splash)
