@@ -96,11 +96,22 @@ class Player(QObject):
                 await self.cache.load(request)
                 request.cache.set_current_time(timepoint)
                 self.send_cache(request.topic, request.cache)
-
                 self.requestFinished.emit(request, number)
             except asyncio.CancelledError:
                 self.requestTerminated.emit(request, number)
+            except Exception as ex:
+                logging.warn(
+                    "While loading %s (%s to %s): %s.",
+                    request.topic,
+                    request.start.isot,
+                    request.end.isot,
+                    str(ex),
+                )
+                self.requestTerminated.emit(request, number)
             finally:
+                if request.topic == "logevent_ilcWarning":
+                    print("ILC warning fin")
+
                 self.downloads += 1
                 self.worker_queue.task_done()
 
@@ -148,9 +159,15 @@ class Player(QObject):
             Interval length. This is the prefered length of the cache around
             timepoint.
         """
+
+        async def create_efd_cache(efd: str) -> None:
+            self.cache = EfdCache(self.sal, efd)
+
         if self.cache is None or self.cache.efd != efd:
             logging.info("Initializing the EFD connection client to %s.", efd)
-            self.cache = EfdCache(self.sal, efd)
+            cache_create_task = asyncio.create_task(create_efd_cache(efd))
+            await cache_create_task
+            assert self.cache is not None
 
         await self.cache.cleanup()
 

@@ -381,20 +381,15 @@ class Widget(QSplitter):
         except AttributeError:
             self.last_updated_label.setValue(data.private_sndStamp)
 
-        for i, axis in enumerate("xyz"):
+        if self._topic is not None:
             try:
-                d = getattr(data, f"f{axis}")
-                self.forces_moments[i].setText(f"{d:.3f} N")
-            except AttributeError:
-                self.forces_moments[i].setText("-N-")
+                f_m_t = getattr(self._topic, "get_forces_moments")(data)
 
-            try:
-                d = getattr(data, f"m{axis}")
-                self.forces_moments[i + 3].setText(f"{d:.3f} Nm")
-            except AttributeError:
-                self.forces_moments[i + 3].setText("-N-")
+                for i, d in enumerate(f_m_t):
+                    if d is None:
+                        self.forces_moments[i].setText("-N-")
+                    else:
+                        self.forces_moments[i].setText(f"{d:.3f} N")
 
-        try:
-            self.forces_moments[6].setText(f"{getattr(data, 'forceMagnitude'):.3f} N")
-        except AttributeError:
-            pass
+            except AttributeError:
+                pass

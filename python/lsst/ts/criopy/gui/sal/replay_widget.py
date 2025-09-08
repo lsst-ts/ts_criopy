@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qasync import asyncSlot
 
 from ...salcomm import MetaSAL
 from ..logging_widget import LoggingWidget
@@ -120,11 +121,12 @@ class ReplayControlWidget(QWidget):
         self.player_widget.set_player(None)
         self.sal.thaw()
 
-    @Slot()
-    def retrieve_data(self) -> None:
+    @asyncSlot()
+    async def retrieve_data(self) -> None:
         self.player_widget.retrieve_data(
             self.select_efd.currentText(), self.start.dateTime()
         )
+        await self.player_widget.replay(self.start.dateTime())
 
     @Slot()
     def stop(self) -> None:
