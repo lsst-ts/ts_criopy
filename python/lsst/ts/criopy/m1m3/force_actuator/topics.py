@@ -113,6 +113,31 @@ class ZFEForces(TopicField):
         return forces.zForces
 
 
+class ForceMomentData(TopicData):
+    def get_forces_moments(self, data: BaseMsgType) -> typing.Iterable[float | None]:
+        for d in (
+            [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]
+        ):
+            try:
+                yield getattr(data, d)
+            except AttributeError:
+                yield None
+
+
+class FEData(TopicData):
+    def get_forces_moments(self, data: BaseMsgType) -> typing.Iterable[float | None]:
+        forces = ForceCalculator.CylinderForces(
+            data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
+        )
+        for d in (
+            [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]
+        ):
+            try:
+                yield getattr(forces, d)
+            except AttributeError:
+                yield None
+
+
 class FAIndicesData(TopicData):
     """Class for constant FA indices. Construct required fields, provides data.
 
@@ -163,7 +188,7 @@ class Topics(TopicCollection):
 
     def __init__(self) -> None:
         super().__init__(
-            TopicData(
+            ForceMomentData(
                 "Applied Acceleration Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -173,13 +198,13 @@ class Topics(TopicCollection):
                 "appliedAccelerationForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Active Optic Forces",
                 [TopicField("Z Forces", "zForces", FAIndex.Z)],
                 "appliedActiveOpticForces",
                 command="ActiveOpticForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Azimuth Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -189,7 +214,7 @@ class Topics(TopicCollection):
                 "appliedAzimuthForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Balance Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -199,7 +224,7 @@ class Topics(TopicCollection):
                 "appliedBalanceForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Cylinder Forces",
                 [
                     TopicField(
@@ -216,7 +241,7 @@ class Topics(TopicCollection):
                 "appliedCylinderForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Elevation Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -226,7 +251,7 @@ class Topics(TopicCollection):
                 "appliedElevationForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -238,7 +263,7 @@ class Topics(TopicCollection):
                 "appliedForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Offset Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -248,7 +273,7 @@ class Topics(TopicCollection):
                 "appliedOffsetForces",
                 command="OffsetForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Static Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -257,7 +282,7 @@ class Topics(TopicCollection):
                 ],
                 "appliedStaticForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Thermal Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -267,7 +292,7 @@ class Topics(TopicCollection):
                 "appliedThermalForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Applied Velocity Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -277,7 +302,7 @@ class Topics(TopicCollection):
                 "appliedVelocityForces",
                 False,
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Acceleration Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -286,12 +311,12 @@ class Topics(TopicCollection):
                 ],
                 "preclippedAccelerationForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Active Optic Forces",
                 [TopicField("Z Forces", "zForces", FAIndex.Z)],
                 "preclippedActiveOpticForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Azimuth Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -300,7 +325,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedAzimuthForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Balance Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -309,7 +334,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedBalanceForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Cylinder Forces",
                 [
                     TopicField(
@@ -325,7 +350,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedCylinderForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Elevation Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -334,7 +359,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedElevationForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -343,7 +368,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Offset Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -352,7 +377,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedOffsetForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Static Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -361,7 +386,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedStaticForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Thermal Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -370,7 +395,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedThermalForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Pre-clipped Velocity Forces",
                 [
                     TopicField("Z Forces", "zForces", FAIndex.Z),
@@ -379,7 +404,7 @@ class Topics(TopicCollection):
                 ],
                 "preclippedVelocityForces",
             ),
-            TopicData(
+            ForceMomentData(
                 "Measured forces",
                 [
                     TopicField(
@@ -411,8 +436,8 @@ class Topics(TopicCollection):
                 "forceActuatorData",
                 False,
             ),
-            TopicData(
-                "FA Following Error",
+            FEData(
+                "Following Error",
                 [
                     TopicField(
                         "Primary Cylinder FE",
