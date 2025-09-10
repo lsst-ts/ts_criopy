@@ -260,11 +260,11 @@ class M1M3CSCControl(CSCControlWidget):
                 self.TEXT_STANDBY,
             ],
             {
-                self.TEXT_RAISE: "raiseM1M3",
+                self.TEXT_RAISE: "confirm_raiseM1M3",
                 self.TEXT_PAUSE_RAISING: "pauseM1M3RaisingLowering",
                 self.TEXT_RESUME_RAISING: "resumeM1M3RaisingLowering",
                 self.TEXT_ABORT_RAISE: "abortRaiseM1M3",
-                self.TEXT_LOWER: "lowerM1M3",
+                self.TEXT_LOWER: "confirm_lowerM1M3",
                 self.TEXT_PAUSE_LOWERING: "pauseM1M3RaisingLowering",
                 self.TEXT_RESUME_LOWERING: "resumeM1M3RaisingLowering",
                 self.TEXT_ENTER_ENGINEERING: "enterEngineering",
@@ -272,6 +272,7 @@ class M1M3CSCControl(CSCControlWidget):
             },
             "detailedState",
             "detailedState",
+            [self.TEXT_RAISE, self.TEXT_LOWER],
         )
         self.m1m3 = m1m3
 

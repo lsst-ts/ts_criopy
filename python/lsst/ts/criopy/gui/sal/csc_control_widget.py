@@ -20,7 +20,13 @@
 
 from lsst.ts import salobj
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QButtonGroup, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 from qasync import asyncSlot
 
 from ...salcomm import MetaSAL, command
@@ -44,11 +50,15 @@ class CSCControlWidget(QWidget):
     buttons : `[str]`, optional
         Text for defaults buttons.
     extra_Buttons_commands : `dict[str, str]', optional
-        Commands for buttons texts.
+        Commands for buttons texts. If command is prefixed with "confirm_"
+        string, the command execution is being guarded with "Yes-No" dialog,
+        with No set as default.
     state_signal : `str`, optional
         Topic providing CSC state. Defaults to summaryState.
     state_field : `str`, optional
         Field inside topic providing CSC state. Defaults to summaryState.
+    not_default_buttons : `[str]`, optional
+        List of buttons that shall not be set as default.
     """
 
     TEXT_START = "&Start"
@@ -66,6 +76,7 @@ class CSCControlWidget(QWidget):
         extra_buttons_commands: dict[str, str] = {},
         state_signal: str = "summaryState",
         state_field: str = "summaryState",
+        not_default_buttons: list[str] = [],
     ):
         super().__init__()
 
@@ -78,6 +89,7 @@ class CSCControlWidget(QWidget):
             self.TEXT_EXIT_CONTROL: "exitControl",
         }
         self.buttons_commands.update(extra_buttons_commands)
+        self.not_default_buttons = not_default_buttons
 
         self.__last_enabled: None | list[bool] = None
 
@@ -154,9 +166,33 @@ class CSCControlWidget(QWidget):
         text = bnt.text()
         cmd = self.get_buttons_command(text)
         self.disable_all_buttons()
-        executed = await command(self, getattr(self.comm.remote, "cmd_" + cmd))
-        if not (executed):
-            self.restore_enabled()
+
+        async def execute() -> None:
+            executed = await command(self, getattr(self.comm.remote, "cmd_" + cmd))
+            if not (executed):
+                self.restore_enabled()
+
+        if cmd.startswith("confirm_"):
+            cmd = cmd[8:]
+            dialog = QMessageBox(self)
+            dialog.setWindowTitle(f"Confirm {cmd} execution.")
+            dialog.setText(f"Execute the '{cmd}' command?")
+            dialog.setIcon(QMessageBox.Question)
+            dialog.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            dialog.setDefaultButton(QMessageBox.No)
+
+            @asyncSlot()
+            async def confirm(result: int) -> None:
+                if result == QMessageBox.Yes:
+                    await execute()
+                else:
+                    self.restore_enabled()
+
+            dialog.finished.connect(confirm)
+            dialog.open()
+            return
+
+        await execute()
 
     def get_buttons_command(self, text: str) -> str:
         return self.buttons_commands[text]
@@ -219,8 +255,9 @@ class CSCControlWidget(QWidget):
                 else:
                     b.setText(text)
                     b.setEnabled(True)
-                    b.setDefault(db_set)
-                    db_set = False
+                    if text not in self.not_default_buttons:
+                        b.setDefault(db_set)
+                        db_set = False
         except KeyError:
             print(
                 f"Unhandled summary state {str(salobj.State(data.summaryState))} - {data.summaryState}"

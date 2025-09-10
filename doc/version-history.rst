@@ -9,6 +9,7 @@ v0.12.0
 
 * Replay widget - replays historic data in GUIs, displays replay progress.
 * Allow user select the EFD instance, create EfdClient in async thread.
+* Confirm mirror raising and lowering.
 
 v0.11.0
 -------
