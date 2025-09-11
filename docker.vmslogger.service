@@ -14,10 +14,10 @@ Requires=docker.service
 [Service]
 TimeoutStartSec=0
 Restart=always
-ExecStartPre=-/usr/bin/docker stop %n
-ExecStartPre=-/usr/bin/docker rm %n
-ExecStart=/usr/bin/docker run --rm --name %n -v /vms-data/:/vms-data/:rw --network host vmslogger VMSlogger -5 --workdir /vms-data --template '%%Y/%%m/$${name}-%%Y-%%m-%%dT%%H:%%M.$${ext}' --rotate 1D M1M3 M2 Rotator
-ExecStop=/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker stop vmslogger
+ExecStartPre=-/usr/bin/docker rm vmslogger
+ExecStart=<path to start-docker-vmslogger> vmslogger
+ExecStop=/usr/bin/docker stop vmslogger
 
 [Install]
 WantedBy=multi-user.target

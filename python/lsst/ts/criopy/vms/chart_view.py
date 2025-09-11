@@ -44,7 +44,7 @@ class ChartView(TimeChartView):
         self._maxSensor = max(self._maxSensor, maxSensor)
 
     def clear(self) -> None:
-        self.chart().clearData()
+        self.chart().clear_data()
 
     def addSerie(self, name: str) -> None:
         s = self._serieType()

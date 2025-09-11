@@ -24,6 +24,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QDoubleSpinBox,
+    QGraphicsItem,
     QGridLayout,
     QLabel,
     QPushButton,
@@ -207,7 +208,7 @@ class UpdateWindow(QSplitter):
         except AttributeError:
             self.resize(700, 600)
 
-        self.mirror_widget.mirrorView.selectionChanged.connect(self.selectionChanged)
+        self.mirror_widget.mirror_view.selectionChanged.connect(self.selectionChanged)
 
         m1m3.reemit_remote()
 
@@ -218,14 +219,17 @@ class UpdateWindow(QSplitter):
 
         super().closeEvent(event)
 
-    def selectionChanged(self, selected: ForceActuatorItem) -> None:
+    def selectionChanged(self, selected: QGraphicsItem) -> None:
         """Called when selected Force Actuator is changed.
 
         Parameters
         ----------
-        selected : `ForceActuatorItem`
-            Newly selected ForceActuatorItem object.
+        selected : QGraphicsItem
+            Newly selected QGraphicsItem object.
         """
+        if not isinstance(selected, ForceActuatorItem):
+            return
+
         forces: dict[str, float | None] = {
             "xForces": None,
             "yForces": None,
@@ -302,7 +306,7 @@ class UpdateWindow(QSplitter):
                 else ForceActuatorItem.STATE_ACTIVE
             )
 
-            self.mirror_widget.mirrorView.addForceActuator(
+            self.mirror_widget.mirror_view.add_force_actuator(
                 row,
                 value,
                 data_index,

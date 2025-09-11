@@ -4,6 +4,43 @@
 Version History
 ===============
 
+v0.12.0
+-------
+
+* Replay widget - replays historic data in GUIs, displays replay progress.
+* Allow user select the EFD instance, create EfdClient in async thread.
+* Confirm mirror raising and lowering.
+
+v0.11.0
+-------
+
+* Display FCU values in M1M3TSGUI
+* Show mirror boundaries (M1, M3, center hole)
+* Improved M1M3TSGUI Mixing valve display
+* M1M3TSGUI table backgrounds colors for FCU with problems
+* Show Glycol/EGW pump errors
+* Display far neighbor factor
+
+v0.10.0
+-------
+
+* M1M3 FA parallel bump tests
+* WaitCompression state
+
+v0.9.0
+------
+
+* Support for automatic FCU's heaters PWM (~power) control.
+* VMSLogger Kafka
+* Hardpoint Compression waiting state
+
+v0.8.3
+------
+
+* M1M3 support system remote parameters for swifter Kafka connection
+* More code refactoring
+* Update conda builder version for conda package
+
 v0.8.2
 ------
 

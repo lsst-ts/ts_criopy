@@ -62,7 +62,7 @@ class CacheWidget(DockWindow):
 
         self.chart = AbstractChart()
 
-        self.updateTask = make_done_future()
+        self.update_task = make_done_future()
 
         self.update_after: float = 0.0
 
@@ -114,7 +114,7 @@ class CacheWidget(DockWindow):
 
     @Slot()
     def cacheUpdated(
-        self, index: int, length: int, startTime: float, endTime: float
+        self, index: int, length: int, start_time: float, end_time: float
     ) -> None:
         """Process and plot data. Signaled when new data become available.
 
@@ -124,18 +124,18 @@ class CacheWidget(DockWindow):
             VMS index (1 - M1M3, 2 - M2, 3 - CameraRotator)
         length : `int`
             Number of points in cache.
-        startTime : `float`
+        start_time : `float`
             Start timestamp.
-        endTime : `float`
+        end_time : `float`
             End timestamp.
         """
         if self.callSetupAxes is True:
             self.setupAxes()
             self.update_after = 0
 
-        if self.update_after < time.monotonic() and self.updateTask.done():
+        if self.update_after < time.monotonic() and self.update_task.done():
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.updateTask = pool.submit(self._plotAll)
+                self.update_task = pool.submit(self._plotAll)
 
     @Slot()
     def frequencyChanged(self, lowFrequency: float, highFrequency: float) -> None:

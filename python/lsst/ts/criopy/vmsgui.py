@@ -189,8 +189,8 @@ class EUI(QMainWindow):
             self.cacheUpdated.emit(
                 data.salIndex - 1,
                 len(cache),
-                cache.startTime(),
-                cache.endTime(),
+                cache.start_time(),
+                cache.end_time(),
             )
 
     @Slot()

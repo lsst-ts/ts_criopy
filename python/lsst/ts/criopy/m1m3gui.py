@@ -102,13 +102,13 @@ class EUI(EUIWindow):
         self.add_page("SAL Log", LogWidget, self.m1m3)
         self.add_page("SAL Errors", SALErrorCodeWidget, self.m1m3)
 
-        self.statusLabel = QLabel("Unknown")
-        self.setStatusBar(SALStatusBar([self.m1m3, self.mtmount], [self.statusLabel]))
+        self.status_label = QLabel("Unknown")
+        self.setStatusBar(SALStatusBar([self.m1m3, self.mtmount], [self.status_label]))
 
         self.m1m3.detailedState.connect(self.detailed_state)
 
     def detailed_state(self, data: BaseMsgType) -> None:
-        self.statusLabel.setText(detailedStateString(data.detailedState))
+        self.status_label.setText(detailedStateString(data.detailedState))
 
 
 def detailedStateString(detailedState: int) -> str:
@@ -162,7 +162,7 @@ def detailedStateString(detailedState: int) -> str:
 def run() -> None:
     # Create the Qt Application
     app = Application(EUI)
-    app.add_comm("MTM1M3")
+    app.add_comm("MTM1M3", num_messages=500, consume_messages_timeout=0.2)
     app.add_comm(
         "MTMount",
         include=[

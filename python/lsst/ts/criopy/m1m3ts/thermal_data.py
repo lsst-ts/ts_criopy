@@ -33,19 +33,44 @@ class Thermals(TopicCollection):
     def __init__(self) -> None:
         super().__init__(
             TopicData(
+                "FCU Targets",
+                [
+                    TopicField(
+                        "Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt="{v:.2f}%"
+                    ),
+                    TopicField(
+                        "Fan RPM",
+                        "fanRPM",
+                        self.THERMAL_INDEX,
+                        Scales.INTEGER,
+                        fmt="{v:d} RPM",
+                    ),
+                ],
+                "fcuTargets",
+                True,
+            ),
+            TopicData(
                 "Thermal Data",
                 [
                     TopicField(
                         "Differential temperature",
                         "differentialTemperature",
                         self.THERMAL_INDEX,
+                        fmt="{v:.3f} °C",
                     ),
-                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX),
+                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX, Scales.INTEGER),
                     TopicField(
                         "Absolute temperature",
                         "absoluteTemperature",
                         self.THERMAL_INDEX,
+                        fmt="{v:.3f} °C",
                     ),
+                    WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
+                    WarningField(
+                        "Heater Disabled", "heaterDisabled", self.THERMAL_INDEX
+                    ),
+                    WarningField("Heater Breaker", "heaterBreaker", self.THERMAL_INDEX),
+                    WarningField("Fan Breaker", "fanBreaker", self.THERMAL_INDEX),
                 ],
                 "thermalData",
                 False,

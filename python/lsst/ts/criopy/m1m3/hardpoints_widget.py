@@ -511,7 +511,8 @@ class HardpointsWidget(QWidget):
             HardpointActuatorMotionState.STEPPING: "Stepping",
             HardpointActuatorMotionState.QUICKPOSITIONING: "Quick positioning",
             HardpointActuatorMotionState.FINEPOSITIONING: "Fine positioning",
-            HardpointActuatorMotionState.WAITINGTENSION: "Wait for support",
+            HardpointActuatorMotionState.WAITINGTENSION: "Tension - wait",
+            HardpointActuatorMotionState.WAITINGCOMPRESSION: "Compression - wait",
         }
 
         def getHpState(state: HardpointActuatorMotionState) -> str:

@@ -22,7 +22,7 @@ import signal
 import sys
 import typing
 
-from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+from PySide6.QtCore import QCommandLineOption, QCommandLineParser, QMargins, QRect
 from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
@@ -86,14 +86,18 @@ class Application:
         self.parser.addHelpOption()
         self.parser.addVersionOption()
 
-        noSplash = QCommandLineOption(["n", "no-splash"], "don't show splash screen")
-        self.parser.addOption(noSplash)
+        no_splash = QCommandLineOption(["n", "no-splash"], "don't show splash screen")
+        self.parser.addOption(no_splash)
 
-        salInfo = QCommandLineOption(
+        sal_info = QCommandLineOption(
             ["s", "SAL-info"],
             "show SAL info (including methods checksums) and exits",
         )
-        self.parser.addOption(salInfo)
+
+        resize = QCommandLineOption(["r", "resize"], "resize to small size")
+        self.parser.addOption(resize)
+
+        self.parser.addOption(sal_info)
 
         self.parser.addOptions(options)
 
@@ -106,8 +110,9 @@ class Application:
         asyncio.set_event_loop(self._loop)
 
         self._comms_args: list[SplashScreen.CommArgs] = []
-        self._sal_info = self.parser.isSet(salInfo)
-        self._splash = not (self.parser.isSet(noSplash))
+        self._sal_info = self.parser.isSet(sal_info)
+        self._splash = not (self.parser.isSet(no_splash))
+        self._resize = self.parser.isSet(resize)
         self.eui: QMainWindow | None = None
 
     def add_comm(
@@ -147,6 +152,37 @@ class Application:
             def started(splash, *comms: MetaSAL) -> None:  # noqa: N805
                 eui = self._eui_class(*comms)
                 splash.finish(self.eui)
+
+                screen_size = eui.screen().size()
+                eui_rect = eui.frameGeometry()
+
+                def rect_str(r: QRect) -> str:
+                    return f"({r.left()},{r.top()},{r.right()},{r.bottom()})"
+
+                if self._resize:
+                    eui.move(50, 50)
+                    eui.resize(1000, 700)
+                    print(
+                        f"Window resized to {rect_str(eui.frameGeometry())}, as requested."
+                    )
+                elif (
+                    eui_rect.top() < 0
+                    or eui_rect.left() < 0
+                    or eui_rect.bottom() > screen_size.height()
+                    or eui_rect.right() > screen_size.width()
+                ):
+                    new_size = screen_size.shrunkBy(QMargins(50, 50, 50, 50))
+                    eui.move(50, 50)
+                    eui.resize(new_size)
+                    print(
+                        f"Window moved from {rect_str(eui_rect)} to {rect_str(eui.frameGeometry())}."
+                    )
+                else:
+                    print(
+                        f"Window size {rect_str(eui_rect)}, "
+                        f"screen size ({screen_size.width()},{screen_size.height()})."
+                    )
+
                 eui.show()
                 self.eui = eui
                 # re-emit signals from history
@@ -164,7 +200,8 @@ class Application:
                                 or m.startswith("tel_")
                                 or m.startswith("evt_")
                             ):
-                                print(getattr(c.remote, m).dds_name)
+                                ti = getattr(c.remote, m).topic_info
+                                print(ti.component_name, ti.sal_name, ti.get_revcode())
                     self._app.quit()
 
         splash = AppSplashScreen(*self._comms_args, show=self._splash)

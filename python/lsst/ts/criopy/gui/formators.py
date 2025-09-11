@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import math
 import re
 import typing
 
@@ -118,7 +119,23 @@ class Formator:
         str
             Formatted value.
         """
-        text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
+        if math.isnan(value):
+            return f"---{self.unit_name}"
+
+        try:
+            text = f"{(value * self.scale):{self.fmt}}{self.unit_name}"
+        except Exception as ex:
+            print(
+                "Error while formating",
+                value,
+                "scale",
+                self.scale,
+                "with format",
+                self.fmt,
+                ":",
+                str(ex),
+            )
+            text = str(value * self.scale)
 
         if self.error_function is not None and self.error_function(value):
             text = f"<font color='{Colors.ERROR.name()}'>{text}</font>"

@@ -120,11 +120,11 @@ class DataFormButton(ColoredButton):
         self._dataWidget = DataFormWidget(signal, self._fields)
         self._dataWidget.setWindowTitle(self.text())
 
-        signal.connect(self._dataChanged)
+        signal.connect(self._data_changed)
         self.clicked.connect(self._displayDetails)
 
     @Slot()
-    def _dataChanged(self, data: BaseMsgType) -> None:
+    def _data_changed(self, data: BaseMsgType) -> None:
         color = Colors.OK
         for f in self._fields:
             if getattr(data, f[1].objectName()) is True:

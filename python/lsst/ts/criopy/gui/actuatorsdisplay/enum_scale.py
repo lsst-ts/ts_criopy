@@ -21,21 +21,21 @@
 import typing
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPaintEvent, QPalette
+from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPaintEvent, QPalette
 from PySide6.QtWidgets import QWidget
 
 
 class EnumScale(QWidget):
     """Draws gauge with color scale for enumeration (on/off, bump test
-    progress,..) values. Subclasses shall implement formatValue() and
-    getColor() methods.
+    progress,..) values. Subclasses shall implement format_value() and
+    get_brush() methods.
 
     Parameters
     ----------
     levels : `{value : (name, color)}`
     """
 
-    def __init__(self, levels: dict[typing.Any, tuple[str, QColor]]):
+    def __init__(self, levels: dict[typing.Any, tuple[str, QBrush]]):
         super().__init__()
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
@@ -55,13 +55,13 @@ class EnumScale(QWidget):
         """
         return list(self._levels.keys())
 
-    def formatValue(self, value: typing.Any) -> str:
+    def format_value(self, value: int) -> str:
         try:
             return self._levels[value][0]
         except KeyError:
             return str(value)
 
-    def getColor(self, value: typing.Any) -> QColor:
+    def get_brush(self, value: typing.Any) -> QBrush:
         """Returns color value.
 
         Parameters
@@ -71,8 +71,8 @@ class EnumScale(QWidget):
 
         Returns
         -------
-        color : `QColor`
-            Color for value.
+        brush : QBrush
+            Brush for value.
         """
         return self._levels[value][1]
 
@@ -97,7 +97,7 @@ class EnumScale(QWidget):
         x_offset = 5
 
         def box(y: float, value: typing.Any) -> None:
-            painter.setBrush(self.getColor(value))
+            painter.setBrush(self.get_brush(value))
             painter.drawRect(0, y, swidth, sheight / l_labels)
 
             painter.setBrush(palette.window())
@@ -112,7 +112,7 @@ class EnumScale(QWidget):
                 swidth - 2 * x_offset,
                 t_height,
                 int(Qt.AlignCenter),
-                self.formatValue(value),
+                self.format_value(value),
             )
 
         for i in range(l_labels):

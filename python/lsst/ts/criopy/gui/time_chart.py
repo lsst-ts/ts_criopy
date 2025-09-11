@@ -26,9 +26,10 @@ import typing
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QChart, QChartView, QDateTimeAxis, QLineSeries, QValueAxis
 from PySide6.QtCore import QDateTime, QPointF, Qt, Signal, Slot
-from PySide6.QtGui import QContextMenuEvent, QPainter
+from PySide6.QtGui import QContextMenuEvent, QPainter, QWheelEvent
 from PySide6.QtWidgets import QMenu
 
+from ..time_cache import TimeCache
 from .abstract_chart import AbstractChart
 from .custom_labels import UnitLabel
 
@@ -63,12 +64,12 @@ class TimeChart(AbstractChart):
         update_interval: float = 0.1,
     ):
         super().__init__(update_interval=update_interval)
-        self.timeAxis: QDateTimeAxis | None = None
+        self.time_axis: QDateTimeAxis | None = None
 
-        self._createCaches(items, max_items)
-        self._attachSeries()
+        self._create_caches(items, max_items)
+        self._attach_series()
 
-    def _addSerie(self, name: str, axis: str) -> None:
+    def _add_serie(self, name: str, axis: str) -> None:
         s = QLineSeries()
         s.setName(name)
         # TODO crashes (core dumps) on some systems. Need to investigate
@@ -84,7 +85,7 @@ class TimeChart(AbstractChart):
         self.addSeries(s)
         s.attachAxis(a)
 
-    def _attachSeries(self) -> None:
+    def _attach_series(self) -> None:
         # Caveat emptor, the order here is important. Hard to find, but the
         # order in which chart, axis and series are constructed and attached
         # should always be:
@@ -95,17 +96,17 @@ class TimeChart(AbstractChart):
         # likely the axis or even graph not shown. It's irrelevant when you
         # fill series with data. See QtChart::createDefaultAxes in QtChart
         # source code for details.
-        self.timeAxis = QDateTimeAxis()
-        self.timeAxis.setReverse(True)
-        self.timeAxis.setTickCount(5)
-        self.timeAxis.setFormat("h:mm:ss.zzz")
-        self.timeAxis.setTitleText("Time (TAI)")
-        self.timeAxis.setGridLineVisible(True)
+        self.time_axis = QDateTimeAxis()
+        self.time_axis.setReverse(False)
+        self.time_axis.setTickCount(5)
+        self.time_axis.setFormat("h:mm:ss.zzz")
+        self.time_axis.setTitleText("Time (TAI)")
+        self.time_axis.setGridLineVisible(True)
 
-        self.addAxis(self.timeAxis, Qt.AlignBottom)
+        self.addAxis(self.time_axis, Qt.AlignBottom)
 
         for serie in self.series():
-            serie.attachAxis(self.timeAxis)
+            serie.attachAxis(self.time_axis)
 
     def append(
         self,
@@ -116,7 +117,8 @@ class TimeChart(AbstractChart):
         update: bool = False,
     ) -> None:
         """Add data to a serie. Creates axis and serie if needed. Shrink if
-        more than expected elements are stored.
+        more than expected elements are stored. Redraw plot data if needed or
+        requested.
 
         Parameters
         ----------
@@ -139,57 +141,90 @@ class TimeChart(AbstractChart):
 
         cache.append(tuple([timestamp * 1000.0] + data))
 
-        def replot() -> None:
-            if self.timeAxis is None:
-                return
-
-            axis = self.axes(Qt.Vertical)[axis_index]
-            d_min = d_max = None
-            for n in cache.columns()[1:]:
-                serie = self.findSerie(n)
-                if serie is None or serie.isVisible() is False:
-                    continue
-
-                data = cache[n]
-                if d_min is None:
-                    d_min = min(data)
-                    d_max = max(data)
-                else:
-                    d_min = min(d_min, min(data))
-                    d_max = max(d_max, max(data))
-                points = [QPointF(*i) for i in zip(cache["timestamp"], data)]
-
-                serie.replace(points)
-
-            self.timeAxis.setRange(
-                *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.timeRange()]
-            )
-            if d_min == d_max:
-                if d_min == 0 or d_min is None or d_max is None:
-                    d_min = -1
-                    d_max = 1
-                else:
-                    d_min -= d_min * 0.05
-                    d_max += d_max * 0.05
-
-            axis.setRange(d_min, d_max)
-
-            self._next_update = time.monotonic() + self.update_interval
-
         # replot if needed
         if update:
-            self.updateTask.cancel()
+            self.update_task.cancel()
             self._next_update = 0
 
         if (
             self._next_update < time.monotonic()
-            and self.updateTask.done()
+            and self.update_task.done()
             and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                self.updateTask = pool.submit(replot)
+                self.update_task = pool.submit(self._replot, axis_index, cache)
 
-    def clearData(self) -> None:
+            self._next_update = time.monotonic() + self.update_interval
+
+    def replace(self, caches: list[TimeCache]) -> None:
+        self._caches = caches
+        self.resync()
+
+    def resync(self) -> None:
+        """Reload data from cache and plot those. This is usefull when data in
+        externally supplied TimeCaches are update outside of the graph - this
+        then replot data based on the current cache content.
+        """
+
+        def update_all() -> None:
+            try:
+                for cache in self._caches:
+                    self._replot(0, cache)
+            except Exception as ex:
+                print("Exception updating", str(ex), str(cache))
+
+        self.update_task.cancel()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            self.update_task = pool.submit(update_all)
+        self._next_update = time.monotonic() + self.update_interval
+
+    def _replot(self, axis_index: int, cache: TimeCache) -> None:
+        """Updates given cache.
+
+        Parameters
+        ----------
+        cache : TimeCache
+            Time cache from which data shall be updated.
+        """
+        if self.time_axis is None:
+            return
+
+        axis = self.axes(Qt.Vertical)[axis_index]
+        d_min = d_max = None
+        for n in cache.columns()[1:]:
+            serie = self.findSerie(n)
+            if serie is None or serie.isVisible() is False:
+                continue
+
+            if cache.empty():
+                continue
+
+            data = cache[n]
+            if d_min is None:
+                d_min = min(data)
+                d_max = max(data)
+            else:
+                d_min = min(d_min, min(data))
+                d_max = max(d_max, max(data))
+
+            points = [QPointF(*i) for i in zip(cache["timestamp"], data)]
+
+            serie.replace(points)
+
+        self.time_axis.setRange(
+            *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()]
+        )
+        if d_min == d_max:
+            if d_min == 0 or d_min is None or d_max is None:
+                d_min = -1
+                d_max = 1
+            else:
+                d_min -= d_min * 0.05
+                d_max += d_max * 0.05
+
+        axis.setRange(d_min, d_max)
+
+    def clear_data(self) -> None:
         """Removes all data from the chart."""
         super().removeAllSeries()
 
@@ -233,7 +268,7 @@ class UserSelectedTimeChart(TimeChart):
                     continue
 
                 if self._signal is not None:
-                    self._signal.disconnect(self._appendData)
+                    self._signal.disconnect(self._append_data)
 
                 try:
                     unit_name = obj.formator.unit_name
@@ -243,8 +278,8 @@ class UserSelectedTimeChart(TimeChart):
                     except AttributeError:
                         unit_name = "Y"
 
-                self._createCaches({unit_name: [name]})
-                self._attachSeries()
+                self._create_caches({unit_name: [name]})
+                self._attach_series()
 
                 self._signal = s
                 assert self._signal is not None
@@ -252,13 +287,13 @@ class UserSelectedTimeChart(TimeChart):
                 self._name = name
                 self._index = index
 
-                self._signal.connect(self._appendData)
+                self._signal.connect(self._append_data)
                 self._next_update = 0
 
                 break
 
     @Slot()
-    def _appendData(self, data: BaseMsgType) -> None:
+    def _append_data(self, data: BaseMsgType) -> None:
         if self._name is None:
             return
 
@@ -285,19 +320,55 @@ class TimeChartView(QChartView):
         self.setRenderHint(QPainter.Antialiasing)
         self.setRubberBand(QChartView.HorizontalRubberBand)
 
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """Zoom on mouse wheel action."""
+        self.chart().zoom(1.1 if event.angleDelta().y() > 0 else 0.9)
+
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        contextMenu = QMenu()
+        context_menu = QMenu()
 
         for s in self.chart().series():
-            action = contextMenu.addAction(s.name())
+            action = context_menu.addAction(s.name())
             action.setCheckable(True)
             action.setChecked(s.isVisible())
 
-        action = contextMenu.exec_(event.globalPos())
-        if action.text() is None:
+        context_menu.addSeparator()
+
+        # add actions for different zooming
+        actions_rb = {
+            "Verical": QChartView.VerticalRubberBand,
+            "Horizontal": QChartView.HorizontalRubberBand,
+            "Rectangle": QChartView.RectangleRubberBand,
+        }
+
+        rb = self.rubberBand()
+
+        for title, a_rb in actions_rb.items():
+            action = context_menu.addAction(title)
+            action.setCheckable(True)
+            action.setChecked(rb == a_rb)
+
+        context_menu.addSeparator()
+
+        context_menu.addAction("Zoom &in")
+        context_menu.addAction("Zoom &out")
+        context_menu.addAction("&Reset zoom")
+
+        selected = context_menu.exec_(event.globalPos())
+
+        if selected is None or selected.text() is None:
             return
 
         for s in self.chart().series():
-            if action.text() == s.name():
-                s.setVisible(action.isChecked())
+            if selected.text() == s.name():
+                s.setVisible(selected.isChecked())
                 return
+
+        if selected.text() in actions_rb:
+            self.setRubberBand(actions_rb[selected.text()])
+        elif selected.text() == "Zoom &in":
+            self.chart().zoomIn()
+        elif selected.text() == "Zoom &out":
+            self.chart().zoomOut()
+        elif selected.text() == "&Reset zoom":
+            self.chart().zoomReset()

@@ -47,7 +47,7 @@ from .update_window import UpdateWindow
 class Widget(QSplitter):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement changeValues and updateValues(data)
+    Children classes must implement change_values and update_values(data)
     methods.
 
     Parameters
@@ -57,7 +57,7 @@ class Widget(QSplitter):
         SALComm instance to communicate with SAL.
     userWidget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
-        be update in updateValues(data) method.
+        be update in update_values(data) method.
     """
 
     def __init__(self, m1m3: MetaSAL, userWidget: QWidget):
@@ -80,7 +80,7 @@ class Widget(QSplitter):
         self.selected_actuator_id_label = QLabel()
         self.selected_actuator_value_label = QLabel()
         self.selected_actuator_warning_label = WarningLabel()
-        self.lastUpdatedLabel = TimeDeltaLabel()
+        self.last_updated_label = TimeDeltaLabel(time_delta=60)
 
         self.near_selected_ids_label = QLabel()
         self.near_selected_value_label = QLabel()
@@ -88,12 +88,12 @@ class Widget(QSplitter):
         self.far_selected_ids_label = QLabel()
         self.far_selected_value_label = QLabel()
 
-        self.topicList = QListWidget()
-        self.topicList.setFixedWidth(256)
-        self.topicList.currentRowChanged.connect(self.currentTopicChanged)
+        self.topic_list = QListWidget()
+        self.topic_list.setFixedWidth(256)
+        self.topic_list.currentRowChanged.connect(self.currentTopicChanged)
         self.topics = Topics()
         for topic in self.topics.topics:
-            self.topicList.addItem(topic.name)
+            self.topic_list.addItem(topic.name)
         self.fieldList = QListWidget()
         self.fieldList.setFixedWidth(256)
         self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
@@ -132,7 +132,7 @@ class Widget(QSplitter):
         addDetails(
             3,
             "<b>Last Updated</b>",
-            self.lastUpdatedLabel,
+            self.last_updated_label,
             QLabel("<b>Warning</b>"),
             self.selected_actuator_warning_label,
         )
@@ -168,10 +168,10 @@ class Widget(QSplitter):
 
         filter_layout.addWidget(QLabel("Topic"), 1, 1)
         filter_layout.addWidget(QLabel("Field"), 1, 2)
-        filter_layout.addWidget(self.topicList, 2, 1)
+        filter_layout.addWidget(self.topic_list, 2, 1)
         filter_layout.addWidget(self.fieldList, 2, 2)
 
-        self.topicList.setCurrentRow(0)
+        self.topic_list.setCurrentRow(0)
 
         w_left = QWidget()
         w_left.setLayout(plot_layout)
@@ -185,13 +185,13 @@ class Widget(QSplitter):
         self.setStretchFactor(0, 10)
         self.setStretchFactor(1, 1)
 
-    def changeValues(self) -> None:
+    def change_values(self) -> None:
         """Called when new values were selected by the user."""
         raise NotImplementedError(
-            "changeValues method must be implemented in all Widget childrens"
+            "change_values method must be implemented in all Widget childrens"
         )
 
-    def updateValues(self, data: BaseMsgType) -> None:
+    def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
 
         Parameters
@@ -200,35 +200,35 @@ class Widget(QSplitter):
             New data structure, passed from SAL handler.
         """
         raise NotImplementedError(
-            "updateValues method must be implemented in all Widget childrens"
+            "update_values method must be implemented in all Widget childrens"
         )
 
     @Slot()
-    def currentTopicChanged(self, topicIndex: int) -> None:
-        if topicIndex < 0:
+    def currentTopicChanged(self, topic_index: int) -> None:
+        if topic_index < 0:
             self._set_unknown()
             return
 
         self.fieldList.clear()
-        for field in self.topics.topics[topicIndex].fields:
+        for field in self.topics.topics[topic_index].fields:
             self.fieldList.addItem(field.name)
 
-        fieldIndex = self.topics.topics[topicIndex].selectedField
-        if fieldIndex < 0:
+        field_index = self.topics.topics[topic_index].selected_field
+        if field_index < 0:
             self._set_unknown()
             return
 
-        self.fieldList.setCurrentRow(fieldIndex)
-        self.__change_field(topicIndex, fieldIndex)
+        self.fieldList.setCurrentRow(field_index)
+        self.__change_field(topic_index, field_index)
 
     @Slot()
-    def currentFieldChanged(self, fieldIndex: int) -> None:
-        topicIndex = self.topicList.currentRow()
-        if topicIndex < 0 or fieldIndex < 0:
+    def currentFieldChanged(self, field_index: int) -> None:
+        topic_index = self.topic_list.currentRow()
+        if topic_index < 0 or field_index < 0:
             self._set_unknown()
             return
-        self.__change_field(topicIndex, fieldIndex)
-        self.topics.topics[topicIndex].selectedField = fieldIndex
+        self.__change_field(topic_index, field_index)
+        self.topics.topics[topic_index].selected_field = field_index
 
     @Slot()
     def editValues(self) -> None:
@@ -263,7 +263,7 @@ class Widget(QSplitter):
         )
 
     def _set_unknown(self) -> None:
-        self.lastUpdatedLabel.set_unknown()
+        self.last_updated_label.set_unknown()
 
     def getCurrentFieldName(self) -> tuple[str, str]:
         if self._topic is None or self._topic.topic is None or self.field is None:
@@ -305,10 +305,10 @@ class Widget(QSplitter):
         self.selected_actuator_id_label.setText(
             str(selected_actuator.actuator.actuator_id)
         )
-        self.selected_actuator_value_label.setText(selected_actuator.getValue())
+        self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-        data = self.field.getValue(self._get_data())
+        data = self.field.get_value(self._get_data())
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors
@@ -322,7 +322,7 @@ class Widget(QSplitter):
         else:
             self.near_selected_ids_label.setText(",".join(map(str, near_ids)))
             self.near_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in near_indices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in near_indices]))}"
             )
 
         far_ids = filter(
@@ -340,7 +340,7 @@ class Widget(QSplitter):
         else:
             self.far_selected_ids_label.setText(",".join(map(str, far_ids)))
             self.far_selected_value_label.setText(
-                f"{selected_actuator.formatValue(numpy.average([data[i] for i in farIndices]))}"
+                f"{selected_actuator.format_value(numpy.average([data[i] for i in farIndices]))}"
             )
 
     def __setModifyCommand(self, command: str | None) -> None:
@@ -348,26 +348,21 @@ class Widget(QSplitter):
         self.editButton.setEnabled(enabled)
         self.clearButton.setEnabled(enabled)
 
-    def __change_field(self, topicIndex: int, fieldIndex: int) -> None:
+    def __change_field(self, topic_index: int, field_index: int) -> None:
         """
         Redraw actuators with new values.
         """
-        self._topic = self.topics.topics[topicIndex]
+        self._topic = self.topics.topics[topic_index]
         self.__setModifyCommand(self._topic.command)
-        self.field = self._topic.fields[fieldIndex]
-        try:
-            self.topics.change_topic(topicIndex, self.dataChanged, self.m1m3)
-            data = self._get_data()
-            self.changeValues()
-            self.updateValues(data)
-            self.dataChanged(data)
-        except RuntimeError as err:
-            print("ForceActuator.Widget.__change_field", err)
-            self._topic = None
-            pass
+        self.field = self._topic.fields[field_index]
+        self.topics.change_topic(topic_index, self.data_changed, self.m1m3)
+        data = self._get_data()
+        self.change_values()
+        self.update_values(data)
+        self.data_changed(data)
 
     @Slot()
-    def dataChanged(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType) -> None:
         """
         Called when selected data are updated.
 
@@ -376,30 +371,25 @@ class Widget(QSplitter):
         data : `class`
             Class holding data. See SALComm for details.
         """
-        self.updateValues(data)
+        self.update_values(data)
         if data is None:
             self._set_unknown()
             return
 
         try:
-            self.lastUpdatedLabel.setValue(data.timestamp)
+            self.last_updated_label.setValue(data.timestamp)
         except AttributeError:
-            self.lastUpdatedLabel.setValue(data.private_sndStamp)
+            self.last_updated_label.setValue(data.private_sndStamp)
 
-        for i, axis in enumerate("xyz"):
+        if self._topic is not None:
             try:
-                d = getattr(data, f"f{axis}")
-                self.forces_moments[i].setText(f"{d:.3f} N")
-            except AttributeError:
-                self.forces_moments[i].setText("-N-")
+                f_m_t = getattr(self._topic, "get_forces_moments")(data)
 
-            try:
-                d = getattr(data, f"m{axis}")
-                self.forces_moments[i + 3].setText(f"{d:.3f} Nm")
-            except AttributeError:
-                self.forces_moments[i + 3].setText("-N-")
+                for i, d in enumerate(f_m_t):
+                    if d is None:
+                        self.forces_moments[i].setText("-N-")
+                    else:
+                        self.forces_moments[i].setText(f"{d:.3f} N")
 
-        try:
-            self.forces_moments[6].setText(f"{getattr(data, 'forceMagnitude'):.3f} N")
-        except AttributeError:
-            pass
+            except AttributeError:
+                pass

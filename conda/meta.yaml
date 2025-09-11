@@ -27,7 +27,7 @@ test:
     - {{ cdt('libxdamage') }}  # [linux]
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
-    - ts-conda-build =0.3
+    - ts-conda-build =0.4
     - ts-m1m3-utils
     - ts-xml
     - ts-salobj {{ salobj_version }}
@@ -35,6 +35,7 @@ test:
     - pandas
     - pyyaml
     - qt6-charts
+    - vcrpy
   script_env:
     - QT_API=pyside6
   source_files:
@@ -52,7 +53,7 @@ requirements:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - python {{python}}
-    - ts-conda-build =0.3
+    - ts-conda-build =0.4
     - qt6-charts
   host:
     - python {{python}}

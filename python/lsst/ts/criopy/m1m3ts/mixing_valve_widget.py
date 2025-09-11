@@ -33,7 +33,8 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..gui import DataFormWidget, Percent, TimeChart, TimeChartView, Volt
+from ..gui import DataDegC, DataFormWidget, Percent, Volt
+from ..gui.sal import Axis, ChartWidget
 from ..salcomm import MetaSAL, command
 
 
@@ -68,78 +69,137 @@ class MixingValveWidget(QWidget):
         self.mixing_valve_target.setSuffix("%")
         command_layout.addRow("Target", self.mixing_valve_target)
 
-        self.temperature_target = QDoubleSpinBox()
-        self.temperature_target.setRange(-40, 50)
-        self.temperature_target.setSingleStep(1)
-        self.temperature_target.setDecimals(2)
-        self.temperature_target.setSuffix("°C")
-        command_layout.addRow("Setpoint", self.temperature_target)
+        def temperature_target() -> QDoubleSpinBox:
+            temperature_target_box = QDoubleSpinBox()
+            temperature_target_box.setRange(-40, 50)
+            temperature_target_box.setSingleStep(0.05)
+            temperature_target_box.setDecimals(2)
+            temperature_target_box.setSuffix("°C")
+            return temperature_target_box
+
+        self.glycol_target = temperature_target()
+        self.heaters_target = temperature_target()
+
+        command_layout.addRow("Glycol Setpoint", self.glycol_target)
+        command_layout.addRow("Heaters Setpoint", self.heaters_target)
 
         set_mixing_valve = QPushButton("Set")
         set_mixing_valve.clicked.connect(self._set)
         command_layout.addRow(set_mixing_valve)
+
+        self.delta_t = temperature_target()
+        command_layout.addRow("\u0394 T", self.delta_t)
+        self.set_delta_t = QPushButton("Do \u0394 T")
+        self.set_delta_t.clicked.connect(self._delta)
+        command_layout.addRow(self.set_delta_t)
 
         vlayout = QVBoxLayout()
         vlayout.addWidget(
             DataFormWidget(
                 m1m3ts.mixingValve,
                 [
-                    ("Raw Position", Volt(field="rawValvePosition")),
+                    ("Raw Position", Volt(field="rawValvePosition", fmt="0.05f")),
                     ("Position", Percent(field="valvePosition")),
                 ],
             )
         )
+
         vlayout.addSpacing(20)
         vlayout.addWidget(selection_group)
         vlayout.addLayout(command_layout)
+
+        vlayout.addWidget(
+            DataFormWidget(
+                m1m3ts.appliedSetpoints,
+                [
+                    ("Glycol Setpoint", DataDegC(field="glycolSetpoint")),
+                    ("Heaters Setpoint", DataDegC(field="heatersSetpoint")),
+                ],
+            )
+        )
+        vlayout.addWidget(
+            DataFormWidget(
+                m1m3ts.glycolLoopTemperature,
+                [
+                    ("Above Mirror", DataDegC(field="aboveMirrorTemperature")),
+                    ("Inside 1", DataDegC(field="insideCellTemperature1")),
+                    ("Inside 2", DataDegC(field="insideCellTemperature2")),
+                    ("Inside 3", DataDegC(field="insideCellTemperature3")),
+                    (
+                        "Telescope Supply",
+                        DataDegC(field="telescopeCoolantSupplyTemperature"),
+                    ),
+                    ("Cell Supply", DataDegC(field="mirrorCoolantSupplyTemperature")),
+                    ("Cell Return", DataDegC(field="mirrorCoolantReturnTemperature")),
+                    (
+                        "Telescope Return",
+                        DataDegC(field="telescopeCoolantReturnTemperature"),
+                    ),
+                ],
+            )
+        )
+
         vlayout.addStretch()
 
         hlayout = QHBoxLayout()
         hlayout.addLayout(vlayout)
 
-        self.mixing_valve_chart = TimeChart(
-            {
-                "Raw (V)": ["Raw Position"],
-                "Percent (%)": ["Position"],
-            }
+        plot_layout = QVBoxLayout()
+
+        a1 = Axis("Raw (V)", m1m3ts.mixingValve)
+        a1.addValue("Raw (V)", "rawValvePosition")
+
+        a2 = Axis("Percent (%)", m1m3ts.mixingValve)
+        a2.addValue("Percent (%)", "valvePosition")
+
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("Raw (V)", m1m3ts.mixingValve).addValue("Raw", "rawValvePosition"),
+                Axis("Percent (%)", m1m3ts.mixingValve).addValue(
+                    "Percent", "valvePosition"
+                ),
+            )
         )
 
-        hlayout.addWidget(TimeChartView(self.mixing_valve_chart))
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("M1M3 Glycol (\u00b0C)", m1m3ts.glycolLoopTemperature)
+                .addValue("M1M3 Supply", "mirrorCoolantSupplyTemperature")
+                .addValue("M1M3 Return", "mirrorCoolantReturnTemperature")
+            )
+        )
+
+        plot_layout.addWidget(
+            ChartWidget(
+                Axis("Telescope Glycol (\u00b0C)", m1m3ts.glycolLoopTemperature)
+                .addValue("Telescope Supply", "telescopeCoolantSupplyTemperature")
+                .addValue("Telescope Return", "telescopeCoolantReturnTemperature")
+            )
+        )
+
+        hlayout.addLayout(plot_layout)
 
         self.setLayout(hlayout)
 
         self.command_mixing_valve.toggled.connect(self._temperature_control)
         self.command_mixing_valve.setChecked(True)
 
-        self.m1m3ts.mixingValve.connect(self.mixing_valve)
-        self.m1m3ts.appliedSetpoint.connect(self.applied_setpoint)
+        self.m1m3ts.appliedSetpoints.connect(self.applied_setpoints)
 
     @Slot()
-    def mixing_valve(self, data: BaseMsgType) -> None:
-        self.mixing_valve_chart.append(
-            data.private_sndStamp,
-            [data.rawValvePosition],
-            axis_index=0,
-        )
-
-        self.mixing_valve_chart.append(
-            data.private_sndStamp,
-            [data.valvePosition],
-            axis_index=1,
-        )
-
-    @Slot()
-    def applied_setpoint(self, data: BaseMsgType) -> None:
-        if math.isnan(data.setpoint):
+    def applied_setpoints(self, data: BaseMsgType) -> None:
+        if math.isnan(data.glycolSetpoint):
             self.command_temperature.setChecked(False)
         else:
             self.command_temperature.setChecked(True)
-            self.temperature_target.setValue(data.setpoint)
 
     @Slot()
     def _temperature_control(self, checked: bool) -> None:
         self.mixing_valve_target.setEnabled(checked)
-        self.temperature_target.setEnabled(not (checked))
+        self.glycol_target.setEnabled(not (checked))
+        self.heaters_target.setEnabled(not (checked))
+        self.delta_t.setEnabled(not (checked))
+        self.set_delta_t.setEnabled(not (checked))
 
     @asyncSlot()
     async def _set(self) -> None:
@@ -151,12 +211,25 @@ class MixingValveWidget(QWidget):
             )
             await command(
                 self,
-                self.m1m3ts.remote.cmd_applySetpoint,
-                setpoint=float("nan"),
+                self.m1m3ts.remote.cmd_applySetpoints,
+                glycolSetpoint=float("nan"),
+                heatersSetpoint=float("nan"),
             )
         else:
             await command(
                 self,
-                self.m1m3ts.remote.cmd_applySetpoint,
-                setpoint=self.temperature_target.value(),
+                self.m1m3ts.remote.cmd_applySetpoints,
+                glycolSetpoint=self.glycol_target.value(),
+                heatersSetpoint=self.heaters_target.value(),
             )
+
+    @asyncSlot()
+    async def _delta(self) -> None:
+        self.glycol_target.setValue(self.glycol_target.value() + self.delta_t.value())
+        self.heaters_target.setValue(self.heaters_target.value() + self.delta_t.value())
+        await command(
+            self,
+            self.m1m3ts.remote.cmd_applySetpoints,
+            glycolSetpoint=self.glycol_target.value(),
+            heatersSetpoint=self.heaters_target.value(),
+        )

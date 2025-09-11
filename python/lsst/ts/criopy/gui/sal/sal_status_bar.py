@@ -26,6 +26,7 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
 
 from ...salcomm import MetaSAL
 from ..custom_labels import Heartbeat, SimulationStatus, VLine
+from .summary_state_label import SummaryStateLabel
 
 __all__ = ["SALStatusBar"]
 
@@ -38,64 +39,69 @@ class SALStatusBar(QStatusBar):
     comms : `[MetaSAL]`
         SALs for heartbeat displays. ErrorCode from the first SAL will
         be displayed as well.
-    stateLabel : `QLabel`, optional
-        If provided, aa label showing detailedState (result of
-        detailedStateFunction call with detailedState as argument) will be
-        added to beginning of the StatusBar.
+    states_labels : `QLabel`, optional
+        If provided, a label showing detailedState will be added to beginning
+        of the StatusBar. If empty, label(s) showing summary state(s) of the
+        CSC listed in comms will be added to the beginning of the StatusBar.
     """
 
-    def __init__(self, comms: list[MetaSAL], stateLabels: list[QLabel] = []):
+    def __init__(self, comms: list[MetaSAL], state_labels: list[QLabel] = []):
         super().__init__()
 
-        for stateLabel in stateLabels:
-            self.addWidget(stateLabel)
-            self.addWidget(VLine())
+        if len(state_labels) > 0:
+            for state_label in state_labels:
+                self.addWidget(state_label)
+                self.addWidget(VLine())
+        else:
+            for c in comms:
+                self.addWidget(SummaryStateLabel(c.summaryState))
+                self.addWidget(VLine())
 
-        self.settingsLabel = QLabel("--")
-        self.addWidget(self.settingsLabel)
+        self.settings_label = QLabel("--")
+        self.addWidget(self.settings_label)
         self.addWidget(VLine())
-        comms[0].configurationApplied.connect(self.configurationApplied)
+        comms[0].configurationApplied.connect(self.configuration_applied)
 
-        self.errorCodeLabel = QLabel()
-        self.addWidget(self.errorCodeLabel)
+        self.error_code_label = QLabel()
+        self.addWidget(self.error_code_label)
 
-        hbWidget = QWidget()
-        hbLayout = QHBoxLayout()
-        hbLayout.setContentsMargins(0, 0, 0, 0)
-        hbWidget.setLayout(hbLayout)
+        hb_widget = QWidget()
+        hb_layout = QHBoxLayout()
+        hb_layout.setContentsMargins(0, 0, 0, 0)
+        hb_widget.setLayout(hb_layout)
 
         for comm in comms:
-            hbLayout.addWidget(QLabel(comm.remote.salinfo.name))
+            hb_layout.addWidget(QLabel(comm.remote.salinfo.name))
 
-            hbLayout.addWidget(VLine())
-            hbLayout.addWidget(SimulationStatus(comm))
-            hbLayout.addWidget(VLine())
+            hb_layout.addWidget(VLine())
+            hb_layout.addWidget(SimulationStatus(comm))
+            hb_layout.addWidget(VLine())
 
-            heartBeatLabel = Heartbeat(indicator=False)
-            hbLayout.addWidget(heartBeatLabel)
-            comm.heartbeat.connect(heartBeatLabel.heartbeat)
+            heart_beat_label = Heartbeat(indicator=False)
+            hb_layout.addWidget(heart_beat_label)
+            comm.heartbeat.connect(heart_beat_label.heartbeat)
             if not (comm == comms[-1]):
-                hbLayout.addWidget(VLine())
+                hb_layout.addWidget(VLine())
 
         self.addPermanentWidget(VLine())
-        self.addPermanentWidget(hbWidget)
+        self.addPermanentWidget(hb_widget)
 
-        comms[0].errorCode.connect(self.errorCode)
+        comms[0].errorCode.connect(self.error_code)
 
     @Slot()
     def detailedState(self, data: BaseMsgType) -> None:
         self.detailedStateLabel.setText(self.detailedStateFunction(data.detailedState))
 
     @Slot()
-    def configurationApplied(self, data: BaseMsgType) -> None:
-        self.settingsLabel.setText(data.version)
+    def configuration_applied(self, data: BaseMsgType) -> None:
+        self.settings_label.setText(data.version)
 
     @Slot()
-    def errorCode(self, data: BaseMsgType) -> None:
+    def error_code(self, data: BaseMsgType) -> None:
         date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
             sep=" ", timespec="milliseconds"
         )
-        self.errorCodeLabel.setText(
+        self.error_code_label.setText(
             f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
             f"{'green' if data.errorCode == 0 else 'red'}"
             f"'>{escape(data.errorReport)}</span>"

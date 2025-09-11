@@ -20,7 +20,7 @@
 
 import astropy.units as u
 from lsst.ts.salobj import BaseMsgType
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QHBoxLayout,
@@ -44,7 +44,19 @@ from ..gui import (
 )
 from ..gui.sal import TimeDeltaLabel
 from ..salcomm import MetaSAL, command
+from .egw_pump_errors import EGWPumpErrors
 from .glycol_loop_temperature_widget import GlycolLoopTemperatureWidget
+
+
+class PumpErrorCode(DataLabel):
+    def __init__(self, signal: Signal | None = None, field: str | None = None):
+        super().__init__(signal, field)
+
+    def setValue(self, value: int) -> None:
+        try:
+            self.setText(EGWPumpErrors[value].description)
+        except KeyError:
+            self.setText(f"Unknow error code: {value}")
 
 
 class CoolantPumpWidget(QWidget):
@@ -110,6 +122,14 @@ class CoolantPumpWidget(QWidget):
             )
         )
         tellayout.addWidget(
+            DataFormWidget(
+                self.m1m3ts.glycolPumpStatus,
+                [
+                    ("Error Code", PumpErrorCode(field="errorCode")),
+                ],
+            )
+        )
+        tellayout.addWidget(
             TopicStatusLabel(
                 self.m1m3ts.glycolPumpStatus,
                 "Glycol Pump Status",
@@ -163,7 +183,7 @@ class CoolantPumpWidget(QWidget):
                         ("Parameters locked", Colors.WARNING),
                     ),
                 ],
-            )
+            ),
         )
 
         layout.addLayout(cmdlayout)

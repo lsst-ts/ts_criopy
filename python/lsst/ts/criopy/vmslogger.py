@@ -29,7 +29,9 @@ import sys
 import time
 import typing
 
-from . import ExitErrorCodes, parseDuration
+from lsst.ts.m1m3.utils import parse_duration
+
+from . import ExitErrorCodes
 from .vms import VMS_DEVICES, Collector
 
 try:
@@ -90,7 +92,7 @@ parser.add_argument(
     "-s",
     type=int,
     dest="size",
-    default=None,
+    default=-1,
     help=(
         "number of records to save in a file. Default to 86400 seconds"
         " (assuming --rotate isn't specified)"
@@ -148,7 +150,7 @@ parser.add_argument(
     action="store",
     dest="rotate",
     default=None,
-    type=parseDuration,
+    type=parse_duration,
     help=(
         "rotate on given interval. Default to not rotate - rotate on reaching"
         " size number of entries. Can be used only with HDF5 output."
@@ -159,7 +161,7 @@ parser.add_argument(
     action="store",
     dest="rotate_offset",
     default=0,
-    type=parseDuration,
+    type=parse_duration,
     help="rotate at give offset from rotate interval (--rotate argument)",
 )
 
