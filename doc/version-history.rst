@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.12.1
+-------
+
+* Show warning in M1M3 Support System's "Slew controller" page when slew is active.
+
 v0.12.0
 -------
 
