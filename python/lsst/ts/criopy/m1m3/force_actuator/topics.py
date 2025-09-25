@@ -22,7 +22,7 @@ import typing
 import numpy as np
 from lsst.ts.m1m3.utils import ForceCalculator
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
+from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FAIndex, FATable, actuator_id_to_index
 
 from ...gui.actuatorsdisplay import Scales
 from ...gui.sal import (
@@ -40,8 +40,8 @@ __all__ = ["Topics"]
 class BumpTestField(TopicField):
     """Class displaying bump test status."""
 
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.BUMP_TEST)
 
 
 class NearNeighborsDifferencesField(TopicField):
@@ -69,6 +69,23 @@ class FarNeighborsFactorsField(TopicField):
             np.array(fn_factors.far_neighbors_magnitudes)
             - fn_factors.global_average_force
         ) / fn_factors.global_average_force
+
+
+class ILCWarningField(TopicField):
+    """Class to display the 'ilcWarning' event. Those comes with fields
+    displaying either true or false for failed FAs."""
+
+    def __init__(self, name: str, field_name: str):
+        super().__init__(name, field_name, FAIndex.Z)
+        self.values = [np.nan] * FATABLE_ZFA
+
+    def get_value(self, data: BaseMsgType) -> typing.Any:
+        index = actuator_id_to_index(data.actuatorId)
+        if index is not None:
+            assert self.field_name is not None
+            if getattr(data, self.field_name) is True:
+                self.values[index] = data.timestamp
+        return self.values
 
 
 class XFEForces(TopicField):
@@ -1062,5 +1079,19 @@ class Topics(TopicCollection):
                     ),
                 ],
                 "enabledForceActuators",
+            ),
+            TopicData(
+                "ILC Warnings",
+                [
+                    ILCWarningField("Any Warning", "anyWarning"),
+                    ILCWarningField("Response Timeout", "responseTimeout"),
+                    ILCWarningField("Illegal Function", "illegalFunction"),
+                    ILCWarningField("Illegal Data Value", "illegalDataValue"),
+                    ILCWarningField("Invalid Length", "invalidLength"),
+                    ILCWarningField("Unknown Address", "unknownAddress"),
+                    ILCWarningField("Unknown Function", "unknownFunction"),
+                    ILCWarningField("Unknown Problem", "unknownProblem"),
+                ],
+                "ilcWarning",
             ),
         )

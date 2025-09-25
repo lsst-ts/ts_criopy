@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import typing
+from dataclasses import dataclass
 
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
@@ -28,6 +29,7 @@ from ..actuatorsdisplay import Scales
 __all__ = ["TopicData", "TopicField"]
 
 
+@dataclass
 class TopicField:
     """
     Field inside topic. Holds together data needed to properly display values.
@@ -47,19 +49,11 @@ class TopicField:
         Format string to display the field value.
     """
 
-    def __init__(
-        self,
-        name: str,
-        field_name: str | None,
-        value_index: int,
-        scale_type: Scales = Scales.GAUGE,
-        fmt: str | None = None,
-    ):
-        self.name = name
-        self.field_name = field_name
-        self.value_index = value_index
-        self.scale_type = scale_type
-        self.fmt = fmt
+    name: str
+    field_name: str | None
+    value_index: int
+    scale_type: Scales = Scales.GAUGE
+    fmt: str | None = None
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         # if None, get_value must be overwritten

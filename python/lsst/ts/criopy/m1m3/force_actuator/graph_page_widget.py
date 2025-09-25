@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-
+import numpy as np
 from lsst.ts.m1m3.utils import Simulator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
@@ -104,7 +104,7 @@ class GraphPageWidget(Widget):
             return
 
         # filter out None values
-        values = [v for v in values if v is not None]
+        values = [v for v in values if v is not None and not (np.isnan(v))]
         self.mirror_widget.set_range(min(values), max(values))
 
         selected = self.mirror_widget.mirror_view.selected()
