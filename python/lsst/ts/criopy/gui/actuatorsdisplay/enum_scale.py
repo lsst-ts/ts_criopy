@@ -20,6 +20,7 @@
 
 import typing
 
+import numpy as np
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QBrush, QGuiApplication, QPainter, QPaintEvent, QPalette
 from PySide6.QtWidgets import QWidget
@@ -74,6 +75,9 @@ class EnumScale(QWidget):
         brush : QBrush
             Brush for value.
         """
+        if np.isnan(value):
+            return QBrush(Qt.gray, Qt.Dense5Pattern)
+
         return self._levels[value][1]
 
     def paintEvent(self, event: QPaintEvent) -> None:

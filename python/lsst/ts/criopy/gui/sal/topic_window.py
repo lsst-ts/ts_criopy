@@ -23,8 +23,7 @@
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
-    QFormLayout,
-    QHBoxLayout,
+    QGridLayout,
     QLabel,
     QListWidget,
     QSplitter,
@@ -33,11 +32,9 @@ from PySide6.QtWidgets import (
 )
 
 from ...salcomm import MetaSAL
-from ..actuatorsdisplay import ForceActuatorItem
-from ..custom_labels import WarningLabel
-from .time_delta_label import TimeDeltaLabel
 from .topic_collection import TopicCollection
-from .topic_data import TopicField
+from .topic_data import TopicData, TopicField
+from .topic_detail_widget import TopicDetailWidget
 
 
 class TopicWindow(QSplitter):
@@ -54,9 +51,8 @@ class TopicWindow(QSplitter):
     user_widget : `QWidget`
         Widget to be displayed on left from value selection. Its content shall
         be update in update_values(data) method.
-    detail_widget : `QWidget`, optional
-        Widget displaying details of selected actuator. If not provided, basic
-        selected actuator data will be displayed.
+    detail_widget : `TopicDetailWidget`, optional
+        Widget displaying details of selected actuator.
 
     Methods
     -------
@@ -67,10 +63,13 @@ class TopicWindow(QSplitter):
 
     Attributes
     ----------
+    topic : `TopicData | None`
+        Selected Topic.
     field : `TopicField | None`
         Selected field. Can be used to access details about the field.
     """
 
+    topic: TopicData | None = None
     field: TopicField | None = None
 
     def __init__(
@@ -78,7 +77,7 @@ class TopicWindow(QSplitter):
         comm: MetaSAL,
         collection: TopicCollection,
         user_widget: QWidget,
-        detail_widget: QWidget | None = None,
+        detail_widget: TopicDetailWidget | None = None,
     ):
         super().__init__()
 
@@ -86,44 +85,26 @@ class TopicWindow(QSplitter):
         self.collection = collection
         self.user_widget = user_widget
 
-        self.field: TopicField | None = None
-
         plot_layout = QVBoxLayout()
         selection_layout = QVBoxLayout()
-        filter_layout = QHBoxLayout()
+        filter_layout = QGridLayout()
 
         w_left = QWidget()
         w_left.setLayout(plot_layout)
         self.addWidget(w_left)
         w_right = QWidget()
         w_right.setLayout(selection_layout)
+        w_right.setMaximumWidth(w_right.size().width())
         self.addWidget(w_right)
 
         self.setCollapsible(0, False)
         self.setStretchFactor(0, 10)
         self.setStretchFactor(1, 0)
 
-        if detail_widget is not None:
-            selection_layout.addWidget(detail_widget)
-        else:
-            self.selected_actuator_id_label = QLabel()
-            self.selected_actuator_value_label = QLabel()
-            self.selected_actuator_warning_label = WarningLabel()
-            self.last_updated_label = TimeDeltaLabel()
+        self.detail_widget = detail_widget
 
-            details_layout = QFormLayout()
-            details_layout.addRow(QLabel("Selected Actuator Details"), QLabel(""))
-            details_layout.addRow(
-                QLabel("Actuator Id"), self.selected_actuator_id_label
-            )
-            details_layout.addRow(
-                QLabel("Actuator Value"), self.selected_actuator_value_label
-            )
-            details_layout.addRow(
-                QLabel("Actuator Warning"), self.selected_actuator_warning_label
-            )
-            details_layout.addRow(QLabel("Last Updated"), self.last_updated_label)
-            selection_layout.addLayout(details_layout)
+        if self.detail_widget is not None:
+            selection_layout.addWidget(self.detail_widget)
 
         selection_layout.addWidget(QLabel("Filter Data"))
         selection_layout.addLayout(filter_layout)
@@ -137,15 +118,17 @@ class TopicWindow(QSplitter):
 
         plot_layout.addWidget(self.user_widget)
 
-        filter_layout.addWidget(self.topic_list)
-        filter_layout.addWidget(self.field_list)
+        filter_layout.addWidget(QLabel("Topic"), 1, 1)
+        filter_layout.addWidget(QLabel("Field"), 1, 2)
+        filter_layout.addWidget(self.topic_list, 2, 1)
+        filter_layout.addWidget(self.field_list, 2, 2)
 
         self.topic_list.setCurrentRow(0)
 
     @Slot()
     def current_topic_changed(self, topic_index: int) -> None:
         if topic_index < 0:
-            self._set_unknown()
+            self.no_data()
             return
 
         self.field_list.clear()
@@ -154,19 +137,19 @@ class TopicWindow(QSplitter):
 
         field_index = self.collection.topics[topic_index].selected_field
         if field_index < 0:
-            self._set_unknown()
+            self.no_data()
             return
 
         self.field_list.setCurrentRow(field_index)
-        self._change_field(topic_index, field_index)
+        self.change_field(topic_index, field_index)
 
     @Slot()
     def current_field_changed(self, field_index: int) -> None:
         topic_index = self.topic_list.currentRow()
         if topic_index < 0 or field_index < 0:
-            self._set_unknown()
+            self.no_data()
             return
-        self._change_field(topic_index, field_index)
+        self.change_field(topic_index, field_index)
         self.collection.topics[topic_index].selected_field = field_index
 
     def field_changed(self, field: TopicField) -> None:
@@ -180,53 +163,57 @@ class TopicWindow(QSplitter):
         """
         pass
 
-    def _set_unknown(self) -> None:
-        self.last_updated_label.set_unknown()
+    def no_data(self) -> None:
+        if self.detail_widget is not None:
+            self.detail_widget.data_changed(None)
 
-    def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
-        """
-        Called from childrens to update currently selected actuator display.
+    def get_current_field_name(self) -> tuple[str, str]:
+        if self.topic is None or self.field is None:
+            raise RuntimeError(
+                "Topic or field is None in get_current_field_name:"
+                f" {self.topic}, {self.field}"
+            )
+        assert self.topic.topic is not None
+        assert self.field.field_name is not None
+        return (self.topic.topic, self.field.field_name)
 
-        Parameters
-        ----------
-        selected_actuator : `ForceActuatorItem`
-            Contains actuator ID (selected actuator ID), data (selected
-            actuator current value) and warning (boolean, true if value is in
-            warning).
-        """
-        if selected_actuator is None:
-            self.selected_actuator_id_label.setText("not selected")
-            self.selected_actuator_value_label.setText("")
-            self.selected_actuator_warning_label.setText("")
-            return
-
-        self.selected_actuator_id_label.setText(str(selected_actuator.actuator_id))
-        self.selected_actuator_value_label.setText(selected_actuator.get_value())
-        self.selected_actuator_warning_label.setValue(selected_actuator.warning)
-
-    def _change_field(self, topic_index: int, field_index: int) -> None:
+    def change_field(self, topic_index: int, field_index: int) -> BaseMsgType | None:
         """
         Redraw actuators with new values fields.
 
-        Para
+        Parameters
+        ----------
+        topic_index : `int`
+        field_index : `int`
         """
-        topic = self.collection.topics[topic_index]
-        self.field = topic.fields[field_index]
+        self.topic = self.collection.topics[topic_index]
+        self.field = self.topic.fields[field_index]
         try:
             self.collection.change_topic(topic_index, self.data_changed, self.comm)
             self.field_changed(self.field)
 
-            data = getattr(self.comm.remote, topic.getTopic()).get()
+            data = getattr(self.comm.remote, self.topic.getTopic()).get()
             self.data_changed(data)
+            return data
+
         except RuntimeError as err:
-            print("TopicWindow._change_field:", err)
-            pass
+            print("TopicWindow.change_field:", err)
+            return None
 
     def update_values(self, data: BaseMsgType) -> None:
-        raise RuntimeError("Abstract method update_values")
+        """
+        Called when new data are available through SAL callback. Needs to be
+        overwritten in all childs.
+
+        Parameters
+        ----------
+        data : `BaseMsgType | None`
+            New data structure, passed from SAL handler.
+        """
+        raise NotImplementedError("Abstract method update_values called.")
 
     @Slot()
-    def data_changed(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType | None) -> None:
         """
         Called when selected data are updated.
 
@@ -239,10 +226,5 @@ class TopicWindow(QSplitter):
             raise RuntimeError("update_values was called with empty field.")
 
         self.update_values(data)
-        if data is None:
-            self._set_unknown()
-        else:
-            try:
-                self.last_updated_label.setValue(data.timestamp)
-            except AttributeError:
-                self.last_updated_label.setValue(data.private_sndStamp)
+        if self.detail_widget is not None:
+            self.detail_widget.data_changed(data)

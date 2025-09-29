@@ -54,6 +54,9 @@ class TopicCollection:
         comm : `MetaSAL`
             SAL Communication object containing the topic.
         """
+        if self.__last_index == topic_index:
+            return
+
         if self.__last_index is not None:
             topic = self.topics[self.__last_index].topic
             if topic is not None:

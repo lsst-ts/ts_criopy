@@ -36,11 +36,12 @@ class GraphPageWidget(Widget):
     def __init__(self, m1m3: MetaSAL | Simulator):
         self.mirror_widget = MirrorWidget(support=True)
 
-        self.mirror_widget.mirror_view.selectionChanged.connect(
-            self.updateSelectedActuator
-        )
-
         super().__init__(m1m3, self.mirror_widget)
+
+        assert self.detail_widget is not None
+        self.mirror_widget.mirror_view.selectionChanged.connect(
+            self.detail_widget.update_selected_actuator
+        )
 
     def change_values(self) -> None:
         """Called when data are changed."""
@@ -55,7 +56,7 @@ class GraphPageWidget(Widget):
         data : `object`
             New data structure, passed from SAL handler.
         """
-        warning_data = self.m1m3.remote.evt_forceActuatorWarning.get()
+        warning_data = self.comm.remote.evt_forceActuatorWarning.get()
 
         if self.field is None:
             raise RuntimeError("field is None in GraphPageWidget.update_values")
@@ -72,7 +73,7 @@ class GraphPageWidget(Widget):
                 else DataItemState.ACTIVE
             )
 
-        enabled = self.m1m3.remote.evt_enabledForceActuators.get()
+        enabled = self.comm.remote.evt_enabledForceActuators.get()
 
         for fa in FATable:
             index = fa.index
@@ -107,11 +108,16 @@ class GraphPageWidget(Widget):
         values = [v for v in values if v is not None and not (np.isnan(v))]
         self.mirror_widget.set_range(min(values), max(values))
 
+        if self.detail_widget is None:
+            return
+
         selected = self.mirror_widget.mirror_view.selected()
         if selected is not None:
             if selected.data is not None:
-                self.selected_actuator_value_label.setText(selected.get_value())
+                self.detail_widget.selected_actuator_value_label.setText(
+                    selected.get_value()
+                )
             if warning_data is not None:
-                self.selected_actuator_warning_label.setValue(
+                self.detail_widget.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))
                 )
