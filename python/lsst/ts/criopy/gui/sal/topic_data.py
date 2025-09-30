@@ -117,15 +117,24 @@ class TopicData:
         self.is_event = is_event
         self.command = command
 
-    def getTopic(self) -> str:
-        if self.topic is None:
-            raise RuntimeError("Called getTopic for topic-less Topic")
+    def get_topic(self) -> str:
+        assert self.topic is not None
         if self.is_event:
             return "evt_" + self.topic
         return "tel_" + self.topic
 
-    def change_topic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
-        """Called when new topic is selected.
+    def connect(self, comm: MetaSAL, slot: Slot) -> None:
+        if self.topic is None:
+            return
+
+        try:
+            getattr(comm, self.topic).connect(slot)
+        except AttributeError:
+            raise RuntimeError(f"Topic {self.topic} doesn't exists")
+
+    def disconnect(self, comm: MetaSAL, slot: Slot) -> None:
+        """
+        Called when topic shall be disconnected from updates.
 
         Parameters
         ----------
@@ -136,4 +145,10 @@ class TopicData:
         comm: `MetaSAL`
             MetaSAL with data.
         """
-        raise NotImplementedError("TopicData structure must implement change_topic")
+        if self.topic is None:
+            return
+
+        try:
+            getattr(comm, self.topic).disconnect(slot)
+        except AttributeError:
+            pass

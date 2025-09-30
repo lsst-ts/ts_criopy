@@ -30,19 +30,26 @@ from qasync import asyncSlot
 
 from ...gui import WarningLabel
 from ...gui.actuatorsdisplay import ForceActuatorItem
-from ...gui.sal import TimeDeltaLabel, TopicData, TopicDetailWidget, TopicWindow
+from ...gui.sal import (
+    TimeDeltaLabel,
+    TopicData,
+    TopicDetailWidget,
+    TopicField,
+    TopicWindow,
+)
 from ...salcomm import MetaSAL, command
 from .topics import Topics
 from .update_window import UpdateWindow
 
 
 class DetailWidget(TopicDetailWidget):
+    update_windows: dict[str, QWidget] = {}
+    topic: TopicData | None = None
+    field: TopicField | None = None
+
     def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
-
-        self.update_windows: dict[str, QWidget] = {}
-        self.topic: TopicData | None = None
 
         layout = QGridLayout()
 
@@ -120,7 +127,7 @@ class DetailWidget(TopicDetailWidget):
         self.clear_button = QPushButton("&Zero")
         self.clear_button.clicked.connect(self.zero_values)
 
-        self.set_topic(None)
+        self.set_field(None, None)
 
         layout.addWidget(self.edit_button, 8, 0, 1, 2)
         layout.addWidget(self.clear_button, 8, 2, 1, 2)
@@ -151,7 +158,14 @@ class DetailWidget(TopicDetailWidget):
         self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-        data = self.field.get_value(self._get_data())
+        def _get_data() -> typing.Any:
+            assert self.topic is not None
+            topic = self.topic.get_topic()
+            if isinstance(topic, str):
+                return getattr(self.m1m3.remote, topic).get()
+            return topic
+
+        data = self.field.get_value(_get_data())
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors
@@ -227,8 +241,9 @@ class DetailWidget(TopicDetailWidget):
 
         await command(self, getattr(self.m1m3.remote, "cmd_clear" + self.topic.command))
 
-    def set_topic(self, topic: TopicData | None) -> None:
+    def set_field(self, topic: TopicData | None, field: TopicField | None) -> None:
         self.topic = topic
+        self.field = field
         enabled = topic is not None and topic.command is not None
         self.edit_button.setEnabled(enabled)
         self.clear_button.setEnabled(enabled)
@@ -251,7 +266,7 @@ class Widget(TopicWindow):
     """
 
     def __init__(self, m1m3: MetaSAL, user_widget: QWidget):
-        super().__init__(m1m3, Topics(), user_widget, DetailWidget(m1m3))
+        super().__init__(m1m3, Topics(m1m3), user_widget, DetailWidget(m1m3))
 
         self.setCollapsible(0, False)
         self.setStretchFactor(0, 10)
@@ -266,13 +281,6 @@ class Widget(TopicWindow):
             "change_values method must be implemented in all Widget childrens"
         )
 
-    def _get_data(self) -> typing.Any:
-        assert self.topic is not None
-        topic = self.topic.getTopic()
-        if isinstance(topic, str):
-            return getattr(self.comm.remote, topic).get()
-        return topic
-
     def change_field(self, topic_index: int, field_index: int) -> BaseMsgType:
         """
         Redraw actuators with new values.
@@ -282,7 +290,7 @@ class Widget(TopicWindow):
             return
 
         assert self.detail_widget is not None
-        self.detail_widget.set_topic(self.topic)
+        self.detail_widget.set_field(self.topic, self.field)
 
         self.change_values()
         self.update_values(data)

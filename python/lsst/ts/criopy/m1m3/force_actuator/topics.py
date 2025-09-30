@@ -23,6 +23,7 @@ import numpy as np
 from lsst.ts.m1m3.utils import ForceCalculator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FAIndex, FATable, actuator_id_to_index
+from PySide6.QtCore import Slot
 
 from ...gui.actuatorsdisplay import Scales
 from ...gui.sal import (
@@ -33,6 +34,7 @@ from ...gui.sal import (
     WaitingField,
     WarningField,
 )
+from ...salcomm import MetaSAL
 
 __all__ = ["Topics"]
 
@@ -194,16 +196,42 @@ class FAIndicesData(TopicData):
         self.sIndices = [row.s_index for row in FATable if row.s_index is not None]
         self.timestamp = None
 
-    def getTopic(self) -> typing.Any:
+    def get_topic(self) -> typing.Any:
         return self
+
+
+class ILCWarningTopic(TopicData):
+    """
+    Cache field values, so updates occured when topic wasn't active will be
+    properly reflected in the data.
+    """
+
+    def __init__(self, m1m3: MetaSAL, fields: list[TopicField]):
+        super().__init__("ILC Warnings", fields, "ilcWarning")
+
+        try:
+            m1m3.ilcWarning.connect(self.update)
+        except AttributeError:
+            pass
+
+    @Slot()
+    def update(self, data: BaseMsgType) -> None:
+        for field in self.fields:
+            field.get_value(data)
 
 
 class Topics(TopicCollection):
     """
     Class constructing list of all available topics of the Force Actuators.
+
+    Parameters
+    ----------
+    m1m3 : `MetaSAL`
+        M1M3 SAL communication object. Needed for proper processing of
+        ilcWarning messages.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, m1m3: MetaSAL):
         super().__init__(
             ForceMomentData(
                 "Applied Acceleration Forces",
@@ -1080,8 +1108,8 @@ class Topics(TopicCollection):
                 ],
                 "enabledForceActuators",
             ),
-            TopicData(
-                "ILC Warnings",
+            ILCWarningTopic(
+                m1m3,
                 [
                     ILCWarningField("Any Warning", "anyWarning"),
                     ILCWarningField("Response Timeout", "responseTimeout"),
@@ -1092,6 +1120,5 @@ class Topics(TopicCollection):
                     ILCWarningField("Unknown Function", "unknownFunction"),
                     ILCWarningField("Unknown Problem", "unknownProblem"),
                 ],
-                "ilcWarning",
             ),
         )
