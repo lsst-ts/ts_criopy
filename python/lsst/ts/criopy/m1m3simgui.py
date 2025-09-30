@@ -20,7 +20,7 @@
 import os
 import sys
 
-from lsst.ts.m1m3.utils import ForceCalculator, Simulator
+from lsst.ts.m1m3.utils import ForceCalculator
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
 
 from . import ExitErrorCodes
 from .gui.sal import Application
-from .m1m3 import SimulatorWidget
+from .m1m3 import Simulator, SimulatorWidget
 from .m1m3.force_actuator import GraphPageWidget
 from .salcomm import warning
 
