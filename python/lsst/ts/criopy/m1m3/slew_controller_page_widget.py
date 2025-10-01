@@ -21,7 +21,7 @@
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.enums.MTM1M3 import DetailedStates, SetSlewControllerSettings
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
 from ..gui import ArrayItem, ArrayLabels, ColoredButton, Force
@@ -86,52 +86,61 @@ class SlewControllerPageWidget(QWidget):
 
         layout = QVBoxLayout()
 
+        self.warning_text = QLabel(
+            "<font color='red'><b>To change the force's slew flags settings, slew flag shall not be set. "
+            "It is currently set.</b></font>"
+        )
+        self.warning_text.setAlignment(Qt.AlignCenter)
+        self.warning_text.setWordWrap(True)
+
         bv_buttons = [None] + ForceButton.create("BoosterValves", m1m3)
 
-        layout.addWidget(
-            ForcesGrid(
-                [
-                    PreclippedForces("<i>Pre-clipped</i>", m1m3.preclippedForces),
-                    Forces("Applied", m1m3.appliedForces),
-                    Forces("Measured", m1m3.forceActuatorData),
-                    Forces("Hardpoints", m1m3.hardpointActuatorData),
-                    PreclippedForces(
-                        "<i>Pre-clipped Acceleration</i>",
-                        m1m3.preclippedAccelerationForces,
-                    ),
-                    Forces(
-                        "Applied Acceleration",
-                        m1m3.appliedAccelerationForces,
-                        ForceButton.create("AccelerationForces", m1m3),
-                    ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Balance</i>", m1m3.preclippedBalanceForces
-                    ),
-                    Forces(
-                        "Applied Balance",
-                        m1m3.appliedBalanceForces,
-                        ForceButton.create("BalanceForces", m1m3),
-                    ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces
-                    ),
-                    Forces(
-                        "Applied Velocity",
-                        m1m3.appliedVelocityForces,
-                        ForceButton.create("VelocityForces", m1m3),
-                    ),
-                    ArrayLabels(*[f"<b>HP {i}</b>" for i in range(1, 7)]),
-                    ArrayItem(
-                        "measuredForce",
-                        "Booster Valves",
-                        Force,
-                        m1m3.hardpointActuatorData,
-                        extra_widgets=bv_buttons,
-                    ),
-                ],
-                Qt.Horizontal,
-            )
+        self.forces_grid = ForcesGrid(
+            [
+                PreclippedForces("<i>Pre-clipped</i>", m1m3.preclippedForces),
+                Forces("Applied", m1m3.appliedForces),
+                Forces("Measured", m1m3.forceActuatorData),
+                Forces("Hardpoints", m1m3.hardpointActuatorData),
+                PreclippedForces(
+                    "<i>Pre-clipped Acceleration</i>",
+                    m1m3.preclippedAccelerationForces,
+                    self.warning_text,
+                ),
+                Forces(
+                    "Applied Acceleration",
+                    m1m3.appliedAccelerationForces,
+                    ForceButton.create("AccelerationForces", m1m3),
+                ),
+                PreclippedForces(
+                    "<i>Pre-clipped Balance</i>",
+                    m1m3.preclippedBalanceForces,
+                ),
+                Forces(
+                    "Applied Balance",
+                    m1m3.appliedBalanceForces,
+                    ForceButton.create("BalanceForces", m1m3),
+                ),
+                PreclippedForces(
+                    "<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces
+                ),
+                Forces(
+                    "Applied Velocity",
+                    m1m3.appliedVelocityForces,
+                    ForceButton.create("VelocityForces", m1m3),
+                ),
+                ArrayLabels(*[f"<b>HP {i}</b>" for i in range(1, 7)]),
+                ArrayItem(
+                    "measuredForce",
+                    "Booster Valves",
+                    Force,
+                    m1m3.hardpointActuatorData,
+                    extra_widgets=bv_buttons,
+                ),
+            ],
+            Qt.Horizontal,
         )
+
+        layout.addWidget(self.forces_grid)
 
         acceleration_axis = Axis(
             "Acceleration (N, Nm)", self.m1m3.appliedAccelerationForces
@@ -159,7 +168,10 @@ class SlewControllerPageWidget(QWidget):
         self.m1m3.forceControllerState.connect(self.force_controller_state)
 
     def __set_enabled(self) -> None:
-        self.setEnabled(self.__active_state is True and self.__slew_flag is False)
+        self.forces_grid.setExtraWidgetsEnabled(
+            self.__active_state is True and self.__slew_flag is False
+        )
+        self.warning_text.setVisible(self.__slew_flag)
 
     @Slot()
     def detailed_state(self, data: BaseMsgType) -> None:

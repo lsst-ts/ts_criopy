@@ -66,12 +66,15 @@ class PreclippedLabel(FormatLabel):
 
 
 class PreclippedForces(ArrayFields):
-    def __init__(self, label: str, signal: Signal):
+    def __init__(
+        self, label: str, signal: Signal, extra_widgets: list[QWidget] | None = None
+    ):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             f"<i>{label}</i>",
             PreclippedLabel,
             signal,
+            extra_widgets=extra_widgets,
         )
 
 

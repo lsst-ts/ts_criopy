@@ -22,7 +22,8 @@ import typing
 import numpy as np
 from lsst.ts.m1m3.utils import ForceCalculator
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
+from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FAIndex, FATable, actuator_id_to_index
+from PySide6.QtCore import Slot
 
 from ...gui.actuatorsdisplay import Scales
 from ...gui.sal import (
@@ -33,6 +34,7 @@ from ...gui.sal import (
     WaitingField,
     WarningField,
 )
+from ...salcomm import MetaSAL
 
 __all__ = ["Topics"]
 
@@ -40,8 +42,8 @@ __all__ = ["Topics"]
 class BumpTestField(TopicField):
     """Class displaying bump test status."""
 
-    def __init__(self, name: str, fieldName: str, valueIndex: int):
-        super().__init__(name, fieldName, valueIndex, Scales.BUMP_TEST)
+    def __init__(self, name: str, field_name: str, value_index: int):
+        super().__init__(name, field_name, value_index, Scales.BUMP_TEST)
 
 
 class NearNeighborsDifferencesField(TopicField):
@@ -69,6 +71,23 @@ class FarNeighborsFactorsField(TopicField):
             np.array(fn_factors.far_neighbors_magnitudes)
             - fn_factors.global_average_force
         ) / fn_factors.global_average_force
+
+
+class ILCWarningField(TopicField):
+    """Class to display the 'ilcWarning' event. Those comes with fields
+    displaying either true or false for failed FAs."""
+
+    def __init__(self, name: str, field_name: str):
+        super().__init__(name, field_name, FAIndex.Z)
+        self.values = [np.nan] * FATABLE_ZFA
+
+    def get_value(self, data: BaseMsgType) -> typing.Any:
+        index = actuator_id_to_index(data.actuatorId)
+        if index is not None:
+            assert self.field_name is not None
+            if getattr(data, self.field_name) is True:
+                self.values[index] = data.timestamp
+        return self.values
 
 
 class XFEForces(TopicField):
@@ -177,16 +196,42 @@ class FAIndicesData(TopicData):
         self.sIndices = [row.s_index for row in FATable if row.s_index is not None]
         self.timestamp = None
 
-    def getTopic(self) -> typing.Any:
+    def get_topic(self) -> typing.Any:
         return self
+
+
+class ILCWarningTopic(TopicData):
+    """
+    Cache field values, so updates occured when topic wasn't active will be
+    properly reflected in the data.
+    """
+
+    def __init__(self, m1m3: MetaSAL, fields: list[TopicField]):
+        super().__init__("ILC Warnings", fields, "ilcWarning")
+
+        try:
+            m1m3.ilcWarning.connect(self.update)
+        except AttributeError:
+            pass
+
+    @Slot()
+    def update(self, data: BaseMsgType) -> None:
+        for field in self.fields:
+            field.get_value(data)
 
 
 class Topics(TopicCollection):
     """
     Class constructing list of all available topics of the Force Actuators.
+
+    Parameters
+    ----------
+    m1m3 : `MetaSAL`
+        M1M3 SAL communication object. Needed for proper processing of
+        ilcWarning messages.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, m1m3: MetaSAL):
         super().__init__(
             ForceMomentData(
                 "Applied Acceleration Forces",
@@ -1062,5 +1107,18 @@ class Topics(TopicCollection):
                     ),
                 ],
                 "enabledForceActuators",
+            ),
+            ILCWarningTopic(
+                m1m3,
+                [
+                    ILCWarningField("Any Warning", "anyWarning"),
+                    ILCWarningField("Response Timeout", "responseTimeout"),
+                    ILCWarningField("Illegal Function", "illegalFunction"),
+                    ILCWarningField("Illegal Data Value", "illegalDataValue"),
+                    ILCWarningField("Invalid Length", "invalidLength"),
+                    ILCWarningField("Unknown Address", "unknownAddress"),
+                    ILCWarningField("Unknown Function", "unknownFunction"),
+                    ILCWarningField("Unknown Problem", "unknownProblem"),
+                ],
             ),
         )

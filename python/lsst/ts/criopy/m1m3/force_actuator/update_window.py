@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import numpy as np
 from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
 from PySide6.QtCore import QSettings, Qt, Signal, Slot
 from PySide6.QtGui import QCloseEvent
@@ -35,7 +36,7 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ...gui.actuatorsdisplay import ForceActuatorItem, MirrorWidget
+from ...gui.actuatorsdisplay import DataItemState, ForceActuatorItem, MirrorWidget
 from ...gui.sal import EngineeringButton
 from ...salcomm import MetaSAL, command
 
@@ -72,7 +73,7 @@ class EditWidget(QWidget):
         self.__enabled_axis = enabled_axis
 
         self.__axisGroup = QButtonGroup()
-        gridLayout = QGridLayout()
+        grid_layout = QGridLayout()
 
         layout = QVBoxLayout()
 
@@ -90,13 +91,13 @@ class EditWidget(QWidget):
                 spin.setRange(-5000, 5000)
                 spin.setEnabled(False)
                 spin.valueChanged.connect(lambda v: self.valueChanged.emit())
-                gridLayout.addWidget(spin, row + 1, 1)
+                grid_layout.addWidget(spin, row + 1, 1)
                 self.__editBox[axis] = spin
             else:
                 button.setEnabled(False)
-            gridLayout.addWidget(button, row + 1, 0)
+            grid_layout.addWidget(button, row + 1, 0)
 
-        layout.addLayout(gridLayout)
+        layout.addLayout(grid_layout)
 
         for cb in control_boxes:
             layout.addWidget(cb)
@@ -108,7 +109,7 @@ class EditWidget(QWidget):
             lambda b: self.axisChanged.emit(b.text().lower())
         )
 
-    def setSelected(self, selectedId: int, forces: dict[str, float | None]) -> None:
+    def set_selected(self, selectedId: int, forces: dict[str, float | None]) -> None:
         """Set new values to spin boxes."""
         self.__selected.setText(f"Selected {selectedId}")
 
@@ -125,24 +126,20 @@ class EditWidget(QWidget):
                 pass
         # set focus so new value can be entered; TabFocusReason as it allows to
         # type new value directly
-        self.__editBox[self.getSelectedAxis()].setFocus(Qt.TabFocusReason)
+        self.__editBox[self.get_selected_axis()].setFocus(Qt.TabFocusReason)
 
-    def getXYZ(self) -> dict[str, float]:
+    def get_xyz(self) -> dict[str, float]:
         """Returns map with forces values."""
         ret = {}
         for index, axis in enumerate(self.__enabled_axis):
             ret[axis + "Forces"] = self.__editBox[axis].value()
         return ret
 
-    def selectedAxisButton(self) -> QPushButton:
+    def selected_axis_button(self) -> QPushButton:
         return self.__axisGroup.button(self.__axisGroup.checkedId())
 
-    def getSelectedAxis(self) -> str:
-        return self.selectedAxisButton().text().lower()
-
-    @Slot()
-    def changeAxis(self, button: QPushButton) -> None:
-        self.axisChanged.emit(button.text().lower())
+    def get_selected_axis(self) -> str:
+        return self.selected_axis_button().text().lower()
 
 
 class UpdateWindow(QSplitter):
@@ -156,7 +153,7 @@ class UpdateWindow(QSplitter):
     command : `str`
         Command suffix - string after cmd_apply.
     enabled_axis : `str`
-        Axis (xyz strin) which command accepts.
+        Axis (xyz string) which command accepts.
 
     Attributes
     ----------
@@ -166,7 +163,7 @@ class UpdateWindow(QSplitter):
     """
 
     def __init__(self, m1m3: MetaSAL, command: str, enabled_axis: str):
-        self.mirror_widget = MirrorWidget()
+        self.mirror_widget = MirrorWidget(support=True)
         super().__init__()
 
         self.offsets: dict[str, list[float]] = {}
@@ -251,11 +248,11 @@ class UpdateWindow(QSplitter):
 
         self.__last_selected = selected
 
-        self.edit_widget.setSelected(selected.actuator.actuator_id, forces)
+        self.edit_widget.set_selected(selected.actuator.actuator_id, forces)
 
     def redraw(self) -> None:
         """Refresh value and gauge scale to match self.offsets"""
-        self.set_axis(self.edit_widget.getSelectedAxis())
+        self.set_axis(self.edit_widget.get_selected_axis())
 
     @asyncSlot()
     async def applyChanges(self) -> None:
@@ -276,9 +273,7 @@ class UpdateWindow(QSplitter):
         axis : `str`
             Newly selected axis.
         """
-        self.mirror_widget.clear()
-        minV = None
-        maxV = None
+        value_range = (np.nan, np.nan)
         for row in FATable:
             if axis == "x":
                 data_index = row.x_index
@@ -287,42 +282,30 @@ class UpdateWindow(QSplitter):
             else:
                 data_index = row.index
 
-            value = None
+            value = np.nan
 
             if data_index is not None:
                 offset = self.offsets[axis + "Forces"]
                 assert offset is not None
                 value = offset[data_index]
-                if minV is None:
-                    minV = value
-                    maxV = value
-                else:
-                    minV = min(value, minV)
-                    maxV = max(value, maxV)
-
-            state = (
-                ForceActuatorItem.STATE_INACTIVE
-                if data_index is None
-                else ForceActuatorItem.STATE_ACTIVE
-            )
-
-            self.mirror_widget.mirror_view.add_force_actuator(
-                row,
+                value_range = (
+                    np.nanmin((value, value_range[0])),
+                    np.nanmax((value, value_range[1])),
+                )
+            fa_item = self.mirror_widget.mirror_view.get_force_actuator(row.actuator_id)
+            fa_item.update_data(
                 value,
-                data_index,
-                state,
+                DataItemState.INACTIVE if data_index is None else DataItemState.ACTIVE,
             )
-        if minV is None or maxV is None:
-            return
 
-        self.mirror_widget.setRange(minV, maxV)
+        self.mirror_widget.set_range(*value_range)
 
     @Slot()
     def valueChanged(self) -> None:
         if self.__last_selected is None:
             return
         lastRow = FATable[self.__last_selected.actuator.index]
-        values = self.edit_widget.getXYZ()
+        values = self.edit_widget.get_xyz()
 
         for key, value in self.offsets.items():
             axis = key[0]

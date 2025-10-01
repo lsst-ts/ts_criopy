@@ -42,7 +42,6 @@ class VersionWidget(DataFormWidget):
                 ("CSC Version", DataLabel(field="cscVersion")),
                 ("XML Version", DataLabel(field="xmlVersion")),
                 ("SAL Version", DataLabel(field="salVersion")),
-                ("OpenSplice Version", DataLabel(field="openSpliceVersion")),
                 ("Subsystem Versions", DataLabel(field="subsystemVersions")),
             ],
         )

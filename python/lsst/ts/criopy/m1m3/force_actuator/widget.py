@@ -25,57 +25,33 @@ import numpy
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import (
-    QGridLayout,
-    QLabel,
-    QListWidget,
-    QPushButton,
-    QSplitter,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 from qasync import asyncSlot
 
 from ...gui import WarningLabel
 from ...gui.actuatorsdisplay import ForceActuatorItem
-from ...gui.sal import TimeDeltaLabel, TopicData
+from ...gui.sal import (
+    TimeDeltaLabel,
+    TopicData,
+    TopicDetailWidget,
+    TopicField,
+    TopicWindow,
+)
 from ...salcomm import MetaSAL, command
 from .topics import Topics
 from .update_window import UpdateWindow
 
 
-class Widget(QSplitter):
-    """
-    Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement change_values and update_values(data)
-    methods.
+class DetailWidget(TopicDetailWidget):
+    update_windows: dict[str, QWidget] = {}
+    topic: TopicData | None = None
+    field: TopicField | None = None
 
-    Parameters
-    ----------
-
-    m1m3 : `SALComm`
-        SALComm instance to communicate with SAL.
-    userWidget : `QWidget`
-        Widget to be displayed on left from value selection. Its content shall
-        be update in update_values(data) method.
-    """
-
-    def __init__(self, m1m3: MetaSAL, userWidget: QWidget):
+    def __init__(self, m1m3: MetaSAL):
         super().__init__()
         self.m1m3 = m1m3
 
-        self.updateWindows: dict[str, QWidget] = {}
-
-        self.field: typing.Any | None = None
-        self._topic: TopicData | None = None
-
-        plot_layout = QVBoxLayout()
-        selection_layout = QVBoxLayout()
-        details_layout = QGridLayout()
-        filter_layout = QGridLayout()
-
-        selection_layout.addLayout(details_layout)
-        selection_layout.addLayout(filter_layout)
+        layout = QGridLayout()
 
         self.selected_actuator_id_label = QLabel()
         self.selected_actuator_value_label = QLabel()
@@ -88,25 +64,13 @@ class Widget(QSplitter):
         self.far_selected_ids_label = QLabel()
         self.far_selected_value_label = QLabel()
 
-        self.topic_list = QListWidget()
-        self.topic_list.setFixedWidth(256)
-        self.topic_list.currentRowChanged.connect(self.currentTopicChanged)
-        self.topics = Topics()
-        for topic in self.topics.topics:
-            self.topic_list.addItem(topic.name)
-        self.fieldList = QListWidget()
-        self.fieldList.setFixedWidth(256)
-        self.fieldList.currentRowChanged.connect(self.currentFieldChanged)
-
-        plot_layout.addWidget(userWidget)
-
         def addDetails(
             row: int, name: str, label: QLabel, nears: QLabel, fars: QLabel
         ) -> None:
-            details_layout.addWidget(QLabel(name), row, 0)
-            details_layout.addWidget(label, row, 1)
-            details_layout.addWidget(nears, row, 2)
-            details_layout.addWidget(fars, row, 3)
+            layout.addWidget(QLabel(name), row, 0)
+            layout.addWidget(label, row, 1)
+            layout.addWidget(nears, row, 2)
+            layout.addWidget(fars, row, 3)
 
         addDetails(
             0,
@@ -147,141 +111,30 @@ class Widget(QSplitter):
             QLabel("---"),
         ]
 
-        details_layout.addWidget(QLabel("<b>Forces</b>"), 4, 0)
-        details_layout.addWidget(self.forces_moments[6], 5, 0)
+        layout.addWidget(QLabel("<b>Forces</b>"), 4, 0)
+        layout.addWidget(self.forces_moments[6], 5, 0)
         for i, a in enumerate("XYZ"):
-            details_layout.addWidget(QLabel(f"<b>{a}</b>"), 4, i + 1)
-            details_layout.addWidget(self.forces_moments[i], 5, i + 1)
+            layout.addWidget(QLabel(f"<b>{a}</b>"), 4, i + 1)
+            layout.addWidget(self.forces_moments[i], 5, i + 1)
 
-        details_layout.addWidget(QLabel("<b>Moments</b>"), 6, 0)
+        layout.addWidget(QLabel("<b>Moments</b>"), 6, 0)
         for i, a in enumerate("XYZ"):
-            details_layout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
-            details_layout.addWidget(self.forces_moments[i + 3], 7, i + 1)
+            layout.addWidget(QLabel(f"<b>{a}</b>"), 6, i + 1)
+            layout.addWidget(self.forces_moments[i + 3], 7, i + 1)
 
-        self.editButton = QPushButton("&Modify")
-        self.editButton.clicked.connect(self.editValues)
-        self.clearButton = QPushButton("&Zero")
-        self.clearButton.clicked.connect(self.zeroValues)
+        self.edit_button = QPushButton("&Modify")
+        self.edit_button.clicked.connect(self.edit_values)
+        self.clear_button = QPushButton("&Zero")
+        self.clear_button.clicked.connect(self.zero_values)
 
-        details_layout.addWidget(self.editButton, 8, 0, 1, 2)
-        details_layout.addWidget(self.clearButton, 8, 2, 1, 2)
+        self.set_field(None, None)
 
-        filter_layout.addWidget(QLabel("Topic"), 1, 1)
-        filter_layout.addWidget(QLabel("Field"), 1, 2)
-        filter_layout.addWidget(self.topic_list, 2, 1)
-        filter_layout.addWidget(self.fieldList, 2, 2)
+        layout.addWidget(self.edit_button, 8, 0, 1, 2)
+        layout.addWidget(self.clear_button, 8, 2, 1, 2)
 
-        self.topic_list.setCurrentRow(0)
+        self.setLayout(layout)
 
-        w_left = QWidget()
-        w_left.setLayout(plot_layout)
-        w_right = QWidget()
-        w_right.setLayout(selection_layout)
-        w_right.setMaximumWidth(w_right.size().width())
-        self.addWidget(w_left)
-        self.addWidget(w_right)
-
-        self.setCollapsible(0, False)
-        self.setStretchFactor(0, 10)
-        self.setStretchFactor(1, 1)
-
-    def change_values(self) -> None:
-        """Called when new values were selected by the user."""
-        raise NotImplementedError(
-            "change_values method must be implemented in all Widget childrens"
-        )
-
-    def update_values(self, data: BaseMsgType) -> None:
-        """Called when new data are available through SAL callback.
-
-        Parameters
-        ----------
-        data : `object`
-            New data structure, passed from SAL handler.
-        """
-        raise NotImplementedError(
-            "update_values method must be implemented in all Widget childrens"
-        )
-
-    @Slot()
-    def currentTopicChanged(self, topic_index: int) -> None:
-        if topic_index < 0:
-            self._set_unknown()
-            return
-
-        self.fieldList.clear()
-        for field in self.topics.topics[topic_index].fields:
-            self.fieldList.addItem(field.name)
-
-        field_index = self.topics.topics[topic_index].selected_field
-        if field_index < 0:
-            self._set_unknown()
-            return
-
-        self.fieldList.setCurrentRow(field_index)
-        self.__change_field(topic_index, field_index)
-
-    @Slot()
-    def currentFieldChanged(self, field_index: int) -> None:
-        topic_index = self.topic_list.currentRow()
-        if topic_index < 0 or field_index < 0:
-            self._set_unknown()
-            return
-        self.__change_field(topic_index, field_index)
-        self.topics.topics[topic_index].selected_field = field_index
-
-    @Slot()
-    def editValues(self) -> None:
-        def get_axis(topic: TopicData) -> str:
-            axis = ""
-            for f in topic.fields:
-                if f.value_index == FAIndex.X:
-                    axis += "x"
-                elif f.value_index == FAIndex.Y:
-                    axis += "y"
-                elif f.value_index == FAIndex.Z:
-                    axis += "z"
-            return "".join(sorted(set(axis)))
-
-        if self._topic is None or self._topic.command is None:
-            return
-
-        suffix = self._topic.command
-        try:
-            self.updateWindows[suffix].show()
-        except KeyError:
-            w = UpdateWindow(self.m1m3, suffix, get_axis(self._topic))
-            w.show()
-            self.updateWindows[suffix] = w
-
-    @asyncSlot()
-    async def zeroValues(self) -> None:
-        if self.field is None or self._topic is None or self._topic.command is None:
-            return
-        await command(
-            self, getattr(self.m1m3.remote, "cmd_clear" + self._topic.command)
-        )
-
-    def _set_unknown(self) -> None:
-        self.last_updated_label.set_unknown()
-
-    def getCurrentFieldName(self) -> tuple[str, str]:
-        if self._topic is None or self._topic.topic is None or self.field is None:
-            raise RuntimeError(
-                "Topic or field is None in Widget.getCurrentFieldName:"
-                f" {self._topic}, {self.field}"
-            )
-        return (self._topic.topic, self.field.field_name)
-
-    def _get_data(self) -> typing.Any:
-        if self._topic is None:
-            raise RuntimeError("Topic is None in Widget._get_data")
-        topic = self._topic.getTopic()
-        if isinstance(topic, str):
-            return getattr(self.m1m3.remote, topic).get()
-        return topic
-
-    def updateSelectedActuator(self, selected_actuator: ForceActuatorItem) -> None:
+    def update_selected_actuator(self, selected_actuator: ForceActuatorItem) -> None:
         """
         Called from childrens to update currently selected actuator display.
 
@@ -293,14 +146,11 @@ class Widget(QSplitter):
             actuator current value) and warning (boolean, true if value is in
             warning).
         """
-        if selected_actuator is None:
+        if selected_actuator is None or self.topic is None or self.field is None:
             self.selected_actuator_id_label.setText("not selected")
             self.selected_actuator_value_label.setText("")
             self.selected_actuator_warning_label.setText("")
             return
-
-        if self.field is None:
-            raise RuntimeError("field not selected in Widget.updateSelectedActuator")
 
         self.selected_actuator_id_label.setText(
             str(selected_actuator.actuator.actuator_id)
@@ -308,7 +158,14 @@ class Widget(QSplitter):
         self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
-        data = self.field.get_value(self._get_data())
+        def _get_data() -> typing.Any:
+            assert self.topic is not None
+            topic = self.topic.get_topic()
+            if isinstance(topic, str):
+                return getattr(self.m1m3.remote, topic).get()
+            return topic
+
+        data = self.field.get_value(_get_data())
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors
@@ -343,26 +200,103 @@ class Widget(QSplitter):
                 f"{selected_actuator.format_value(numpy.average([data[i] for i in farIndices]))}"
             )
 
-    def __setModifyCommand(self, command: str | None) -> None:
-        enabled = command is not None
-        self.editButton.setEnabled(enabled)
-        self.clearButton.setEnabled(enabled)
+    def data_changed(self, data: BaseMsgType | None) -> None:
+        if data is None:
+            self.last_updated_label.set_unknown()
+            return
 
-    def __change_field(self, topic_index: int, field_index: int) -> None:
+        try:
+            self.last_updated_label.setValue(data.timestamp)
+        except AttributeError:
+            self.last_updated_label.setValue(data.private_sndStamp)
+
+    @Slot()
+    def edit_values(self) -> None:
+        def get_axis(topic: TopicData) -> str:
+            axis = ""
+            for f in topic.fields:
+                if f.value_index == FAIndex.X:
+                    axis += "x"
+                elif f.value_index == FAIndex.Y:
+                    axis += "y"
+                elif f.value_index == FAIndex.Z:
+                    axis += "z"
+            return "".join(sorted(set(axis)))
+
+        assert self.topic is not None
+        assert self.topic.command is not None
+
+        suffix = self.topic.command
+        try:
+            self.update_windows[suffix].show()
+        except KeyError:
+            w = UpdateWindow(self.m1m3, suffix, get_axis(self.topic))
+            w.show()
+            self.update_windows[suffix] = w
+
+    @asyncSlot()
+    async def zero_values(self) -> None:
+        assert self.topic is not None
+        assert self.topic.command is not None
+
+        await command(self, getattr(self.m1m3.remote, "cmd_clear" + self.topic.command))
+
+    def set_field(self, topic: TopicData | None, field: TopicField | None) -> None:
+        self.topic = topic
+        self.field = field
+        enabled = topic is not None and topic.command is not None
+        self.edit_button.setEnabled(enabled)
+        self.clear_button.setEnabled(enabled)
+
+
+class Widget(TopicWindow):
+    """
+    Abstract class for widget and graphics display of selected M1M3 values.
+    Children classes must implement change_values and update_values(data)
+    methods.
+
+    Parameters
+    ----------
+
+    m1m3 : `SALComm`
+        SALComm instance to communicate with SAL.
+    user_widget : `QWidget`
+        Widget to be displayed on left from value selection. Its content shall
+        be update in update_values(data) method.
+    """
+
+    def __init__(self, m1m3: MetaSAL, user_widget: QWidget):
+        super().__init__(m1m3, Topics(m1m3), user_widget, DetailWidget(m1m3))
+
+        self.setCollapsible(0, False)
+        self.setStretchFactor(0, 10)
+        self.setStretchFactor(1, 1)
+
+        self.topic_list.setFixedWidth(256)
+        self.field_list.setFixedWidth(256)
+
+    def change_values(self) -> None:
+        """Called when new values were selected by the user."""
+        raise NotImplementedError(
+            "change_values method must be implemented in all Widget childrens"
+        )
+
+    def change_field(self, topic_index: int, field_index: int) -> BaseMsgType:
         """
         Redraw actuators with new values.
         """
-        self._topic = self.topics.topics[topic_index]
-        self.__setModifyCommand(self._topic.command)
-        self.field = self._topic.fields[field_index]
-        self.topics.change_topic(topic_index, self.data_changed, self.m1m3)
-        data = self._get_data()
+        data = super().change_field(topic_index, field_index)
+        if data is None:
+            return
+
+        assert self.detail_widget is not None
+        self.detail_widget.set_field(self.topic, self.field)
+
         self.change_values()
         self.update_values(data)
-        self.data_changed(data)
 
     @Slot()
-    def data_changed(self, data: BaseMsgType) -> None:
+    def data_changed(self, data: BaseMsgType | None) -> None:
         """
         Called when selected data are updated.
 
@@ -372,24 +306,23 @@ class Widget(QSplitter):
             Class holding data. See SALComm for details.
         """
         self.update_values(data)
+
+        assert self.detail_widget is not None
+
+        self.detail_widget.data_changed(data)
+
         if data is None:
-            self._set_unknown()
             return
 
-        try:
-            self.last_updated_label.setValue(data.timestamp)
-        except AttributeError:
-            self.last_updated_label.setValue(data.private_sndStamp)
-
-        if self._topic is not None:
+        if self.topic is not None:
             try:
-                f_m_t = getattr(self._topic, "get_forces_moments")(data)
+                f_m_t = getattr(self.topic, "get_forces_moments")(data)
 
                 for i, d in enumerate(f_m_t):
                     if d is None:
-                        self.forces_moments[i].setText("-N-")
+                        self.detail_widget.forces_moments[i].setText("-N-")
                     else:
-                        self.forces_moments[i].setText(f"{d:.3f} N")
+                        self.detail_widget.forces_moments[i].setText(f"{d:.3f} N")
 
             except AttributeError:
                 pass

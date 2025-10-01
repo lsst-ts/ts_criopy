@@ -111,12 +111,10 @@ class OverviewPageWidget(QWidget):
         m1m3_cscVersion = DataLabel(m1m3.softwareVersions, "cscVersion")
         m1m3_salVersion = DataLabel(m1m3.softwareVersions, "salVersion")
         m1m3_xmlVersion = DataLabel(m1m3.softwareVersions, "xmlVersion")
-        m1m3_osplVersion = DataLabel(m1m3.softwareVersions, "openSpliceVersion")
 
         mtmount_cscVersion = DataLabel(mtmount.softwareVersions, "cscVersion")
         mtmount_salVersion = DataLabel(mtmount.softwareVersions, "salVersion")
         mtmount_xmlVersion = DataLabel(mtmount.softwareVersions, "xmlVersion")
-        mtmount_osplVersion = DataLabel(mtmount.softwareVersions, "openSpliceVersion")
 
         row = 0
         col = 0
@@ -244,7 +242,6 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(QLabel("<b>CsC</b>"), row, col + 4)
         dataLayout.addWidget(QLabel("<b>SAL</b>"), row, col + 5)
         dataLayout.addWidget(QLabel("<b>XML</b>"), row, col + 6)
-        dataLayout.addWidget(QLabel("<b>OSPL</b>"), row, col + 7)
         row += 1
         dataLayout.addWidget(QLabel("Azimuth (deg)"), row, col)
         dataLayout.addWidget(QLabel("---"), row, col + 1)
@@ -253,7 +250,6 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(m1m3_cscVersion, row, col + 4)
         dataLayout.addWidget(m1m3_salVersion, row, col + 5)
         dataLayout.addWidget(m1m3_xmlVersion, row, col + 6)
-        dataLayout.addWidget(m1m3_osplVersion, row, col + 7)
         row += 1
         dataLayout.addWidget(QLabel("Elevation (deg)"), row, col)
         dataLayout.addWidget(self.inclinometerElevationLabel, row, col + 1)
@@ -262,7 +258,6 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(mtmount_cscVersion, row, col + 4)
         dataLayout.addWidget(mtmount_salVersion, row, col + 5)
         dataLayout.addWidget(mtmount_xmlVersion, row, col + 6)
-        dataLayout.addWidget(mtmount_osplVersion, row, col + 7)
 
         m1m3.appliedForces.connect(self.appliedForces)
         m1m3.detailedState.connect(self.detailedState)

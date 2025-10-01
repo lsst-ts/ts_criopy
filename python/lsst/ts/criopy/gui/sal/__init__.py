@@ -25,5 +25,6 @@ from .topic_data import (
     WaitingField,
     WarningField,
 )
+from .topic_detail_widget import TopicDetailWidget
 from .topic_window import TopicWindow
 from .version_widget import VersionWidget

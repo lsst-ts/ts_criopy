@@ -102,7 +102,14 @@ import typing
 from lsst.ts.salobj import BaseMsgType, base
 from PySide6.QtCore import QObject, Qt, Signal, Slot
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QWidget,
+)
 from qasync import asyncSlot
 
 from ..salcomm import warning
@@ -133,6 +140,9 @@ class AbstractColumn(QObject):
     indices : `[int]`, optional
         Indices remapping. If specified, label at grid column/row position g
         will display data from array at position indices[g].
+    extra_widgets: `QWidget | [QWidget]`, optional
+        Extra widget(s) added at the end of row. If a single widget is
+        specified, it will be expanded over all extra widgets in the grid.
     """
 
     def __init__(
@@ -142,12 +152,14 @@ class AbstractColumn(QObject):
         widget: typing.Callable[[], UnitLabel] | None = UnitLabel,
         signal: Signal | None = None,
         indices: list[int] | None = None,
+        extra_widgets: QWidget | list[QWidget] | None = None,
     ):
         super().__init__()
         self.setObjectName(field)
         self._label = label
         self._widget = widget
         self._indices = indices
+        self.extra_widgets = extra_widgets
 
         self.items: list[UnitLabel | None] = []
 
@@ -176,6 +188,20 @@ class AbstractColumn(QObject):
             Raised when abstract method is used.
         """
         raise NotImplementedError("Abstract attach_into called")
+
+    def attach_extra_widgets(
+        self, parent: "ArrayGrid", row: int, base_col: int
+    ) -> None:
+        if self.extra_widgets is not None:
+            if isinstance(self.extra_widgets, QWidget):
+                parent.add_widget(self.extra_widgets, row, base_col, fill_row=True)
+                self.extra_widgets.setSizePolicy(
+                    QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+                )
+                return
+            for c, w in enumerate(self.extra_widgets):
+                if w is not None:
+                    parent.add_widget(w, row, base_col + c)
 
     def get_label(self, name: str, index: int) -> QWidget | None:
         """Returns label with given name and index.
@@ -216,6 +242,23 @@ class AbstractColumn(QObject):
             if item is not None:
                 item.setValue(fd[self.get_data_index(idx)])
 
+    def setExtraWidgetsEnabled(self, enabled: bool) -> None:
+        """
+        Set enabled state of the extra widgets.
+        """
+        if self.extra_widgets is None:
+            return
+
+        if isinstance(self.extra_widgets, QWidget):
+            self.extra_widgets.setEnabled(enabled)
+            return
+
+        for w in self.extra_widgets:
+            if w is None:
+                continue
+
+            w.setEnabled(enabled)
+
 
 class ArrayItem(AbstractColumn):
     """Variable with values in array. Display array values to cells in
@@ -236,9 +279,10 @@ class ArrayItem(AbstractColumn):
     indices : `[int]`, optional
         Indices mapping. Key is original index, value is mapped (displayed)
         index value. If not provided, 1:1 mapping is assumed.
-    extra_widgets : `[QWidget]`
-        Widgets added after data. Can include additional control, such as
-        buttons, related to the data.
+    extra_widgets : `QWidget | [QWidget]`, optional
+        Extra widget(s) added at the end of row. If a single widget is
+        specified, it will be expanded over all extra widgets in the grid.
+        Can include additional control, such as buttons, related to the data.
     """
 
     def __init__(
@@ -250,8 +294,7 @@ class ArrayItem(AbstractColumn):
         indices: list[int] | None = None,
         extra_widgets: list[QWidget | None] | None = None,
     ):
-        super().__init__(field, label, widget, signal, indices)
-        self._extra_widgets = extra_widgets
+        super().__init__(field, label, widget, signal, indices, extra_widgets)
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         if self._widget is None:
@@ -267,11 +310,7 @@ class ArrayItem(AbstractColumn):
                 i.setObjectName(self.objectName() + f"[{c}]")
                 i.setCursor(Qt.PointingHandCursor)
 
-        if self._extra_widgets is not None:
-            base_col = len(self.items) + 1
-            for c, w in enumerate(self._extra_widgets):
-                if w is not None:
-                    parent.add_widget(w, row, c + base_col)
+        self.attach_extra_widgets(parent, row, len(self.items) + 1)
 
         return row + 1
 
@@ -290,8 +329,9 @@ class ArrayFields(AbstractColumn):
         Type of widget added into row.
     signal:`Signal`
         Signal delivering fields values to be displayed.
-    extra_widgets: `[QWidget]`
-        Extra widgets added at the end of row.
+    extra_widgets: `QWidget | [QWidget]`, optional
+        Extra widget(s) added at the end of row. If a single widget is
+        specified, it will be expanded over all extra widgets in the grid.
     """
 
     def __init__(
@@ -302,9 +342,8 @@ class ArrayFields(AbstractColumn):
         signal: Signal | None = None,
         extra_widgets: list[QWidget] | None = None,
     ):
-        super().__init__("", label, widget, signal)
+        super().__init__("", label, widget, signal, extra_widgets=extra_widgets)
         self.fields = fields
-        self._extra_widgets = extra_widgets
 
     def attach_into(self, parent: "ArrayGrid", row: int) -> int:
         if self._widget is None:
@@ -321,10 +360,7 @@ class ArrayFields(AbstractColumn):
             i.setObjectName(self.fields[c])
             i.setCursor(Qt.PointingHandCursor)
 
-        if self._extra_widgets is not None:
-            base_col = len(self.fields) + 1
-            for c, w in enumerate(self._extra_widgets):
-                parent.add_widget(w, row, c + base_col)
+        self.attach_extra_widgets(parent, row, len(self.fields) + 1)
 
         return row + 1
 
@@ -524,11 +560,15 @@ class ArrayGrid(QWidget):
         for i in items:
             row = i.attach_into(self, row)
 
-    def add_widget(self, widget: QWidget, row: int, col: int) -> None:
-        self.layout().addWidget(widget, *self._rowcol(row, col))
+    def add_widget(
+        self, widget: QWidget, row: int, col: int, fill_row: bool = False
+    ) -> None:
+        def _rowcol(r: int, c: int) -> tuple[int, int]:
+            return (c, r) if self.orientation == Qt.Vertical else (r, c)
 
-    def _rowcol(self, r: int, c: int) -> tuple[int, int]:
-        return (c, r) if self.orientation == Qt.Vertical else (r, c)
+        self.layout().addWidget(
+            widget, *_rowcol(row, col), *_rowcol(1, -1 if fill_row else 1)
+        )
 
     def get_data_rows(self) -> int:
         return len(self.rows)
@@ -559,3 +599,7 @@ class ArrayGrid(QWidget):
             child = self.childAt(ev.pos())
             if child is not None:
                 self._chart.topicSelected.emit(child)
+
+    def setExtraWidgetsEnabled(self, enabled: bool) -> None:
+        for i in self._items:
+            i.setExtraWidgetsEnabled(enabled)

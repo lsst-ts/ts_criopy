@@ -4,6 +4,17 @@
 Version History
 ===============
 
+v0.13.0
+-------
+
+* Show occurence of ilcWarning messages.
+* Fix data reload - issue only one request to load data.
+
+v0.12.1
+-------
+
+* Show warning in M1M3 Support System's "Slew controller" page when slew is active.
+
 v0.12.0
 -------
 

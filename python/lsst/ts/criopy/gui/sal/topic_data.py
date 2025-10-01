@@ -18,6 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import typing
+from dataclasses import dataclass
 
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
@@ -28,6 +29,7 @@ from ..actuatorsdisplay import Scales
 __all__ = ["TopicData", "TopicField"]
 
 
+@dataclass
 class TopicField:
     """
     Field inside topic. Holds together data needed to properly display values.
@@ -47,19 +49,11 @@ class TopicField:
         Format string to display the field value.
     """
 
-    def __init__(
-        self,
-        name: str,
-        field_name: str | None,
-        value_index: int,
-        scale_type: Scales = Scales.GAUGE,
-        fmt: str | None = None,
-    ):
-        self.name = name
-        self.field_name = field_name
-        self.value_index = value_index
-        self.scale_type = scale_type
-        self.fmt = fmt
+    name: str
+    field_name: str | None
+    value_index: int
+    scale_type: Scales = Scales.GAUGE
+    fmt: str | None = None
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         # if None, get_value must be overwritten
@@ -123,15 +117,24 @@ class TopicData:
         self.is_event = is_event
         self.command = command
 
-    def getTopic(self) -> str:
-        if self.topic is None:
-            raise RuntimeError("Called getTopic for topic-less Topic")
+    def get_topic(self) -> str:
+        assert self.topic is not None
         if self.is_event:
             return "evt_" + self.topic
         return "tel_" + self.topic
 
-    def change_topic(self, index: int, slot: Slot, comm: MetaSAL) -> None:
-        """Called when new topic is selected.
+    def connect(self, comm: MetaSAL, slot: Slot) -> None:
+        if self.topic is None:
+            return
+
+        try:
+            getattr(comm, self.topic).connect(slot)
+        except AttributeError:
+            raise RuntimeError(f"Topic {self.topic} doesn't exists")
+
+    def disconnect(self, comm: MetaSAL, slot: Slot) -> None:
+        """
+        Called when topic shall be disconnected from updates.
 
         Parameters
         ----------
@@ -142,4 +145,10 @@ class TopicData:
         comm: `MetaSAL`
             MetaSAL with data.
         """
-        raise NotImplementedError("TopicData structure must implement change_topic")
+        if self.topic is None:
+            return
+
+        try:
+            getattr(comm, self.topic).disconnect(slot)
+        except AttributeError:
+            pass
