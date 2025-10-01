@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import numpy as np
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
@@ -36,8 +37,8 @@ class GaugeScale(QWidget):
 
     def __init__(self, fmt: str = ".02f"):
         super().__init__()
-        self._min: float = 1
-        self._max: float = 1
+        self._min: float = np.nan
+        self._max: float = np.nan
         self._fmt = fmt
         self._formated_zero = f"{0:{self._fmt}}"
         self.setMinimumSize(100, 100)
@@ -81,6 +82,8 @@ class GaugeScale(QWidget):
         brush : QBrush
             QBrush representing the value on scale.
         """
+        if not (np.isfinite(value)):
+            return QBrush(Qt.gray, Qt.Dense5Pattern)
         if self._min == self._max:
             return QBrush(Qt.red, Qt.DiagCrossPattern)
         # draw using value as index into possible colors in HSV model

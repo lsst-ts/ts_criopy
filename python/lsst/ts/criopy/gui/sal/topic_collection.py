@@ -54,21 +54,14 @@ class TopicCollection:
         comm : `MetaSAL`
             SAL Communication object containing the topic.
         """
+        if self.__last_index == topic_index:
+            return
+
         if self.__last_index is not None:
-            topic = self.topics[self.__last_index].topic
-            if topic is not None:
-                try:
-                    getattr(comm, topic).disconnect(slot)
-                except AttributeError:
-                    pass
+            self.topics[self.__last_index].disconnect(comm, slot)
 
         self.__last_index = topic_index
         if topic_index is None:
             return
 
-        topic = self.topics[topic_index].topic
-        if topic is not None:
-            try:
-                getattr(comm, topic).connect(slot)
-            except AttributeError:
-                raise RuntimeError(f"Topic {topic} doesn't exists")
+        self.topics[topic_index].connect(comm, slot)

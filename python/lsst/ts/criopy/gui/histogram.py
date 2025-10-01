@@ -57,19 +57,19 @@ class Histogram(QChart):
         self.legend().setVisible(True)
         self.legend().setAlignment(Qt.AlignBottom)
 
-    def plot(self, values: list[int]) -> None:
+    def plot(self, values: list[float]) -> None:
         """Update histogram values.
 
         Parameters
         ----------
-        values : `[int]`
+        values : `[float]`
             New values for histogram computation.
         """
+        self.removeAllSeries()
+
         hist, bin_edges = np.histogram(values, self.nbins)
         self.set = QBarSet("Data")
         self.set.append(list(hist))
-
-        self.removeSeries(self.serie)
 
         self.serie = QBarSeries()
         self.serie.setBarWidth(1)

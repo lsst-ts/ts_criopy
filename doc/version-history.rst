@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.13.0
+-------
+
+* Show occurence of ilcWarning messages.
+
 v0.12.1
 -------
 
