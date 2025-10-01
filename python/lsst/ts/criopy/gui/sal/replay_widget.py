@@ -126,7 +126,6 @@ class ReplayControlWidget(QWidget):
         self.player_widget.retrieve_data(
             self.select_efd.currentText(), self.start.dateTime()
         )
-        await self.player_widget.replay(self.start.dateTime())
 
     @Slot()
     def stop(self) -> None:

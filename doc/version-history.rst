@@ -8,6 +8,7 @@ v0.13.0
 -------
 
 * Show occurence of ilcWarning messages.
+* Fix data reload - issue only one request to load data.
 
 v0.12.1
 -------

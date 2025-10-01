@@ -42,7 +42,7 @@ from .load_progress_widget import LoadProgressWidget
 
 
 class MSecDateTimeEdit(QDateTimeEdit):
-    def __init__(self, date_time: QDateTime):
+    def __init__(self, date_time: QDateTime | None):
         super().__init__(date_time)
         self.setDisplayFormat(self.displayFormat() + ".zzz")
 
@@ -82,7 +82,7 @@ class PlayerWidget(QWidget):
 
         self.slider = QSlider(Qt.Horizontal)
 
-        self.current = MSecDateTimeEdit(self.start.dateTime())
+        self.current = MSecDateTimeEdit(None)
         self.current.dateTimeChanged.connect(self.replay)
 
         self.step_size_box = QSpinBox()
