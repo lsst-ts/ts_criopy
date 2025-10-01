@@ -25,11 +25,11 @@ from PySide6.QtWidgets import QWidget
 
 class TopicDetailWidget(QWidget):
     """
-    Provides details about currenctly selected actuator. Abstract class, shall
-    be implemented as needed in child classes.
+    Provides details about currently selected actuator. Abstract class, shall
+    be subclassed and data_changed method implemented.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def data_changed(self, data: BaseMsgType | None) -> None:
@@ -41,4 +41,6 @@ class TopicDetailWidget(QWidget):
         data : `BaseMsgType`
             New data. Either received from SAL, or retrived from some cache.
         """
-        pass
+        raise NotImplementedError(
+            "data_changed method needs to be overriden in TopicDetailWidget subclass."
+        )

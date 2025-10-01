@@ -167,14 +167,12 @@ class TopicWindow(QSplitter):
         if self.detail_widget is not None:
             self.detail_widget.data_changed(None)
 
-    def get_current_field_name(self) -> tuple[str, str]:
+    def get_current_field_name(self) -> tuple[str | None, str | None]:
         if self.topic is None or self.field is None:
             raise RuntimeError(
                 "Topic or field is None in get_current_field_name:"
                 f" {self.topic}, {self.field}"
             )
-        assert self.topic.topic is not None
-        assert self.field.field_name is not None
         return (self.topic.topic, self.field.field_name)
 
     def change_field(self, topic_index: int, field_index: int) -> BaseMsgType | None:

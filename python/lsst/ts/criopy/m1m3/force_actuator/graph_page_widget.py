@@ -106,7 +106,10 @@ class GraphPageWidget(Widget):
 
         # filter out None values
         values = [v for v in values if v is not None and not (np.isnan(v))]
-        self.mirror_widget.set_range(min(values), max(values))
+        if len(values) == 0:
+            self.mirror_widget.set_range(0, 0)
+        else:
+            self.mirror_widget.set_range(min(values), max(values))
 
         if self.detail_widget is None:
             return

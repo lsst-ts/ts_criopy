@@ -18,11 +18,12 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
+import numpy as np
 from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QChartView
-from PySide6.QtCore import QSettings
-from PySide6.QtGui import QContextMenuEvent, QPainter
-from PySide6.QtWidgets import QInputDialog, QMenu
+from PySide6.QtCore import QPointF, QSettings, Qt
+from PySide6.QtGui import QContextMenuEvent, QFont, QPainter
+from PySide6.QtWidgets import QGraphicsTextItem, QInputDialog, QMenu
 
 from ...gui import Histogram
 from ...salcomm import MetaSAL
@@ -38,8 +39,20 @@ class HistogramView(QChartView):
 
         self.config: str | None = None
 
-    def update(self, values: list[int]) -> None:
-        self.histogram.plot(values)
+    def update(self, values: list[float]) -> None:
+        values = [v for v in values if np.isfinite(v)]
+        if len(values) > 0:
+            self.histogram.plot(values)
+        else:
+            scene = self.scene()
+            text = QGraphicsTextItem("No valid values!")
+            text.setDefaultTextColor(Qt.red)
+            text.setFont(QFont("Helvetica", min(self.width(), self.height()) / 20.0))
+            text.setPos(QPointF(self.rect().center()) - text.boundingRect().center())
+            scene.addItem(text)
+
+            self.chart().hide()
+            self.show()
 
     def setName(self, names: tuple[str, str]) -> None:
         self.config = "/".join(names)
@@ -84,7 +97,10 @@ class HistogramPageWidget(Widget):
         super().__init__(m1m3, self.histogramView)
 
     def change_values(self) -> None:
-        self.histogramView.setName(self.get_current_field_name())
+        (topic, field) = self.get_current_field_name()
+        if topic is None or field is None:
+            return
+        self.histogramView.setName((topic, field))
 
     def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
