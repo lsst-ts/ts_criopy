@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.13.1
+-------
+
+* Fix multiple axis plotting.
+
 v0.13.0
 -------
 

@@ -79,7 +79,7 @@ class ChartView(TimeChartView):
                 name = f"{s} {a}"
                 action = contextMenu.addAction(name)
                 action.setCheckable(True)
-                action.setChecked(self.chart().findSerie(name) is not None)
+                action.setChecked(self.chart().find_serie(name) is not None)
 
         if isinstance(self._serieType, QLineSeries):
             contextMenu.addSeparator()

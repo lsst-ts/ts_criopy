@@ -63,7 +63,9 @@ class TimeChart(AbstractChart):
         max_items: int = 50 * 30,
         update_interval: float = 0.1,
     ):
-        super().__init__(update_interval=update_interval)
+        super().__init__(
+            axis_num=1 if items is None else len(items), update_interval=update_interval
+        )
         self.time_axis: QDateTimeAxis | None = None
 
         self._create_caches(items, max_items)
@@ -74,7 +76,7 @@ class TimeChart(AbstractChart):
         s.setName(name)
         # TODO crashes (core dumps) on some systems. Need to investigate
         # s.setUseOpenGL(True)
-        a = self.findAxis(axis)
+        a = self.find_axis(axis)
         if a is None:
             a = QValueAxis()
             a.setTickCount(10)
@@ -144,17 +146,17 @@ class TimeChart(AbstractChart):
         # replot if needed
         if update:
             self.update_task.cancel()
-            self._next_update = 0
+            self._next_update = [0] * len(self._caches)
 
         if (
-            self._next_update < time.monotonic()
+            self._next_update[axis_index] < time.monotonic()
             and self.update_task.done()
             and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 self.update_task = pool.submit(self._replot, axis_index, cache)
 
-            self._next_update = time.monotonic() + self.update_interval
+            self._next_update[axis_index] = time.monotonic() + self.update_interval
 
     def replace(self, caches: list[TimeCache]) -> None:
         self._caches = caches
@@ -168,15 +170,17 @@ class TimeChart(AbstractChart):
 
         def update_all() -> None:
             try:
-                for cache in self._caches:
-                    self._replot(0, cache)
+                for index, cache in enumerate(self._caches):
+                    self._replot(index, cache)
             except Exception as ex:
-                print("Exception updating", str(ex), str(cache))
+                print("Exception updating", str(ex), index, str(cache))
 
         self.update_task.cancel()
         with concurrent.futures.ThreadPoolExecutor() as pool:
             self.update_task = pool.submit(update_all)
-        self._next_update = time.monotonic() + self.update_interval
+
+        for index in range(len(self._caches)):
+            self._next_update[index] = time.monotonic() + self.update_interval
 
     def _replot(self, axis_index: int, cache: TimeCache) -> None:
         """Updates given cache.
@@ -192,7 +196,7 @@ class TimeChart(AbstractChart):
         axis = self.axes(Qt.Vertical)[axis_index]
         d_min = d_max = None
         for n in cache.columns()[1:]:
-            serie = self.findSerie(n)
+            serie = self.find_serie(n)
             if serie is None or serie.isVisible() is False:
                 continue
 
@@ -288,7 +292,7 @@ class UserSelectedTimeChart(TimeChart):
                 self._index = index
 
                 self._signal.connect(self._append_data)
-                self._next_update = 0
+                self._next_update = [0]
 
                 break
 

@@ -34,36 +34,62 @@ __all__ = ["AbstractChart"]
 
 class AbstractChart(QChart):
     """
+    Chart with caching. Create caches (using _create_caches method) to build
+    list of data. Update chart only as needed - as fast updates after every
+    point are CPU intense (when handling M1M3 telemetry at 50 Hz).
+
     Parameters
     ----------
+    parent : `QGraphicsItem`, optional
+        Parent widget, passed to QChart constructor.
+    w_flags : `Qt.WindowFlags`, optional
+        Window flags. Passed to QChart contructor.
+    axis_num: `int`, optional
+        Number of axis in the plot.
     update_interval: `float`, optional
-        Interval for chart redraws responding to append call. Defaults to 0.1
+        Interval for chart redraws responding to append call. Defaults to 0.1.
         second.
     """
 
     def __init__(
         self,
         parent: QGraphicsItem = None,
-        wFlags: Qt.WindowFlags = Qt.WindowFlags(),
+        w_flags: Qt.WindowFlags = Qt.WindowFlags(),
+        axis_num: int = 1,
         update_interval: float = 0.1,
     ):
-        super().__init__(parent, wFlags)
+        super().__init__(parent, w_flags)
 
-        self._next_update: float = 0.0
+        self._next_update = [0.0] * axis_num
         self.update_interval = update_interval
 
         self.update_task: asyncio.Future | concurrent.futures.Future = asyncio.Future()
         self.update_task.set_result(None)
 
-    def findAxis(
-        self, titleText: str, axisType: Qt.Orientation = Qt.Vertical
+    def find_axis(
+        self, title_text: str, axis_type: Qt.Orientation = Qt.Vertical
     ) -> QAbstractAxis | None:
-        for a in self.axes(axisType):
-            if a.titleText() == titleText:
+        """
+        Locate axis.
+
+        Parameters
+        ----------
+        title_text : `str`
+            Axis title.
+        axis_type : `Qt.Orientation`, optional
+            Axis orientation. Defaults to Qt.Vertical.
+
+        Returns
+        -------
+        axis : `QAbstractAxis | None`
+            Axis found, or None if the axis doesn't exists.
+        """
+        for a in self.axes(axis_type):
+            if a.titleText() == title_text:
                 return a
         return None
 
-    def findSerie(self, name: str) -> QAbstractSeries | None:
+    def find_serie(self, name: str) -> QAbstractSeries | None:
         """
         Returns series with given name.
 
@@ -89,7 +115,7 @@ class AbstractChart(QChart):
 
     def remove(self, name: str) -> None:
         """Removes series with given name."""
-        s = self.findSerie(name)
+        s = self.find_serie(name)
         if s is None:
             return
         self.removeSeries(s)
@@ -113,10 +139,21 @@ class AbstractChart(QChart):
     def _create_caches(
         self, items: dict[str, list[str | None]] | None, max_items: int = 50 * 30
     ) -> None:
+        """
+        Create cache for data.
+
+        Parameters
+        ----------
+        items : `{str, [str | None]} | None`
+            Dictionary with items in the cache. Keys are field names. Cache
+            values are SAL variable's names.
+        max_items : `int`, optional
+            Maximal number of items. Default to 50 * 30 (30 seconds at 50 Hz).
+        """
         # prevents race conditions by processing any outstanding events
         # (paint,..) before manipulating axes. Lock would work as well, but as
         # we really care just about latest diagram repaint, better cancel what
-        # shall anyway not make it to screen.
+        # shall anyway not make to the screen.
         self.update_task.cancel()
         QApplication.instance().processEvents()
 
