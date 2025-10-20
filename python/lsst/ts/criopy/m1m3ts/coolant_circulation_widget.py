@@ -134,9 +134,7 @@ class CoolantPumpWidget(QWidget):
                 self.m1m3ts.glycolPumpStatus,
                 "Glycol Pump Status",
                 [
-                    FieldButton(
-                        "faulted", ("OK", Colors.OK), ("Faulted", Colors.ERROR)
-                    ),
+                    FieldButton("faulted", ("OK", Colors.OK), ("Faulted", Colors.ERROR)),
                     FieldButton(
                         "running",
                         ("Not running", Colors.WARNING),

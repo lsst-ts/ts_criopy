@@ -108,9 +108,7 @@ class OffsetsTypeButton(QPushButton):
         self._selectedIndex = index
         self.setText(self._units[index].text)
 
-        self.unitChanged.emit(
-            oldScale, self.getScale(), self.getUnit(), self.getDecimals()
-        )
+        self.unitChanged.emit(oldScale, self.getScale(), self.getUnit(), self.getDecimals())
 
     def getScale(self) -> float:
         """Returns scale used.
@@ -130,9 +128,7 @@ class OffsetsTypeButton(QPushButton):
     def getUnit(self) -> u:
         return self._units[self._selectedIndex].unit
 
-    def set_scales(
-        self, micrometersPerStep: float, micrometersPerEncoder: float
-    ) -> None:
+    def set_scales(self, micrometersPerStep: float, micrometersPerEncoder: float) -> None:
         self._units[1].scale = micrometersPerEncoder / micrometersPerStep
         self._units[2].scale = 1.0 / micrometersPerStep
         self._units[3].scale = u.mm.to(u.um) / micrometersPerStep
@@ -338,15 +334,11 @@ class HardpointsWidget(QWidget):
             self.dataLayout.addWidget(self.hpStates[hp], row, hp + 1)
         row += 1
 
-        enableHPChaseButton = DetailedStateEnabledButton(
-            "Enable Hardpoint Chase", m1m3, enabledStates
-        )
+        enableHPChaseButton = DetailedStateEnabledButton("Enable Hardpoint Chase", m1m3, enabledStates)
         enableHPChaseButton.clicked.connect(self._enableHPChase)
         self.dataLayout.addWidget(enableHPChaseButton, row, 1, 1, 3)
 
-        disableHPChaseButton = DetailedStateEnabledButton(
-            "Disable Hardpoint Chase", m1m3, enabledStates
-        )
+        disableHPChaseButton = DetailedStateEnabledButton("Disable Hardpoint Chase", m1m3, enabledStates)
         disableHPChaseButton.clicked.connect(self._disableHPChase)
         self.dataLayout.addWidget(disableHPChaseButton, row, 4, 1, 3)
         row += 1
@@ -364,9 +356,7 @@ class HardpointsWidget(QWidget):
         self.dataLayout.addWidget(QLabel(), row, 0)
         row += 1
 
-        def addDataRow(
-            variables: dict[str, tuple[str, FormatLabel]], row: int, col: int = 0
-        ) -> None:
+        def addDataRow(variables: dict[str, tuple[str, FormatLabel]], row: int, col: int = 0) -> None:
             for k, v in variables.items():
                 self.dataLayout.addWidget(QLabel(f"<b>{v[0]}</b>"), row, col)
                 setattr(self, k, v[1])
@@ -405,9 +395,7 @@ class HardpointsWidget(QWidget):
                 return
 
     @Slot()
-    def _HPUnitChanged(
-        self, oldScale: float, newScale: float, units: str, decimals: int
-    ) -> None:
+    def _HPUnitChanged(self, oldScale: float, newScale: float, units: str, decimals: int) -> None:
         self.hpOffsets = []
         for hp in range(6):
             if decimals == 0:
@@ -473,15 +461,9 @@ class HardpointsWidget(QWidget):
         if hs is not None:
             for idx, f in enumerate(data.measuredForce):
                 color = Colors.OK
-                if (
-                    f < hs.hardpointMeasuredForceWarningLow
-                    or f > hs.hardpointMeasuredForceWarningHigh
-                ):
+                if f < hs.hardpointMeasuredForceWarningLow or f > hs.hardpointMeasuredForceWarningHigh:
                     color = Colors.WARNING
-                if (
-                    f < hs.hardpointMeasuredForceFaultLow
-                    or f > hs.hardpointMeasuredForceFaultHigh
-                ):
+                if f < hs.hardpointMeasuredForceFaultLow or f > hs.hardpointMeasuredForceFaultHigh:
                     color = Colors.ERROR
 
                 label = self.grid.get_label("measuredForce", idx)

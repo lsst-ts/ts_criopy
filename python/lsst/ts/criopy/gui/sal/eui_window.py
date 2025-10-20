@@ -153,9 +153,7 @@ class EUIWindow(QMainWindow):
         if self._last_tab == "" and self.application_pagination.count() == 1:
             self.application_pagination.setCurrentRow(0)
         elif name == self._last_tab:
-            self.application_pagination.setCurrentRow(
-                self.application_pagination.count() - 1
-            )
+            self.application_pagination.setCurrentRow(self.application_pagination.count() - 1)
 
     def state_string(self, state: enum.IntEnum) -> str:
         """Retrieve nicely formatted state description.
@@ -180,7 +178,7 @@ class EUIWindow(QMainWindow):
         """Create new window with copy of currently selected tab."""
         name = self.application_pagination.currentItem().text()
         widget = self.pages[name]()
-        widget.setWindowTitle(f"{name}:{len(self.windows[name])+1}")
+        widget.setWindowTitle(f"{name}:{len(self.windows[name]) + 1}")
         widget.show()
         self.windows[name].append(widget)
 

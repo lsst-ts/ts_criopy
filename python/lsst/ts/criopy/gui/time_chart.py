@@ -63,9 +63,7 @@ class TimeChart(AbstractChart):
         max_items: int = 50 * 30,
         update_interval: float = 0.1,
     ):
-        super().__init__(
-            axis_num=1 if items is None else len(items), update_interval=update_interval
-        )
+        super().__init__(axis_num=1 if items is None else len(items), update_interval=update_interval)
         self.time_axis: QDateTimeAxis | None = None
 
         self._create_caches(items, max_items)
@@ -81,9 +79,7 @@ class TimeChart(AbstractChart):
             a = QValueAxis()
             a.setTickCount(10)
             a.setTitleText(axis)
-            self.addAxis(
-                a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft
-            )
+            self.addAxis(a, Qt.AlignRight if len(self.axes(Qt.Vertical)) % 2 else Qt.AlignLeft)
         self.addSeries(s)
         s.attachAxis(a)
 
@@ -215,9 +211,7 @@ class TimeChart(AbstractChart):
 
             serie.replace(points)
 
-        self.time_axis.setRange(
-            *[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()]
-        )
+        self.time_axis.setRange(*[QDateTime().fromMSecsSinceEpoch(int(t)) for t in cache.time_range()])
         if d_min == d_max:
             if d_min == 0 or d_min is None or d_max is None:
                 d_min = -1

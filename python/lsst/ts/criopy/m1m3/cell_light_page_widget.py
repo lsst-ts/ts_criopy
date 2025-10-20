@@ -59,9 +59,7 @@ class CellLightPageWidget(QWidget):
 
         warningLayout = QFormLayout()
 
-        warningLayout.addRow(
-            "Any Warnings", WarningLabel(m1m3.cellLightWarning, "anyWarning")
-        )
+        warningLayout.addRow("Any Warnings", WarningLabel(m1m3.cellLightWarning, "anyWarning"))
         warningLayout.addRow(
             "Output Mismatch",
             WarningLabel(m1m3.cellLightWarning, "cellLightsOutputMismatch"),

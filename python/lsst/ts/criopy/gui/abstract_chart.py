@@ -66,9 +66,7 @@ class AbstractChart(QChart):
         self.update_task: asyncio.Future | concurrent.futures.Future = asyncio.Future()
         self.update_task.set_result(None)
 
-    def find_axis(
-        self, title_text: str, axis_type: Qt.Orientation = Qt.Vertical
-    ) -> QAbstractAxis | None:
+    def find_axis(self, title_text: str, axis_type: Qt.Orientation = Qt.Vertical) -> QAbstractAxis | None:
         """
         Locate axis.
 
@@ -127,18 +125,12 @@ class AbstractChart(QChart):
             self.removeAxis(a)
 
     def _add_serie(self, name: str, axis: typing.Any) -> None:
-        raise NotImplementedError(
-            "AbstractChart._add_serie should not be instantiated directly"
-        )
+        raise NotImplementedError("AbstractChart._add_serie should not be instantiated directly")
 
     def _attach_series(self) -> None:
-        raise NotImplementedError(
-            "AbstractChart._attach_series should not be instantiated directly"
-        )
+        raise NotImplementedError("AbstractChart._attach_series should not be instantiated directly")
 
-    def _create_caches(
-        self, items: dict[str, list[str | None]] | None, max_items: int = 50 * 30
-    ) -> None:
+    def _create_caches(self, items: dict[str, list[str | None]] | None, max_items: int = 50 * 30) -> None:
         """
         Create cache for data.
 

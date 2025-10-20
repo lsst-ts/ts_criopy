@@ -189,15 +189,11 @@ class AbstractColumn(QObject):
         """
         raise NotImplementedError("Abstract attach_into called")
 
-    def attach_extra_widgets(
-        self, parent: "ArrayGrid", row: int, base_col: int
-    ) -> None:
+    def attach_extra_widgets(self, parent: "ArrayGrid", row: int, base_col: int) -> None:
         if self.extra_widgets is not None:
             if isinstance(self.extra_widgets, QWidget):
                 parent.add_widget(self.extra_widgets, row, base_col, fill_row=True)
-                self.extra_widgets.setSizePolicy(
-                    QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
-                )
+                self.extra_widgets.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
                 return
             for c, w in enumerate(self.extra_widgets):
                 if w is not None:
@@ -455,9 +451,7 @@ class ArrayButton(AbstractColumn):
         Row/column label.
     """
 
-    def __init__(
-        self, action: typing.Callable[[int], typing.Awaitable[typing.Any]], label: str
-    ):
+    def __init__(self, action: typing.Callable[[int], typing.Awaitable[typing.Any]], label: str):
         """ """
         super().__init__("", label)
         self.action = action
@@ -481,7 +475,7 @@ class ArrayButton(AbstractColumn):
             warning(
                 bnt,
                 f"Error executing button {text}",
-                "Error executing button" f" <i>{text}</i>:<br/>{ackE.ackcmd.result}",
+                f"Error executing button <i>{text}</i>:<br/>{ackE.ackcmd.result}",
             )
         except RuntimeError as rte:
             warning(
@@ -560,15 +554,11 @@ class ArrayGrid(QWidget):
         for i in items:
             row = i.attach_into(self, row)
 
-    def add_widget(
-        self, widget: QWidget, row: int, col: int, fill_row: bool = False
-    ) -> None:
+    def add_widget(self, widget: QWidget, row: int, col: int, fill_row: bool = False) -> None:
         def _rowcol(r: int, c: int) -> tuple[int, int]:
             return (c, r) if self.orientation == Qt.Vertical else (r, c)
 
-        self.layout().addWidget(
-            widget, *_rowcol(row, col), *_rowcol(1, -1 if fill_row else 1)
-        )
+        self.layout().addWidget(widget, *_rowcol(row, col), *_rowcol(1, -1 if fill_row else 1))
 
     def get_data_rows(self) -> int:
         return len(self.rows)

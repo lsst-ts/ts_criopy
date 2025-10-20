@@ -90,9 +90,7 @@ class MetaSAL(type(QObject)):  # type: ignore
         dictionary["domain"] = Domain()
 
         if dictionary["_manual"] is None:
-            dictionary["sal_remote"] = Remote(
-                dictionary["domain"], **dictionary["_args"]
-            )
+            dictionary["sal_remote"] = Remote(dictionary["domain"], **dictionary["_args"])
         else:
             dictionary["sal_remote"] = Remote(
                 dictionary["domain"],
@@ -102,9 +100,7 @@ class MetaSAL(type(QObject)):  # type: ignore
             )
             for name, args in dictionary["_manual"].items():
                 if name in dictionary["sal_remote"].salinfo.telemetry_names:
-                    tel = RemoteTelemetry(
-                        dictionary["sal_remote"].salinfo, name, **args
-                    )
+                    tel = RemoteTelemetry(dictionary["sal_remote"].salinfo, name, **args)
                     setattr(dictionary["sal_remote"], tel.attr_name, tel)
                 elif name in dictionary["sal_remote"].salinfo.event_names:
                     evt = RemoteEvent(dictionary["sal_remote"].salinfo, name, **args)
@@ -112,9 +108,7 @@ class MetaSAL(type(QObject)):  # type: ignore
                 else:
                     print(f"Unknown manual {name} - is not a telemetry or event topics")
 
-            dictionary["sal_remote"].start_task = asyncio.create_task(
-                dictionary["sal_remote"].start()
-            )
+            dictionary["sal_remote"].start_task = asyncio.create_task(dictionary["sal_remote"].start())
 
         if dictionary["sal_remote"].salinfo.indexed:
             if "index" not in dictionary["_args"].keys():
@@ -123,11 +117,7 @@ class MetaSAL(type(QObject)):  # type: ignore
                     "index argument wasn't provided."
                 )
 
-        for m in [
-            evttel
-            for evttel in dir(dictionary["sal_remote"])
-            if _filter_evt_tel(evttel)
-        ]:
+        for m in [evttel for evttel in dir(dictionary["sal_remote"]) if _filter_evt_tel(evttel)]:
             dictionary[m[4:]] = Signal(map)
 
         # remote for storing data in freeze method
@@ -172,15 +162,11 @@ class MetaSAL(type(QObject)):  # type: ignore
             await self.domain.close()
 
         def connect_callbacks(self) -> None:  # type: ignore
-            for t in [
-                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
-            ]:
+            for t in [evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)]:
                 getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
 
         def disconnect_callbacks(self) -> None:  # type: ignore
-            for t in [
-                evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)
-            ]:
+            for t in [evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)]:
                 getattr(self.sal_remote, t).callback = None
 
         newclass = super(MetaSAL, cls).__new__(cls, classname, bases, dictionary)
@@ -201,9 +187,7 @@ class MetaSAL(type(QObject)):  # type: ignore
         return newclass
 
 
-def create(
-    name: str, manual: None | dict[str, typing.Any] = None, **kwargs: typing.Any
-) -> MetaSAL:
+def create(name: str, manual: None | dict[str, typing.Any] = None, **kwargs: typing.Any) -> MetaSAL:
     """Creates SALComm instance for given remote(s).
 
     The returned object contains PySide6.QtCore.Signal class variables. Those

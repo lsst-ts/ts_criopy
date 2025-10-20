@@ -151,9 +151,7 @@ class PowerPageWidget(QWidget):
         create_labels("Light Network", 5, False)
         create_labels("Controls Network", 6, False)
 
-        self.chart = TimeChart(
-            {"Current (A)": ["A", "B", "C", "D", "Lights", "Controls"]}
-        )
+        self.chart = TimeChart({"Current (A)": ["A", "B", "C", "D", "Lights", "Controls"]})
         self.chartView = TimeChartView(self.chart)
 
         statusGrid = StatusGrid(

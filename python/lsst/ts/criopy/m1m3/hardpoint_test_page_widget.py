@@ -64,18 +64,10 @@ class HardpointTestPageWidget(QWidget):
             EnumLabel,
             {
                 HardpointTest.NOTTESTED: "<font color='gray'>Not tested</font>",
-                HardpointTest.MOVINGNEGATIVE: (
-                    "<font color='blue'>Moving negative</font>"
-                ),
-                HardpointTest.TESTINGPOSITIVE: (
-                    "<font color='orange'>Testing positive</font>"
-                ),
-                HardpointTest.TESTINGNEGATIVE: (
-                    "<font color='lime'>Testing negative</font>"
-                ),
-                HardpointTest.MOVINGREFERENCE: (
-                    "<font color='blue'>Moving to reference</font>"
-                ),
+                HardpointTest.MOVINGNEGATIVE: ("<font color='blue'>Moving negative</font>"),
+                HardpointTest.TESTINGPOSITIVE: ("<font color='orange'>Testing positive</font>"),
+                HardpointTest.TESTINGNEGATIVE: ("<font color='lime'>Testing negative</font>"),
+                HardpointTest.MOVINGREFERENCE: ("<font color='blue'>Moving to reference</font>"),
                 HardpointTest.PASSED: "<font color='green'>Passed</font>",
                 HardpointTest.FAILED: "<font color='red'>Failed</font>",
             },
@@ -114,15 +106,11 @@ class HardpointTestPageWidget(QWidget):
                         m1m3.hardpointTestStatus,
                     ),
                     ArrayButton(
-                        lambda i: m1m3.remote.cmd_testHardpoint.set_start(
-                            hardpointActuator=i + 1
-                        ),
+                        lambda i: m1m3.remote.cmd_testHardpoint.set_start(hardpointActuator=i + 1),
                         "Start test",
                     ),
                     ArrayButton(
-                        lambda i: m1m3.remote.cmd_killHardpointTest.set_start(
-                            hardpointActuator=i + 1
-                        ),
+                        lambda i: m1m3.remote.cmd_killHardpointTest.set_start(hardpointActuator=i + 1),
                         "Abort",
                     ),
                 ],

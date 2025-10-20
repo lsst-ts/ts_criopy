@@ -50,12 +50,8 @@ class AccelerationTransformerTestCase(unittest.TestCase):
 
         calibrated = self.transformer.calibrated(tested)
 
-        np.testing.assert_allclose(
-            calibrated.accelerometer0, [0.006616, 0.026546], rtol=1e-03
-        )
-        np.testing.assert_allclose(
-            calibrated.accelerometer1, [0.98167, 1.18107], rtol=1e-03
-        )
+        np.testing.assert_allclose(calibrated.accelerometer0, [0.006616, 0.026546], rtol=1e-03)
+        np.testing.assert_allclose(calibrated.accelerometer1, [0.98167, 1.18107], rtol=1e-03)
 
 
 if __name__ == "__main__":

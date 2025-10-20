@@ -44,6 +44,4 @@ class LoggingWidget(QWidget, Handler):
         layout.addWidget(self.messages)
 
     def emit(self, record: LogRecord) -> None:
-        self.messages.appendHtml(
-            f"<span>{record.asctime} {record.levelname} {escape(record.message)}</span>"
-        )
+        self.messages.appendHtml(f"<span>{record.asctime} {record.levelname} {escape(record.message)}</span>")

@@ -77,9 +77,7 @@ class AccelerationTransformer:
         self.accelerometeres = []
 
         for accelerometer in range(N_ACCELEROMETERS):
-            self.accelerometeres.append(
-                self.Accelerometer(ac[f"Accelerometer{accelerometer + 1}"])
-            )
+            self.accelerometeres.append(self.Accelerometer(ac[f"Accelerometer{accelerometer + 1}"]))
 
         self.distances = [
             ac["AngularAccelerationXDistance"],
@@ -90,9 +88,7 @@ class AccelerationTransformer:
     def calibrated(self, raw: pd.DataFrame) -> pd.DataFrame:
         ret = pd.DataFrame()
         for acc in range(N_ACCELEROMETERS):
-            ret[f"accelerometer{acc}"] = (
-                self.accelerometeres[acc] @ raw[f"rawAccelerometer{acc}"]
-            )
+            ret[f"accelerometer{acc}"] = self.accelerometeres[acc] @ raw[f"rawAccelerometer{acc}"]
 
         return ret
 
@@ -102,11 +98,8 @@ class AccelerationTransformer:
         # to the center of rotation.
         return pd.DataFrame(
             {
-                "accelerationX": (calibrated.accelerometer5 - calibrated.accelerometer7)
-                / self.distances[0],
-                "accelerationY": (calibrated.accelerometer2 - calibrated.accelerometer0)
-                / self.distances[1],
-                "accelerationZ": (calibrated.accelerometer4 - calibrated.accelerometer0)
-                / self.distances[2],
+                "accelerationX": (calibrated.accelerometer5 - calibrated.accelerometer7) / self.distances[0],
+                "accelerationY": (calibrated.accelerometer2 - calibrated.accelerometer0) / self.distances[1],
+                "accelerationZ": (calibrated.accelerometer4 - calibrated.accelerometer0) / self.distances[2],
             }
         )

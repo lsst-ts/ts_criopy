@@ -157,5 +157,5 @@ class StatusBar(QStatusBar):
                 f"Size: {length}"
                 f" {datetime.fromtimestamp(start).strftime('%H:%M:%S.%f')} -"
                 f" {datetime.fromtimestamp(end).strftime('%H:%M:%S.%f')}"
-                f" {end-start+self.sampleTimes[index]*u.ms.to(u.s):.03f}s"
+                f" {end - start + self.sampleTimes[index] * u.ms.to(u.s):.03f}s"
             )

@@ -66,9 +66,7 @@ class PreclippedLabel(FormatLabel):
 
 
 class PreclippedForces(ArrayFields):
-    def __init__(
-        self, label: str, signal: Signal, extra_widgets: list[QWidget] | None = None
-    ):
+    def __init__(self, label: str, signal: Signal, extra_widgets: list[QWidget] | None = None):
         super().__init__(
             ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"],
             f"<i>{label}</i>",
@@ -79,9 +77,7 @@ class PreclippedForces(ArrayFields):
 
 
 class ForcesGrid(ArrayGrid):
-    def __init__(
-        self, items: list[AbstractColumn], orientation: Qt.Orientation = Qt.Horizontal
-    ):
+    def __init__(self, items: list[AbstractColumn], orientation: Qt.Orientation = Qt.Horizontal):
         super().__init__(
             "<b>Forces</b>",
             [

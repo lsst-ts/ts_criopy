@@ -105,9 +105,7 @@ class EditWidget(QWidget):
         layout.addStretch(1)
         self.setLayout(layout)
 
-        self.__axisGroup.buttonClicked.connect(
-            lambda b: self.axisChanged.emit(b.text().lower())
-        )
+        self.__axisGroup.buttonClicked.connect(lambda b: self.axisChanged.emit(b.text().lower()))
 
     def set_selected(self, selectedId: int, forces: dict[str, float | None]) -> None:
         """Set new values to spin boxes."""

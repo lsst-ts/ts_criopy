@@ -149,9 +149,7 @@ class EfdCache:
                 del self.telemetry[r.topic]
         self.__shall_delete = []
 
-    def new_requests(
-        self, timepoint: Time, interval: TimeDelta
-    ) -> Iterable[EfdCacheRequest]:
+    def new_requests(self, timepoint: Time, interval: TimeDelta) -> Iterable[EfdCacheRequest]:
         """
         Retuns new EfdCacheRequest needed to load data in the interval
         around timepoint. If a topic's cache is empty or its data are too far
@@ -181,9 +179,7 @@ class EfdCache:
                     interval.sec,
                 )
                 continue
-            yield EfdCacheRequest(
-                self.name, t, c, start, end, TimeDelta(120.05, format="sec")
-            )
+            yield EfdCacheRequest(self.name, t, c, start, end, TimeDelta(120.05, format="sec"))
 
         for e, c in self.events.items():
             start, end = c.interval(timepoint, interval, self.max_span)

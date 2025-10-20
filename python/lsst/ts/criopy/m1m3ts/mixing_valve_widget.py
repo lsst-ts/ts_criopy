@@ -149,9 +149,7 @@ class MixingValveWidget(QWidget):
         plot_layout.addWidget(
             ChartWidget(
                 Axis("Raw (V)", m1m3ts.mixingValve).addValue("Raw", "rawValvePosition"),
-                Axis("Percent (%)", m1m3ts.mixingValve).addValue(
-                    "Percent", "valvePosition"
-                ),
+                Axis("Percent (%)", m1m3ts.mixingValve).addValue("Percent", "valvePosition"),
             )
         )
 

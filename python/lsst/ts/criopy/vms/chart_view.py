@@ -50,10 +50,7 @@ class ChartView(TimeChartView):
         s = self._serieType()
         s.setName(name)
         self.chart().addSeries(s)
-        if (
-            len(self.chart().axes(Qt.Horizontal)) > 0
-            and len(self.chart().axes(Qt.Vertical)) > 0
-        ):
+        if len(self.chart().axes(Qt.Horizontal)) > 0 and len(self.chart().axes(Qt.Vertical)) > 0:
             s.attachAxis(self.chart().axes(Qt.Horizontal)[0])
             s.attachAxis(self.chart().axes(Qt.Vertical)[0])
 

@@ -153,17 +153,13 @@ class Enabled(StateEnabledWidget):
     async def _enableFA(self) -> None:
         actuator_id = self.getSelectedID()
         if actuator_id is not None:
-            await command(
-                self, self.m1m3.remote.cmd_enableForceActuator, actuatorId=actuator_id
-            )
+            await command(self, self.m1m3.remote.cmd_enableForceActuator, actuatorId=actuator_id)
 
     @asyncSlot()
     async def _disableFA(self) -> None:
         actuator_id = self.getSelectedID()
         if actuator_id is not None:
-            await command(
-                self, self.m1m3.remote.cmd_disableForceActuator, actuatorId=actuator_id
-            )
+            await command(self, self.m1m3.remote.cmd_disableForceActuator, actuatorId=actuator_id)
 
     @Slot()
     def enabledForceActuators(self, data: BaseMsgType) -> None:

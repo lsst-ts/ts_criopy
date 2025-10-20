@@ -208,9 +208,7 @@ class ChartView(QTreeView):
                 di.set_progress(state)
 
     @Slot(QItemSelection, QItemSelection)
-    def selectionChanged(
-        self, selected: QItemSelection, deselected: QItemSelection
-    ) -> None:
+    def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         super().selectionChanged(selected, deselected)
         if selected.count() > 0:
             row = selected.front().indexes()[0].row()

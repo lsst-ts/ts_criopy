@@ -99,9 +99,7 @@ class EUI(QMainWindow):
             )
             m.addSeparator()
 
-            self._miscellaneous.append(
-                MiscellaneousWidget("Miscellaneous " + s, self.comms[i])
-            )
+            self._miscellaneous.append(MiscellaneousWidget("Miscellaneous " + s, self.comms[i]))
             m.addAction("&Miscellaneous", partial(self._showMiscellaneous, i))
 
         self.toolBar = ToolBar()
@@ -139,9 +137,7 @@ class EUI(QMainWindow):
         self.toolBar.frequencyChanged.connect(a_widget.frequencyChanged)
         self.addDockWidget(Qt.TopDockWidgetArea, a_widget)
 
-    def _add_cache_widget(
-        self, index: int, prefix: str, chart_type_class: type[CacheWidget]
-    ) -> None:
+    def _add_cache_widget(self, index: int, prefix: str, chart_type_class: type[CacheWidget]) -> None:
         prefix = prefix + " " + self.SYSTEMS[index] + ":"
         actuator_id = self.getNextId(prefix)
         a_widget = chart_type_class(

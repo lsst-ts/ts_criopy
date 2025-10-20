@@ -72,9 +72,7 @@ class DirectionPadWidget(QWidget):
             icon: QIcon, text: str, index: int, delta: QDoubleSpinBox, deltaScale: float
         ) -> QPushButton:
             but = QPushButton(icon, text)
-            but.clicked.connect(
-                lambda: _positionChanged(index, delta.value() * deltaScale)
-            )
+            but.clicked.connect(lambda: _positionChanged(index, delta.value() * deltaScale))
             return but
 
         style = QApplication.instance().style()

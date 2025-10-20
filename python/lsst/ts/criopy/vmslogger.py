@@ -62,10 +62,7 @@ parser.add_argument(
     "-5",
     dest="h5py",
     action="store_true",
-    help=(
-        "save into HDF 5. Requires h5py (pip install h5py). Save to CSV if not"
-        " provided."
-    ),
+    help=("save into HDF 5. Requires h5py (pip install h5py). Save to CSV if not provided."),
 )
 parser.add_argument(
     "--chunk-size",
@@ -78,9 +75,7 @@ parser.add_argument(
         " CSV (default) format is used. Defaults to 5000."
     ),
 )
-parser.add_argument(
-    "-d", dest="debug", default=0, action="count", help="increase debug level"
-)
+parser.add_argument("-d", dest="debug", default=0, action="count", help="increase debug level")
 parser.add_argument(
     "--header",
     dest="header",
@@ -94,13 +89,10 @@ parser.add_argument(
     dest="size",
     default=-1,
     help=(
-        "number of records to save in a file. Default to 86400 seconds"
-        " (assuming --rotate isn't specified)"
+        "number of records to save in a file. Default to 86400 seconds (assuming --rotate isn't specified)"
     ),
 )
-parser.add_argument(
-    "-z", action="store_true", dest="zip_file", help="gzip output files"
-)
+parser.add_argument("-z", action="store_true", dest="zip_file", help="gzip output files")
 parser.add_argument(
     "--single-shot",
     action="store_true",
@@ -171,9 +163,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     ch.setFormatter(formatter)
 
     if args.workdir is not None:
@@ -186,9 +176,7 @@ async def main(args: typing.Any, pipe: typing.Any = None) -> None:
     if args.logfile:
         fh = logging.FileHandler(args.logfile)
         fh.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 

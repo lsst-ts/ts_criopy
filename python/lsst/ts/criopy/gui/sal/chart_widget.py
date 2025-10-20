@@ -33,9 +33,7 @@ AxisVar = typing.TypeVar("AxisVar", bound="Axis")
 
 
 class AxisValue:
-    def __init__(
-        self, field: str, index: int | None = None, scale: float | None = None
-    ):
+    def __init__(self, field: str, index: int | None = None, scale: float | None = None):
         self.field = field
         self.index = index
         self.scale = scale
@@ -68,9 +66,7 @@ class Axis:
         self.signal = signal
         self.fields: dict[str, AxisValue] = {}
 
-    def addValue(
-        self: AxisVar, name: str, field: str, scale: float | None = None
-    ) -> AxisVar:
+    def addValue(self: AxisVar, name: str, field: str, scale: float | None = None) -> AxisVar:
         self.fields[name] = AxisValue(field, scale=scale)
         return self
 
@@ -113,17 +109,11 @@ class ChartWidget(TimeChartView):
         ).addValue("X", "xForce"))
     """
 
-    def __init__(
-        self, *values: Axis, max_items: int = 50 * 30, update_interval: float = 0.1
-    ):
-        self.chart = TimeChart(
-            {v.title: list(v.fields.keys()) for v in values}, max_items, update_interval
-        )
+    def __init__(self, *values: Axis, max_items: int = 50 * 30, update_interval: float = 0.1):
+        self.chart = TimeChart({v.title: list(v.fields.keys()) for v in values}, max_items, update_interval)
         axis_index = 0
         for v in values:
-            v.signal.connect(
-                partial(self._append, axis_index=axis_index, fields=v.fields.values())
-            )
+            v.signal.connect(partial(self._append, axis_index=axis_index, fields=v.fields.values()))
             axis_index += 1
         self._has_timestamp: bool | None = None
 

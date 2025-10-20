@@ -110,9 +110,7 @@ class DataFormButton(ColoredButton):
        )])
     """
 
-    def __init__(
-        self, text: str, signal: Signal, fields: list[tuple[str | None, DataLabel]]
-    ):
+    def __init__(self, text: str, signal: Signal, fields: list[tuple[str | None, DataLabel]]):
         super().__init__(text)
 
         self._fields = fields

@@ -64,6 +64,4 @@ class BoxChartWidget(DockWindow):
                     data.timestamp,
                     getattr(data, f"acceleration{axis}"),
                 )
-                self.chart.axes(Qt.Vertical)[0].setTitleText(
-                    "Acceleration (" + self.chart.unit + ")"
-                )
+                self.chart.axes(Qt.Vertical)[0].setTitleText("Acceleration (" + self.chart.unit + ")")

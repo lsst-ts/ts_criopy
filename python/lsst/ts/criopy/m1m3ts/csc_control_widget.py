@@ -48,9 +48,7 @@ class EnterExitEngineeringButton(QPushButton):
 
     @Slot()
     def engineering_mode(self, data: BaseMsgType) -> None:
-        self.setText(
-            self.EXIT_ENGINEERING if data.engineeringMode else self.ENTER_ENGINEERING
-        )
+        self.setText(self.EXIT_ENGINEERING if data.engineeringMode else self.ENTER_ENGINEERING)
 
 
 class M1M3TSCSCControlWidget(CSCControlWidget):

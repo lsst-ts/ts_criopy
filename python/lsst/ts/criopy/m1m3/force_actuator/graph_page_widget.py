@@ -39,9 +39,7 @@ class GraphPageWidget(Widget):
         super().__init__(m1m3, self.mirror_widget)
 
         assert self.detail_widget is not None
-        self.mirror_widget.mirror_view.selectionChanged.connect(
-            self.detail_widget.update_selected_actuator
-        )
+        self.mirror_widget.mirror_view.selectionChanged.connect(self.detail_widget.update_selected_actuator)
 
     def change_values(self) -> None:
         """Called when data are changed."""
@@ -89,11 +87,7 @@ class GraphPageWidget(Widget):
                 state = DataItemState.ACTIVE
 
             try:
-                value = (
-                    None
-                    if (values is None or data_index is None)
-                    else values[data_index]
-                )
+                value = None if (values is None or data_index is None) else values[data_index]
             except IndexError as err:
                 print("Error", data, data_index, values, self.field)
                 raise err
@@ -117,9 +111,7 @@ class GraphPageWidget(Widget):
         selected = self.mirror_widget.mirror_view.selected()
         if selected is not None:
             if selected.data is not None:
-                self.detail_widget.selected_actuator_value_label.setText(
-                    selected.get_value()
-                )
+                self.detail_widget.selected_actuator_value_label.setText(selected.get_value())
             if warning_data is not None:
                 self.detail_widget.selected_actuator_warning_label.setValue(
                     bool(get_warning(selected.actuator.index))

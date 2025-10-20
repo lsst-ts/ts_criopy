@@ -113,9 +113,7 @@ class CacheWidget(DockWindow):
         )
 
     @Slot()
-    def cacheUpdated(
-        self, index: int, length: int, start_time: float, end_time: float
-    ) -> None:
+    def cacheUpdated(self, index: int, length: int, start_time: float, end_time: float) -> None:
         """Process and plot data. Signaled when new data become available.
 
         Parameters

@@ -87,7 +87,6 @@ class EfdTopic:
                     add_map(last)
 
                 if c[-1] == "0":
-
                     last = c[:-1]
                     last_len = len(last)
                     current_map = {0: v}

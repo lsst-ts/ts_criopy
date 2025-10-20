@@ -64,9 +64,7 @@ class TimeBoxChart(AbstractChart):
         self.coefficient = coefficients(unit)
         self.unit = unit
 
-    def append(
-        self, serie: QBoxPlotSeries, timestamp: float, data: list[float]
-    ) -> None:
+    def append(self, serie: QBoxPlotSeries, timestamp: float, data: list[float]) -> None:
         """Add data to a serie. Creates serie if needed. Shrink if
         more than expected elements are stored.
 

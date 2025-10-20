@@ -152,9 +152,7 @@ class Mirror(QGraphicsScene):
         for fcu in self.fcu:
             fcu.set_color_scale(scale)
 
-    def update_force_actuator(
-        self, index: int, data: BaseMsgType, state: DataItemState
-    ) -> None:
+    def update_force_actuator(self, index: int, data: BaseMsgType, state: DataItemState) -> None:
         """Updates actuator value and state.
 
         Parameters

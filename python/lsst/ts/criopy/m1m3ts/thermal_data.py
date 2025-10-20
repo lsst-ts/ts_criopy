@@ -35,9 +35,7 @@ class Thermals(TopicCollection):
             TopicData(
                 "FCU Targets",
                 [
-                    TopicField(
-                        "Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt="{v:.2f}%"
-                    ),
+                    TopicField("Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt="{v:.2f}%"),
                     TopicField(
                         "Fan RPM",
                         "fanRPM",
@@ -66,9 +64,7 @@ class Thermals(TopicCollection):
                         fmt="{v:.3f} °C",
                     ),
                     WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
-                    WarningField(
-                        "Heater Disabled", "heaterDisabled", self.THERMAL_INDEX
-                    ),
+                    WarningField("Heater Disabled", "heaterDisabled", self.THERMAL_INDEX),
                     WarningField("Heater Breaker", "heaterBreaker", self.THERMAL_INDEX),
                     WarningField("Fan Breaker", "fanBreaker", self.THERMAL_INDEX),
                 ],
@@ -169,9 +165,7 @@ class Thermals(TopicCollection):
                         "applicationCRCMismatch",
                         self.THERMAL_INDEX,
                     ),
-                    WarningField(
-                        "One Wire Missing", "oneWireMissing", self.THERMAL_INDEX
-                    ),
+                    WarningField("One Wire Missing", "oneWireMissing", self.THERMAL_INDEX),
                     WarningField(
                         "One Wire 1 Mismatch",
                         "oneWire1Mismatch",
@@ -184,15 +178,9 @@ class Thermals(TopicCollection):
                     ),
                     WarningField("Watchdog Reset", "watchdogReset", self.THERMAL_INDEX),
                     WarningField("Brown Out", "brownOut", self.THERMAL_INDEX),
-                    WarningField(
-                        "Event Trap Reset", "eventTrapReset", self.THERMAL_INDEX
-                    ),
-                    WarningField(
-                        "SSR Power Fault", "ssrPowerFault", self.THERMAL_INDEX
-                    ),
-                    WarningField(
-                        "AUX Power Fault", "auxPowerFault", self.THERMAL_INDEX
-                    ),
+                    WarningField("Event Trap Reset", "eventTrapReset", self.THERMAL_INDEX),
+                    WarningField("SSR Power Fault", "ssrPowerFault", self.THERMAL_INDEX),
+                    WarningField("AUX Power Fault", "auxPowerFault", self.THERMAL_INDEX),
                     WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
                     WarningField(
                         "Broadcast Counter Warnign",
