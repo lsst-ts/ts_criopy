@@ -204,7 +204,7 @@ class TimeChart(AbstractChart):
                 continue
 
             data = cache[n]
-            if d_min is None:
+            if d_min is None or d_max is None:
                 d_min = min(data)
                 d_max = max(data)
             else:
