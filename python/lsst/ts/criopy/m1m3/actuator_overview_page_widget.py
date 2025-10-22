@@ -49,11 +49,7 @@ class ForceButton(ColoredButton):
         await command(
             self,
             self.m1m3.remote.cmd_enableDisableForceComponent,
-            forceComponent=int(
-                getattr(
-                    EnableDisableForceComponent, self.objectName().upper() + "FORCE"
-                )
-            ),
+            forceComponent=int(getattr(EnableDisableForceComponent, self.objectName().upper() + "FORCE")),
             enable=self.__enable,
         )
 
@@ -73,15 +69,11 @@ class ForceButton(ColoredButton):
 
     @Slot()
     def detailed_state(self, data: BaseMsgType) -> None:
-        self.__engineering_state = (
-            data.detailedState == DetailedStates.ACTIVEENGINEERING
-        )
+        self.__engineering_state = data.detailedState == DetailedStates.ACTIVEENGINEERING
         if self.__engineering_state:
             force_controller_state = self.m1m3.remote.evt_forceControllerState.get()
             if force_controller_state is not None:
-                self.set_button_enable(
-                    getattr(force_controller_state, self.objectName() + "ForcesApplied")
-                )
+                self.set_button_enable(getattr(force_controller_state, self.objectName() + "ForcesApplied"))
             else:
                 self.setEnabled(True)
         else:
@@ -127,25 +119,19 @@ class ActuatorOverviewPageWidget(QWidget):
                         m1m3.appliedActiveOpticForces,
                         ForceButton.create("activeOptic", m1m3),
                     ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Azimuth</i>", m1m3.preclippedAzimuthForces
-                    ),
+                    PreclippedForces("<i>Pre-clipped Azimuth</i>", m1m3.preclippedAzimuthForces),
                     Forces(
                         "Applied Azimuth",
                         m1m3.appliedAzimuthForces,
                         ForceButton.create("azimuth", m1m3),
                     ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Balance</i>", m1m3.preclippedBalanceForces
-                    ),
+                    PreclippedForces("<i>Pre-clipped Balance</i>", m1m3.preclippedBalanceForces),
                     Forces(
                         "Applied Balance",
                         m1m3.appliedBalanceForces,
                         ForceButton.create("balance", m1m3),
                     ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Elevation</i>", m1m3.preclippedElevationForces
-                    ),
+                    PreclippedForces("<i>Pre-clipped Elevation</i>", m1m3.preclippedElevationForces),
                     Forces("Applied Elevation", m1m3.appliedElevationForces),
                     PreclippedForces("Pre-clipped Offset", m1m3.preclippedOffsetForces),
                     Forces(
@@ -159,17 +145,13 @@ class ActuatorOverviewPageWidget(QWidget):
                         m1m3.appliedStaticForces,
                         ForceButton.create("static", m1m3),
                     ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Thermal</i>", m1m3.preclippedThermalForces
-                    ),
+                    PreclippedForces("<i>Pre-clipped Thermal</i>", m1m3.preclippedThermalForces),
                     Forces(
                         "Applied Thermal",
                         m1m3.appliedThermalForces,
                         ForceButton.create("thermal", m1m3),
                     ),
-                    PreclippedForces(
-                        "<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces
-                    ),
+                    PreclippedForces("<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces),
                     Forces(
                         "Applied Velocity",
                         m1m3.appliedVelocityForces,
@@ -185,9 +167,7 @@ class ActuatorOverviewPageWidget(QWidget):
         layout.addLayout(plotLayout)
 
         chartForces = ChartWidget(
-            Axis("Force (N)", self.m1m3.appliedForces).addValue(
-                "Total Mag", "forceMagnitude"
-            ),
+            Axis("Force (N)", self.m1m3.appliedForces).addValue("Total Mag", "forceMagnitude"),
             max_items=50 * 5,
         )
         chartPercentage = ChartWidget(

@@ -83,15 +83,12 @@ async def command(parent: QWidget, cmd: typing.Any, **kwargs: typing.Any) -> boo
         warning(
             parent,
             f"Error executing {cmd.topic_info.attr_name}",
-            "Executing SAL/DDS command"
-            f" <b>{cmd.topic_info.attr_name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
+            f"Executing SAL/DDS command <b>{cmd.topic_info.attr_name}</b>(<i>{kwargs}</i>):<br/>{str(rte)}",
         )
     return False
 
 
-async def command_group(
-    parent: QWidget, comms: list[MetaSAL], cmdName: str, **kwargs: typing.Any
-) -> None:
+async def command_group(parent: QWidget, comms: list[MetaSAL], cmdName: str, **kwargs: typing.Any) -> None:
     """
     Command a set of SAL remotes.
 

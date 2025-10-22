@@ -64,9 +64,7 @@ class DetailWidget(TopicDetailWidget):
         self.far_selected_ids_label = QLabel()
         self.far_selected_value_label = QLabel()
 
-        def addDetails(
-            row: int, name: str, label: QLabel, nears: QLabel, fars: QLabel
-        ) -> None:
+        def addDetails(row: int, name: str, label: QLabel, nears: QLabel, fars: QLabel) -> None:
             layout.addWidget(QLabel(name), row, 0)
             layout.addWidget(label, row, 1)
             layout.addWidget(nears, row, 2)
@@ -152,9 +150,7 @@ class DetailWidget(TopicDetailWidget):
             self.selected_actuator_warning_label.setText("")
             return
 
-        self.selected_actuator_id_label.setText(
-            str(selected_actuator.actuator.actuator_id)
-        )
+        self.selected_actuator_id_label.setText(str(selected_actuator.actuator.actuator_id))
         self.selected_actuator_value_label.setText(selected_actuator.get_value())
         self.selected_actuator_warning_label.setValue(selected_actuator.warning)
 
@@ -169,9 +165,7 @@ class DetailWidget(TopicDetailWidget):
 
         # near neighbour
         near_ids = FATable[selected_actuator.actuator.index].near_neighbors
-        near_indices = list(
-            selected_actuator.actuator.near_neighbors_indices(self.field.value_index)
-        )
+        near_indices = list(selected_actuator.actuator.near_neighbors_indices(self.field.value_index))
 
         if len(near_indices) == 0:
             self.near_selected_ids_label.setText("---")
@@ -186,11 +180,7 @@ class DetailWidget(TopicDetailWidget):
             lambda f: f not in near_ids,
             FATable[selected_actuator.actuator.index].far_neighbors,
         )
-        farIndices = list(
-            selected_actuator.actuator.only_far_neighbors_indices(
-                self.field.value_index
-            )
-        )
+        farIndices = list(selected_actuator.actuator.only_far_neighbors_indices(self.field.value_index))
         if len(farIndices) == 0:
             self.far_selected_ids_label.setText("---")
             self.far_selected_value_label.setText("---")
@@ -277,9 +267,7 @@ class Widget(TopicWindow):
 
     def change_values(self) -> None:
         """Called when new values were selected by the user."""
-        raise NotImplementedError(
-            "change_values method must be implemented in all Widget childrens"
-        )
+        raise NotImplementedError("change_values method must be implemented in all Widget childrens")
 
     def change_field(self, topic_index: int, field_index: int) -> BaseMsgType:
         """

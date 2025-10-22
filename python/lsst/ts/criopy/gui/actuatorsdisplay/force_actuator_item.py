@@ -67,9 +67,7 @@ class ForceActuatorItem(DataItem):
         super().__init__(state)
         self.actuator = actuator
         # actuator position
-        self._center = QPointF(
-            actuator.x_position * 1000.0, -actuator.y_position * 1000.0
-        )
+        self._center = QPointF(actuator.x_position * 1000.0, -actuator.y_position * 1000.0)
         self._kind = kind
         # scale. Provides get_brush(data) object, returning brush to fill data
         self._color_scale: None | GaugeScale = None
@@ -164,9 +162,7 @@ class ForceActuatorItem(DataItem):
             return str(v)
         return self._color_scale.format_value(v)
 
-    def paint(
-        self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget
-    ) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
         """Paint actuator. Overridden method."""
         # if scale isn't set, don't draw
         if self._color_scale is None:
@@ -197,9 +193,7 @@ class ForceActuatorItem(DataItem):
         # paint grayed circle for actuators not providing the selected value
         if self._state == DataItemState.INACTIVE:
             painter.setPen(QPen(Qt.gray, self._scale_factor, Qt.DotLine))
-            painter.drawEllipse(
-                self._center, 10 * self._scale_factor, 10 * self._scale_factor
-            )
+            painter.drawEllipse(self._center, 10 * self._scale_factor, 10 * self._scale_factor)
             draw_actuator_id()
             return
         lineStyle = Qt.SolidLine if self.isEnabled() else Qt.DotLine
@@ -222,9 +216,7 @@ class ForceActuatorItem(DataItem):
             brush = self._color_scale.get_brush(self._data)
             painter.setBrush(brush)
         # draw actuator, write value
-        painter.drawEllipse(
-            self._center, 10 * self._scale_factor, 10 * self._scale_factor
-        )
+        painter.drawEllipse(self._center, 10 * self._scale_factor, 10 * self._scale_factor)
 
         painter.setPen(palette.buttonText().color())
 

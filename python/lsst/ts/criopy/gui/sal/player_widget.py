@@ -110,18 +110,12 @@ class PlayerWidget(QWidget):
 
         play_icon = self.style().standardIcon(QStyle.SP_MediaPlay)
 
-        backward_button = QPushButton(
-            self.style().standardIcon(QStyle.SP_MediaSeekBackward), "Backward"
-        )
+        backward_button = QPushButton(self.style().standardIcon(QStyle.SP_MediaSeekBackward), "Backward")
         step_backward_button = QPushButton(play_icon, "Step Backward")
-        pause_button = QPushButton(
-            self.style().standardIcon(QStyle.SP_MediaPause), "Pause"
-        )
+        pause_button = QPushButton(self.style().standardIcon(QStyle.SP_MediaPause), "Pause")
         step_forward_button = QPushButton(play_icon, "Step Forward")
         play_button = QPushButton(play_icon, "Play")
-        forward_button = QPushButton(
-            self.style().standardIcon(QStyle.SP_MediaSeekForward), "Forward"
-        )
+        forward_button = QPushButton(self.style().standardIcon(QStyle.SP_MediaSeekForward), "Forward")
 
         player_layout = QHBoxLayout()
         player_layout.addWidget(backward_button)
@@ -236,16 +230,12 @@ class PlayerWidget(QWidget):
 
             self.load_progress.connect_player(self.player)
 
-        timepoint = (
-            date_time.toMSecsSinceEpoch() - self.start.dateTime().toMSecsSinceEpoch()
-        )
+        timepoint = date_time.toMSecsSinceEpoch() - self.start.dateTime().toMSecsSinceEpoch()
         if timepoint < 0:
             date_time = self.start.dateTime()
             timepoint = 0
         elif timepoint > self.slider.maximum():
-            date_time = self.start.dateTime().addMSecs(
-                int(self.duration.value() * 1000)
-            )
+            date_time = self.start.dateTime().addMSecs(int(self.duration.value() * 1000))
             timepoint = self.slider.maximum()
 
         self.slider.setValue(timepoint)

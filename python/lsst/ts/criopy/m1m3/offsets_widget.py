@@ -129,9 +129,7 @@ class OffsetsWidget(QWidget):
                 "mz": Moment(),
             }
 
-        def createArray(
-            var: str, label: typing.Callable[[], UnitLabel]
-        ) -> dict[str, QLabel]:
+        def createArray(var: str, label: typing.Callable[[], UnitLabel]) -> dict[str, QLabel]:
             ret = {}
             for i in range(6):
                 ret[f"{var}[{i}]"] = label()
@@ -244,11 +242,7 @@ class OffsetsWidget(QWidget):
 
         row += 3
         for i in range(6):
-            text = (
-                f"Force {chr(ord('X') + i)}"
-                if i < 3
-                else f"Moment {chr(ord('X') + i - 3)}"
-            )
+            text = f"Force {chr(ord('X') + i)}" if i < 3 else f"Moment {chr(ord('X') + i - 3)}"
             data_layout.addWidget(QLabel(f"<b>{text}</b>"), row, i + 1)
 
         row += 1

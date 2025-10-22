@@ -102,9 +102,7 @@ class ReplayControlWidget(QWidget):
 
         self.load_progress = LoadProgressWidget()
 
-        self.player_widget = PlayerWidget(
-            self.sal, self.start, self.duration, self.load_progress
-        )
+        self.player_widget = PlayerWidget(self.sal, self.start, self.duration, self.load_progress)
         self.player_widget.setEnabled(False)
 
         layout = QVBoxLayout()
@@ -123,9 +121,7 @@ class ReplayControlWidget(QWidget):
 
     @asyncSlot()
     async def retrieve_data(self) -> None:
-        self.player_widget.retrieve_data(
-            self.select_efd.currentText(), self.start.dateTime()
-        )
+        self.player_widget.retrieve_data(self.select_efd.currentText(), self.start.dateTime())
 
     @Slot()
     def stop(self) -> None:
@@ -157,9 +153,7 @@ class ReplayWidget(QWidget):
         logging_widget = LoggingWidget()
         a_ch = self.fontMetrics().averageCharWidth()
         logging_widget.setMinimumWidth(a_ch * 40)
-        logging_widget.setSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
-        )
+        logging_widget.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
         logging.getLogger().addHandler(logging_widget)
@@ -172,9 +166,7 @@ class ReplayWidget(QWidget):
         except AttributeError:
             self.resize(a_ch * 115, 600)
 
-        self.replay_control.select_efd.setCurrentText(
-            settings.value("efd_name", "usdf_efd")
-        )
+        self.replay_control.select_efd.setCurrentText(settings.value("efd_name", "usdf_efd"))
 
     def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings(self.app_name, "ReplayWindow")

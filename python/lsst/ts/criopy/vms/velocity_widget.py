@@ -43,11 +43,7 @@ class VelocityWidget(CacheTimeWidget):
 
         return (
             [
-                (
-                    timestamps[r * self.integralBinning]
-                    + timestamps[(r + 1) * self.integralBinning - 1]
-                )
-                / 2.0
+                (timestamps[r * self.integralBinning] + timestamps[(r + 1) * self.integralBinning - 1]) / 2.0
                 for r in range(len(velocity))
             ],
             velocity,

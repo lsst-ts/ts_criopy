@@ -138,9 +138,7 @@ EGWPumpErrors = {
         "Ground Fault",
         PumpFaultType.AUTO_RESET_RUN,
         "A current path to earth ground has been detected at one or more of the drive output terminals.",
-        [
-            "Check the motor and external wiring to the drive output terminals for a grounded condition."
-        ],
+        ["Check the motor and external wiring to the drive output terminals for a grounded condition."],
     ),
     15: PumpError(
         "Load Loss",
@@ -450,9 +448,7 @@ EGWPumpErrors = {
         "Flash Update Req",
         PumpFaultType.NON_RESETTABLE,
         "The firmware in the drive is corrupt, mismatched, or incompatible with the hardware.",
-        [
-            "Perform a firmware flash update operation to attempt to load a valid set of firmware."
-        ],
+        ["Perform a firmware flash update operation to attempt to load a valid set of firmware."],
     ),
     126: PumpError(
         "NonRecoverablErr",

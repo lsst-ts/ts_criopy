@@ -226,9 +226,7 @@ class TimeCache:
             for r in range(self._size - 1, self.current_index - 1, -1):
                 yield self.data[r]
 
-    def savetxt(
-        self, filename: str, size: int | None = None, **kwargs: typing.Any
-    ) -> None:
+    def savetxt(self, filename: str, size: int | None = None, **kwargs: typing.Any) -> None:
         """Saves data to CSV file. Saved data are forgotten.
 
         Parameters
@@ -252,9 +250,7 @@ class TimeCache:
             new_data[n][:remaining] = self[n][size:]
 
         if self.filled:
-            data = list(self.data[self.current_index + 1 :]) + list(
-                self.data[: self.current_index]
-            )
+            data = list(self.data[self.current_index + 1 :]) + list(self.data[: self.current_index])
         else:
             data = list(self.data)
 
@@ -264,9 +260,7 @@ class TimeCache:
 
         np.savetxt(filename, data[:size], **kwargs)
 
-    def create_hdf5_datasets(
-        self, size: int, group: h5py.Group, **group_args: typing.Any
-    ) -> None:
+    def create_hdf5_datasets(self, size: int, group: h5py.Group, **group_args: typing.Any) -> None:
         """Creates HDF5 datasets.
 
         Parameters
@@ -283,9 +277,7 @@ class TimeCache:
         self._hdf5_datasets = {}
 
         for n in self.data.dtype.names:
-            self._hdf5_datasets[n] = group.create_dataset(
-                n, (size), self.data.dtype.base[n], **group_args
-            )
+            self._hdf5_datasets[n] = group.create_dataset(n, (size), self.data.dtype.base[n], **group_args)
         self.hdf5_index = 0
         self._hdf5_size = size
 
@@ -330,9 +322,7 @@ class TimeCache:
 
     def __getitem__(self, key: str) -> list[float]:
         if self.filled:
-            return list(self.data[self.current_index :][key]) + list(
-                self.data[: self.current_index][key]
-            )
+            return list(self.data[self.current_index :][key]) + list(self.data[: self.current_index][key])
         else:
             return list(self.data[: self.current_index][key])
 

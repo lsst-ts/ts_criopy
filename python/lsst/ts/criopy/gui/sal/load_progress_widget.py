@@ -36,9 +36,7 @@ class LoadProgressModel(QStandardItemModel):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setHorizontalHeaderLabels(
-            ["Worker", "CSC", "Topic", "Start", "Elapsed time"]
-        )
+        self.setHorizontalHeaderLabels(["Worker", "CSC", "Topic", "Start", "Elapsed time"])
 
     @Slot()
     def request_started(self, request: EfdCacheRequest, worker: int) -> None:

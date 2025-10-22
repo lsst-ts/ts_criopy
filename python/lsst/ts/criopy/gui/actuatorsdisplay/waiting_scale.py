@@ -26,6 +26,4 @@ class WaitingScale(EnumScale):
     """Draws gauge with color scale for boolean (Running/Waiting) values."""
 
     def __init__(self) -> None:
-        super().__init__(
-            {False: ("Running", Colors.OK), True: ("Waiting", Colors.ERROR)}
-        )
+        super().__init__({False: ("Running", Colors.OK), True: ("Waiting", Colors.ERROR)})

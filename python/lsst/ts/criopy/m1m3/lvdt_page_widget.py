@@ -61,8 +61,8 @@ class LVDTPageWidget(QWidget):
         breakawayAxis = Axis("Breakaway LVDT", m1m3.hardpointMonitorData)
         displacementAxis = Axis("Displacement LVDT", m1m3.hardpointMonitorData)
         for hp in range(6):
-            breakawayAxis.addArrayValue(f"HP {hp+1}", "breakawayLVDT", hp)
-            displacementAxis.addArrayValue(f"HP {hp+1}", "displacementLVDT", hp)
+            breakawayAxis.addArrayValue(f"HP {hp + 1}", "breakawayLVDT", hp)
+            displacementAxis.addArrayValue(f"HP {hp + 1}", "displacementLVDT", hp)
 
         layout.addWidget(ChartWidget(breakawayAxis))
         layout.addWidget(ChartWidget(displacementAxis))

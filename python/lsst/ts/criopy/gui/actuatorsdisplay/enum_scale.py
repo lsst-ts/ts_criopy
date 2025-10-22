@@ -87,9 +87,7 @@ class EnumScale(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
         palette = QGuiApplication.palette()
-        palette.setCurrentColorGroup(
-            QPalette.Active if self.isEnabled() else QPalette.Inactive
-        )
+        palette.setCurrentColorGroup(QPalette.Active if self.isEnabled() else QPalette.Inactive)
 
         swidth = self.width()
         sheight = self.height()
@@ -106,9 +104,7 @@ class EnumScale(QWidget):
 
             painter.setBrush(palette.window())
             painter.setPen(palette.windowText().color())
-            painter.drawRect(
-                x_offset, y + 2 * t_height, swidth - 2 * x_offset, t_height
-            )
+            painter.drawRect(x_offset, y + 2 * t_height, swidth - 2 * x_offset, t_height)
 
             painter.drawText(
                 x_offset,

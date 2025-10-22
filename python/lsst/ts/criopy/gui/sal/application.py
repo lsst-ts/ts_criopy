@@ -162,9 +162,7 @@ class Application:
                 if self._resize:
                     eui.move(50, 50)
                     eui.resize(1000, 700)
-                    print(
-                        f"Window resized to {rect_str(eui.frameGeometry())}, as requested."
-                    )
+                    print(f"Window resized to {rect_str(eui.frameGeometry())}, as requested.")
                 elif (
                     eui_rect.top() < 0
                     or eui_rect.left() < 0
@@ -174,9 +172,7 @@ class Application:
                     new_size = screen_size.shrunkBy(QMargins(50, 50, 50, 50))
                     eui.move(50, 50)
                     eui.resize(new_size)
-                    print(
-                        f"Window moved from {rect_str(eui_rect)} to {rect_str(eui.frameGeometry())}."
-                    )
+                    print(f"Window moved from {rect_str(eui_rect)} to {rect_str(eui.frameGeometry())}.")
                 else:
                     print(
                         f"Window size {rect_str(eui_rect)}, "
@@ -195,11 +191,7 @@ class Application:
                 if self._sal_info:
                     for c in splash.comms:
                         for m in dir(c.remote):
-                            if (
-                                m.startswith("cmd_")
-                                or m.startswith("tel_")
-                                or m.startswith("evt_")
-                            ):
+                            if m.startswith("cmd_") or m.startswith("tel_") or m.startswith("evt_"):
                                 ti = getattr(c.remote, m).topic_info
                                 print(ti.component_name, ti.sal_name, ti.get_revcode())
                     self._app.quit()

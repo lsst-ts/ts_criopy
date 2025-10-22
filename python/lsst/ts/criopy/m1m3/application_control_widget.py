@@ -125,13 +125,12 @@ class SlewWidget(QWidget):
                     StatusWidget(
                         "FE",
                         "followingErrorTriggered",
-                        "Force Actuator Following error values suggests booster"
-                        " valves shall be opened",
+                        "Force Actuator Following error values suggests booster valves shall be opened",
                     ),
                     StatusWidget(
                         "A",
                         "accelerometerTriggered",
-                        "Accelerometer values suggest booster valve shall be" " opened",
+                        "Accelerometer values suggest booster valve shall be opened",
                     ),
                 ],
                 self.m1m3.boosterValveStatus,
@@ -421,9 +420,7 @@ class M1M3CSCControl(CSCControlWidget):
 
     @Slot()
     def detailed_state(self, data: BaseMsgType) -> None:
-        self._panic_button.setEnabled(
-            not (data.detailedState == DetailedStates.OFFLINE)
-        )
+        self._panic_button.setEnabled(not (data.detailedState == DetailedStates.OFFLINE))
 
 
 class ApplicationControlWidget(QWidget):

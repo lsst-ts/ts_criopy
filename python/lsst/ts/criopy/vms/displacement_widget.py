@@ -31,9 +31,7 @@ class DisplacementWidget(CacheTimeWidget):
         self, timestamps: list[float], signal: list[float]
     ) -> tuple[list[float] | None, list[float] | None]:
         # use 2 bin for velocity
-        velocity = np.trapz(
-            [(signal[i], signal[i + 1]) for i in range(len(signal) - 1)], axis=1
-        )
+        velocity = np.trapz([(signal[i], signal[i + 1]) for i in range(len(signal) - 1)], axis=1)
 
         displacement = np.trapz(
             np.reshape(
@@ -45,11 +43,7 @@ class DisplacementWidget(CacheTimeWidget):
 
         return (
             [
-                (
-                    timestamps[r * self.integralBinning]
-                    + timestamps[(r + 1) * self.integralBinning - 1]
-                )
-                / 2.0
+                (timestamps[r * self.integralBinning] + timestamps[(r + 1) * self.integralBinning - 1]) / 2.0
                 for r in range(len(displacement))
             ],
             displacement,

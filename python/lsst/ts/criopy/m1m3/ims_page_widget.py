@@ -130,13 +130,9 @@ class IMSPageWidget(QWidget):
                 {
                     "anyWarning": "Any Warnings",
                     "sensorReportsInvalidCommand": "Sensor Invalid Command",
-                    "sensorReportsCommunicationTimeoutError": (
-                        "Sensor Communication Timeout"
-                    ),
+                    "sensorReportsCommunicationTimeoutError": ("Sensor Communication Timeout"),
                     "sensorReportsDataLengthError": "Sensor Data Length",
-                    "sensorReportsNumberOfParametersError": (
-                        "Sensor Number of Parameters"
-                    ),
+                    "sensorReportsNumberOfParametersError": ("Sensor Number of Parameters"),
                     "sensorReportsParameterError": "Sensor Parameter",
                     "sensorReportsCommunicationError": ("Sensor Communication Error"),
                     "sensorReportsIDNumberErrorLabel": "Sensor ID Number",

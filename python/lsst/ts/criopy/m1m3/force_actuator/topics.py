@@ -68,8 +68,7 @@ class FarNeighborsFactorsField(TopicField):
         fn_factors = ForceCalculator.SALAppliedForces(data)
         fn_factors.calculate_far_neighbors_magnitudes()
         return (
-            np.array(fn_factors.far_neighbors_magnitudes)
-            - fn_factors.global_average_force
+            np.array(fn_factors.far_neighbors_magnitudes) - fn_factors.global_average_force
         ) / fn_factors.global_average_force
 
 
@@ -134,9 +133,7 @@ class ZFEForces(TopicField):
 
 class ForceMomentData(TopicData):
     def get_forces_moments(self, data: BaseMsgType) -> typing.Iterable[float | None]:
-        for d in (
-            [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]
-        ):
+        for d in [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]:
             try:
                 yield getattr(data, d)
             except AttributeError:
@@ -148,9 +145,7 @@ class FEData(TopicData):
         forces = ForceCalculator.CylinderForces(
             data.primaryCylinderFollowingError, data.secondaryCylinderFollowingError
         )
-        for d in (
-            [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]
-        ):
+        for d in [f"f{ax}" for ax in "xyz"] + [f"m{ax}" for ax in "xyz"] + ["forceMagnitude"]:
             try:
                 yield getattr(forces, d)
             except AttributeError:
@@ -599,9 +594,7 @@ class Topics(TopicCollection):
             TopicData(
                 "FA Settings",
                 [
-                    EnabledDisabledField(
-                        "Enabled/Disabled", "enabledActuators", FAIndex.Z
-                    ),
+                    EnabledDisabledField("Enabled/Disabled", "enabledActuators", FAIndex.Z),
                     TopicField(
                         "Z Applied Force Low Limit",
                         "appliedZForceLowLimit",

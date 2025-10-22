@@ -135,10 +135,7 @@ class PSDWidget(CacheWidget):
                 psd = [max(psd[i : i + s]) for i in range(0, N, s)]
                 # frequencies are monotonic constant step. So to calculate
                 # average, only took boundary members and divide by two
-                frequencies = [
-                    (frequencies[i] + frequencies[min(i + s, N - 1)]) / 2
-                    for i in range(0, N, s)
-                ]
+                frequencies = [(frequencies[i] + frequencies[min(i + s, N - 1)]) / 2 for i in range(0, N, s)]
             return (psd, frequencies)
 
         def plot(serie: QLineSeries, signal: list[float]) -> tuple[float, float]:

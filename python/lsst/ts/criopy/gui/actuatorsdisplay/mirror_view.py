@@ -134,9 +134,7 @@ class MirrorView(QGraphicsView):
         s = min(self.width() / 8600, self.height() / 8600)
         self.scale(s, s)
 
-    def update_force_actuator(
-        self, fa: ForceActuatorData, data: BaseMsgType, state: DataItemState
-    ) -> None:
+    def update_force_actuator(self, fa: ForceActuatorData, data: BaseMsgType, state: DataItemState) -> None:
         """Update actuator value and state.
 
         Parameters
@@ -158,9 +156,7 @@ class MirrorView(QGraphicsView):
         if not (isinstance(self._selected_actuator, ForceActuatorItem)):
             return
         if self._selected_actuator.actuator.actuator_id == fa.actuator_id:
-            self.selectionChanged.emit(
-                self._selected_actuator if self._selected_actuator.active else None
-            )
+            self.selectionChanged.emit(self._selected_actuator if self._selected_actuator.active else None)
 
     def update_fcu(self, fcu: FCUData, value: float, state: DataItemState) -> None:
         """Update FCU value and state.
@@ -183,9 +179,7 @@ class MirrorView(QGraphicsView):
         if not isinstance(self._selected_actuator, FCUItem):
             return
         if self._selected_actuator.actuator.index == fcu.index:
-            self.selectionChanged.emit(
-                self._selected_actuator if self._selected_actuator.active else None
-            )
+            self.selectionChanged.emit(self._selected_actuator if self._selected_actuator.active else None)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         item = self.itemAt(event.pos())

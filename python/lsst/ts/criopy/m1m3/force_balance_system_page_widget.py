@@ -57,9 +57,7 @@ class ForceBalanceSystemPageWidget(QWidget):
             m1m3,
             [DetailedStates.ACTIVEENGINEERING],
         )
-        self.enable_hardpoint_corrections_button.clicked.connect(
-            self.issueCommandEnableHardpointCorrections
-        )
+        self.enable_hardpoint_corrections_button.clicked.connect(self.issueCommandEnableHardpointCorrections)
         self.enable_hardpoint_corrections_button.setFixedWidth(256)
         self.disable_hardpoint_corrections_button = DetailedStateEnabledButton(
             "Disable Hardpoint Corrections",
@@ -177,9 +175,7 @@ class ForceBalanceSystemPageWidget(QWidget):
             [data.fx, data.fy, data.fz, data.forceMagnitude],
             axis_index=0,
         )
-        self.balance_chart.append(
-            data.timestamp, [data.mx, data.my, data.mz], axis_index=1
-        )
+        self.balance_chart.append(data.timestamp, [data.mx, data.my, data.mz], axis_index=1)
 
         self._balanceData = data
         self._setTotalForces()
@@ -214,9 +210,7 @@ class ForceBalanceSystemPageWidget(QWidget):
     async def issueCommandDisableHardpointCorrections(self) -> None:
         await command(self, self.m1m3.remote.cmd_disableHardpointCorrections)
 
-    def _fillRowSum(
-        self, variables: dict[str, QLabel], d1: typing.Any, d2: typing.Any
-    ) -> None:
+    def _fillRowSum(self, variables: dict[str, QLabel], d1: typing.Any, d2: typing.Any) -> None:
         for k, v in variables.items():
             v.setValue(getattr(d1, k) + getattr(d2, k))
 

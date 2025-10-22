@@ -98,9 +98,7 @@ class SALStatusBar(QStatusBar):
 
     @Slot()
     def error_code(self, data: BaseMsgType) -> None:
-        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
-            sep=" ", timespec="milliseconds"
-        )
+        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(sep=" ", timespec="milliseconds")
         self.error_code_label.setText(
             f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
             f"{'green' if data.errorCode == 0 else 'red'}"

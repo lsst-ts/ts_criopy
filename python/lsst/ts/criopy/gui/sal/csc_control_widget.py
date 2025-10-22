@@ -259,6 +259,4 @@ class CSCControlWidget(QWidget):
                         b.setDefault(db_set)
                         db_set = False
         except KeyError:
-            print(
-                f"Unhandled summary state {str(salobj.State(data.summaryState))} - {data.summaryState}"
-            )
+            print(f"Unhandled summary state {str(salobj.State(data.summaryState))} - {data.summaryState}")

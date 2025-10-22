@@ -72,11 +72,7 @@ class CompressorCSC(CSCControlWidget):
 
         return default_buttons + [
             TEXT_POWER_ON if status.startByRemote is True else None,
-            (
-                TEXT_POWER_OFF
-                if status.startByRemote is False and status.operating is True
-                else None
-            ),
+            (TEXT_POWER_OFF if status.startByRemote is False and status.operating is True else None),
             TEXT_RESET,
         ]
 
@@ -89,9 +85,7 @@ class CompressorPageWidget(QWidget):
         master_layout = QVBoxLayout()
         top_layout = QHBoxLayout()
 
-        user_time_chart = UserSelectedTimeChart(
-            {compressor.remote.tel_analogData: compressor.analogData}
-        )
+        user_time_chart = UserSelectedTimeChart({compressor.remote.tel_analogData: compressor.analogData})
 
         errors_widget = DataFormButton(
             "Errors",
@@ -365,9 +359,7 @@ class CompressorPageWidget(QWidget):
         self.__control_widget.layout().addWidget(hb)
 
         self.power_on = self.__control_widget.add_csc_button(TEXT_POWER_ON, "powerOn")
-        self.power_off = self.__control_widget.add_csc_button(
-            TEXT_POWER_OFF, "powerOff"
-        )
+        self.power_off = self.__control_widget.add_csc_button(TEXT_POWER_OFF, "powerOff")
         self.reset = self.__control_widget.add_csc_button(TEXT_RESET, "reset")
 
         self.__control_widget.layout().addWidget(errors_widget)

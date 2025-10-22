@@ -26,6 +26,4 @@ class WarningScale(EnumScale):
     """Draws gauge with color scale for boolean (on/off) values."""
 
     def __init__(self) -> None:
-        super().__init__(
-            {False: ("OK", Colors.OK), True: ("Warning\nError", Colors.ERROR)}
-        )
+        super().__init__({False: ("OK", Colors.OK), True: ("Warning\nError", Colors.ERROR)})

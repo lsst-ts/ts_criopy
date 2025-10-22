@@ -92,9 +92,7 @@ class ForceStatistics(QWidget):
 
     def set_forces(self, forces: ForceCalculator.AppliedForces) -> None:
         def populate_row(row: int, f: ForceCalculator.AppliedForces) -> None:
-            for col, field in enumerate(
-                ["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]
-            ):
+            for col, field in enumerate(["fx", "fy", "fz", "mx", "my", "mz", "forceMagnitude"]):
                 self.labels[row][col].setText(f"{getattr(f, field):.2f}")
 
         for quadrant in range(1, 5):
@@ -105,23 +103,17 @@ class ForceStatistics(QWidget):
 
         populate_row(
             4,
-            ForceCalculator.AppliedForces(
-                y_forces=forces.yForces, z_forces=forces.zForces
-            ),
+            ForceCalculator.AppliedForces(y_forces=forces.yForces, z_forces=forces.zForces),
         )
 
         populate_row(
             5,
-            ForceCalculator.AppliedForces(
-                x_forces=forces.xForces, z_forces=forces.zForces
-            ),
+            ForceCalculator.AppliedForces(x_forces=forces.xForces, z_forces=forces.zForces),
         )
 
         populate_row(
             6,
-            ForceCalculator.AppliedForces(
-                x_forces=forces.xForces, y_forces=forces.yForces
-            ),
+            ForceCalculator.AppliedForces(x_forces=forces.xForces, y_forces=forces.yForces),
         )
 
 
@@ -195,7 +187,7 @@ class SimulatorWidget(QWidget):
         ]
 
         for hp in range(6):
-            form.addRow(f"Hardpoint {hp+1}", self.hardpoints[hp])
+            form.addRow(f"Hardpoint {hp + 1}", self.hardpoints[hp])
 
         for idx, axis in enumerate("XYZ"):
             form.addRow(f"Offset Force {axis}", self.hp_fam[idx])

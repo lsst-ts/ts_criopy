@@ -88,9 +88,7 @@ class LogToolBar(QWidget):
         def addLevelLabel(comm: MetaSAL) -> None:
             currentLevel = QLabel("---")
             toolbar.addWidget(currentLevel)
-            comm.logLevel.connect(
-                lambda data: currentLevel.setText(LEVELS[_levelToIndex(data.level)])
-            )
+            comm.logLevel.connect(lambda data: currentLevel.setText(LEVELS[_levelToIndex(data.level)]))
 
         for comm in comms:
             addLevelLabel(comm)
@@ -100,18 +98,14 @@ class LogToolBar(QWidget):
         toolbar.addStretch()
 
         if issubclass(type(parent), QDockWidget):
-            floatButton = QPushButton(
-                self.style().standardIcon(QStyle.SP_TitleBarNormalButton), ""
-            )
+            floatButton = QPushButton(self.style().standardIcon(QStyle.SP_TitleBarNormalButton), "")
 
             def _toggleFloating() -> None:
                 parent.setFloating(not parent.isFloating())
 
             floatButton.clicked.connect(_toggleFloating)
 
-            closeButton = QPushButton(
-                self.style().standardIcon(QStyle.SP_TitleBarCloseButton), ""
-            )
+            closeButton = QPushButton(self.style().standardIcon(QStyle.SP_TitleBarCloseButton), "")
             closeButton.clicked.connect(parent.close)
 
             toolbar.addWidget(floatButton)
@@ -161,9 +155,7 @@ class Messages(QPlainTextEdit):
 
     @Slot()
     def logMessage(self, data: BaseMsgType) -> None:
-        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
-            sep=" ", timespec="milliseconds"
-        )
+        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(sep=" ", timespec="milliseconds")
         level = min(int(data.level / 10), 5)
         self.appendHtml(
             f"{date} [<b>{self.LEVELS_IDS[level]}</b>]"
