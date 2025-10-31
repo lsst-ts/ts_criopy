@@ -9,4 +9,5 @@ from .mirror_view import MirrorView
 from .mirror_widget import MirrorWidget
 from .on_off_scale import OnOffScale
 from .scales import Scales
+from .scanner_item import ScannerItem
 from .warning_scale import WarningScale

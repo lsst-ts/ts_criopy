@@ -26,14 +26,15 @@ from .m1m3ts import (
     M1M3TSCSCControlWidget,
     MixingValveWidget,
     PowerPageWidget,
+    ScannersWidget,
     ThermalValuePageWidget,
 )
 from .salcomm import MetaSAL
 
 
 class EUI(EUIWindow):
-    def __init__(self, m1m3ts: MetaSAL):
-        super().__init__("M1M3TSGUI", [m1m3ts], (700, 400), M1M3TSCSCControlWidget(m1m3ts))
+    def __init__(self, m1m3ts: MetaSAL, *scanners: MetaSAL):
+        super().__init__("M1M3TSGUI", [m1m3ts] + list(scanners), (700, 400), M1M3TSCSCControlWidget(m1m3ts))
 
         self.m1m3ts = m1m3ts
 
@@ -42,6 +43,7 @@ class EUI(EUIWindow):
         self.add_page("Thermal values", ThermalValuePageWidget, self.m1m3ts)
         self.add_page("Mixing valve", MixingValveWidget, self.m1m3ts)
         self.add_page("Coolant circulations", CoolantCirculationWidget, self.m1m3ts)
+        self.add_page("Glass Temperatures", ScannersWidget, scanners)
         self.add_page("SAL Log", LogWidget, self.m1m3ts)
         self.add_page("SAL Errors", SALErrorCodeWidget, self.m1m3ts)
 
@@ -51,4 +53,6 @@ class EUI(EUIWindow):
 def run() -> None:
     app = Application(EUI)
     app.add_comm("MTM1M3TS")
+    for index in range(114, 118):
+        app.add_comm("ESS", index=index)
     app.run()
