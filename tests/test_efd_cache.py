@@ -64,19 +64,13 @@ class EfdCacheTestCase(unittest.IsolatedAsyncioTestCase):
 
                 if request.topic == "thermalData":
                     assert len(cache.tel_thermalData.data) == 479
-                    assert request.cache.data.index[0] == Time(
-                        "2025-05-19T23:40:00.177549", scale="utc"
-                    )
-                    assert request.cache.data.index[-1] == Time(
-                        "2025-05-19T23:43:59.7599", scale="utc"
-                    )
+                    assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
+                    assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
 
             assert len(topics) == 24
 
 
 if __name__ == "__main__":
     if "RECORD_MODE" not in os.environ:
-        print(
-            f"To generate new cassettes with pre-downloaded data use: RECORD_MODE=all python {sys.argv[0]}"
-        )
+        print(f"To generate new cassettes with pre-downloaded data use: RECORD_MODE=all python {sys.argv[0]}")
     unittest.main()

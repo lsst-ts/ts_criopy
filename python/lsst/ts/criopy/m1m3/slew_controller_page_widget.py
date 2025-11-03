@@ -48,9 +48,7 @@ class ForceButton(ColoredButton):
         await command(
             self,
             self.m1m3.remote.cmd_setSlewControllerSettings,
-            slewSettings=int(
-                getattr(SetSlewControllerSettings, self.objectName().upper())
-            ),
+            slewSettings=int(getattr(SetSlewControllerSettings, self.objectName().upper())),
             enableSlewManagement=self.__use,
         )
 
@@ -120,9 +118,7 @@ class SlewControllerPageWidget(QWidget):
                     m1m3.appliedBalanceForces,
                     ForceButton.create("BalanceForces", m1m3),
                 ),
-                PreclippedForces(
-                    "<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces
-                ),
+                PreclippedForces("<i>Pre-clipped Velocity</i>", m1m3.preclippedVelocityForces),
                 Forces(
                     "Applied Velocity",
                     m1m3.appliedVelocityForces,
@@ -142,9 +138,7 @@ class SlewControllerPageWidget(QWidget):
 
         layout.addWidget(self.forces_grid)
 
-        acceleration_axis = Axis(
-            "Acceleration (N, Nm)", self.m1m3.appliedAccelerationForces
-        )
+        acceleration_axis = Axis("Acceleration (N, Nm)", self.m1m3.appliedAccelerationForces)
         balance_axis = Axis("Balance (N, Nm)", self.m1m3.appliedBalanceForces)
         velocity_axis = Axis("Velocity (N, Nm)", self.m1m3.appliedVelocityForces)
 
@@ -168,9 +162,7 @@ class SlewControllerPageWidget(QWidget):
         self.m1m3.forceControllerState.connect(self.force_controller_state)
 
     def __set_enabled(self) -> None:
-        self.forces_grid.setExtraWidgetsEnabled(
-            self.__active_state is True and self.__slew_flag is False
-        )
+        self.forces_grid.setExtraWidgetsEnabled(self.__active_state is True and self.__slew_flag is False)
         self.warning_text.setVisible(self.__slew_flag)
 
     @Slot()

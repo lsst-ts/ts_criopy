@@ -119,9 +119,7 @@ class Player(QObject):
         """
         Create workers to execute EfdCacheRequest from worker_queue.
         """
-        self.workers = [
-            asyncio.create_task(self.worker(i)) for i in range(self.num_tasks)
-        ]
+        self.workers = [asyncio.create_task(self.worker(i)) for i in range(self.num_tasks)]
 
     def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
         """

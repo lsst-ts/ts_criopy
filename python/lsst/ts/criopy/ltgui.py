@@ -60,9 +60,7 @@ class LTEUI(EUIWindow):
 
     @Slot()
     def laser_status(self, data: salobj.BaseMsgType) -> None:
-        self.laser_status_label.setText(
-            self.state_string(LaserTracker.LaserStatus(data.status))
-        )
+        self.laser_status_label.setText(self.state_string(LaserTracker.LaserStatus(data.status)))
 
 
 def run() -> None:

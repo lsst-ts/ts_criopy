@@ -96,9 +96,7 @@ class DCAccelerometerPageWidget(QWidget):
             )
         )
 
-        axis = Axis(
-            "Angular Acceleration (&deg;/s<sup>2</sup>)", m1m3.accelerometerData
-        )
+        axis = Axis("Angular Acceleration (&deg;/s<sup>2</sup>)", m1m3.accelerometerData)
         axis.add_values(
             {
                 "X": AxisValue("angularAccelerationX"),

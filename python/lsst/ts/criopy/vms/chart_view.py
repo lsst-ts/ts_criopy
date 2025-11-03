@@ -50,10 +50,7 @@ class ChartView(TimeChartView):
         s = self._serieType()
         s.setName(name)
         self.chart().addSeries(s)
-        if (
-            len(self.chart().axes(Qt.Horizontal)) > 0
-            and len(self.chart().axes(Qt.Vertical)) > 0
-        ):
+        if len(self.chart().axes(Qt.Horizontal)) > 0 and len(self.chart().axes(Qt.Vertical)) > 0:
             s.attachAxis(self.chart().axes(Qt.Horizontal)[0])
             s.attachAxis(self.chart().axes(Qt.Vertical)[0])
 
@@ -79,7 +76,7 @@ class ChartView(TimeChartView):
                 name = f"{s} {a}"
                 action = contextMenu.addAction(name)
                 action.setCheckable(True)
-                action.setChecked(self.chart().findSerie(name) is not None)
+                action.setChecked(self.chart().find_serie(name) is not None)
 
         if isinstance(self._serieType, QLineSeries):
             contextMenu.addSeparator()

@@ -69,9 +69,7 @@ class ApplicationStatusWidget(QWidget):
             if data.weightSupportedPercent >= 100:
                 self.mirror_state_label.setText("Raising - positioning hardpoints")
             else:
-                self.mirror_state_label.setText(
-                    f"Raising ({data.weightSupportedPercent:.02f}%)"
-                )
+                self.mirror_state_label.setText(f"Raising ({data.weightSupportedPercent:.02f}%)")
         elif (
             detailedData.detailedState == DetailedStates.LOWERING
             or detailedData.detailedState == DetailedStates.LOWERINGENGINEERING
@@ -79,20 +77,14 @@ class ApplicationStatusWidget(QWidget):
             if data.weightSupportedPercent <= 0:
                 self.mirror_state_label.setText("Lowering - positioning hardpoints")
             else:
-                self.mirror_state_label.setText(
-                    f"Lowering ({data.weightSupportedPercent:.02f}%)"
-                )
+                self.mirror_state_label.setText(f"Lowering ({data.weightSupportedPercent:.02f}%)")
         elif detailedData.detailedState == DetailedStates.LOWERINGFAULT:
-            self.mirror_state_label.setText(
-                f"Lowering (fault, {data.weightSupportedPercent:.02f}%)"
-            )
+            self.mirror_state_label.setText(f"Lowering (fault, {data.weightSupportedPercent:.02f}%)")
         else:
             self._disconnect_raise_lowering()
 
     def _connect_raise_lowering(self) -> None:
-        self.m1m3.raisingLoweringInfo.connect(
-            self.raisingLoweringInfo, Qt.UniqueConnection
-        )
+        self.m1m3.raisingLoweringInfo.connect(self.raisingLoweringInfo, Qt.UniqueConnection)
 
     def _disconnect_raise_lowering(self) -> None:
         try:
@@ -124,9 +116,7 @@ class ApplicationStatusWidget(QWidget):
             self._disconnect_raise_lowering()
         elif data.detailedState == DetailedStates.RAISING:
             mode_state_text = "Automatic"
-            percent = (
-                self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
-            )
+            percent = self.m1m3.remote.evt_forceActuatorState.get().weightSupportedPercent
             mirror_state_text = f"Raising ({percent:.03f}%)"
             self._connect_raise_lowering()
         elif data.detailedState == DetailedStates.ACTIVE:

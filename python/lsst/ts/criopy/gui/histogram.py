@@ -29,7 +29,7 @@ class Histogram(QChart):
     def __init__(
         self,
         parent: QGraphicsItem = None,
-        wFlags: Qt.WindowFlags = Qt.WindowFlags(),
+        w_flags: Qt.WindowFlags = Qt.WindowFlags(),
         nbins: int = 50,
     ):
         """
@@ -38,7 +38,7 @@ class Histogram(QChart):
         nbins : `int`, optional
             Number of bins to plot. Default to None - autoscale bins.
         """
-        super().__init__(parent, wFlags)
+        super().__init__(parent, w_flags)
         self.nbins = nbins
 
         self.set = QBarSet("Data")

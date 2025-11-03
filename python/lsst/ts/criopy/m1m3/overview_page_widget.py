@@ -140,19 +140,13 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(WarningButton(m1m3, "forceActuatorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Actuators"), row, col)
-        dataLayout.addWidget(
-            WarningButton(m1m3, "hardpointActuatorWarning"), row, col + 1
-        )
+        dataLayout.addWidget(WarningButton(m1m3, "hardpointActuatorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Hardpoint Monitors"), row, col)
-        dataLayout.addWidget(
-            WarningButton(m1m3, "hardpointMonitorWarning"), row, col + 1
-        )
+        dataLayout.addWidget(WarningButton(m1m3, "hardpointMonitorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Inclinometer"), row, col)
-        dataLayout.addWidget(
-            WarningButton(m1m3, "inclinometerSensorWarning"), row, col + 1
-        )
+        dataLayout.addWidget(WarningButton(m1m3, "inclinometerSensorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Accelerometer"), row, col)
         dataLayout.addWidget(WarningButton(m1m3, "accelerometerWarning"), row, col + 1)
@@ -164,9 +158,7 @@ class OverviewPageWidget(QWidget):
         dataLayout.addWidget(WarningButton(m1m3, "airSupplyWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("IMS"), row, col)
-        dataLayout.addWidget(
-            WarningButton(m1m3, "displacementSensorWarning"), row, col + 1
-        )
+        dataLayout.addWidget(WarningButton(m1m3, "displacementSensorWarning"), row, col + 1)
         row += 1
         dataLayout.addWidget(QLabel("Cell Light"), row, col)
         dataLayout.addWidget(WarningButton(m1m3, "cellLightWarning"), row, col + 1)

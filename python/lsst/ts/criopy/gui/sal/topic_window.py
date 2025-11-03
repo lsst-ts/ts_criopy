@@ -170,8 +170,7 @@ class TopicWindow(QSplitter):
     def get_current_field_name(self) -> tuple[str | None, str | None]:
         if self.topic is None or self.field is None:
             raise RuntimeError(
-                "Topic or field is None in get_current_field_name:"
-                f" {self.topic}, {self.field}"
+                f"Topic or field is None in get_current_field_name: {self.topic}, {self.field}"
             )
         return (self.topic.topic, self.field.field_name)
 

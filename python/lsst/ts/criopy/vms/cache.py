@@ -50,9 +50,7 @@ class Cache(TimeCache):
         self.interval: float = 1
         self.sampleTime: float = 1
         items = [("timestamp", "f8")] + [
-            (f"{s} {a}", "f8")
-            for s in range(1, self._sensors + 1)
-            for a in ["X", "Y", "Z"]
+            (f"{s} {a}", "f8") for s in range(1, self._sensors + 1) for a in ["X", "Y", "Z"]
         ]
 
         super().__init__(size, items)
@@ -115,19 +113,19 @@ class Cache(TimeCache):
             timestamps = np.arange(r[0], r[0] + self.sampleTime * dl, self.sampleTime)
 
             def copy_data(start: int, lenght: int) -> None:
-                self.data["timestamp"][
-                    self.current_index : self.current_index + lenght
-                ] = timestamps[start : start + lenght]
+                self.data["timestamp"][self.current_index : self.current_index + lenght] = timestamps[
+                    start : start + lenght
+                ]
                 for s in range(1, self._sensors + 1):
-                    self.data[f"{s} X"][
-                        self.current_index : self.current_index + lenght
-                    ] = r[1][s - 1].accelerationX[start : start + lenght]
-                    self.data[f"{s} Y"][
-                        self.current_index : self.current_index + lenght
-                    ] = r[1][s - 1].accelerationY[start : start + lenght]
-                    self.data[f"{s} Z"][
-                        self.current_index : self.current_index + lenght
-                    ] = r[1][s - 1].accelerationZ[start : start + lenght]
+                    self.data[f"{s} X"][self.current_index : self.current_index + lenght] = r[1][
+                        s - 1
+                    ].accelerationX[start : start + lenght]
+                    self.data[f"{s} Y"][self.current_index : self.current_index + lenght] = r[1][
+                        s - 1
+                    ].accelerationY[start : start + lenght]
+                    self.data[f"{s} Z"][self.current_index : self.current_index + lenght] = r[1][
+                        s - 1
+                    ].accelerationZ[start : start + lenght]
 
             lenght = min(dl, self._size - self.current_index)
             if lenght > 0:

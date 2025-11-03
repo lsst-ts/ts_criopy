@@ -79,9 +79,7 @@ class FCUItem(DataItem):
             20 * self._scale_factor,
         )
 
-    def paint(
-        self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget
-    ) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
         """Paint actuator. Overridden method."""
         assert self._color_scale is not None
 

@@ -33,9 +33,7 @@ from .salcomm import MetaSAL
 
 class EUI(EUIWindow):
     def __init__(self, m1m3ts: MetaSAL):
-        super().__init__(
-            "M1M3TSGUI", [m1m3ts], (700, 400), M1M3TSCSCControlWidget(m1m3ts)
-        )
+        super().__init__("M1M3TSGUI", [m1m3ts], (700, 400), M1M3TSCSCControlWidget(m1m3ts))
 
         self.m1m3ts = m1m3ts
 

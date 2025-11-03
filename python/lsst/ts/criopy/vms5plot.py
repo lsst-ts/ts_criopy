@@ -30,9 +30,7 @@ def type_h5file(filename: str) -> h5py.File:
     except FileNotFoundError:
         raise argparse.ArgumentTypeError(f"Cannot open {filename}!")
     except IsADirectoryError:
-        raise argparse.ArgumentTypeError(
-            f"{filename} is a directory, filename expected!"
-        )
+        raise argparse.ArgumentTypeError(f"{filename} is a directory, filename expected!")
 
 
 def type_axis(axis: str) -> str:
@@ -58,12 +56,8 @@ def run() -> None:
         default=1024,
         help="Number of data points used in each block for the FFT",
     )
-    parser.add_argument(
-        "--raw", type=int, help="Number of raw datapoints to plot", default=-1
-    )
-    parser.add_argument(
-        "h5py", type=type_h5file, nargs="+", help="HDF5 file(s) to plot"
-    )
+    parser.add_argument("--raw", type=int, help="Number of raw datapoints to plot", default=-1)
+    parser.add_argument("h5py", type=type_h5file, nargs="+", help="HDF5 file(s) to plot")
 
     args = parser.parse_args()
 
@@ -103,7 +97,7 @@ def run() -> None:
         c_a[0].set_title(f"Raw {f.filename}")
         c_a[0].plot(f["timestamp"][: args.raw], f["1 X"][: args.raw])
         for j, a in enumerate(axes):
-            print(f"Sub-plot {i}, {j+1} ({a}).")
+            print(f"Sub-plot {i}, {j + 1} ({a}).")
             c_a[j + 1].set_title(f"PSD {a}")
             c_a[j + 1].psd(f[a], NFFT=args.NFFT, Fs=args.frequency)
 

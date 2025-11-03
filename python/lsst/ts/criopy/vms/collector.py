@@ -104,7 +104,7 @@ class Collector:
         device_sensors = [3, 6, 3]
 
         self.log.debug(
-            f"Creating cache: index={self.index+1}"
+            f"Creating cache: index={self.index + 1}"
             f" device={device_sensors[self.index]} type={self.file_type}"
         )
 
@@ -140,11 +140,7 @@ class Collector:
             ("name", VMS_DEVICES[self.index]),
             (
                 "ext",
-                (
-                    "hdf"
-                    if "5" in self.file_type
-                    else "csv.gz" if "z" in self.file_type else "csv"
-                ),
+                ("hdf" if "5" in self.file_type else "csv.gz" if "z" in self.file_type else "csv"),
             ),
         ]
         for name, value in repl:
@@ -218,7 +214,7 @@ class Collector:
             current_len = saved_len + len(self.cache)
             self.log.debug(
                 f"Waiting {VMS_DEVICES[self.index]}.."
-                f" {100 * (current_len)/self.size:.02f}% {current_len} of"
+                f" {100 * (current_len) / self.size:.02f}% {current_len} of"
                 f" {self.size}"
             )
             if self.h5file is None:
@@ -250,10 +246,7 @@ class Collector:
             bar_size = self.size
         else:
             if self.next_rotate is None:
-                bar_size = (
-                    self.__calculate_next_rotate(self._current_file_date)
-                    - self._current_file_date
-                )
+                bar_size = self.__calculate_next_rotate(self._current_file_date) - self._current_file_date
             else:
                 bar_size = self.rotate
             bar_size = int(np.ceil(bar_size / self.cache.sampleTime))

@@ -311,9 +311,7 @@ class DataUnitLabel(DataFormatorLabel):
         is_warn_func: typing.Callable[[float], bool] | None = None,
         is_err_func: typing.Callable[[float], bool] | None = None,
     ):
-        super().__init__(
-            signal, DataFormator(field, fmt, unit, convert, is_warn_func, is_err_func)
-        )
+        super().__init__(signal, DataFormator(field, fmt, unit, convert, is_warn_func, is_err_func))
 
 
 class Force(DataUnitLabel):
@@ -329,9 +327,7 @@ class Force(DataUnitLabel):
         Float formatting. Defaults to .02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.N)
 
 
@@ -429,9 +425,7 @@ class Ampere(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.A)
 
 
@@ -451,9 +445,7 @@ class Liter(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.liter)
 
 
@@ -473,9 +465,7 @@ class LiterMinute(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.liter / u.minute)
 
 
@@ -495,9 +485,7 @@ class Percent(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.percent)
 
 
@@ -517,9 +505,7 @@ class Volt(DataUnitLabel):
         Float formatting. Defaults to 0.02f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = "0.02f"):
         super().__init__(signal, field, fmt, u.V)
 
 
@@ -539,9 +525,7 @@ class RPM(DataUnitLabel):
         Float formatting. Defaults to .0f.
     """
 
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".0f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".0f"):
         super().__init__(signal, field, fmt, u.Unit("min^-1"))
 
 
@@ -600,43 +584,31 @@ class KiloWatt(DataUnitLabel):
 
 
 class DMS(DataUnitLabel):
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"):
         super().__init__(signal, field, fmt)
 
     def setValue(self, value: float) -> None:
         dms = Angle(value * u.deg).dms
-        self.setText(
-            f"{dms.d:.0f}<b>°</b> {dms.m:02.0f}<b>'</b> {dms.s:05.02f}<b>\"</b>"
-        )
+        self.setText(f"{dms.d:.0f}<b>°</b> {dms.m:02.0f}<b>'</b> {dms.s:05.02f}<b>\"</b>")
 
 
 class DataDegC(DataUnitLabel):
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"):
         super().__init__(signal, field, fmt, u.deg_C)
 
 
 class Hz(DataUnitLabel):
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"):
         super().__init__(signal, field, fmt, u.Hz)
 
 
 class DegS2(DataUnitLabel):
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"):
         super().__init__(signal, field, fmt, u.deg / u.s**2)
 
 
 class MSec2(DataUnitLabel):
-    def __init__(
-        self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"
-    ):
+    def __init__(self, signal: Signal | None = None, field: str | None = None, fmt: str = ".02f"):
         super().__init__(signal, field, fmt, u.m / u.s**2)
 
 
@@ -991,13 +963,9 @@ class Clipped(QLabel):
 
     def setClipped(self, clipped: bool) -> None:
         if clipped:
-            self.setText(
-                f"<font color='{Colors.ERROR.name()}'>{self._force} forces clipped</font>"
-            )
+            self.setText(f"<font color='{Colors.ERROR.name()}'>{self._force} forces clipped</font>")
         else:
-            self.setText(
-                f"<font color='{Colors.OK.name()}'>{self._force} forces not clipped</font>"
-            )
+            self.setText(f"<font color='{Colors.OK.name()}'>{self._force} forces not clipped</font>")
 
 
 class Heartbeat(QWidget):
@@ -1071,9 +1039,7 @@ class Heartbeat(QWidget):
             self.hbIndicator.setFormat("")
             self.hbIndicator.setValue(0)
             self.hbIndicator.setInvertedAppearance(False)
-        self.timestamp.setText(
-            f"<font color='{Colors.ERROR.name()}'>- timeouted -</font>"
-        )
+        self.timestamp.setText(f"<font color='{Colors.ERROR.name()}'>- timeouted -</font>")
 
     @Slot()
     def heartbeat(self, data: BaseMsgType) -> None:

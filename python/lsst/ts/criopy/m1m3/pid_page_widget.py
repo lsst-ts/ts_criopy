@@ -51,9 +51,7 @@ class PIDPageWidget(QWidget):
                                 "Measured PID",
                                 partial(FormatLabel, fmt=".03f"),
                             ),
-                            ArrayItem(
-                                "error", "Error", partial(FormatLabel, fmt=".03f")
-                            ),
+                            ArrayItem("error", "Error", partial(FormatLabel, fmt=".03f")),
                             ArrayItem(
                                 "errorT1",
                                 "Error T1",

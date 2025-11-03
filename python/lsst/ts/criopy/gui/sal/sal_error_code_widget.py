@@ -53,9 +53,7 @@ class SALErrorCodeWidget(QWidget):
 
     @Slot()
     def errorCode(self, data: BaseMsgType) -> None:
-        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(
-            sep=" ", timespec="milliseconds"
-        )
+        date = datetime.fromtimestamp(data.private_sndStamp).isoformat(sep=" ", timespec="milliseconds")
         self.plainText.appendHtml(
             f"{date} [<b>{data.errorCode:06X}</b>] <span style='color:"
             f"{'green' if data.errorCode == 0 else 'red'}'"

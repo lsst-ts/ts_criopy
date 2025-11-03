@@ -81,8 +81,6 @@ class EventWindow(QWidget):
 
         for member in usedMembers:
             items = self.model.findItems(str(member))
-            self.model.item(items[0].index().row(), 1).setText(
-                str(getattr(data, member))
-            )
+            self.model.item(items[0].index().row(), 1).setText(str(getattr(data, member)))
 
         self._data = data

@@ -138,9 +138,7 @@ class SIM(QMainWindow):
         layout = QVBoxLayout()
 
         self.config_dir_widget = ConfigDir(self.force_calculator)
-        self.config_dir_widget.configurationChanged.connect(
-            self.__configuration_changed
-        )
+        self.config_dir_widget.configurationChanged.connect(self.__configuration_changed)
 
         layout.addWidget(self.config_dir_widget)
 

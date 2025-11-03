@@ -41,6 +41,4 @@ class TopicDetailWidget(QWidget):
         data : `BaseMsgType`
             New data. Either received from SAL, or retrived from some cache.
         """
-        raise NotImplementedError(
-            "data_changed method needs to be overriden in TopicDetailWidget subclass."
-        )
+        raise NotImplementedError("data_changed method needs to be overriden in TopicDetailWidget subclass.")

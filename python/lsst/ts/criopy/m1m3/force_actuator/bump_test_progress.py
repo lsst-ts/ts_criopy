@@ -40,9 +40,7 @@ class BumpTestModel(QStandardItemModel):
         m1m3.appliedForces.connect(self.applied_forces)
         m1m3.forceActuatorData.connect(self.force_actuator_data)
 
-    def append(
-        self, fa: ForceActuatorData, kind: BumpTestKind
-    ) -> tuple[TimeCache, TimeCache]:
+    def append(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
         time_field = [("timestamp", "f8")]
         if kind == BumpTestKind.AXIS_X:
             axis_index = fa.x_index
@@ -51,9 +49,9 @@ class BumpTestModel(QStandardItemModel):
         elif kind == BumpTestKind.AXIS_Z:
             axis_index = fa.z_index
 
-        row = [
-            QStandardItem(s) for s in [str(fa.actuator_id), str(axis_index), str(kind)]
-        ] + [BumpTestStatusItem("--")]
+        row = [QStandardItem(s) for s in [str(fa.actuator_id), str(axis_index), str(kind)]] + [
+            BumpTestStatusItem("--")
+        ]
         row[0].setData(fa)
 
         row[2].setData(kind)
@@ -98,9 +96,7 @@ class BumpTestModel(QStandardItemModel):
 
         return None
 
-    def caches(
-        self, actuator_id: int, primary: bool
-    ) -> tuple[TimeCache, TimeCache] | None:
+    def caches(self, actuator_id: int, primary: bool) -> tuple[TimeCache, TimeCache] | None:
         row = self.find_tests(actuator_id, primary)
         if row is not None:
             return (
@@ -161,9 +157,7 @@ class BumpTestProgressWidget(QTreeView):
         self.setMinimumWidth(200)
         self.setMaximumWidth(420)
 
-    def add(
-        self, fa: ForceActuatorData, kind: BumpTestKind
-    ) -> tuple[TimeCache, TimeCache]:
+    def add(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
         return self.model().append(fa, kind)
 
     def clear(self) -> None:

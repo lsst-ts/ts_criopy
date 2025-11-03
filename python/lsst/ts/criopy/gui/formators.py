@@ -65,19 +65,21 @@ class Formator:
     ):
         self.fmt = fmt
         if isinstance(unit, str):
-            unit = u.Unit(unit)
+            self.unit = u.Unit(unit)
+        else:
+            self.unit = unit
 
-        if unit is not None:
-            assert issubclass(unit.__class__, u.UnitBase)
+        if self.unit is not None:
+            assert issubclass(self.unit.__class__, u.UnitBase)
 
         if convert is not None:
-            if unit is None:
+            if self.unit is None:
                 raise RuntimeError("Cannot specify conversion without input units!")
-            self.scale = unit.to(convert)
+            self.scale = self.unit.to(convert)
             self.unit_name = convert.to_string()
         elif unit is not None:
             self.scale = 1
-            self.unit_name = unit.to_string()
+            self.unit_name = self.unit.to_string()
         else:
             self.scale = 1
             self.unit_name = ""
@@ -101,7 +103,6 @@ class Formator:
 
         self.unit_name = " " + self.unit_name
 
-        self.unit = unit
         self.convert = convert
         self.warning_function = warning_function
         self.error_function = error_function

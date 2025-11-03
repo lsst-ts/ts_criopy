@@ -141,9 +141,7 @@ class CommandWidget(QWidget):
             elif self._kind == Buttons.FANS:
                 self._edit_title = "Edit FCU Fans speed"
                 self._set_title = "Set FCU Fans speed"
-                tooltip = (
-                    "Edit and sets Fan Coil Units (FCU) Fans Speed (0-255, *10" " RPM)"
-                )
+                tooltip = "Edit and sets Fan Coil Units (FCU) Fans Speed (0-255, *10 RPM)"
             else:
                 raise RuntimeError(f"Unknown set button kind {kind}")
 
@@ -293,9 +291,7 @@ class CommandWidget(QWidget):
 
         self.cancel()
 
-    def update_values(
-        self, values: None | BaseMsgType, freeze: bool = False, fmt: str | None = None
-    ) -> None:
+    def update_values(self, values: None | BaseMsgType, freeze: bool = False, fmt: str | None = None) -> None:
         if self.freezed:
             return
 
@@ -333,32 +329,18 @@ class ThermalValuePageWidget(TopicWindow):
             self.command_widget.data_widget.reset_background()
             self.command_widget.update_values(values, fmt=self.field.fmt)
             if self.field.field_name in ["heaterPWM"]:
-                self.command_widget.mask_backround(
-                    [heater == 0 for heater in values], Qt.red
-                )
-                self.command_widget.mask_backround(
-                    [heater == 100 for heater in values], Qt.blue
-                )
+                self.command_widget.mask_backround([heater == 0 for heater in values], Qt.red)
+                self.command_widget.mask_backround([heater == 100 for heater in values], Qt.blue)
             if self.field.field_name in ["absoluteTemperature"]:
-                self.command_widget.mask_backround(
-                    [isnan(t) for t in values], Qt.darkRed
-                )
+                self.command_widget.mask_backround([isnan(t) for t in values], Qt.darkRed)
                 target = self.comm.remote.evt_appliedSetpoints.get()
                 if target is not None and not isnan(target.heatersSetpoint):
                     tt = target.heatersSetpoint
                     t_diff = [t - tt for t in values]
-                    self.command_widget.mask_backround(
-                        [td < -0.025 for td in t_diff], QColor("#99CCFF")
-                    )
-                    self.command_widget.mask_backround(
-                        [td > 0.025 for td in t_diff], QColor("#FF9999")
-                    )
-                    self.command_widget.mask_backround(
-                        [td < -0.05 for td in t_diff], Qt.blue
-                    )
-                    self.command_widget.mask_backround(
-                        [td > 0.05 for td in t_diff], Qt.red
-                    )
+                    self.command_widget.mask_backround([td < -0.025 for td in t_diff], QColor("#99CCFF"))
+                    self.command_widget.mask_backround([td > 0.025 for td in t_diff], QColor("#FF9999"))
+                    self.command_widget.mask_backround([td < -0.05 for td in t_diff], Qt.blue)
+                    self.command_widget.mask_backround([td > 0.05 for td in t_diff], Qt.red)
             if self.field.field_name in ["heaterPWM", "fanRPM", "absoluteTemperature"]:
                 t_w = self.comm.remote.evt_thermalWarning.get()
                 if t_w is not None:
@@ -366,9 +348,7 @@ class ThermalValuePageWidget(TopicWindow):
                         t_w.breakerHeater1Error, QBrush(Qt.red, Qt.Dense6Pattern)
                     )
             elif isinstance(values[0], bool):
-                self.command_widget.mask_backround(
-                    values, QBrush(Qt.red, Qt.Dense3Pattern)
-                )
+                self.command_widget.mask_backround(values, QBrush(Qt.red, Qt.Dense3Pattern))
             thermal_settings = self.comm.remote.evt_thermalSettings.get()
             if thermal_settings is not None:
                 self.command_widget.mask_backround(

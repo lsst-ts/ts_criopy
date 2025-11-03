@@ -83,9 +83,7 @@ class BumpTestPageWidget(QWidget):
 
         self._runner: BumpTestRunner | None = None
 
-        self.actuators_table = QTableWidget(
-            int(max([row.actuator_id for row in FATable])) % 100, 12
-        )
+        self.actuators_table = QTableWidget(int(max([row.actuator_id for row in FATable])) % 100, 12)
         self.actuators_table.setShowGrid(False)
 
         def set_none(r: int, c: int) -> None:
@@ -94,15 +92,7 @@ class BumpTestPageWidget(QWidget):
             self.actuators_table.setItem(r, c, item)
 
         for i in range(4):
-            mr = int(
-                min(
-                    [
-                        row.actuator_id
-                        for row in FATable
-                        if row.actuator_id > (100 + 100 * i)
-                    ]
-                )
-            )
+            mr = int(min([row.actuator_id for row in FATable if row.actuator_id > (100 + 100 * i)]))
             for r in range(mr):
                 for c in range(i * 3, (i * 3) + 2):
                     set_none(r, c)
@@ -129,14 +119,10 @@ class BumpTestPageWidget(QWidget):
                 )
 
         self.actuators_table.horizontalHeader().hide()
-        self.actuators_table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeToContents
-        )
+        self.actuators_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.actuators_table.horizontalHeader().setStretchLastSection(False)
         self.actuators_table.verticalHeader().hide()
-        self.actuators_table.verticalHeader().setSectionResizeMode(
-            QHeaderView.ResizeToContents
-        )
+        self.actuators_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.actuators_table.itemSelectionChanged.connect(self.item_selection_changed)
         self.actuators_table.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
@@ -159,12 +145,8 @@ class BumpTestPageWidget(QWidget):
         self.allow_parallel.setChecked(True)
 
         self.bump_test_all_button = make_button("Bump test &all", self.bump_test_all)
-        self.bump_test_button = make_button(
-            "Run &bump test", self.send_bump_test_command
-        )
-        self.kill_bump_test_button = make_button(
-            "&Stop bump test(s)", self.issue_command_kill_bump_test
-        )
+        self.bump_test_button = make_button("Run &bump test", self.send_bump_test_command)
+        self.kill_bump_test_button = make_button("&Stop bump test(s)", self.issue_command_kill_bump_test)
 
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.allow_parallel)
@@ -185,9 +167,7 @@ class BumpTestPageWidget(QWidget):
         self.setLayout(layout)
 
         self.m1m3.detailedState.connect(self.detailed_state_data)
-        self.m1m3.forceActuatorBumpTestStatus.connect(
-            self.force_actuator_bump_test_status
-        )
+        self.m1m3.forceActuatorBumpTestStatus.connect(self.force_actuator_bump_test_status)
 
     def _recheck_bump_test_button(self, test_enabled: bool = True) -> None:
         detailed_state = self.m1m3.remote.evt_detailedState.get()
@@ -301,9 +281,7 @@ class BumpTestPageWidget(QWidget):
                     testSecondary=test_s,
                 )
 
-                self.kill_bump_test_button.setText(
-                    f"Stop bump test FA ID {test.actuator.actuator_id}"
-                )
+                self.kill_bump_test_button.setText(f"Stop bump test FA ID {test.actuator.actuator_id}")
 
             await self._runner.wait_finish(20)
             print("Passed:", self._runner.passed)
@@ -348,12 +326,9 @@ class BumpTestPageWidget(QWidget):
 
         def try_remove(actuator_id: int, primary: bool) -> None:
             if self._runner is None or not (
-                self._runner.running.contains(fa, primary)
-                or self._runner.todo.contains(fa, primary)
+                self._runner.running.contains(fa, primary) or self._runner.todo.contains(fa, primary)
             ):
-                asyncio.get_event_loop().call_later(
-                    1, remove_fa, fa.actuator_id, primary
-                )
+                asyncio.get_event_loop().call_later(1, remove_fa, fa.actuator_id, primary)
 
         if self._runner is not None:
             self._runner.force_actuator_bump_test_status(data)

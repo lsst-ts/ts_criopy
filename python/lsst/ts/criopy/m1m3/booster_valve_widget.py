@@ -59,9 +59,7 @@ class FollowingErrorTrigger(QWidget):
             "Close",
             Force(m1m3.boosterValveSettings, "followingErrorTriggerClose"),
         )
-        operationalLayout.addRow(
-            "Opened", OnOffLabel(m1m3.boosterValveStatus, "opened")
-        )
+        operationalLayout.addRow("Opened", OnOffLabel(m1m3.boosterValveStatus, "opened"))
         operationalLayout.addRow(
             "Following Error Triggered",
             OnOffLabel(m1m3.boosterValveStatus, "followingErrorTriggered"),
@@ -158,9 +156,7 @@ class Accelerometer(QWidget):
 
         layout.addLayout(operationalLayout, 0, 0)
 
-        plotAxis = Axis(
-            "Angular Acceleration (deg/s<sup>2</sup>)", m1m3.accelerometerData
-        )
+        plotAxis = Axis("Angular Acceleration (deg/s<sup>2</sup>)", m1m3.accelerometerData)
 
         dataLayout = QFormLayout()
 

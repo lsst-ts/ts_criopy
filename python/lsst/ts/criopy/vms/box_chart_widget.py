@@ -57,13 +57,11 @@ class BoxChartWidget(DockWindow):
         self.chartView.updateMaxSensor(data.sensor)
         for axis in ["X", "Y", "Z"]:
             name = f"{str(data.sensor)} {axis}"
-            serie = self.chart.findSerie(name)
+            serie = self.chart.find_serie(name)
             if serie is not None:
                 self.chart.append(
                     serie,
                     data.timestamp,
                     getattr(data, f"acceleration{axis}"),
                 )
-                self.chart.axes(Qt.Vertical)[0].setTitleText(
-                    "Acceleration (" + self.chart.unit + ")"
-                )
+                self.chart.axes(Qt.Vertical)[0].setTitleText("Acceleration (" + self.chart.unit + ")")
