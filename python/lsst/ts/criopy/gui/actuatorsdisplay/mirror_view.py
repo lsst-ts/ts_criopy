@@ -138,10 +138,10 @@ class MirrorView(QGraphicsView):
     def update_scale(self) -> None:
         """Sets prefered scale."""
         b_width = M1_R * 2000
-        b_height = b_width
+        b_height = b_width + 200
 
         if len(self._mirror.scanners) > 0:
-            b_height += 700
+            b_height += 500
         if len(self._mirror.fcu) > 0:
             b_width += 550
 

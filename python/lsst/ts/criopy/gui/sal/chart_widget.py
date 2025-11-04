@@ -110,14 +110,14 @@ class ChartWidget(TimeChartView):
     """
 
     def __init__(self, *values: Axis, max_items: int = 50 * 30, update_interval: float = 0.1):
-        self.chart = TimeChart({v.title: list(v.fields.keys()) for v in values}, max_items, update_interval)
+        chart = TimeChart({v.title: list(v.fields.keys()) for v in values}, max_items, update_interval)
         axis_index = 0
         for v in values:
             v.signal.connect(partial(self._append, axis_index=axis_index, fields=v.fields.values()))
             axis_index += 1
         self._has_timestamp: bool | None = None
 
-        super().__init__(self.chart)
+        super().__init__(chart)
 
     def _append(
         self,
@@ -136,7 +136,7 @@ class ChartWidget(TimeChartView):
         for f in fields:
             display_data.append(f.get_value(data))
 
-        self.chart.append(
+        self.chart().append(
             data.timestamp if self._has_timestamp else data.private_sndStamp,
             display_data,
             axis_index=axis_index,
