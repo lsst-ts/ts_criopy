@@ -67,7 +67,7 @@ class EfdCacheTestCase(unittest.IsolatedAsyncioTestCase):
                     assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
                     assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
 
-            assert len(topics) == 24
+            assert len(topics) == 25
 
 
 if __name__ == "__main__":

@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.14.0
+-------
+
+* M1M3 Thermal Scanner Thermocouples ("Glass Temperature") display in M1M3TSGUI.
+
 v0.13.1
 -------
 
@@ -12,7 +17,7 @@ v0.13.1
 v0.13.0
 -------
 
-* Show occurence of ilcWarning messages.
+* Show occurrence of ilcWarning messages.
 * Fix data reload - issue only one request to load data.
 
 v0.12.1

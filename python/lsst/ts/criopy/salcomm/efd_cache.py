@@ -120,7 +120,7 @@ class EfdCache:
         try:
             await request.load(self.efd_client)
         except ValueError as er:
-            logging.warn(
+            logging.warning(
                 "Event %s is not in the efd - will be ignored: %s.",
                 request.topic,
                 str(er),
