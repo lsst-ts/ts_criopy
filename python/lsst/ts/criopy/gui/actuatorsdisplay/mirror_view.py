@@ -125,7 +125,7 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
-        scale : `class`
+        scale : `GaugeScale`
             New scale.
         """
         self._mirror.set_color_scale(scale)
@@ -153,11 +153,11 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
-        fa : ForceActuatorData
+        fa : `ForceActuatorData`
             Force Actuator record.
-        data : BaseMsgType
+        data : `BaseMsgType`
             Update actuator value.
-        state : DataItemState
+        state : `DataItemState`
             Updated actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
@@ -177,11 +177,11 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
-        fcu : FCUData
+        fcu : `FCUData`
             Force Actuator record.
-        value : float
+        value : `float`
             Update actuator value.
-        state : DataItemState
+        state : `DataItemState`
             Updated actuator state.
 
         Raises
@@ -201,6 +201,11 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
+        tc_values : `[[ThermocoupleData, float]]`
+            Pair of thermocouple info and its value - measured temperature in
+            degree Celsius.
+        state : `DataItemState`
+            Updated thermocouple state.
         """
         for tc, value in tc_values:
             scanner = self._mirror.get_scanner(tc)

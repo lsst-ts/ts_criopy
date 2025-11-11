@@ -32,6 +32,25 @@ from .gauge_scale import GaugeScale
 
 
 class ScannerItem(DataItem):
+    """Represent ScannerItem. This is an arteficial concept, linking
+    thermocouples in the same location. Overwrites function to draw the
+    QGraphicsItem. Hold values of all (up to 4, if cross-calibration
+    thermocouples are at the cell) thermocouples at the same location.
+
+    Attributes
+    ----------
+    tcs : `[ThermocoupleData]`
+        List of thermocouples sharing the location. The list is sorted from
+        topmost to bottommost thermocouples.
+
+    Parameters
+    ----------
+    tcs : `[ThermocoupleData]`
+        List of thermocuples sharing the location.
+    state : `DataItemState`, optional
+        Sensor state. Optional, defaults to DataItemState.INACTIVE.
+    """
+
     def __init__(
         self, name: str, tcs: list[ThermocoupleData], state: DataItemState = DataItemState.INACTIVE
     ) -> None:
@@ -45,7 +64,13 @@ class ScannerItem(DataItem):
 
     @property
     def data(self) -> list[float]:
-        """Values associated with the scanner ([`float`])."""
+        """Values associated with the scanner ([`float`]).
+
+        Returns
+        -------
+        data : `[float]`
+            Thermocouple temperatures.
+        """
         return self._values
 
     @data.setter
@@ -55,13 +80,28 @@ class ScannerItem(DataItem):
         self.update()
 
     def set_tc(self, tc_name: str, value: float, state: DataItemState) -> None:
+        """Set thermocouple current value.
+
+        Parameters
+        ----------
+        tc_name : `str`
+            Thermocouple name.
+        value : `float`
+            Thermocouple temperature in degrees C.
+        state : `DataItemState`
+            Thermocouple state.
+
+        Raises
+        ------
+        RuntimeError
+            If thermocuple with give name is not found.
+        """
         for i, tc in enumerate(self.tcs):
             if tc.name == tc_name:
                 self._values[i] = value
                 self._data = np.mean(self._values)
                 self._state = state
                 return
-        print([tc.name for tc in self.tcs])
         raise RuntimeError(f"Cannot find thermocouple {tc_name} in scanner {self.name}!")
 
     def set_color_scale(self, scale: GaugeScale) -> None:
@@ -72,7 +112,8 @@ class ScannerItem(DataItem):
         ----------
         scale : `object`
             Scaling object. Should provide format_value() and get_brush()
-            methods."""
+            methods.
+        """
         self._color_scale = scale
         self.update()
 
@@ -82,7 +123,8 @@ class ScannerItem(DataItem):
         Returns
         -------
         format_value : `str`
-           Current value formatted by the currently used color scale."""
+           Current value formatted by the currently used color scale.
+        """
         return self.format_value(self._data)
 
     def get_range(self, s_min: float, s_max: float) -> tuple[float, float]:
@@ -92,20 +134,32 @@ class ScannerItem(DataItem):
         return s_min, s_max
 
     def get_indexed_value(self, index: int) -> str:
-        return self.format_value(self._values[index])
-
-    def format_value(self, v: float) -> str:
-        """Returns
+        """Returns formated value with given index.
 
         Parameters
         ----------
-        v : `scalar`
+        index : `int`
+            Thermocouple index.
+
+        Returns
+        -------
+        format : `str`
+            Formated returned thermocouple value.
+        """
+        return self.format_value(self._values[index])
+
+    def format_value(self, v: float) -> str:
+        """Returns formated value.
+
+        Parameters
+        ----------
+        v : `float`
             Value to format. Type can vary depending on which value is being
             formated (boolean, float, int,..).
 
         Returns
         -------
-        formattedValue : `str`
+        formatted_value : `str`
             Value formatted by the currently used color scale.
         """
         if self._color_scale is None:
@@ -122,13 +176,26 @@ class ScannerItem(DataItem):
         )
 
     def get_index(self, tc_name: str) -> int | None:
+        """Returns index of thermocouple withj given name.
+
+        Parameters
+        ----------
+        tc_name : `str`
+            Thermocouple name.
+
+        Returns
+        -------
+        index : `int | None`
+            Thermocouple index. None if thermcouple with the given name is not
+            present.
+        """
         for i, tc in enumerate(self.tcs):
             if tc.name == tc_name:
                 return i
         return None
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
-        """Paint actuator. Overridden method."""
+        """Paint actuator. Overridden method of the QGraphicsItem class."""
         palette = QGuiApplication.palette()
         if not self.isEnabled():
             palette.setCurrentColorGroup(QPalette.Inactive)
