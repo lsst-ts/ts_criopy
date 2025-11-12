@@ -20,10 +20,19 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from collections import defaultdict
 from math import sqrt
 
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import CENTER_HOLE_R, M1_R, M3_R, FATable, FCUTable
+from lsst.ts.xml.tables.m1m3 import (
+    CENTER_HOLE_R,
+    M1_R,
+    M3_R,
+    FATable,
+    FCUTable,
+    ThermocoupleTable,
+    ThermocoupleData,
+)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QPen
 from PySide6.QtWidgets import QGraphicsScene
@@ -32,6 +41,7 @@ from .data_item import DataItemState
 from .fcu_item import FCUItem
 from .force_actuator_item import ForceActuatorItem
 from .gauge_scale import GaugeScale
+from .scanner_item import ScannerItem
 
 
 class Mirror(QGraphicsScene):
@@ -40,24 +50,33 @@ class Mirror(QGraphicsScene):
     Actuator list is cleared with clear() method (inherited from
     QGraphicsScene). Force Actuators are added with add_force_actuator()
     method. Force Actuator data should be updated with update_force_actuator()
-    call.
+    call. Similar is true for FCU (Fan Coil Unit) and thermocouples / scanners.
+
+    Items taking part of the mirror are assigned various Z-order, which governs
+    their drawing order. Please see QGraphicsItem.setZValue for details.
 
     Attributes
     ----------
-    fa : [ForceActuatorItem]
+    fa : `[ForceActuatorItem]`
         Mirror support system force actuators.
-    fcu : [FCUItem]
+    fcu : `[FCUItem]`
         Mirror thermal system FCU (Fan Coil Units).
+    scanners : `[ScannerItem]`
+        Thermocouples sets. Thermocouples sharing the same cell are part of the
+        ScannerItem. ScannerItem provides graphical representation of the
+        thermocouples.
 
     Parameters
     ----------
-    support : bool, optional
+    support : `bool`, optional
         Populate mirror view with support actuators.
-    thermal : bool, optional
+    thermal : `bool`, optional
         Populate mirror view with thermal actuators.
+    scanners : `bool`, optional
+        Populate mirror view with thermal scanners.
     """
 
-    def __init__(self, support: bool = False, thermal: bool = False) -> None:
+    def __init__(self, support: bool = False, thermal: bool = False, scanners: bool = False) -> None:
         super().__init__()
 
         pen = QPen(Qt.black, 15, Qt.DashLine)
@@ -108,8 +127,8 @@ class Mirror(QGraphicsScene):
 
         pen = QPen(Qt.black, 10, Qt.SolidLine, Qt.RoundCap)
 
-        xo = -R_M1
-        yo = -R_M1 + 1000
+        xo = -R_M1 + 100
+        yo = R_M1 - 100
 
         vector(xo, yo, 0, -1000, pen, "+Y", 100, -50)
         vector(xo, yo, 1000, 0, pen, "+X", 100, -100)
@@ -118,6 +137,7 @@ class Mirror(QGraphicsScene):
 
         self.fa: list[ForceActuatorItem] = []
         self.fcu: list[FCUItem] = []
+        self.scanners: list[ScannerItem] = []
 
         if support:
             for fa in FATable:
@@ -127,15 +147,53 @@ class Mirror(QGraphicsScene):
             for fcu in FCUTable:
                 self.add_fcu(FCUItem(fcu, DataItemState.INACTIVE))
 
+        if scanners:
+            cells: dict[str, list[ThermocoupleData]] = defaultdict(list[ThermocoupleTable])
+            for tc in ThermocoupleTable:
+                cells[tc.cell()].append(tc)
+
+            for name, tcs in cells.items():
+                self.add_scanner(ScannerItem(name, tcs))
+
     def add_fa(self, fa: ForceActuatorItem) -> None:
+        """Add force actuator, set its Z order to 11.
+
+        Parameters
+        ----------
+        fa : `ForceActuatorItem`
+            Force actuator item (child of QGraphicsItem) to be added to the
+            mirror.
+        """
         self.fa.append(fa)
-        fa.setZValue(9)
+        fa.setZValue(11)
         self.addItem(fa)
 
     def add_fcu(self, fcu: FCUItem) -> None:
+        """Add FCU (Fan Coil Unit) to the mirror item. Z order defaults to 10,
+        atop thermal scanners but below the force actuators.
+
+        Parameters
+        ----------
+        fcu : `FCUItem`
+            FCU item to be added to the mirror.
+        """
         self.fcu.append(fcu)
         fcu.setZValue(10)
         self.addItem(fcu)
+
+    def add_scanner(self, scanner: ScannerItem) -> None:
+        """Add ScannerItem to the mirror items. Z order defaults to 9, below
+        the force actuators and thermal system's FCUs.
+
+        Parameters
+        ----------
+        scanner : `ScannerItem`
+            Scanner item to be added to the mirror. Scanner item holds list of
+            ThermocoupleData objects, sharing the cell location.
+        """
+        self.scanners.append(scanner)
+        scanner.setZValue(9)
+        self.addItem(scanner)
 
     def set_color_scale(self, scale: GaugeScale) -> None:
         """Set display color scale. Provides get_brush method, returning brush
@@ -151,6 +209,9 @@ class Mirror(QGraphicsScene):
 
         for fcu in self.fcu:
             fcu.set_color_scale(scale)
+
+        for scanner in self.scanners:
+            scanner.set_color_scale(scale)
 
     def update_force_actuator(self, index: int, data: BaseMsgType, state: DataItemState) -> None:
         """Updates actuator value and state.
@@ -171,3 +232,20 @@ class Mirror(QGraphicsScene):
             If actuator with the given ID cannot be found.
         """
         self.fa[index].update_data(data, state)
+
+    def get_scanner(self, tc: ThermocoupleData) -> ScannerItem | None:
+        """Returns scanner belonging to the given thermocouple.
+
+        Parameters
+        ----------
+        tc : `ThermocoupleData`
+
+        Returns
+        -------
+        scanner : `ScannerItem | None`
+            Scanner item belonging to the thermcouple.
+        """
+        try:
+            return next(sc for sc in self.scanners if tc.cell() == sc.name)
+        except StopIteration:
+            return None
