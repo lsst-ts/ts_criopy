@@ -133,9 +133,9 @@ class TimeChart(AbstractChart):
             call and update plot if update_interval passed since the last
             completed update."""
         if cache_index is None:
-            cache = self._caches[axis_index]
-        else:
-            cache = self._caches[cache_index]
+            cache_index = axis_index
+
+        cache = self._caches[cache_index]
 
         cache.append(tuple([timestamp * 1000.0] + data))
 
@@ -145,14 +145,14 @@ class TimeChart(AbstractChart):
             self._next_update = [0] * len(self._caches)
 
         if (
-            self._next_update[axis_index] < time.monotonic()
+            self._next_update[cache_index] < time.monotonic()
             and self.update_task.done()
             and self.isVisibleTo(None)
         ):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 self.update_task = pool.submit(self._replot, axis_index, cache)
 
-            self._next_update[axis_index] = time.monotonic() + self.update_interval
+            self._next_update[cache_index] = time.monotonic() + self.update_interval
 
     def replace(self, caches: list[TimeCache]) -> None:
         self._caches = caches
@@ -167,7 +167,7 @@ class TimeChart(AbstractChart):
         def update_all() -> None:
             try:
                 for index, cache in enumerate(self._caches):
-                    self._replot(index, cache)
+                    self._replot(0, cache)
             except Exception as ex:
                 print("Exception updating", str(ex), index, str(cache))
 
@@ -175,8 +175,7 @@ class TimeChart(AbstractChart):
         with concurrent.futures.ThreadPoolExecutor() as pool:
             self.update_task = pool.submit(update_all)
 
-        for index in range(len(self._caches)):
-            self._next_update[index] = time.monotonic() + self.update_interval
+        self._next_update = [time.monotonic() + self.update_interval] * len(self._caches)
 
     def _replot(self, axis_index: int, cache: TimeCache) -> None:
         """Updates given cache.
@@ -286,7 +285,6 @@ class UserSelectedTimeChart(TimeChart):
                 self._index = index
 
                 self._signal.connect(self._append_data)
-                self._next_update = [0]
 
                 break
 

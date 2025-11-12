@@ -5,4 +5,5 @@ from .fcu_display_widget import FCUDisplayWidget
 from .glycol_loop_temperature_widget import GlycolLoopTemperatureWidget
 from .mixing_valve_widget import MixingValveWidget
 from .power_page_widget import PowerPageWidget
+from .scanners_widget import ScannersWidget
 from .thermal_value_page_widget import ThermalValuePageWidget

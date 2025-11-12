@@ -69,7 +69,7 @@ class EfdTopic:
                     arr[i] = current_map[i]
                 else:
                     arr[i] = None
-                    logging.warn(
+                    logging.warning(
                         "Uncomplete array in EFD data - %s map %s",
                         last,
                         current_map,

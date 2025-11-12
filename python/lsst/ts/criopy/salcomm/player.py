@@ -100,7 +100,7 @@ class Player(QObject):
             except asyncio.CancelledError:
                 self.requestTerminated.emit(request, number)
             except Exception as ex:
-                logging.warn(
+                logging.warning(
                     "While loading %s (%s to %s): %s.",
                     request.topic,
                     request.start.isot,

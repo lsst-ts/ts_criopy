@@ -48,15 +48,19 @@ class MirrorWidget(QWidget):
         Populate mirror view with support actuators.
     thermal : bool, optional
         Populate mirror view with thermal actuators.
+    scanners : bool, optional
+        Populate mirror view with thermal scanners.
     """
 
-    def __init__(self, support: bool = False, thermal: bool = False) -> None:
+    def __init__(
+        self, support: bool = False, thermal: bool = False, scanners: bool = False, fmt: str = ".02f"
+    ) -> None:
         super().__init__()
 
-        self.mirror_view = MirrorView(support, thermal)
+        self.mirror_view = MirrorView(support, thermal, scanners)
         self._bump_test = BumpTestScale()
         self._enabled_disabled = EnabledDisabledScale()
-        self._gauge = GaugeScale()
+        self._gauge = GaugeScale(fmt=fmt)
         self._integer = IntegerScale()
         self._onoff = OnOffScale()
         self._waiting = WaitingScale()

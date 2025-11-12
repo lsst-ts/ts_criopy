@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import numpy as np
 
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import (
@@ -26,6 +27,8 @@ from lsst.ts.xml.tables.m1m3 import (
     FCUData,
     ForceActuatorData,
     actuator_id_to_index,
+    ThermocoupleData,
+    M1_R,
 )
 from PySide6.QtCore import QEvent, Signal
 from PySide6.QtGui import QMouseEvent
@@ -36,6 +39,7 @@ from .fcu_item import FCUItem
 from .force_actuator_item import FASelection, ForceActuatorItem
 from .gauge_scale import GaugeScale
 from .mirror import Mirror
+from .scanner_item import ScannerItem
 
 
 class MirrorView(QGraphicsView):
@@ -50,10 +54,12 @@ class MirrorView(QGraphicsView):
         Populate mirror view with support actuators.
     thermal : `bool`, optional
         Populate mirror view with thermal actuators.
+    scanners : `bool`, optional
+        Populate mirror view with thermal scanners.
     """
 
-    def __init__(self, support: bool, thermal: bool) -> None:
-        self._mirror = Mirror(support, thermal)
+    def __init__(self, support: bool, thermal: bool, scanners: bool) -> None:
+        self._mirror = Mirror(support, thermal, scanners)
         super().__init__(self._mirror)
         self._selected_actuator: ForceActuatorItem | None = None
 
@@ -119,7 +125,7 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
-        scale : `class`
+        scale : `GaugeScale`
             New scale.
         """
         self._mirror.set_color_scale(scale)
@@ -131,7 +137,15 @@ class MirrorView(QGraphicsView):
 
     def update_scale(self) -> None:
         """Sets prefered scale."""
-        s = min(self.width() / 8600, self.height() / 8600)
+        b_width = M1_R * 2000
+        b_height = b_width + 200
+
+        if len(self._mirror.scanners) > 0:
+            b_height += 500
+        if len(self._mirror.fcu) > 0:
+            b_width += 550
+
+        s = min(self.width() / b_width, self.height() / b_height)
         self.scale(s, s)
 
     def update_force_actuator(self, fa: ForceActuatorData, data: BaseMsgType, state: DataItemState) -> None:
@@ -139,11 +153,11 @@ class MirrorView(QGraphicsView):
 
         Parameters
         ----------
-        fa : ForceActuatorData
+        fa : `ForceActuatorData`
             Force Actuator record.
-        data : BaseMsgType
+        data : `BaseMsgType`
             Update actuator value.
-        state : DataItemState
+        state : `DataItemState`
             Updated actuator state. ForceActuatorItem.STATE_INVALID,
             ForceActuatorItem.STATE_VALID, ForceActuatorItem.STATE_WARNING.
 
@@ -159,15 +173,15 @@ class MirrorView(QGraphicsView):
             self.selectionChanged.emit(self._selected_actuator if self._selected_actuator.active else None)
 
     def update_fcu(self, fcu: FCUData, value: float, state: DataItemState) -> None:
-        """Update FCU value and state.
+        """Update FCU's value and state.
 
         Parameters
         ----------
-        fcu : FCUData
+        fcu : `FCUData`
             Force Actuator record.
-        value : float
+        value : `float`
             Update actuator value.
-        state : DataItemState
+        state : `DataItemState`
             Updated actuator state.
 
         Raises
@@ -180,6 +194,38 @@ class MirrorView(QGraphicsView):
             return
         if self._selected_actuator.actuator.index == fcu.index:
             self.selectionChanged.emit(self._selected_actuator if self._selected_actuator.active else None)
+
+    def update_scanner(self, tc_values: list[tuple[ThermocoupleData, float]], state: DataItemState) -> None:
+        """
+        Update Scanner's value and state.
+
+        Parameters
+        ----------
+        tc_values : `[[ThermocoupleData, float]]`
+            Pair of thermocouple info and its value - measured temperature in
+            degree Celsius.
+        state : `DataItemState`
+            Updated thermocouple state.
+        """
+        for tc, value in tc_values:
+            scanner = self._mirror.get_scanner(tc)
+            assert scanner is not None, f"Cannot find scanner for TC with name {tc.name}"
+            scanner.set_tc(tc.name, value, DataItemState.ACTIVE)
+            if not isinstance(self._selected_actuator, ScannerItem):
+                continue
+            if self._selected_actuator.actuator.index == scanner.index:
+                self.selectionChanged.emit(
+                    self._selected_actuator if self._selected_actuator.active else None
+                )
+
+    def get_scanner_range(self) -> tuple[float, float]:
+        s_min = np.inf
+        s_max = -np.inf
+
+        for scanner in self._mirror.scanners:
+            s_min, s_max = scanner.get_range(s_min, s_max)
+
+        return s_min, s_max
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         item = self.itemAt(event.pos())
