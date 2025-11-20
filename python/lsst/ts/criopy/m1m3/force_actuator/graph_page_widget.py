@@ -18,12 +18,13 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from lsst.ts.m1m3.utils import Simulator
+
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
 
 from ...gui.actuatorsdisplay import DataItemState, MirrorWidget
 from ...salcomm import MetaSAL
+from ..simulator import Simulator
 from .widget import Widget
 
 

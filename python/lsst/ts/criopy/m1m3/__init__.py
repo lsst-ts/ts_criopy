@@ -20,5 +20,6 @@ from .outer_loop_page_widget import OuterLoopPageWidget
 from .overview_page_widget import OverviewPageWidget
 from .pid_page_widget import PIDPageWidget
 from .power_page_widget import PowerPageWidget
+from .simulator import Simulator
 from .simulator_widget import SimulatorWidget
 from .slew_controller_page_widget import SlewControllerPageWidget

@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.15.0
+-------
+
+* M1M3 PySide6 dependent simulator moved to this package.
+
 v0.14.0
 -------
 
