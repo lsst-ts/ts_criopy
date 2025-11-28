@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.16.0
+-------
+
+* Displays EGW Pump's VFD DriveStatus2.
+
 v0.15.0
 -------
 
