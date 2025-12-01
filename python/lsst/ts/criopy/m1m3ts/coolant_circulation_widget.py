@@ -42,6 +42,7 @@ from ..gui import (
     TopicStatusLabel,
     OnOffLabel,
     PowerOnOffLabel,
+    RPM,
     Volt,
 )
 from ..gui.sal import TimeDeltaLabel
@@ -114,6 +115,7 @@ class CoolantPumpWidget(QWidget):
                     ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Commanded Frequency", Hz(field="commandedFrequency")),
                     ("Output Frequency", Hz(field="outputFrequency")),
+                    ("Speed Feedback", RPM(field="speedFeedback")),
                     ("Output Current", Ampere(field="outputCurrent")),
                     ("Bus Voltage", Volt(field="busVoltage", fmt="0.0f")),
                     (
