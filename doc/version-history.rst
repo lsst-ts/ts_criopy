@@ -7,7 +7,7 @@ Version History
 v0.16.0
 -------
 
-* Displays EGW Pump's VFD DriveStatus2.
+* Displays EGW Pump's VFD DriveStatus2 and Speed.
 * Changed mixing valve control logic - setpoints control is used in non-engineering mode.
 
 v0.15.0

@@ -32,6 +32,7 @@ from qasync import asyncSlot
 from lsst.ts.salobj import BaseMsgType
 
 from ..gui import (
+    RPM,
     Ampere,
     Colors,
     DataFormWidget,
@@ -115,6 +116,7 @@ class CoolantPumpWidget(QWidget):
                     ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Commanded Frequency", Hz(field="commandedFrequency")),
                     ("Output Frequency", Hz(field="outputFrequency")),
+                    ("Speed Feedback", RPM(field="speedFeedback")),
                     ("Output Current", Ampere(field="outputCurrent")),
                     ("Bus Voltage", Volt(field="busVoltage", fmt="0.0f")),
                     (
