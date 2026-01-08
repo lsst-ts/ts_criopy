@@ -22,9 +22,10 @@ __all__ = ["CacheWidget"]
 import concurrent.futures
 import time
 
-from lsst.ts.utils import make_done_future
 from PySide6.QtCharts import QLineSeries
 from PySide6.QtCore import Slot
+
+from lsst.ts.utils import make_done_future
 
 from ..gui import AbstractChart, DockWindow
 from .bars import ToolBar

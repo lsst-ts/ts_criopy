@@ -23,11 +23,12 @@ import concurrent.futures
 import time
 import typing
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QChart, QChartView, QDateTimeAxis, QLineSeries, QValueAxis
 from PySide6.QtCore import QDateTime, QPointF, Qt, Signal, Slot
 from PySide6.QtGui import QContextMenuEvent, QPainter, QWheelEvent
 from PySide6.QtWidgets import QMenu
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..time_cache import TimeCache
 from .abstract_chart import AbstractChart

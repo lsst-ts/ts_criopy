@@ -22,7 +22,6 @@ from datetime import datetime
 
 import astropy.units as u
 from astropy.coordinates import Angle
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
@@ -35,6 +34,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..salcomm import MetaSAL
 from .colors import Colors

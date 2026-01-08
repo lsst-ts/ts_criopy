@@ -18,10 +18,11 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QVBoxLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from . import ColoredButton
 

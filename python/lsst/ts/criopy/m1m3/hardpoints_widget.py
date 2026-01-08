@@ -20,8 +20,6 @@
 from functools import partial
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QApplication,
@@ -34,6 +32,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates, HardpointActuatorMotionState
 
 from ..gui import (
     Arcsec,

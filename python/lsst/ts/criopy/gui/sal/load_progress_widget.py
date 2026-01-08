@@ -21,10 +21,11 @@ __all__ = ["LoadProgressWidget"]
 
 import time
 
-from lsst.ts.criopy.salcomm import EfdCacheRequest
 from PySide6.QtCore import QTimerEvent, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QHBoxLayout, QTreeView, QWidget
+
+from lsst.ts.criopy.salcomm import EfdCacheRequest
 
 from ...salcomm import Player
 

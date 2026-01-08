@@ -20,9 +20,10 @@
 from functools import partial
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..gui import (
     Arcsec,

@@ -20,9 +20,10 @@
 from datetime import datetime
 from html import escape
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStatusBar, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...salcomm import MetaSAL
 from ..custom_labels import Heartbeat, SimulationStatus, VLine

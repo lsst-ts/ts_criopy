@@ -18,9 +18,10 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..salcomm import MetaSAL
 

@@ -19,9 +19,10 @@
 
 __all__ = ["BoxChartWidget"]
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QBoxPlotSeries
 from PySide6.QtCore import Qt, Slot
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..gui import DockWindow
 from ..salcomm import MetaSAL

@@ -19,12 +19,11 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
+from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtGui import QGuiApplication, QPainter, QPalette, QPen
+from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from lsst.ts.xml.tables.m1m3 import ThermocoupleData
-
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QGuiApplication, QPainter, QPen, QPalette
-from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from ...gui import Colors
 from .data_item import DataItem, DataItemState

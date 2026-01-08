@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtWidgets import QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 
 class TopicDetailWidget(QWidget):

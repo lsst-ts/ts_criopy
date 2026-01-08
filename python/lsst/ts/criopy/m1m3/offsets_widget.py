@@ -21,8 +21,6 @@ import typing
 from functools import partial
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
@@ -33,6 +31,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 
 from ..gui import (
     Arcsec,

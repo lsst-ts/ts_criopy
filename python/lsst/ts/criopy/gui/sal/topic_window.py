@@ -20,7 +20,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QGridLayout,
@@ -30,6 +29,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...salcomm import MetaSAL
 from .topic_collection import TopicCollection

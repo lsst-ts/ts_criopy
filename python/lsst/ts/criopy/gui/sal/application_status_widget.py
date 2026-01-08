@@ -18,10 +18,11 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 
 from ...salcomm import MetaSAL, warning
 from .summary_state_label import SummaryStateLabel

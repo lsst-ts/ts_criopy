@@ -19,10 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFormLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from .colors import Colors
 from .custom_labels import ColoredButton, DataLabel
