@@ -19,7 +19,6 @@
 
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
@@ -30,6 +29,8 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
+from lsst.ts.salobj import BaseMsgType
+
 from ..gui import (
     Ampere,
     Colors,
@@ -39,9 +40,9 @@ from ..gui import (
     Hz,
     Liter,
     LiterMinute,
-    TopicStatusLabel,
     OnOffLabel,
     PowerOnOffLabel,
+    TopicStatusLabel,
     Volt,
 )
 from ..gui.sal import TimeDeltaLabel

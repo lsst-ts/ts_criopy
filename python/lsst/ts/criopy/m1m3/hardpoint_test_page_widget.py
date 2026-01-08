@@ -19,9 +19,10 @@
 
 from functools import partial
 
-from lsst.ts.xml.enums.MTM1M3 import HardpointTest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QVBoxLayout, QWidget
+
+from lsst.ts.xml.enums.MTM1M3 import HardpointTest
 
 from ..gui import (
     ArrayButton,

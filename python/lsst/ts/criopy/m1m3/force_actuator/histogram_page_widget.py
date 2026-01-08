@@ -19,11 +19,12 @@
 
 
 import numpy as np
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCharts import QChartView
 from PySide6.QtCore import QPointF, QSettings, Qt
 from PySide6.QtGui import QContextMenuEvent, QFont, QPainter
 from PySide6.QtWidgets import QGraphicsTextItem, QInputDialog, QMenu
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...gui import Histogram
 from ...salcomm import MetaSAL

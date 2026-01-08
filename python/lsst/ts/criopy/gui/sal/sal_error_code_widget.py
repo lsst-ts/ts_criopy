@@ -20,10 +20,11 @@
 from datetime import datetime
 from html import escape
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QPlainTextEdit, QVBoxLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...salcomm import MetaSAL
 

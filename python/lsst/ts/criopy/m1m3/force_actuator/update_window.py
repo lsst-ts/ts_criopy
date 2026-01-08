@@ -19,7 +19,6 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
 from PySide6.QtCore import QSettings, Qt, Signal, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
@@ -35,6 +34,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.xml.tables.m1m3 import FATABLE_XFA, FATABLE_YFA, FATABLE_ZFA, FATable
 
 from ...gui.actuatorsdisplay import DataItemState, ForceActuatorItem, MirrorWidget
 from ...gui.sal import EngineeringButton

@@ -21,10 +21,11 @@
 import enum
 import math
 
-from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QPointF, QRect, Qt
 from PySide6.QtGui import QGuiApplication, QPainter, QPalette, QPen
 from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
+
+from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...gui import Colors
 from .data_item import DataItem, DataItemState

@@ -17,9 +17,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.xml.enums.MTM1M3 import BumpTest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem
+
+from lsst.ts.xml.enums.MTM1M3 import BumpTest
 
 __all__ = ["BumpTestStatusItem"]
 

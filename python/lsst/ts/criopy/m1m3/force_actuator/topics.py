@@ -20,10 +20,11 @@
 import typing
 
 import numpy as np
+from PySide6.QtCore import Slot
+
 from lsst.ts.m1m3.utils import ForceCalculator
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FAIndex, FATable, actuator_id_to_index
-from PySide6.QtCore import Slot
 
 from ...gui.actuatorsdisplay import Scales
 from ...gui.sal import (

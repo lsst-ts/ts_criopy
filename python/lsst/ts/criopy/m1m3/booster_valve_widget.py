@@ -19,9 +19,10 @@
 
 
 import numpy as np
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFormLayout, QGridLayout, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..gui import DegS2, Force, OnOffLabel, TimeChart, TimeChartView
 from ..gui.sal import Axis, ChartWidget

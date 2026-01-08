@@ -27,6 +27,7 @@ from datetime import datetime
 import click
 import h5py
 import numpy as np
+
 from lsst.ts.salobj import BaseMsgType, Domain, Remote
 
 from .cache import Cache

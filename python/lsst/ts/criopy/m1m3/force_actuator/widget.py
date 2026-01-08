@@ -22,11 +22,12 @@
 import typing
 
 import numpy
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import FAIndex, FATable
 
 from ...gui import WarningLabel
 from ...gui.actuatorsdisplay import ForceActuatorItem

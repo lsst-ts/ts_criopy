@@ -17,8 +17,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.m1m3.utils import BumpTestKind
-from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 from PySide6.QtCore import QDateTime, QItemSelection, Qt, QTimer, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
@@ -29,6 +27,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from lsst.ts.m1m3.utils import BumpTestKind
+from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...gui import TimeChart, TimeChartView
 from ...time_cache import TimeCache

@@ -18,8 +18,6 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
@@ -32,6 +30,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
 
 from ..gui import ColoredButton, Colors, StatusBox, StatusWidget
 from ..gui.sal import ActiveButton, CSCControlWidget, EngineeringButton

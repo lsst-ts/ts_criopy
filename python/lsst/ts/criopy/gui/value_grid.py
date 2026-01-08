@@ -18,9 +18,10 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QLabel, QWidget
+
+from lsst.ts.salobj import BaseMsgType
 
 from .custom_labels import (
     InterlockOffLabel,

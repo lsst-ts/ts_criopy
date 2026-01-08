@@ -24,8 +24,9 @@ import re
 import typing
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
+
+from lsst.ts.salobj import BaseMsgType
 
 from .colors import Colors
 

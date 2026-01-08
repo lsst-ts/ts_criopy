@@ -18,10 +18,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.xml.tables.m1m3 import FCUData
 from PySide6.QtCore import QPointF, QRect, Qt
 from PySide6.QtGui import QGuiApplication, QPainter, QPen
 from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
+
+from lsst.ts.xml.tables.m1m3 import FCUData
 
 from .data_item import DataItem, DataItemState
 from .gauge_scale import GaugeScale

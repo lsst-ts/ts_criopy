@@ -20,19 +20,19 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
-
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import (
-    FATable,
-    FCUData,
-    ForceActuatorData,
-    actuator_id_to_index,
-    ThermocoupleData,
-    M1_R,
-)
 from PySide6.QtCore import QEvent, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsView
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import (
+    M1_R,
+    FATable,
+    FCUData,
+    ForceActuatorData,
+    ThermocoupleData,
+    actuator_id_to_index,
+)
 
 from .data_item import DataItemState
 from .fcu_item import FCUItem

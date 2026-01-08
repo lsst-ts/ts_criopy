@@ -20,15 +20,6 @@
 import asyncio
 import typing
 
-from lsst.ts.m1m3.utils import (
-    BumpTestKind,
-    BumpTestRunner,
-    BumpTestsList,
-    ForceActuatorBumpTest,
-)
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums import MTM1M3
-from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -44,6 +35,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.m1m3.utils import (
+    BumpTestKind,
+    BumpTestRunner,
+    BumpTestsList,
+    ForceActuatorBumpTest,
+)
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums import MTM1M3
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 
 from ...gui import Colors
 from ...gui.sal import LogWidget
