@@ -45,7 +45,7 @@ class BumpTestQueuedWidget(QTreeView):
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-        self.setMaximumWidth(self.header().length())
+        self.setMaximumWidth(self.header().length() + 5)
 
     def append(self, fa_test: ForceActuatorBumpTest) -> None:
         row = [QStandardItem(s) for s in [str(fa_test.actuator.actuator_id), str(fa_test.kind)]]

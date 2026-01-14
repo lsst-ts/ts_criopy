@@ -33,15 +33,16 @@ from .bump_test_status_item import BumpTestStatusItem
 class BumpTestModel(QStandardItemModel):
     APPLIED_DATA = Qt.UserRole + 1
     MEASURED_DATA = Qt.UserRole + 2
+    FE_DATA = Qt.UserRole + 3
 
     def __init__(self, m1m3: MetaSAL):
         super().__init__(0, 4)
-        self.setHorizontalHeaderLabels(["AccID", "Index", "Kind", "Progress"])
+        self.setHorizontalHeaderLabels(["AccID", "Index", "Kind", "Progress" + " " * 15])
 
         m1m3.appliedForces.connect(self.applied_forces)
         m1m3.forceActuatorData.connect(self.force_actuator_data)
 
-    def append(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
+    def append(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache, TimeCache]:
         time_field = [("timestamp", "f8")]
         if kind == BumpTestKind.AXIS_X:
             axis_index = fa.x_index
@@ -74,9 +75,15 @@ class BumpTestModel(QStandardItemModel):
             self.MEASURED_DATA,
         )
 
+        fe_fields = time_field + [(f"FA {fa.actuator_id} Primary Following Error", "f4")]
+        if fa.s_index is not None:
+            fe_fields += [(f"FA {fa.actuator_id} Secondary Following Error", "f4")]
+
+        row[3].setData(TimeCache(1000, fe_fields), self.FE_DATA)
+
         self.appendRow(row)
 
-        return (row[3].data(self.APPLIED_DATA), row[3].data(self.MEASURED_DATA))
+        return (row[3].data(self.APPLIED_DATA), row[3].data(self.MEASURED_DATA), row[3].data(self.FE_DATA))
 
     def find_tests(self, actuator_id: int, primary: bool) -> int | None:
         items = self.findItems(str(actuator_id), column=0)
@@ -97,12 +104,13 @@ class BumpTestModel(QStandardItemModel):
 
         return None
 
-    def caches(self, actuator_id: int, primary: bool) -> tuple[TimeCache, TimeCache] | None:
+    def caches(self, actuator_id: int, primary: bool) -> tuple[TimeCache, TimeCache, TimeCache] | None:
         row = self.find_tests(actuator_id, primary)
         if row is not None:
             return (
                 self.item(row, 3).data(self.APPLIED_DATA),
                 self.item(row, 3).data(self.MEASURED_DATA),
+                self.item(row, 3).data(self.FE_DATA),
             )
         return None
 
@@ -129,17 +137,23 @@ class BumpTestModel(QStandardItemModel):
     @Slot()
     def force_actuator_data(self, data: BaseMsgType) -> None:
         for r in range(self.rowCount()):
-            new = [data.timestamp * 1000.0]
+            measured = [data.timestamp * 1000.0]
+            fe = [data.timestamp * 1000.0]
             fa = self.item(r, 0).data()
             kind = self.item(r, 2).data()
             if kind == BumpTestKind.AXIS_X:
-                new.append(data.xForce[fa.x_index])
+                measured.append(data.xForce[fa.x_index])
             elif kind == BumpTestKind.AXIS_Y:
-                new.append(data.yForce[fa.y_index])
+                measured.append(data.yForce[fa.y_index])
             else:
-                new.append(data.zForce[fa.z_index])
+                measured.append(data.zForce[fa.z_index])
 
-            self.item(r, 3).data(self.MEASURED_DATA).append(tuple(new))
+            fe.append(data.primaryCylinderFollowingError[fa.z_index])
+            if fa.s_index is not None:
+                fe.append(data.secondaryCylinderFollowingError[fa.s_index])
+
+            self.item(r, 3).data(self.MEASURED_DATA).append(tuple(measured))
+            self.item(r, 3).data(self.FE_DATA).append(tuple(fe))
 
 
 class BumpTestProgressWidget(QTreeView):
@@ -153,12 +167,11 @@ class BumpTestProgressWidget(QTreeView):
         self.setModel(BumpTestModel(self.m1m3))
         self.setSortingEnabled(True)
         self.setRootIsDecorated(False)
-        self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-        self.setMaximumWidth(self.header().length())
+        self.setMaximumWidth(self.header().length() + 5)
 
-    def add(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
+    def add(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache, TimeCache]:
         return self.model().append(fa, kind)
 
     def clear(self) -> None:

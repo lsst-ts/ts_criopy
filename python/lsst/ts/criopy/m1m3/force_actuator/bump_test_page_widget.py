@@ -281,8 +281,8 @@ class BumpTestPageWidget(QWidget):
                 else:
                     test_p = True
 
-                (applied, measured) = self.progress_widget.add(test.actuator, test.kind)
-                self.force_charts.add(test.actuator, test.kind, applied, measured)
+                (applied, measured, fe) = self.progress_widget.add(test.actuator, test.kind)
+                self.force_charts.add(test.actuator, test.kind, applied, measured, fe)
 
                 self.queued_widget.remove(test)
                 todo.remove(test)
