@@ -21,6 +21,7 @@ from PySide6.QtCore import QDateTime, QItemSelection, Qt, QTimer, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QHeaderView,
     QPushButton,
     QSizePolicy,
     QTreeView,
@@ -193,12 +194,14 @@ class ChartView(QTreeView):
 
         self.setModel(ChartModel())
         self.setSortingEnabled(True)
-        for col in range(self.model().columnCount()):
-            self.resizeColumnToContents(col)
+        self.setRootIsDecorated(False)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        self.setMaximumWidth(self.header().length())
 
         self.setSelectionBehavior(QTreeView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
-        self.setMinimumWidth(270)
 
     def progress(self, actuator_id: int, primary: bool, state: int) -> None:
         model = self.model()

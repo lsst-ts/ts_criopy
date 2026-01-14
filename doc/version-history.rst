@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.17.0
+-------
+
+* Improved force actuators bump tests display.
+
 v0.16.0
 -------
 

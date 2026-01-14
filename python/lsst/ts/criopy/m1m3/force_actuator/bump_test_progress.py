@@ -19,7 +19,7 @@
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QTreeView
+from PySide6.QtWidgets import QHeaderView, QTreeView
 
 from lsst.ts.m1m3.utils import BumpTestKind
 from lsst.ts.salobj import BaseMsgType
@@ -152,11 +152,11 @@ class BumpTestProgressWidget(QTreeView):
 
         self.setModel(BumpTestModel(self.m1m3))
         self.setSortingEnabled(True)
-        for col in range(self.model().columnCount()):
-            self.resizeColumnToContents(col)
+        self.setRootIsDecorated(False)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-        self.setMinimumWidth(200)
-        self.setMaximumWidth(420)
+        self.setMaximumWidth(self.header().length())
 
     def add(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
         return self.model().append(fa, kind)
