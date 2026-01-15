@@ -130,7 +130,7 @@ class BumpTestPageWidget(QWidget):
         self.actuators_table.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.actuators_table.setMinimumWidth(
             sum([self.actuators_table.columnWidth(c) for c in range(12)])
-            + self.actuators_table.verticalScrollBar().geometry().width()
+            + self.actuators_table.verticalScrollBar().sizeHint().width()
             + 2
         )
 
@@ -281,8 +281,8 @@ class BumpTestPageWidget(QWidget):
                 else:
                     test_p = True
 
-                (applied, measured, fe) = self.progress_widget.add(test.actuator, test.kind)
-                self.force_charts.add(test.actuator, test.kind, applied, measured, fe)
+                (applied, measured, fe, statistics) = self.progress_widget.add(test.actuator, test.kind)
+                self.force_charts.add(test.actuator, test.kind, applied, measured, fe, statistics)
 
                 self.queued_widget.remove(test)
                 todo.remove(test)

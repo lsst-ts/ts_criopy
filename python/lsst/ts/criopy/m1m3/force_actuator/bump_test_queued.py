@@ -32,7 +32,7 @@ class QueuedTestModel(QStandardItemModel):
 
     def __init__(self) -> None:
         super().__init__(0, 2)
-        self.setHorizontalHeaderLabels(["AccID", "Kind"])
+        self.setHorizontalHeaderLabels(["AccID", "Type"])
 
 
 class BumpTestQueuedWidget(QTreeView):
@@ -45,7 +45,9 @@ class BumpTestQueuedWidget(QTreeView):
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-        self.setMaximumWidth(self.header().length() + 5)
+        self.setMaximumWidth(
+            self.header().length() + self.verticalScrollBar().sizeHint().width() + self.frameWidth() * 2
+        )
 
     def append(self, fa_test: ForceActuatorBumpTest) -> None:
         row = [QStandardItem(s) for s in [str(fa_test.actuator.actuator_id), str(fa_test.kind)]]

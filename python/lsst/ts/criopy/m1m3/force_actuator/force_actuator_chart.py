@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QPushButton,
     QSizePolicy,
+    QTabWidget,
     QTreeView,
     QVBoxLayout,
     QWidget,
@@ -34,6 +35,7 @@ from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...gui import TimeChart, TimeChartView
 from ...time_cache import TimeCache
+from .bump_test_progress import BumpTestStatistics
 from .bump_test_status_item import BumpTestStatusItem
 
 
@@ -101,11 +103,12 @@ class ChartModel(QStandardItemModel):
     APPLIED_DATA = Qt.UserRole + 1
     MEASURED_DATA = Qt.UserRole + 2
     FE_DATA = Qt.UserRole + 3
-    FREEZE_DATA = Qt.UserRole + 4
+    STATISTICS_DATA = Qt.UserRole + 4
+    FREEZE_DATA = Qt.UserRole + 5
 
     def __init__(self) -> None:
         super().__init__(0, 5)
-        self.setHorizontalHeaderLabels(["Acc", "Kn", "State" + " " * 15, "Start", "End"])
+        self.setHorizontalHeaderLabels(["Acc", "Type", "State" + " " * 15, "Start", "End"])
 
     def add(
         self,
@@ -114,6 +117,7 @@ class ChartModel(QStandardItemModel):
         applied_forces: TimeCache,
         measured_forces: TimeCache,
         following_errors: TimeCache,
+        statistics: BumpTestStatistics,
     ) -> None:
         """Add new row to data stored in the model.
 
@@ -129,14 +133,18 @@ class ChartModel(QStandardItemModel):
             TimeCache with recorded measured data.
         following_errors : `TimeCache`
             TimeCache with following errors.
+        statistics : `BumpTestStatistics`
+            Model containing data from ForceActuatorBumpTestStatistics event.
         """
         row = [QStandardItem(s) for s in [str(fa.actuator_id), str(kind), "--", "--"]]
         row.insert(2, BumpTestStatusItem("--"))
         row[0].setData(fa)
         row[1].setData(kind)
+
         row[2].setData(applied_forces, self.APPLIED_DATA)
         row[2].setData(measured_forces, self.MEASURED_DATA)
         row[2].setData(following_errors, self.FE_DATA)
+        row[2].setData(statistics, self.STATISTICS_DATA)
         row[2].setData(False, self.FREEZE_DATA)
 
         self.appendRow(row)
@@ -219,13 +227,12 @@ class ChartView(QTreeView):
         self.setModel(ChartModel())
         self.setSortingEnabled(True)
         self.setRootIsDecorated(False)
-        self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.setSelectionBehavior(QTreeView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
 
-        w = self.header().length() + 5
+        w = self.header().length() + self.verticalScrollBar().sizeHint().width() + self.frameWidth() * 2
 
         self.setMinimumWidth(w)
         self.setMaximumWidth(w)
@@ -248,6 +255,7 @@ class ChartView(QTreeView):
                 item.data(ChartModel.APPLIED_DATA),
                 item.data(ChartModel.MEASURED_DATA),
                 item.data(ChartModel.FE_DATA),
+                item.data(ChartModel.STATISTICS_DATA),
             )
 
 
@@ -271,12 +279,24 @@ class ForceChartWidget(QWidget):
         self.fa_chart = ForceActuatorChart()
         self.fe_chart = FollowingErrorChart()
 
+        self.statistics_view = QTreeView()
+        self.statistics_view.setSortingEnabled(True)
+        self.statistics_view.setRootIsDecorated(False)
+        self.statistics_view.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+
         charts = QVBoxLayout()
         charts.addWidget(self.fa_chart)
         charts.addWidget(self.fe_chart)
 
+        charts_widget = QWidget()
+        charts_widget.setLayout(charts)
+
+        tab = QTabWidget()
+        tab.addTab(charts_widget, "Charts")
+        tab.addTab(self.statistics_view, "Statistics")
+
         layout.addLayout(cache_layout)
-        layout.addLayout(charts)
+        layout.addWidget(tab)
 
         self.setLayout(layout)
 
@@ -304,8 +324,9 @@ class ForceChartWidget(QWidget):
         applied_forces: TimeCache,
         measured_forces: TimeCache,
         following_errors: TimeCache,
+        statistics: BumpTestStatistics,
     ) -> None:
-        self.caches.model().add(fa, kind, applied_forces, measured_forces, following_errors)
+        self.caches.model().add(fa, kind, applied_forces, measured_forces, following_errors, statistics)
 
     def reset(self) -> None:
         model = self.caches.model()
@@ -319,11 +340,14 @@ class ForceChartWidget(QWidget):
         for row in range(model.rowCount()):
             model.item(row, 2).setData(True, ChartModel.FREEZE_DATA)
 
-    def new_data(self, applied: TimeCache, measured: TimeCache, fe: TimeCache) -> None:
+    def new_data(
+        self, applied: TimeCache, measured: TimeCache, fe: TimeCache, statistics: BumpTestStatistics
+    ) -> None:
         self._update_timer.stop()
 
         self.fa_chart.new_data(applied, measured)
         self.fe_chart.new_data(fe)
+        self.statistics_view.setModel(statistics)
         self._last_update = 0
 
         self._update_timer.start(200)
