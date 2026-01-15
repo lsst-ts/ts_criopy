@@ -50,6 +50,16 @@ class BumpTestStatusItem(QStandardItem):
 
     @staticmethod
     def get_text(state: int) -> str:
+        if state > 4000:
+            return f"Z {state - 4000}"
+        elif state > 3000:
+            return f"Y {state - 3000}"
+        elif state > 2000:
+            return f"X {state - 2000}"
+        elif state > 1000:
+            return "S {state - 1000}"
+        elif state > 100:
+            return f"P {state}"
         return TEST_PROGRESS[state]
 
     def set_progress(self, state: int) -> None:
