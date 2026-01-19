@@ -35,7 +35,7 @@ from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...gui import TimeChart, TimeChartView
 from ...time_cache import TimeCache
-from .bump_test_progress import BumpTestStatistics
+from .bump_test_statistics import BumpTestStatistics, BumpTestStatisticsView
 from .bump_test_status_item import BumpTestStatusItem
 
 
@@ -279,10 +279,7 @@ class ForceChartWidget(QWidget):
         self.fa_chart = ForceActuatorChart()
         self.fe_chart = FollowingErrorChart()
 
-        self.statistics_view = QTreeView()
-        self.statistics_view.setSortingEnabled(True)
-        self.statistics_view.setRootIsDecorated(False)
-        self.statistics_view.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.statistics_view = BumpTestStatisticsView()
 
         charts = QVBoxLayout()
         charts.addWidget(self.fa_chart)

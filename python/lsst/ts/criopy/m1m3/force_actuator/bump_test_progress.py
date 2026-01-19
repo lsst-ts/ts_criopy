@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from PySide6.QtCore import QObject, Qt, Slot
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import QHeaderView, QTreeView
 
@@ -28,40 +28,8 @@ from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...salcomm import MetaSAL
 from ...time_cache import TimeCache
+from .bump_test_statistics import BumpTestStatistics
 from .bump_test_status_item import BumpTestStatusItem
-
-
-class BumpTestStatistics(QStandardItemModel):
-    def __init__(self, parent: QObject) -> None:
-        super().__init__(0, 8, parent)
-
-        self.setHorizontalHeaderLabels(
-            ["AccID", "Type", "Stage", "Settle Time", "Minimum", "Maximum", "Average", "Error RMS"]
-        )
-
-    def add_statistic_event(self, data: BaseMsgType) -> None:
-        def test_type_str(test_type: int) -> str:
-            test_map = {
-                BumpTestType.PRIMARY: "P",
-                BumpTestType.SECONDARY: "S",
-                BumpTestType.Z: "Z",
-                BumpTestType.Y: "Y",
-                BumpTestType.X: "X",
-            }
-            return test_map[test_type]
-
-        self.appendRow(
-            [
-                QStandardItem(str(data.actuatorId)),
-                QStandardItem(test_type_str(data.testType)),
-                QStandardItem(BumpTestStatusItem.get_text(data.stage)),
-                QStandardItem(f"{data.settleTime:.3f} s"),
-                QStandardItem(f"{data.minimum:.2f} N"),
-                QStandardItem(f"{data.maximum:.2f} N"),
-                QStandardItem(f"{data.average:.2f} N"),
-                QStandardItem(f"{data.errorRMS:.2f} N"),
-            ]
-        )
 
 
 class BumpTestModel(QStandardItemModel):
