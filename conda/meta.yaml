@@ -53,7 +53,7 @@ requirements:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - python {{python}}
-    - ts-conda-build =0.4
+    - ts-conda-build =0.5
     - qt6-charts
   host:
     - python {{python}}

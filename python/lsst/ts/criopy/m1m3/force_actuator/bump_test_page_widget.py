@@ -50,6 +50,7 @@ from ...gui import Colors
 from ...gui.sal import LogWidget
 from ...salcomm import MetaSAL, command, warning
 from .bump_test_progress import BumpTestProgressWidget
+from .bump_test_queued import BumpTestQueuedWidget
 from .force_actuator_chart import ForceChartWidget
 
 
@@ -126,12 +127,14 @@ class BumpTestPageWidget(QWidget):
         self.actuators_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.actuators_table.itemSelectionChanged.connect(self.item_selection_changed)
-        self.actuators_table.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.actuators_table.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.actuators_table.setMinimumWidth(
             sum([self.actuators_table.columnWidth(c) for c in range(12)])
-            + self.actuators_table.verticalScrollBar().geometry().width()
+            + self.actuators_table.verticalScrollBar().sizeHint().width()
             + 2
         )
+
+        self.queued_widget = BumpTestQueuedWidget()
 
         self.progress_widget = BumpTestProgressWidget(self.m1m3)
         self.force_charts = ForceChartWidget()
@@ -157,8 +160,12 @@ class BumpTestPageWidget(QWidget):
 
         forms = QHBoxLayout()
         forms.addWidget(self.actuators_table)
+        forms.addWidget(self.queued_widget)
         forms.addWidget(self.progress_widget)
-        forms.addWidget(LogWidget(self.m1m3))
+
+        l_w = LogWidget(self.m1m3)
+        l_w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        forms.addWidget(l_w)
 
         layout = QVBoxLayout()
         layout.addLayout(forms)
@@ -259,6 +266,9 @@ class BumpTestPageWidget(QWidget):
         """
         self._runner = BumpTestRunner(todo)
 
+        for t in todo:
+            self.queued_widget.append(t)
+
         try:
             while True:
                 test = await self._runner.next(self.test_distance(), 20)
@@ -271,8 +281,11 @@ class BumpTestPageWidget(QWidget):
                 else:
                     test_p = True
 
-                (applied, measured) = self.progress_widget.add(test.actuator, test.kind)
-                self.force_charts.add(test.actuator, test.kind, applied, measured)
+                (applied, measured, fe, statistics) = self.progress_widget.add(test.actuator, test.kind)
+                self.force_charts.add(test.actuator, test.kind, applied, measured, fe, statistics)
+
+                self.queued_widget.remove(test)
+                todo.remove(test)
 
                 await command(
                     self,
@@ -290,6 +303,10 @@ class BumpTestPageWidget(QWidget):
             self._runner = None
         except TimeoutError as ex:
             print(ex)
+        finally:
+            # clear what's left
+            for t in todo:
+                self.queued_widget.remove(t)
 
     @asyncSlot()
     async def issue_command_kill_bump_test(self) -> None:

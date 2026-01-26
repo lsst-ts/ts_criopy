@@ -19,29 +19,41 @@
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from PySide6.QtWidgets import QTreeView
+from PySide6.QtWidgets import QHeaderView, QTreeView
 
 from lsst.ts.m1m3.utils import BumpTestKind
 from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import BumpTestType
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...salcomm import MetaSAL
 from ...time_cache import TimeCache
+from .bump_test_statistics import BumpTestStatistics
 from .bump_test_status_item import BumpTestStatusItem
 
 
 class BumpTestModel(QStandardItemModel):
+    """
+    Collect bump test data. Progress is being stored in rows together with
+    various TimeCaches of raw data.
+    """
+
     APPLIED_DATA = Qt.UserRole + 1
     MEASURED_DATA = Qt.UserRole + 2
+    FE_DATA = Qt.UserRole + 3
+    STATISTICS_DATA = Qt.UserRole + 4
 
     def __init__(self, m1m3: MetaSAL):
         super().__init__(0, 4)
-        self.setHorizontalHeaderLabels(["AccID", "Index", "Kind", "Progress"])
+        self.setHorizontalHeaderLabels(["AccID", "Index", "Type", "Progress" + " " * 15])
 
         m1m3.appliedForces.connect(self.applied_forces)
         m1m3.forceActuatorData.connect(self.force_actuator_data)
+        m1m3.forceActuatorBumpTestStatistics.connect(self.bump_test_statistics, type=Qt.QueuedConnection)
 
-    def append(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
+    def append(
+        self, fa: ForceActuatorData, kind: BumpTestKind
+    ) -> tuple[TimeCache, TimeCache, TimeCache, BumpTestStatistics]:
         time_field = [("timestamp", "f8")]
         if kind == BumpTestKind.AXIS_X:
             axis_index = fa.x_index
@@ -74,11 +86,24 @@ class BumpTestModel(QStandardItemModel):
             self.MEASURED_DATA,
         )
 
+        fe_fields = time_field + [(f"FA {fa.actuator_id} Primary Following Error", "f4")]
+        if fa.s_index is not None:
+            fe_fields += [(f"FA {fa.actuator_id} Secondary Following Error", "f4")]
+
+        row[3].setData(TimeCache(1000, fe_fields), self.FE_DATA)
+
+        row[3].setData(BumpTestStatistics(self), self.STATISTICS_DATA)
+
         self.appendRow(row)
 
-        return (row[3].data(self.APPLIED_DATA), row[3].data(self.MEASURED_DATA))
+        return (
+            row[3].data(self.APPLIED_DATA),
+            row[3].data(self.MEASURED_DATA),
+            row[3].data(self.FE_DATA),
+            row[3].data(self.STATISTICS_DATA),
+        )
 
-    def find_tests(self, actuator_id: int, primary: bool) -> int | None:
+    def find_test(self, actuator_id: int, primary: bool) -> int | None:
         items = self.findItems(str(actuator_id), column=0)
         for i in items:
             row = i.index().row()
@@ -97,17 +122,8 @@ class BumpTestModel(QStandardItemModel):
 
         return None
 
-    def caches(self, actuator_id: int, primary: bool) -> tuple[TimeCache, TimeCache] | None:
-        row = self.find_tests(actuator_id, primary)
-        if row is not None:
-            return (
-                self.item(row, 3).data(self.APPLIED_DATA),
-                self.item(row, 3).data(self.MEASURED_DATA),
-            )
-        return None
-
     def remove(self, actuator_id: int, primary: bool) -> None:
-        row = self.find_tests(actuator_id, primary)
+        row = self.find_test(actuator_id, primary)
         if row is not None:
             self.removeRows(row, 1)
 
@@ -129,17 +145,31 @@ class BumpTestModel(QStandardItemModel):
     @Slot()
     def force_actuator_data(self, data: BaseMsgType) -> None:
         for r in range(self.rowCount()):
-            new = [data.timestamp * 1000.0]
+            measured = [data.timestamp * 1000.0]
+            fe = [data.timestamp * 1000.0]
             fa = self.item(r, 0).data()
             kind = self.item(r, 2).data()
             if kind == BumpTestKind.AXIS_X:
-                new.append(data.xForce[fa.x_index])
+                measured.append(data.xForce[fa.x_index])
             elif kind == BumpTestKind.AXIS_Y:
-                new.append(data.yForce[fa.y_index])
+                measured.append(data.yForce[fa.y_index])
             else:
-                new.append(data.zForce[fa.z_index])
+                measured.append(data.zForce[fa.z_index])
 
-            self.item(r, 3).data(self.MEASURED_DATA).append(tuple(new))
+            fe.append(data.primaryCylinderFollowingError[fa.z_index])
+            if fa.s_index is not None:
+                fe.append(data.secondaryCylinderFollowingError[fa.s_index])
+
+            self.item(r, 3).data(self.MEASURED_DATA).append(tuple(measured))
+            self.item(r, 3).data(self.FE_DATA).append(tuple(fe))
+
+    @Slot()
+    def bump_test_statistics(self, data: BaseMsgType) -> None:
+        row = self.find_test(
+            data.actuatorId, data.testType == BumpTestType.PRIMARY or data.testType == BumpTestType.Z
+        )
+        if row is not None:
+            self.item(row, 3).data(self.STATISTICS_DATA).add_statistic_event(data)
 
 
 class BumpTestProgressWidget(QTreeView):
@@ -152,13 +182,14 @@ class BumpTestProgressWidget(QTreeView):
 
         self.setModel(BumpTestModel(self.m1m3))
         self.setSortingEnabled(True)
-        for col in range(self.model().columnCount()):
-            self.resizeColumnToContents(col)
+        self.setRootIsDecorated(False)
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-        self.setMinimumWidth(200)
-        self.setMaximumWidth(420)
+        self.setMaximumWidth(self.header().length() + self.verticalScrollBar().sizeHint().width())
 
-    def add(self, fa: ForceActuatorData, kind: BumpTestKind) -> tuple[TimeCache, TimeCache]:
+    def add(
+        self, fa: ForceActuatorData, kind: BumpTestKind
+    ) -> tuple[TimeCache, TimeCache, TimeCache, BumpTestStatistics]:
         return self.model().append(fa, kind)
 
     def clear(self) -> None:
@@ -166,6 +197,6 @@ class BumpTestProgressWidget(QTreeView):
         self.setModel(BumpTestModel(self.m1m3))
 
     def progress(self, fa: ForceActuatorData, primary: bool, state: int) -> None:
-        row = self.model().find_tests(fa.actuator_id, primary)
+        row = self.model().find_test(fa.actuator_id, primary)
         if row is not None:
             self.model().item(row, 3).set_progress(state)

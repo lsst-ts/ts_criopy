@@ -333,7 +333,7 @@ class TimeChartView(QChartView):
 
         # add actions for different zooming
         actions_rb = {
-            "Verical": QChartView.VerticalRubberBand,
+            "Vertical": QChartView.VerticalRubberBand,
             "Horizontal": QChartView.HorizontalRubberBand,
             "Rectangle": QChartView.RectangleRubberBand,
         }
