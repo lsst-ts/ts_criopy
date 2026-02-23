@@ -18,7 +18,7 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 from ..gui.actuatorsdisplay import Scales
-from ..gui.sal import TopicCollection, TopicData, TopicField, WarningField
+from ..gui.sal import EnabledDisabledField, TopicCollection, TopicData, TopicField, WarningField
 
 __all__ = ["Thermals"]
 
@@ -189,6 +189,14 @@ class Thermals(TopicCollection):
                     ),
                 ],
                 "thermalWarning",
+                True,
+            ),
+            TopicData(
+                "Enabled FCUs",
+                [
+                    EnabledDisabledField("Enabled", "enabled", self.THERMAL_INDEX),
+                ],
+                "enabledILC",
                 True,
             ),
         )
