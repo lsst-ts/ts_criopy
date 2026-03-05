@@ -17,39 +17,54 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.xml.enums.MTM1M3 import BumpTest
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItem
 
+from lsst.ts.xml.enums.MTM1M3 import BumpTest
+
 __all__ = ["BumpTestStatusItem"]
+
+TEST_PROGRESS = [
+    "Unknown",
+    "Not tested",
+    "Triggered",
+    "Testing positive",
+    "Positive wait zero",
+    "Testing negative",
+    "Negative wait zero",
+    "Passed",
+    "Failed timeout",
+    "Failed Positive Overshoot",
+    "Failed Positive Undershoot",
+    "Failed Negative Overshoot",
+    "Failed Negative Undershoot",
+    "Failed other FA",
+]
 
 
 class BumpTestStatusItem(QStandardItem):
-    TEST_PROGRESS = [
-        "Unknown",
-        "Not tested",
-        "Triggered",
-        "Testing positive",
-        "Positive wait zero",
-        "Testing negative",
-        "Negative wait zero",
-        "Passed",
-        "Failed timeout",
-        "Failed Positive Overshoot",
-        "Failed Positive Undershoot",
-        "Failed Negative Overshoot",
-        "Failed Negative Undershoot",
-        "Failed other FA",
-    ]
-
     STATE_DATA = Qt.UserRole + 10
 
     def __init__(self, text: str):
         super().__init__(text)
 
+    @staticmethod
+    def get_text(state: int) -> str:
+        if state > 4000:
+            return f"Z {state - 4000}"
+        elif state > 3000:
+            return f"Y {state - 3000}"
+        elif state > 2000:
+            return f"X {state - 2000}"
+        elif state > 1000:
+            return "S {state - 1000}"
+        elif state > 100:
+            return f"P {state}"
+        return TEST_PROGRESS[state]
+
     def set_progress(self, state: int) -> None:
         self.setData(state, self.STATE_DATA)
-        self.setText(self.TEST_PROGRESS[state])
+        self.setText(BumpTestStatusItem.get_text(state))
         if state < int(BumpTest.PASSED):
             self.setBackground(Qt.GlobalColor.yellow)
         elif state == BumpTest.PASSED:

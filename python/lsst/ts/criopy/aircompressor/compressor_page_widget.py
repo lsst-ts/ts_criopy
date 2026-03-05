@@ -18,9 +18,10 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 import astropy.units as u
-from lsst.ts import salobj
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+
+from lsst.ts import salobj
 
 from ..gui import (
     RPM,

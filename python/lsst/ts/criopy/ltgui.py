@@ -18,10 +18,11 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts import salobj
-from lsst.ts.xml.enums import LaserTracker
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QLabel
+
+from lsst.ts import salobj
+from lsst.ts.xml.enums import LaserTracker
 
 from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar
 from .lasertracker import OverviewPageWidget

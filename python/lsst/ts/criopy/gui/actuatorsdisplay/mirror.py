@@ -23,6 +23,10 @@
 from collections import defaultdict
 from math import sqrt
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QPen
+from PySide6.QtWidgets import QGraphicsScene
+
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import (
     CENTER_HOLE_R,
@@ -30,12 +34,9 @@ from lsst.ts.xml.tables.m1m3 import (
     M3_R,
     FATable,
     FCUTable,
-    ThermocoupleTable,
     ThermocoupleData,
+    ThermocoupleTable,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QPen
-from PySide6.QtWidgets import QGraphicsScene
 
 from .data_item import DataItemState
 from .fcu_item import FCUItem

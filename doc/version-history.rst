@@ -4,6 +4,18 @@
 Version History
 ===============
 
+v0.17.0
+-------
+
+* Improved force actuators bump tests display.
+* Show TS FCU's enabled state.
+
+v0.16.0
+-------
+
+* Displays EGW Pump's VFD DriveStatus2 and Speed.
+* Changed mixing valve control logic - setpoints control is used in non-engineering mode.
+
 v0.15.0
 -------
 

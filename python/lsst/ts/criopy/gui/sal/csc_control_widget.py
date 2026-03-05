@@ -18,7 +18,6 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts import salobj
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -28,6 +27,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts import salobj
 
 from ...salcomm import MetaSAL, command
 

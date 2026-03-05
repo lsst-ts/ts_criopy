@@ -21,13 +21,13 @@
 
 import re
 
-from ..salcomm import MetaSAL
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import Scanner, find_thermocouple, ThermocoupleData
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from lsst.ts.xml.tables.m1m3 import Scanner, ThermocoupleData, find_thermocouple
 
-from ..gui.actuatorsdisplay import MirrorWidget, DataItemState
+from ..gui.actuatorsdisplay import DataItemState, MirrorWidget
+from ..salcomm import MetaSAL
 
 
 class ScannersWidget(QWidget):

@@ -24,6 +24,7 @@ __all__ = ["Cache"]
 import typing
 
 import numpy as np
+
 from lsst.ts.salobj import BaseMsgType
 
 from .. import TimeCache

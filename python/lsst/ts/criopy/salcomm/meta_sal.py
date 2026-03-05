@@ -41,9 +41,10 @@ except KeyError:
 import asyncio
 import typing
 
+from PySide6.QtCore import QObject, Signal
+
 from lsst.ts.salobj import Domain, Remote
 from lsst.ts.salobj.topics import RemoteEvent, RemoteTelemetry
-from PySide6.QtCore import QObject, Signal
 
 __all__ = ["MetaSAL", "create"]
 

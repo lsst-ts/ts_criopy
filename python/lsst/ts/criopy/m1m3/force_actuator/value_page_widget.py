@@ -20,9 +20,10 @@
 # along with this program.If not, see < https:  // www.gnu.org/licenses/>.
 
 
+from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
+
 from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATABLE_ZFA, FATable
-from PySide6.QtWidgets import QGridLayout, QLabel, QWidget
 
 from ...salcomm import MetaSAL
 from .widget import Widget

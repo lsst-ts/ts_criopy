@@ -19,7 +19,6 @@
 
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
@@ -30,7 +29,10 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
+from lsst.ts.salobj import BaseMsgType
+
 from ..gui import (
+    RPM,
     Ampere,
     Colors,
     DataFormWidget,
@@ -39,6 +41,8 @@ from ..gui import (
     Hz,
     Liter,
     LiterMinute,
+    OnOffLabel,
+    PowerOnOffLabel,
     TopicStatusLabel,
     Volt,
 )
@@ -66,27 +70,27 @@ class CoolantPumpWidget(QWidget):
 
         layout = QHBoxLayout()
 
-        cmdlayout = QVBoxLayout()
+        command_layout = QVBoxLayout()
 
         self.powerButton = QPushButton("Power on")
         self.powerButton.clicked.connect(self._power)
 
-        cmdlayout.addWidget(self.powerButton)
+        command_layout.addWidget(self.powerButton)
 
         startButton = QPushButton("Start")
         startButton.clicked.connect(self._start)
 
-        cmdlayout.addWidget(startButton)
+        command_layout.addWidget(startButton)
 
         stopButton = QPushButton("Stop")
         stopButton.clicked.connect(self._stop)
 
-        cmdlayout.addWidget(stopButton)
+        command_layout.addWidget(stopButton)
 
         resetButton = QPushButton("Reset")
         resetButton.clicked.connect(self._reset)
 
-        cmdlayout.addWidget(resetButton)
+        command_layout.addWidget(resetButton)
 
         self.frequency = QDoubleSpinBox()
         self.frequency.setRange(0, 300)
@@ -102,16 +106,17 @@ class CoolantPumpWidget(QWidget):
         freqlayout.addWidget(self.frequency)
         freqlayout.addWidget(setButton)
 
-        cmdlayout.addLayout(freqlayout)
+        command_layout.addLayout(freqlayout)
 
-        tellayout = QVBoxLayout()
-        tellayout.addWidget(
+        telemetry_layout = QVBoxLayout()
+        telemetry_layout.addWidget(
             DataFormWidget(
                 m1m3ts.glycolPump,
                 [
                     ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Commanded Frequency", Hz(field="commandedFrequency")),
                     ("Output Frequency", Hz(field="outputFrequency")),
+                    ("Speed Feedback", RPM(field="speedFeedback")),
                     ("Output Current", Ampere(field="outputCurrent")),
                     ("Bus Voltage", Volt(field="busVoltage", fmt="0.0f")),
                     (
@@ -121,7 +126,7 @@ class CoolantPumpWidget(QWidget):
                 ],
             )
         )
-        tellayout.addWidget(
+        telemetry_layout.addWidget(
             DataFormWidget(
                 self.m1m3ts.glycolPumpStatus,
                 [
@@ -129,7 +134,7 @@ class CoolantPumpWidget(QWidget):
                 ],
             )
         )
-        tellayout.addWidget(
+        telemetry_layout.addWidget(
             TopicStatusLabel(
                 self.m1m3ts.glycolPumpStatus,
                 "Glycol Pump Status",
@@ -184,8 +189,32 @@ class CoolantPumpWidget(QWidget):
             ),
         )
 
-        layout.addLayout(cmdlayout)
-        layout.addLayout(tellayout)
+        drive_status2_layout = QVBoxLayout()
+        drive_status2_layout.addWidget(
+            DataFormWidget(
+                m1m3ts.driveStatus2,
+                [
+                    ("Time", TimeDeltaLabel(field="private_sndStamp")),
+                    ("Jogging", OnOffLabel(field="jogging")),
+                    ("Flux Breaking", OnOffLabel(field="fluxBreaking")),
+                    ("Motor Overload", OnOffLabel(field="motorOverload")),
+                    ("Auto Reset Countdown", OnOffLabel(field="autoRestartCountdown")),
+                    ("DC Braking", OnOffLabel(field="dcBraking")),
+                    ("At Frequency", PowerOnOffLabel(field="atFrequency")),
+                    ("Auto Tuning", OnOffLabel(field="autoTuning")),
+                    ("Emergency Braking", OnOffLabel(field="emBraking")),
+                    ("Current Limit", OnOffLabel(field="currentLimit")),
+                    ("Safety S1", PowerOnOffLabel(field="safetyS1")),
+                    ("Safety S2", PowerOnOffLabel(field="safetyS2")),
+                    ("F111 Status", OnOffLabel(field="f111Status")),
+                    ("Safety Torque Permit", PowerOnOffLabel(field="safeTqPermit")),
+                ],
+            )
+        )
+
+        layout.addLayout(command_layout)
+        layout.addLayout(telemetry_layout)
+        layout.addLayout(drive_status2_layout)
 
         layout.addStretch()
 

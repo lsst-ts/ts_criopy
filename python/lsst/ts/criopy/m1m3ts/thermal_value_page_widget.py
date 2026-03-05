@@ -21,8 +21,6 @@ import enum
 import typing
 from math import isnan
 
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.tables.m1m3 import FCUTable
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
@@ -37,6 +35,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.tables.m1m3 import FCUTable
 
 from ..gui.sal import TopicWindow
 from ..salcomm import MetaSAL, command

@@ -18,11 +18,12 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates, SetSlewControllerSettings
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates, SetSlewControllerSettings
 
 from ..gui import ArrayItem, ArrayLabels, ColoredButton, Force
 from ..gui.sal import Axis, ChartWidget

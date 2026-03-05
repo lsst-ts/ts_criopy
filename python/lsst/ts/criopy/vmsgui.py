@@ -22,11 +22,12 @@
 from functools import partial
 
 import astropy.units as u
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import QSettings, Qt, Signal, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMainWindow
 from qasync import asyncClose
+
+from lsst.ts.salobj import BaseMsgType
 
 from .gui.sal import Application, LogDock
 from .salcomm import MetaSAL

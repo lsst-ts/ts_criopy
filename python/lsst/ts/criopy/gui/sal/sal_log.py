@@ -22,7 +22,6 @@ __all__ = ["LEVELS", "LogToolBar", "LogWidget", "LogDock", "Messages"]
 from datetime import datetime
 from html import escape
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
@@ -38,6 +37,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...salcomm import MetaSAL, command_group
 from ..custom_labels import DockWindow

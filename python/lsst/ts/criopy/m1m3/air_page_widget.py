@@ -18,10 +18,11 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..gui import OnOffGrid, WarningGrid
 from ..gui.sal import Axis, ChartWidget, EngineeringButton

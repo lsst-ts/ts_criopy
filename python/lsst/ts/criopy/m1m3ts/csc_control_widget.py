@@ -18,10 +18,11 @@
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QPushButton
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
 
 from ..gui.sal import CSCControlWidget
 from ..salcomm import MetaSAL, command

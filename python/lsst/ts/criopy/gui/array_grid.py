@@ -99,7 +99,6 @@ __all__ = [
 
 import typing
 
-from lsst.ts.salobj import BaseMsgType, base
 from PySide6.QtCore import QObject, Qt, Signal, Slot
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import (
@@ -111,6 +110,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType, base
 
 from ..salcomm import warning
 from .custom_labels import UnitLabel

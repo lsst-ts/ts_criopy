@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.salobj import State
 from PySide6.QtCore import Qt, Signal
+
+from lsst.ts.salobj import State
 
 from ..custom_labels import DataLabel
 

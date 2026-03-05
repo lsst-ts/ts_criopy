@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.xml.tables.m1m3 import FATable
 from PySide6.QtWidgets import QComboBox
+
+from lsst.ts.xml.tables.m1m3 import FATable
 
 __all__ = ["ComboBox"]
 

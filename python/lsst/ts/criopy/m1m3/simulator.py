@@ -22,8 +22,9 @@ __all__ = ["Simulator"]
 
 import typing
 
-from lsst.ts.m1m3.utils import ForceCalculator
 from PySide6.QtCore import QObject, Signal
+
+from lsst.ts.m1m3.utils import ForceCalculator
 
 
 class SimulatedTopic:

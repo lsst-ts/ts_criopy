@@ -20,12 +20,13 @@
 
 import typing
 
-from lsst.ts.salobj import BaseMsgType
-from lsst.ts.xml.enums.MTM1M3 import DetailedStates
-from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from qasync import asyncSlot
+
+from lsst.ts.salobj import BaseMsgType
+from lsst.ts.xml.enums.MTM1M3 import DetailedStates
+from lsst.ts.xml.tables.m1m3 import FATable, actuator_id_to_index
 
 from ...gui.actuatorsdisplay import DataItemState, MirrorWidget, Scales
 from ...gui.sal import StateEnabledWidget

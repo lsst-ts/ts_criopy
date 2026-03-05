@@ -20,8 +20,9 @@
 import typing
 from dataclasses import dataclass
 
-from lsst.ts.salobj import BaseMsgType
 from PySide6.QtCore import Slot
+
+from lsst.ts.salobj import BaseMsgType
 
 from ...salcomm import MetaSAL
 from ..actuatorsdisplay import Scales

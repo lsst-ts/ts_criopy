@@ -18,8 +18,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-from lsst.ts.xml.enums.MTM1M3 import BumpTest
 from PySide6.QtCore import Qt
+
+from lsst.ts.xml.enums.MTM1M3 import BumpTest
 
 from ...gui import Colors
 from .enum_scale import EnumScale
