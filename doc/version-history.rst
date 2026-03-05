@@ -8,6 +8,7 @@ v0.17.0
 -------
 
 * Improved force actuators bump tests display.
+* Show TS FCU's enabled state.
 
 v0.16.0
 -------
