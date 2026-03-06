@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.17.1
+-------
+
+* Confirmation dialog to enter engineering mode in MTM1M3TS and Raise Abort.
+
 v0.17.0
 -------
 
