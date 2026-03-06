@@ -19,7 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QLabel
+
+from lsst.ts.salobj import BaseMsgType
+
+from .gui.sal import Application, EUIWindow, LogWidget, SALErrorCodeWidget, SALStatusBar, SummaryStateLabel
 from .m1m3ts import (
     CoolantCirculationWidget,
     FCUDisplayWidget,
@@ -30,6 +35,20 @@ from .m1m3ts import (
     ThermalValuePageWidget,
 )
 from .salcomm import MetaSAL
+
+
+class EngineeringMode(QLabel):
+    def __init__(self, m1m3ts: MetaSAL):
+        super().__init__()
+        m1m3ts.engineeringMode.connect(self.engineering_mode)
+
+    @Slot()
+    def engineering_mode(self, data: BaseMsgType) -> None:
+        self.setText(
+            "<font color='red'>Engineering</font>"
+            if data.engineeringMode
+            else "<font color='green'>Non-Engineering</font>"
+        )
 
 
 class EUI(EUIWindow):
@@ -47,7 +66,13 @@ class EUI(EUIWindow):
         self.add_page("SAL Log", LogWidget, self.m1m3ts)
         self.add_page("SAL Errors", SALErrorCodeWidget, self.m1m3ts)
 
-        self.setStatusBar(SALStatusBar([self.m1m3ts]))
+        self.setStatusBar(
+            SALStatusBar(
+                [self.m1m3ts] + list(scanners),
+                [SummaryStateLabel(self.m1m3ts.summaryState), EngineeringMode(self.m1m3ts)]
+                + [SummaryStateLabel(sc.summaryState) for sc in scanners],
+            )
+        )
 
 
 def run() -> None:
