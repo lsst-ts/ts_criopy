@@ -263,7 +263,7 @@ class M1M3CSCControl(CSCControlWidget):
                 self.TEXT_RAISE: "confirm_raiseM1M3",
                 self.TEXT_PAUSE_RAISING: "pauseM1M3RaisingLowering",
                 self.TEXT_RESUME_RAISING: "resumeM1M3RaisingLowering",
-                self.TEXT_ABORT_RAISE: "abortRaiseM1M3",
+                self.TEXT_ABORT_RAISE: "confirm_abortRaiseM1M3",
                 self.TEXT_LOWER: "confirm_lowerM1M3",
                 self.TEXT_PAUSE_LOWERING: "pauseM1M3RaisingLowering",
                 self.TEXT_RESUME_LOWERING: "resumeM1M3RaisingLowering",

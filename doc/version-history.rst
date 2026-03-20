@@ -4,6 +4,12 @@
 Version History
 ===============
 
+v0.17.1
+-------
+
+* Add engineering state and scanner states to M1M3TS status bar.
+* Confirmation dialog to enter engineering mode in MTM1M3TS and Raise Abort.
+
 v0.17.0
 -------
 
