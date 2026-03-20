@@ -19,7 +19,7 @@
 
 
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QMessageBox, QPushButton
 from qasync import asyncSlot
 
 from lsst.ts.salobj import BaseMsgType
@@ -41,11 +41,30 @@ class EnterExitEngineeringButton(QPushButton):
 
     @asyncSlot()
     async def _clicked(self) -> None:
-        await command(
-            self,
-            self.m1m3ts.remote.cmd_setEngineeringMode,
-            enableEngineeringMode=self.text() == self.ENTER_ENGINEERING,
-        )
+        if self.text() == self.ENTER_ENGINEERING:
+            dialog = QMessageBox(self)
+            dialog.setWindowTitle("Are you sure to enter engineering mode?")
+            dialog.setText(
+                "In engineering mode, the mixing valve is controlled by the user. "
+                "Temperature setpoints aren't used. <b>Engineering mode is not intended "
+                "for operations</b> - its purpose is to allow troubleshooting of the system, "
+                "or a fully manual operations of the system. <b>If you enter the "
+                "engineering mode, please remember to exit it during on-sky time.</b> "
+                "Are you still sure to enter the engineering mode?"
+            )
+            dialog.setIcon(QMessageBox.Warning)
+            dialog.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            dialog.setDefaultButton(QMessageBox.No)
+
+            @asyncSlot()
+            async def confirm(result: int) -> None:
+                if result == QMessageBox.Yes:
+                    await command(self, self.m1m3ts.remote.cmd_setEngineeringMode, enableEngineeringMode=True)
+
+            dialog.finished.connect(confirm)
+            dialog.open()
+        else:
+            await command(self, self.m1m3ts.remote.cmd_setEngineeringMode, enableEngineeringMode=False)
 
     @Slot()
     def engineering_mode(self, data: BaseMsgType) -> None:
