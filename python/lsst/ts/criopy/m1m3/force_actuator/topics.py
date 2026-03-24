@@ -162,6 +162,13 @@ class FAIndicesData(TopicData):
         Topic name.
     """
 
+    xIndices = [row.x_index for row in FATable if row.x_index is not None]
+    yIndices = [row.y_index for row in FATable if row.y_index is not None]
+    zIndices = [row.z_index for row in FATable]
+    pIndices = [row.index for row in FATable]
+    sIndices = [row.s_index for row in FATable if row.s_index is not None]
+    timestamp = None
+
     def __init__(self, name: str):
         super().__init__(
             name,
@@ -184,13 +191,6 @@ class FAIndicesData(TopicData):
             ],
             None,
         )
-
-        self.xIndices = [row.x_index for row in FATable if row.x_index is not None]
-        self.yIndices = [row.y_index for row in FATable if row.y_index is not None]
-        self.zIndices = [row.z_index for row in FATable]
-        self.pIndices = [row.index for row in FATable]
-        self.sIndices = [row.s_index for row in FATable if row.s_index is not None]
-        self.timestamp = None
 
     def get_topic(self) -> typing.Any:
         return self

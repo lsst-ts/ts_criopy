@@ -190,7 +190,10 @@ class TopicWindow(QSplitter):
             self.collection.change_topic(topic_index, self.data_changed, self.comm)
             self.field_changed(self.field)
 
-            data = getattr(self.comm.remote, self.topic.get_topic()).get()
+            if isinstance(self.topic, str):
+                data = getattr(self.comm.remote, self.topic.get_topic()).get()
+            else:
+                data = self.topic.get_topic()
             self.data_changed(data)
             return data
 
