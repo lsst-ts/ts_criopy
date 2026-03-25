@@ -35,14 +35,8 @@ class Thermals(TopicCollection):
             TopicData(
                 "FCU Targets",
                 [
-                    TopicField("Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt="{v:.2f}%"),
-                    TopicField(
-                        "Fan RPM",
-                        "fanRPM",
-                        self.THERMAL_INDEX,
-                        Scales.INTEGER,
-                        fmt="{v:d} RPM",
-                    ),
+                    TopicField("Heater PWM", "heaterPWM", self.THERMAL_INDEX, fmt=".1f"),
+                    TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX, Scales.INTEGER),
                 ],
                 "fcuTargets",
                 True,
@@ -54,14 +48,14 @@ class Thermals(TopicCollection):
                         "Differential temperature",
                         "differentialTemperature",
                         self.THERMAL_INDEX,
-                        fmt="{v:.3f} °C",
+                        fmt=".3f",
                     ),
                     TopicField("Fan RPM", "fanRPM", self.THERMAL_INDEX, Scales.INTEGER),
                     TopicField(
                         "Absolute temperature",
                         "absoluteTemperature",
                         self.THERMAL_INDEX,
-                        fmt="{v:.3f} °C",
+                        fmt=".3f",
                     ),
                     WarningField("ILC Fault", "ilcFault", self.THERMAL_INDEX),
                     WarningField("Heater Disabled", "heaterDisabled", self.THERMAL_INDEX),

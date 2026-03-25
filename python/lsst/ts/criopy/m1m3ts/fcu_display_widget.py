@@ -41,7 +41,7 @@ class FCUDisplayWidget(TopicWindow):
     def field_changed(self, field: TopicField) -> None:
         """Called when data are changed."""
         if field is not None:
-            self.mirror_widget.set_scale_type(field.scale_type)
+            self.mirror_widget.set_field(field)
 
     def update_values(self, data: BaseMsgType) -> None:
         if data is None:

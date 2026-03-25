@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+import typing
+
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QHBoxLayout, QWidget
 
@@ -121,6 +123,18 @@ class MirrorWidget(QWidget):
             self._replace_gauge(self._integer)
         else:
             self._replace_gauge(self._gauge)
+
+    def set_field(self, field: typing.Any) -> None:
+        """Setup widget to for display TopicField's data.
+
+        Parameters
+        ----------
+        field : `TopicField`
+            TopicField that will be displayed. Setup scale and scale values.
+        """
+        self.set_scale_type(field.scale_type)
+        if hasattr(self._curent_gauge, "set_format"):
+            self._curent_gauge.set_format(field.fmt, field.unit)
 
     def set_range(self, min_value: float, max_value: float) -> None:
         """Sets range used for color scaling.

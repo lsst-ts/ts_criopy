@@ -57,6 +57,7 @@ from .custom_labels import (
     WarningLabel,
 )
 from .data_form_widget import DataFormButton, DataFormWidget
+from .formators import Formator
 from .histogram import Histogram
 from .logging_widget import LoggingWidget
 from .status_box import StatusBox, StatusWidget

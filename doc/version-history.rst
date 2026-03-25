@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.17.2
+-------
+
+* Fix M1M3 indices display.
+
 v0.17.1
 -------
 

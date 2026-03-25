@@ -20,6 +20,7 @@
 import typing
 from dataclasses import dataclass
 
+import astropy.units as u
 from PySide6.QtCore import Slot
 
 from lsst.ts.salobj import BaseMsgType
@@ -44,10 +45,12 @@ class TopicField:
         topics, calculated on-fly, not available in SAL/EFD data.
     value_index : `int`
         Variable kind.
-    scale_type : `Scales`
+    scale_type : `Scales`, optional
         Scale type. Select scale used to display field values.
-    fmt :  str (optional)
+    fmt :  `str`
         Format string to display the field value.
+    unit : `astropy.units.Unit`, optional
+        Displayed unit.
     """
 
     name: str
@@ -55,6 +58,7 @@ class TopicField:
     value_index: int
     scale_type: Scales = Scales.GAUGE
     fmt: str | None = None
+    unit: u.Unit | None = None
 
     def get_value(self, data: BaseMsgType) -> typing.Any:
         # if None, get_value must be overwritten

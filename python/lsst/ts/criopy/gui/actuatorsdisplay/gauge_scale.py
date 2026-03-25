@@ -19,10 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import astropy.units as u
 import numpy as np
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
+
+from .. import Formator
 
 
 class GaugeScale(QWidget):
@@ -31,16 +34,17 @@ class GaugeScale(QWidget):
     Parameters
     ----------
     fmt: `str`
-
-
+        Value formatter. Can specify how many decimal places will be visible.
     """
 
-    def __init__(self, fmt: str = ".02f"):
+    def __init__(self, fmt: str = ".02f", unit: u.Unit | None = None):
         super().__init__()
         self._min: float = np.nan
         self._max: float = np.nan
-        self._fmt = fmt
-        self._formated_zero = f"{0:{self._fmt}}"
+
+        self._default_fmt = fmt
+        self.set_format(fmt, unit)
+
         self.setMinimumSize(100, 100)
         self.setMaximumWidth(200)
 
@@ -59,15 +63,27 @@ class GaugeScale(QWidget):
         self._max = max_range
         self.update()
 
+    def set_format(self, fmt: str | None, unit: u.Unit | None = None) -> None:
+        """Sets format string and (optional) unit.
+
+        Parameters
+        ----------
+        fmt : `str`
+        unit : `u.Unit`, optional
+        """
+        self._fmt = self._default_fmt if fmt is None else fmt
+        self._unit_string = "" if unit is None else Formator.unit_str(unit)
+        self._formated_zero = f"{0:{self._fmt}}"
+
     def sizeHint(self) -> None:
         """Overridden method."""
         return QSize(100, 100)
 
-    def format_value(self, value: float | int | bool) -> str:
-        ret = f"{value:{self._fmt}}"
+    def format_value(self, v: float | int | bool) -> str:
+        ret = f"{v:{self._fmt}}"
         if ret == self._formated_zero:
-            return str(value)
-        return ret
+            return str(v) + self._unit_string
+        return ret + self._unit_string
 
     def get_brush(self, value: float) -> QBrush:
         """Returns color for given value.

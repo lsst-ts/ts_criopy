@@ -23,6 +23,7 @@ from lsst.ts.salobj import BaseMsgType
 from lsst.ts.xml.tables.m1m3 import FATable
 
 from ...gui.actuatorsdisplay import DataItemState, MirrorWidget
+from ...gui.sal import TopicField
 from ...salcomm import MetaSAL
 from ..simulator import Simulator
 from .widget import Widget
@@ -42,10 +43,10 @@ class GraphPageWidget(Widget):
         assert self.detail_widget is not None
         self.mirror_widget.mirror_view.selectionChanged.connect(self.detail_widget.update_selected_actuator)
 
-    def change_values(self) -> None:
+    def field_changed(self, field: TopicField) -> None:
         """Called when data are changed."""
-        assert self.field is not None
-        self.mirror_widget.set_scale_type(self.field.scale_type)
+        if field is not None:
+            self.mirror_widget.set_field(field)
 
     def update_values(self, data: BaseMsgType) -> None:
         """Called when new data are available through SAL callback.
