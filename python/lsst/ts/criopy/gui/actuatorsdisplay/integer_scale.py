@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QPainter, QPaintEvent
 
@@ -53,8 +54,20 @@ class IntegerScale(GaugeScale):
                 )
             return
 
+        color = 0.0
+        painter.setPen(self.get_color(color))
+
+        step = 1 / float(self._max - self._min)
+        g_step = 1 / float(sheight)
+        change = 0.0
+
         for x in range(0, sheight):
-            painter.setPen(self.get_color(round(x / sheight)))
+            change += g_step
+            if change > step:
+                color += step
+                change -= step
+                painter.setPen(self.get_color(color))
+
             painter.drawLine(0, x, swidth, x)
 
         painter.setPen(Qt.black)
