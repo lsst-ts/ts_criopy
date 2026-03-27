@@ -162,6 +162,12 @@ class FAIndicesData(TopicData):
         Topic name.
     """
 
+    xIndices = [row.x_index for row in FATable if row.x_index is not None]
+    yIndices = [row.y_index for row in FATable if row.y_index is not None]
+    zIndices = [row.z_index for row in FATable]
+    pIndices = [row.index for row in FATable]
+    sIndices = [row.s_index for row in FATable if row.s_index is not None]
+
     def __init__(self, name: str):
         super().__init__(
             name,
@@ -184,13 +190,6 @@ class FAIndicesData(TopicData):
             ],
             None,
         )
-
-        self.xIndices = [row.x_index for row in FATable if row.x_index is not None]
-        self.yIndices = [row.y_index for row in FATable if row.y_index is not None]
-        self.zIndices = [row.z_index for row in FATable]
-        self.pIndices = [row.index for row in FATable]
-        self.sIndices = [row.s_index for row in FATable if row.s_index is not None]
-        self.timestamp = None
 
     def get_topic(self) -> typing.Any:
         return self
@@ -513,14 +512,16 @@ class Topics(TopicCollection):
                         "Actuator Type",
                         "actuatorType",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Actuator Orientation",
                         "actuatorOrientation",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
-                    TopicField("Subnet", "modbusSubnet", FAIndex.Z),
-                    TopicField("Address", "modbusAddress", FAIndex.Z),
+                    TopicField("Subnet", "modbusSubnet", FAIndex.Z, Scales.INTEGER),
+                    TopicField("Address", "modbusAddress", FAIndex.Z, Scales.INTEGER),
                     TopicField("X Position", "xPosition", FAIndex.Z),
                     TopicField("Y Position", "yPosition", FAIndex.Z),
                     TopicField("Z Position", "zPosition", FAIndex.Z),
@@ -528,14 +529,16 @@ class Topics(TopicCollection):
                         "Major Revision",
                         "majorRevision",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Minor Revision",
                         "minorRevision",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField("ADC Scan Rate", "adcScanRate", FAIndex.Z),
-                    TopicField("Reference ID", "referenceId", FAIndex.Z),
+                    TopicField("Reference ID", "referenceId", FAIndex.Z, Scales.INTEGER),
                     TopicField(
                         "X Data Reference Id",
                         "xDataReferenceId",
@@ -551,42 +554,49 @@ class Topics(TopicCollection):
                         "zDataReferenceId",
                         FAIndex.Z,
                     ),
-                    TopicField("ILC Unique Id", "ilcUniqueId", FAIndex.Z),
+                    TopicField("ILC Unique Id", "ilcUniqueId", FAIndex.Z, Scales.INTEGER),
                     TopicField(
                         "ILC application type",
                         "ilcApplicationType",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
-                    TopicField("Network Node Type", "networkNodeType", FAIndex.Z),
+                    TopicField("Network Node Type", "networkNodeType", FAIndex.Z, Scales.INTEGER),
                     TopicField(
                         "ILC Selected Options",
                         "ilcSelectedOptions",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Network Node Options",
                         "networkNodeOptions",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Mezzanine Unique ID",
                         "mezzanineUniqueId",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Mezzanine Firmware Type",
                         "mezzanineFirmwareType",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Mezzanine Major Revision",
                         "mezzanineMajorRevision",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Mezzanine Minor Revision",
                         "mezzanineMinorRevision",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                 ],
                 "forceActuatorInfo",
@@ -775,7 +785,7 @@ class Topics(TopicCollection):
             ),
             TopicData(
                 "FA State",
-                [TopicField("ILC State", "ilcState", FAIndex.Z)],
+                [TopicField("ILC State", "ilcState", FAIndex.Z, Scales.INTEGER)],
                 "forceActuatorState",
             ),
             TopicData(
@@ -979,21 +989,25 @@ class Topics(TopicCollection):
                         "Primary axis FE warning counter",
                         "primaryAxisFollowingErrorWarningCounter",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Secondary axis FE warning counter",
                         "secondaryAxisFollowingErrorWarningCounter",
                         FAIndex.SECONDARY,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Primary axis FE counting counter",
                         "primaryAxisFollowingErrorCountingCounter",
                         FAIndex.Z,
+                        Scales.INTEGER,
                     ),
                     TopicField(
                         "Secondary axis FE counting counter",
                         "secondaryAxisFollowingErrorCountingCounter",
                         FAIndex.SECONDARY,
+                        Scales.INTEGER,
                     ),
                 ],
                 "forceActuatorFollowingErrorCounter",

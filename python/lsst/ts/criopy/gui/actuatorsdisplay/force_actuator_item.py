@@ -121,7 +121,7 @@ class ForceActuatorItem(DataItem):
 
         Parameters
         ----------
-        scale : `object`
+        scale : `GaugeScale`
             Scaling object. Should provide format_value() and get_brush()
             methods."""
         self._color_scale = scale
@@ -145,8 +145,8 @@ class ForceActuatorItem(DataItem):
            Current value formatted by the currently used color scale."""
         return self.format_value(self.data)
 
-    def format_value(self, v: float) -> str:
-        """Returns
+    def format_value(self, v: bool | float | int) -> str:
+        """Returns formatted string value.
 
         Parameters
         ----------

@@ -59,27 +59,32 @@ class Formator:
     def __init__(
         self,
         fmt: str = "d",
-        unit: str | u.Unit | None = None,
+        unit: u.Unit | None = None,
         convert: u.Unit | None = None,
         warning_function: typing.Callable[[float], bool] | None = None,
         error_function: typing.Callable[[float], bool] | None = None,
     ):
         self.fmt = fmt
-        if isinstance(unit, str):
-            self.unit = u.Unit(unit)
-        else:
-            self.unit = unit
+        self.unit = unit
 
         if convert is not None:
             assert unit is not None, "Cannot specify conversion without input units!"
-            self.scale = unit.to(convert)  # type: ignore
-            self.unit_name = convert.to_string()
-        elif unit is not None:
-            self.scale = 1
-            self.unit_name = unit.to_string()  # type: ignore
+            self.scale = unit.to(convert)
+            self.unit_name = self.unit_str(convert)
         else:
             self.scale = 1
-            self.unit_name = ""
+            self.unit_name = self.unit_str(unit)
+
+        self.convert = convert
+        self.warning_function = warning_function
+        self.error_function = error_function
+
+    @staticmethod
+    def unit_str(unit: u.Unit | None) -> str:
+        if unit is None:
+            return ""
+
+        ret = unit.to_string()
 
         # we can display some units better using unicode
         aliases = {
@@ -88,21 +93,17 @@ class Formator:
             "m N": "N m",
         }
         try:
-            self.unit_name = aliases[self.unit_name]
+            ret = aliases[ret]
         except KeyError:
             pass
 
-        self.unit_name = re.sub(r"\bdeg[^;]", "°", self.unit_name)
+        ret = re.sub(r"\bdeg[^;]", "°", ret)
 
         # s2, s3 using sup
-        self.unit_name = self.unit_name.replace("s2", "s<sup>2</sup>")
-        self.unit_name = self.unit_name.replace("s3", "s<sup>3</sup>")
+        ret = ret.replace("s2", "s<sup>2</sup>")
+        ret = ret.replace("s3", "s<sup>3</sup>")
 
-        self.unit_name = " " + self.unit_name
-
-        self.convert = convert
-        self.warning_function = warning_function
-        self.error_function = error_function
+        return " " + ret
 
     def format(self, value: typing.Any) -> str:
         """Returns formatted value.

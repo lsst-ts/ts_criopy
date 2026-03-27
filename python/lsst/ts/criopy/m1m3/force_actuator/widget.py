@@ -196,10 +196,12 @@ class DetailWidget(TopicDetailWidget):
             self.last_updated_label.set_unknown()
             return
 
-        try:
+        if hasattr(data, "timestamp"):
             self.last_updated_label.setValue(data.timestamp)
-        except AttributeError:
+        elif hasattr(data, "private_sndStamp"):
             self.last_updated_label.setValue(data.private_sndStamp)
+        else:
+            self.last_updated_label.setText("---")
 
     @Slot()
     def edit_values(self) -> None:
@@ -243,8 +245,7 @@ class DetailWidget(TopicDetailWidget):
 class Widget(TopicWindow):
     """
     Abstract class for widget and graphics display of selected M1M3 values.
-    Children classes must implement change_values and update_values(data)
-    methods.
+    Children classes shall implement update_values(data) method.
 
     Parameters
     ----------
@@ -266,10 +267,6 @@ class Widget(TopicWindow):
         self.topic_list.setFixedWidth(256)
         self.field_list.setFixedWidth(256)
 
-    def change_values(self) -> None:
-        """Called when new values were selected by the user."""
-        raise NotImplementedError("change_values method must be implemented in all Widget childrens")
-
     def change_field(self, topic_index: int, field_index: int) -> BaseMsgType:
         """
         Redraw actuators with new values.
@@ -281,7 +278,6 @@ class Widget(TopicWindow):
         assert self.detail_widget is not None
         self.detail_widget.set_field(self.topic, self.field)
 
-        self.change_values()
         self.update_values(data)
 
     @Slot()
