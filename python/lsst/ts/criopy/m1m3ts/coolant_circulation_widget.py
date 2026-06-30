@@ -262,14 +262,14 @@ class CoolantPumpWidget(QWidget):
 
 
 class FlowMeterWidget(QWidget):
-    def __init__(self, m1m3ts: MetaSAL):
+    def __init__(self, flowmeter: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
 
         layout.addWidget(
             DataFormWidget(
-                m1m3ts.flowMeter,
+                flowmeter.flowMeter,
                 [
                     ("Time", TimeDeltaLabel(field="private_sndStamp")),
                     ("Signal Strength", DataLabel(field="signalStrength")),
@@ -288,13 +288,14 @@ class CoolantCirculationWidget(QWidget):
     """Display Glycol coolant re-circulation pump telemetry, allows motor
     commanding."""
 
-    def __init__(self, m1m3ts: MetaSAL):
+    def __init__(self, m1m3ts: MetaSAL, *flowmeters: MetaSAL):
         super().__init__()
 
         layout = QVBoxLayout()
 
         layout.addWidget(CoolantPumpWidget(m1m3ts))
-        layout.addWidget(FlowMeterWidget(m1m3ts))
+        layout.addWidget(FlowMeterWidget(flowmeters[0]))
+        layout.addWidget(FlowMeterWidget(flowmeters[1]))
         layout.addWidget(GlycolLoopTemperatureWidget(m1m3ts))
 
         layout.addStretch()
