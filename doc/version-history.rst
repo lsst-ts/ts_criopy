@@ -4,6 +4,11 @@
 Version History
 ===============
 
+v0.18.0
+-------
+
+* Moved Flow Meter signals to ESS.
+
 v0.17.2
 -------
 
