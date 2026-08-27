@@ -23,6 +23,7 @@ import astropy.units as u
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import (
     QDoubleSpinBox,
+    QGroupBox,
     QHBoxLayout,
     QPushButton,
     QVBoxLayout,
@@ -38,6 +39,7 @@ from ..gui import (
     Colors,
     DataFormWidget,
     DataLabel,
+    DataUnitLabel,
     FieldButton,
     Hz,
     Liter,
@@ -47,7 +49,7 @@ from ..gui import (
     TopicStatusLabel,
     Volt,
 )
-from ..gui.sal import TimeDeltaLabel
+from ..gui.sal import CSCControlWidget, TimeDeltaLabel
 from ..salcomm import MetaSAL, command
 from .egw_pump_errors import EGWPumpErrors
 from .glycol_loop_temperature_widget import GlycolLoopTemperatureWidget
@@ -262,18 +264,18 @@ class CoolantPumpWidget(QWidget):
         )
 
 
-class FlowMeterWidget(QWidget):
-    def __init__(self, flowmeter: MetaSAL):
-        super().__init__()
+class FlowMeterWidget(QGroupBox):
+    def __init__(self, flowmeter: MetaSAL, title: str):
+        super().__init__(title)
 
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
 
         layout.addWidget(
             DataFormWidget(
                 flowmeter.flowMeter,
                 [
                     ("Time", TimeDeltaLabel(field="private_sndStamp")),
-                    ("Signal Strength", DataLabel(field="signalStrength")),
+                    ("Signal Strength", DataUnitLabel(field="signalStrength", fmt=".0f")),
                     ("Flow Rate", LiterMinute(field="flowRate")),
                     ("Net Total", Liter(field="netTotalizer")),
                     ("Positive Total", Liter(field="positiveTotalizer")),
@@ -281,6 +283,21 @@ class FlowMeterWidget(QWidget):
                 ],
             )
         )
+
+        layout.addWidget(
+            DataFormWidget(
+                flowmeter.flowMeterIdentification,
+                [
+                    ("Meter tag", DataLabel(field="meterTag")),
+                    ("Serial number", DataLabel(field="serialNumber")),
+                    ("Firmware version", DataLabel(field="firmwareVersion")),
+                    ("Calibration date", DataLabel(field="calibrationDate")),
+                    ("Date code", DataLabel(field="dateCode")),
+                ],
+            )
+        )
+
+        layout.addWidget(CSCControlWidget(flowmeter))
 
         self.setLayout(layout)
 
@@ -295,8 +312,15 @@ class CoolantCirculationWidget(QWidget):
         layout = QVBoxLayout()
 
         layout.addWidget(CoolantPumpWidget(m1m3ts))
-        layout.addWidget(FlowMeterWidget(flowmeters[0]))
-        layout.addWidget(FlowMeterWidget(flowmeters[1]))
+
+        flowmeters_layout = QHBoxLayout()
+
+        flowmeters_layout.addWidget(FlowMeterWidget(flowmeters[0], "FlowMeter 1"))
+        flowmeters_layout.addWidget(FlowMeterWidget(flowmeters[1], "FlowMeter 2"))
+        flowmeters_layout.addStretch()
+
+        layout.addLayout(flowmeters_layout)
+
         layout.addWidget(GlycolLoopTemperatureWidget(m1m3ts))
 
         layout.addStretch()
