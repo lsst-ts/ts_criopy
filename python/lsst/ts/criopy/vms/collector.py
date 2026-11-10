@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -30,9 +30,8 @@ import click
 import h5py
 import numpy as np
 
+from lsst.ts.m1m3.utils.cache import Cache
 from lsst.ts.salobj import BaseMsgType, Domain, Remote
-
-from .cache import Cache
 
 __all__ = ["Collector", "VMS_DEVICES"]
 
