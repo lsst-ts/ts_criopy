@@ -31,8 +31,5 @@ class ExitErrorCodes(IntEnum):
 
     ASYNCIO_LOOP_NOT_RUNNING = auto()
     SAL_NOT_SETUP = auto()
-    VMSLOGGER_CANNOT_CHDIR = auto()
-    VMSLOGGER_MISSING_H5PY = auto()
-    VMSLOGGER_SUBPROCESS_STARTUP = auto()
     WRONG_COMMAND_LINE_ARGUMENTS = auto()
     WRONG_QT_API = auto()
