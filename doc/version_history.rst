@@ -1,8 +1,10 @@
 .. _Version_History:
 
-===============
+###############
 Version History
-===============
+###############
+
+.. towncrier release notes start
 
 v0.18.0
 -------
