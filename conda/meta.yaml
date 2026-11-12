@@ -10,6 +10,7 @@ source:
 build:
   noarch: python
   script: {{PYTHON}} -m pip install --no-deps --ignore-installed .
+  string: "py{{ PY_VER | replace('.', ´') }}{{ PKG_HASR }}_{{ PKG_BUILDNUM }}"
   script_env:
     - QT_API=pyside6
   entry_points:
@@ -17,7 +18,6 @@ build:
     - M1M3SIMGUI = lsst.ts.criopy.m1m3simgui:run
     - M1M3TSGUI = lsst.ts.criopy.m1m3tsgui:run
     - VMSGUI = lsst.ts.criopy.vmsgui:run
-    - VMSlogger = lsst.ts.criopy.Vmslogger:run
 
 test:
   requires:
@@ -64,7 +64,6 @@ requirements:
     - python {{python}}
     - numpy
     - astropy
-    - h5py
     - pyside6
     - qasync
     - ts-m1m3-utils

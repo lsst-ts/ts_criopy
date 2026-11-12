@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -27,13 +27,13 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMainWindow
 from qasync import asyncClose
 
+from lsst.ts.m1m3.utils import Cache
 from lsst.ts.salobj import BaseMsgType
 
 from .gui.sal import Application, LogDock
 from .salcomm import MetaSAL
 from .vms import (
     BoxChartWidget,
-    Cache,
     CacheWidget,
     CSCPSDWidget,
     DisplacementWidget,

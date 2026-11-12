@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -19,9 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-# For an explanation why these next lines are so complicated, see
-# https://confluence.lsstcorp.org/pages/viewpage.action?spaceKey=LTS&title=Enabling+Mypy+in+Pytest
-
 __all__ = ["ExitErrorCodes"]
 
 from enum import IntEnum, auto
@@ -34,8 +31,5 @@ class ExitErrorCodes(IntEnum):
 
     ASYNCIO_LOOP_NOT_RUNNING = auto()
     SAL_NOT_SETUP = auto()
-    VMSLOGGER_CANNOT_CHDIR = auto()
-    VMSLOGGER_MISSING_H5PY = auto()
-    VMSLOGGER_SUBPROCESS_STARTUP = auto()
     WRONG_COMMAND_LINE_ARGUMENTS = auto()
     WRONG_QT_API = auto()

@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -26,8 +26,9 @@ import time
 from PySide6.QtCharts import QDateTimeAxis, QLogValueAxis, QValueAxis
 from PySide6.QtCore import QDateTime, QPointF, Qt, Slot
 
+from lsst.ts.m1m3.utils.cache import Cache
+
 from .bars import ToolBar
-from .cache import Cache
 from .cache_widget import CacheWidget
 
 
