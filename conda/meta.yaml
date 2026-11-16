@@ -32,9 +32,10 @@ test:
     - ts-xml
     - ts-salobj {{ salobj_version }}
     - lsst-efd-client
-    - pandas
-    - pyyaml
     - qt6-charts
+    - pandas
+    - pytest
+    - pyyaml
     - vcrpy
   script_env:
     - QT_API=pyside6
