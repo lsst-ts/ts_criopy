@@ -27,7 +27,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QMainWindow
 from qasync import asyncClose
 
-from lsst.ts.m1m3.utils import Cache
+from lsst.ts.m1m3.utils.cache import Cache
 from lsst.ts.salobj import BaseMsgType
 
 from .gui.sal import Application, LogDock

@@ -10,7 +10,7 @@ source:
 build:
   noarch: python
   script: {{PYTHON}} -m pip install --no-deps --ignore-installed .
-  string: "py{{ PY_VER | replace('.', ´') }}{{ PKG_HASR }}_{{ PKG_BUILDNUM }}"
+  string: "py{{ PY_VER | replace('.', '') }}{{ PKG_HASH }}_{{ PKG_BUILDNUM }}"
   script_env:
     - QT_API=pyside6
   entry_points:
