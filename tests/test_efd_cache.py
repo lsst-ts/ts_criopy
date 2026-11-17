@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -19,59 +19,46 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import os
-import sys
 import unittest
 
-import vcr
+import pytest
 from astropy.time import Time, TimeDelta
 
 from lsst.ts.criopy.salcomm import EfdCache, create
 from lsst.ts.salobj import set_test_topic_subname
 
-CASSETTE_DIR = os.path.join(os.path.dirname(__file__), "cassettes")
-
-myvcr = vcr.VCR(
-    cassette_library_dir=CASSETTE_DIR,
-    record_mode=os.getenv("RECORD_MODE", "none"),
-    match_on=["method", "scheme", "host", "port", "path", "query", "body"],
-)
-
 
 class EfdCacheTestCase(unittest.IsolatedAsyncioTestCase):
-    async def asyncSetUp(self) -> None:
-        set_test_topic_subname()
-        self.sal = create("MTM1M3TS")
-
+    @pytest.mark.vcr
     async def test_load(self) -> None:
-        with myvcr.use_cassette("test_load.yaml"):
-            cache = EfdCache(self.sal, "usdf_efd")
+        set_test_topic_subname()
+        sal = create("MTM1M3TS")
 
-            timepoint = Time("2025-05-19T23:40:00", scale="utc")
-            interval = TimeDelta(240, format="sec")
+        cache = EfdCache(sal, "usdf_efd")
 
-            # expected interval start and end
-            i_start = timepoint - TimeDelta(0.05, format="sec")
-            i_end = timepoint + interval
+        timepoint = Time("2025-05-19T23:40:00", scale="utc")
+        interval = TimeDelta(240, format="sec")
 
-            topics: list[str] = []
+        # expected interval start and end
+        i_start = timepoint - TimeDelta(0.05, format="sec")
+        i_end = timepoint + interval
 
-            for request in cache.new_requests(timepoint, interval):
-                topics.append(request.topic)
-                assert request.start == i_start
-                assert request.end == i_end
+        topics: list[str] = []
 
-                await cache.load(request)
+        for request in cache.new_requests(timepoint, interval):
+            topics.append(request.topic)
+            assert request.start == i_start
+            assert request.end == i_end
 
-                if request.topic == "thermalData":
-                    assert len(cache.tel_thermalData.data) == 479
-                    assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
-                    assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
+            await cache.load(request)
 
-            assert len(topics) == 25
+            if request.topic == "thermalData":
+                assert len(cache.tel_thermalData.data) == 479
+                assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
+                assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
+
+        assert len(topics) == 25
 
 
 if __name__ == "__main__":
-    if "RECORD_MODE" not in os.environ:
-        print(f"To generate new cassettes with pre-downloaded data use: RECORD_MODE=all python {sys.argv[0]}")
     unittest.main()

@@ -1,4 +1,4 @@
-# This file is part of ts-criopy.
+# This file is part of ts_criopy.
 #
 # Developed for the Vera C. Rubin Observatory Telescope and Site Systems.
 # This product includes software developed by the LSST Project
@@ -33,10 +33,10 @@ from PySide6.QtWidgets import (
 )
 
 from lsst.ts.m1m3.utils import BumpTestKind
+from lsst.ts.m1m3.utils.cache import TimeCache
 from lsst.ts.xml.tables.m1m3 import ForceActuatorData
 
 from ...gui import TimeChart, TimeChartView
-from ...time_cache import TimeCache
 from .bump_test_statistics import BumpTestStatistics, BumpTestStatisticsView
 from .bump_test_status_item import BumpTestStatusItem
 
