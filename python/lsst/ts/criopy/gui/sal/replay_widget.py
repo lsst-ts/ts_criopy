@@ -36,7 +36,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qasync import asyncSlot
+from qasync import asyncClose, asyncSlot
 
 from ...salcomm import MetaSAL
 from ..logging_widget import LoggingWidget
@@ -115,10 +115,6 @@ class ReplayControlWidget(QWidget):
 
         self.setLayout(layout)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.player_widget.set_player(None)
-        self.sal.thaw()
-
     @asyncSlot()
     async def retrieve_data(self) -> None:
         self.player_widget.retrieve_data(self.select_efd.currentText(), self.start.dateTime())
@@ -128,6 +124,9 @@ class ReplayControlWidget(QWidget):
         self.player_widget.setEnabled(False)
         if self.player_widget.player is not None:
             self.player_widget.player.stop()
+
+    async def close(self) -> None:
+        await self.player_widget.close()
 
 
 class ReplayWidget(QWidget):
@@ -168,7 +167,10 @@ class ReplayWidget(QWidget):
 
         self.replay_control.select_efd.setCurrentText(settings.value("efd_name", "usdf_efd"))
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    @asyncClose
+    async def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings(self.app_name, "ReplayWindow")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("efd_name", self.replay_control.select_efd.currentText())
+
+        await self.replay_control.close()

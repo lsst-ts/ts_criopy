@@ -1,0 +1,1 @@
+Use EfdClient as context manager, fix Player widget exceptions.

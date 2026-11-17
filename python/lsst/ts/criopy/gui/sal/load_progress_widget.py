@@ -111,7 +111,7 @@ class LoadProgressModel(QStandardItemModel):
             self.item(r, 4).setText(f"{(now - self.item(r, 3).data()):.2f} s")
 
     @Slot()
-    def request_terminated(self, request: EfdCacheRequest, worker: int) -> None:
+    def request_terminated(self, request: EfdCacheRequest, worker: int, exception: Exception) -> None:
         """
         Called when request processing terminates - on requestTerminated
         signal.

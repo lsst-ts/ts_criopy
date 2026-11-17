@@ -26,6 +26,7 @@ import logging
 import time
 
 from astropy.time import Time, TimeDelta
+from lsst_efd_client import EfdClient
 from PySide6.QtCore import QObject, Signal
 
 from .efd_cache import EfdCache, EfdCacheRequest, EfdTopicCache
@@ -45,7 +46,7 @@ class Player(QObject):
         Emmited when data download ends.
     requestStarted(request, worker)
         Emmited when request processing is started.
-    requestTerminated(request, worker)
+    requestTerminated(request, worker, Exception)
         Emmited when request processign is terminated (stopped).
     requestFinished(request, worker)
         Emmited when request processing is finished.
@@ -54,6 +55,12 @@ class Player(QObject):
     ----------
     sal : `MetaSAL`
         SAL objects to replay. The topics in this fields are used to query EFD.
+    cache : `EfdCache | None`
+        EfdCache to query for data.
+    efd_client : `EfdClient`
+        EfdClient to query EFD data.
+    efd_name : `str`
+        Name of the EfdClient.
     num_tasks: `int`, optional
         Number of allowed parallel tasks. Defaults to 10.
     """
@@ -62,7 +69,7 @@ class Player(QObject):
     downloadFinished = Signal()
 
     requestStarted = Signal(EfdCacheRequest, int)
-    requestTerminated = Signal(EfdCacheRequest, int)
+    requestTerminated = Signal(EfdCacheRequest, int, Exception)
     requestFinished = Signal(EfdCacheRequest, int)
 
     def __init__(self, sal: MetaSAL, num_tasks: int = 10):
@@ -73,6 +80,8 @@ class Player(QObject):
         self.sal = sal
 
         self.cache: EfdCache | None = None
+        self.efd_client: EfdClient | None = None
+        self.efd_name: str = ""
 
         self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
         self.create_workers()
@@ -97,21 +106,9 @@ class Player(QObject):
                 request.cache.set_current_time(timepoint)
                 self.send_cache(request.topic, request.cache)
                 self.requestFinished.emit(request, number)
-            except asyncio.CancelledError:
-                self.requestTerminated.emit(request, number)
             except Exception as ex:
-                logging.warning(
-                    "While loading %s (%s to %s): %s.",
-                    request.topic,
-                    request.start.isot,
-                    request.end.isot,
-                    str(ex),
-                )
-                self.requestTerminated.emit(request, number)
+                self.requestTerminated.emit(request, number, ex)
             finally:
-                if request.topic == "logevent_ilcWarning":
-                    print("ILC warning fin")
-
                 self.downloads += 1
                 self.worker_queue.task_done()
 
@@ -141,14 +138,20 @@ class Player(QObject):
         if send is not None and send._changed:
             getattr(self.sal, topic).emit(send)
 
-    async def replay(self, efd: str, timepoint: Time, duration: TimeDelta) -> None:
+    async def close(self) -> None:
+        """Close efd_client connection."""
+        if self.efd_client is not None:
+            await self.efd_client.close()
+            logging.info("Closed connection to %s", self.efd_name)
+
+    async def replay(self, efd_name: str, timepoint: Time, duration: TimeDelta) -> None:
         """
         Load data into cache. Starts multiple tasks to load data to speed up
         the process.
 
         Parameters
         ----------
-        efd : `str`
+        efd_name : `str`
             EFD name.
         timepoint : `Time`
             Requested (exact) time. After replay ends, the call guarantees data
@@ -157,14 +160,11 @@ class Player(QObject):
             Interval length. This is the prefered length of the cache around
             timepoint.
         """
-
-        async def create_efd_cache(efd: str) -> None:
-            self.cache = EfdCache(self.sal, efd)
-
-        if self.cache is None or self.cache.efd != efd:
-            logging.info("Initializing the EFD connection client to %s.", efd)
-            cache_create_task = asyncio.create_task(create_efd_cache(efd))
-            await cache_create_task
+        if self.cache is None or self.efd_name != efd_name:
+            logging.info("Initializing the EFD connection tp %s.", efd_name)
+            self.efd_client = EfdClient(efd_name)
+            self.efd_name = efd_name
+            self.cache = EfdCache(self.sal, self.efd_client)
             assert self.cache is not None
 
         await self.cache.cleanup()

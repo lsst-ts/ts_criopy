@@ -28,7 +28,7 @@ from lsst.ts.salobj import base
 
 from .meta_sal import MetaSAL
 
-__all__ = ["warning", "command", "command_group"]
+__all__ = ["warning", "exception", "command", "command_group"]
 
 
 def warning(parent: QWidget, title: str, description: str) -> asyncio.Future:
@@ -52,6 +52,32 @@ def warning(parent: QWidget, title: str, description: str) -> asyncio.Future:
     dialog.setWindowTitle(title)
     dialog.setText(description)
     dialog.setIcon(QMessageBox.Warning)
+    dialog.finished.connect(lambda r: future.set_result(r))
+    dialog.open()
+    return future
+
+
+def exception(parent: QWidget, title: str, description: str) -> asyncio.Future:
+    """Creates future with QMessageBox. Enables use of QMessageBox with
+    qasync/asyncio. Mimics QMessageBox.warning behaviour - but QMessageBox
+    cannot be used, as it blocks Qt loops from executing (as all modal dialogs
+    does).
+
+    Parameters
+    ----------
+    parent : `QtWidget`
+        Parent widget.
+    title : `str`
+        Message window title.
+    description : `str`
+        Descrption of warning occured.
+    """
+
+    future: asyncio.Future = asyncio.Future()
+    dialog = QMessageBox(parent)
+    dialog.setWindowTitle(title)
+    dialog.setText(description)
+    dialog.setIcon(QMessageBox.Critical)
     dialog.finished.connect(lambda r: future.set_result(r))
     dialog.open()
     return future

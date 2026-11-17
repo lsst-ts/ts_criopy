@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ...salcomm import MetaSAL, Player
+from ...salcomm import EfdCacheRequest, MetaSAL, Player, exception
 from .load_progress_widget import LoadProgressWidget
 
 
@@ -141,6 +141,10 @@ class PlayerWidget(QWidget):
 
         self.slider.sliderMoved.connect(self.slider_moved)
 
+    async def close(self) -> None:
+        if self.player is not None:
+            await self.player.close()
+
     def timerEvent(self, event: QTimerEvent) -> None:
         self.play_time = self.play_time.addMSecs(self.play_interval)
         start = self.start.dateTime()
@@ -221,12 +225,26 @@ class PlayerWidget(QWidget):
         self.sal.freeze(self.player.cache)
         self.setEnabled(True)
 
+    @Slot()
+    def request_terminated(self, request: EfdCacheRequest, worker: int, ex: Exception) -> None:
+        exception(
+            self,
+            f"Cannot load {request.topic}!",
+            f"Request to load {request.topic}\n({request.start.isot} - {request.end.isot})\n"
+            f"raises execption: {str(ex)}.",
+        )
+        self.load_progress.clear()
+        self.setEnabled(True)
+        if self.player is not None:
+            self.player.stop()
+
     @asyncSlot()
     async def replay(self, date_time: QDateTime) -> None:
         if self.player is None:
             self.player = Player(self.sal)
             self.player.downloadStarted.connect(self.download_started)
             self.player.downloadFinished.connect(self.download_finished)
+            self.player.requestTerminated.connect(self.request_terminated)
 
             self.load_progress.connect_player(self.player)
 
