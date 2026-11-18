@@ -40,6 +40,7 @@ except KeyError:
 
 import asyncio
 import typing
+from functools import wraps
 
 from PySide6.QtCore import QObject, Signal
 
@@ -163,8 +164,15 @@ class MetaSAL(type(QObject)):  # type: ignore
             await self.domain.close()
 
         def connect_callbacks(self) -> None:  # type: ignore
+            def make_async(func):  # type: ignore
+                @wraps(func)
+                async def wrapper(*args, **kwargs):  # type: ignore
+                    return await asyncio.to_thread(func, *args, **kwargs)
+
+                return wrapper
+
             for t in [evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)]:
-                getattr(self.sal_remote, t).callback = getattr(self, t[4:]).emit
+                getattr(self.sal_remote, t).callback = make_async(getattr(self, t[4:]).emit)
 
         def disconnect_callbacks(self) -> None:  # type: ignore
             for t in [evttel for evttel in dir(self.sal_remote) if _filter_evt_tel(evttel)]:

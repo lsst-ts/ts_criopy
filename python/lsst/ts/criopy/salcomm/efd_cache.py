@@ -47,7 +47,7 @@ class EfdCache:
     sal : `MetaSAL`
         SAL object. Provideds topics names (telemetry() and events() and SAL
         name.
-    efd_client : `str`
+    efd_client : `EfdClient`
         EFD client.
     max_span : `float`, optional
         Maximum cache size in seconds. When data further from the current cache

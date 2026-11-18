@@ -231,7 +231,7 @@ class PlayerWidget(QWidget):
             self,
             f"Cannot load {request.topic}!",
             f"Request to load {request.topic}\n({request.start.isot} - {request.end.isot})\n"
-            f"raises execption: {str(ex)}.",
+            f"raises exeception: {str(ex)}.",
         )
         self.load_progress.clear()
         self.setEnabled(True)

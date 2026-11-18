@@ -158,6 +158,7 @@ class ReplayWidget(QWidget):
         logging.getLogger().addHandler(logging_widget)
 
         layout.addWidget(logging_widget)
+        self.logging_widget: LoggingWidget | None = logging_widget
 
         settings = QSettings(self.app_name, "ReplayWindow")
         try:
@@ -169,6 +170,10 @@ class ReplayWidget(QWidget):
 
     @asyncClose
     async def closeEvent(self, event: QCloseEvent) -> None:
+        if self.logging_widget is not None:
+            logging.getLogger().removeHandler(self.logging_widget)
+            self.logging_widget = None
+
         settings = QSettings(self.app_name, "ReplayWindow")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("efd_name", self.replay_control.select_efd.currentText())
