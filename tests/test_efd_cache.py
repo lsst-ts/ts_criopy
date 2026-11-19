@@ -23,6 +23,7 @@ import unittest
 
 import pytest
 from astropy.time import Time, TimeDelta
+from lsst_efd_client import EfdClient
 
 from lsst.ts.criopy.salcomm import EfdCache, create
 from lsst.ts.salobj import set_test_topic_subname
@@ -34,30 +35,33 @@ class EfdCacheTestCase(unittest.IsolatedAsyncioTestCase):
         set_test_topic_subname()
         sal = create("MTM1M3TS")
 
-        cache = EfdCache(sal, "usdf_efd")
+        assert "thermalData" in sal.telemetry()
 
-        timepoint = Time("2025-05-19T23:40:00", scale="utc")
-        interval = TimeDelta(240, format="sec")
+        async with EfdClient("usdf_efd") as efd_client:
+            cache = EfdCache(sal, efd_client)
 
-        # expected interval start and end
-        i_start = timepoint - TimeDelta(0.05, format="sec")
-        i_end = timepoint + interval
+            timepoint = Time("2025-05-19T23:40:00", scale="utc")
+            interval = TimeDelta(240, format="sec")
 
-        topics: list[str] = []
+            # expected interval start and end
+            i_start = timepoint - TimeDelta(0.05, format="sec")
+            i_end = timepoint + interval
 
-        for request in cache.new_requests(timepoint, interval):
-            topics.append(request.topic)
-            assert request.start == i_start
-            assert request.end == i_end
+            topics: list[str] = []
 
-            await cache.load(request)
+            for request in cache.new_requests(timepoint, interval):
+                topics.append(request.topic)
+                assert request.start == i_start
+                assert request.end == i_end
 
-            if request.topic == "thermalData":
-                assert len(cache.tel_thermalData.data) == 479
-                assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
-                assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
+                await cache.load(request)
 
-        assert len(topics) == 25
+                if request.topic == "thermalData":
+                    assert len(request.cache.data) == 479
+                    assert request.cache.data.index[0] == Time("2025-05-19T23:40:00.177549", scale="utc")
+                    assert request.cache.data.index[-1] == Time("2025-05-19T23:43:59.7599", scale="utc")
+
+            assert len(topics) == 26
 
 
 if __name__ == "__main__":

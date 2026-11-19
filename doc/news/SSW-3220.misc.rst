@@ -1,0 +1,1 @@
+Wrap emit to async function, replay function enhancements.

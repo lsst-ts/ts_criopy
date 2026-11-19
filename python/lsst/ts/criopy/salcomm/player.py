@@ -26,6 +26,7 @@ import logging
 import time
 
 from astropy.time import Time, TimeDelta
+from lsst_efd_client import EfdClient
 from PySide6.QtCore import QObject, Signal
 
 from .efd_cache import EfdCache, EfdCacheRequest, EfdTopicCache
@@ -35,7 +36,9 @@ from .meta_sal import MetaSAL
 class Player(QObject):
     """
     Queries EFD for telemetry and events, build up a cache and replay the
-    events.
+    events. Queries are executed in parallel, using worker_queue for
+    synchronization. The worker_queue is deleted when the close method is
+    called.
 
     Signals
     -------
@@ -45,7 +48,7 @@ class Player(QObject):
         Emmited when data download ends.
     requestStarted(request, worker)
         Emmited when request processing is started.
-    requestTerminated(request, worker)
+    requestTerminated(request, worker, Exception)
         Emmited when request processign is terminated (stopped).
     requestFinished(request, worker)
         Emmited when request processing is finished.
@@ -54,15 +57,26 @@ class Player(QObject):
     ----------
     sal : `MetaSAL`
         SAL objects to replay. The topics in this fields are used to query EFD.
+    cache : `EfdCache | None`
+        EfdCache to query for data.
+    efd_client : `EfdClient`
+        EfdClient to query EFD data.
+    efd_name : `str`
+        Name of the EfdClient.
     num_tasks: `int`, optional
         Number of allowed parallel tasks. Defaults to 10.
+    worker_queue: `asyncio.Queue | None`
+        Task queue. If a new chunk has to be downloaded, it needs to be put
+        into queue so workers can retrieve it.
+    workers: `list[asyncio.Task] | None`
+        Workers tasks.
     """
 
     downloadStarted = Signal()
     downloadFinished = Signal()
 
     requestStarted = Signal(EfdCacheRequest, int)
-    requestTerminated = Signal(EfdCacheRequest, int)
+    requestTerminated = Signal(EfdCacheRequest, int, Exception)
     requestFinished = Signal(EfdCacheRequest, int)
 
     def __init__(self, sal: MetaSAL, num_tasks: int = 10):
@@ -73,9 +87,11 @@ class Player(QObject):
         self.sal = sal
 
         self.cache: EfdCache | None = None
+        self.efd_client: EfdClient | None = None
+        self.efd_name: str = ""
 
-        self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] = asyncio.Queue()
-        self.create_workers()
+        self.worker_queue: asyncio.Queue[tuple[EfdCacheRequest, Time]] | None = None
+        self.workers: list[asyncio.Task] | None = None
 
     async def worker(self, number: int) -> None:
         """
@@ -86,39 +102,39 @@ class Player(QObject):
         number : `int`
             Worker internal number.
         """
-        while True:
-            request, timepoint = await self.worker_queue.get()
-            try:
-                assert self.cache is not None
+        try:
+            while True:
+                if self.worker_queue is None:
+                    return
 
-                self.requestStarted.emit(request, number)
+                request, timepoint = await self.worker_queue.get()
+                try:
+                    assert self.cache is not None
 
-                await self.cache.load(request)
-                request.cache.set_current_time(timepoint)
-                self.send_cache(request.topic, request.cache)
-                self.requestFinished.emit(request, number)
-            except asyncio.CancelledError:
-                self.requestTerminated.emit(request, number)
-            except Exception as ex:
-                logging.warning(
-                    "While loading %s (%s to %s): %s.",
-                    request.topic,
-                    request.start.isot,
-                    request.end.isot,
-                    str(ex),
-                )
-                self.requestTerminated.emit(request, number)
-            finally:
-                if request.topic == "logevent_ilcWarning":
-                    print("ILC warning fin")
+                    self.requestStarted.emit(request, number)
 
-                self.downloads += 1
-                self.worker_queue.task_done()
+                    await self.cache.load(request)
+                    request.cache.set_current_time(timepoint)
+                    self.send_cache(request.topic, request.cache)
+                    self.requestFinished.emit(request, number)
+
+                    if self.worker_queue is not None:
+                        self.worker_queue.task_done()
+                except Exception as ex:
+                    self.requestTerminated.emit(request, number, ex)
+                finally:
+                    self.downloads += 1
+
+        except (asyncio.queues.QueueShutDown, asyncio.CancelledError):
+            pass
 
     def create_workers(self) -> None:
         """
         Create workers to execute EfdCacheRequest from worker_queue.
         """
+        self.delete_workers()
+
+        self.worker_queue = asyncio.Queue()
         self.workers = [asyncio.create_task(self.worker(i)) for i in range(self.num_tasks)]
 
     def send_cache(self, topic: str, cache: EfdTopicCache) -> None:
@@ -141,14 +157,32 @@ class Player(QObject):
         if send is not None and send._changed:
             getattr(self.sal, topic).emit(send)
 
-    async def replay(self, efd: str, timepoint: Time, duration: TimeDelta) -> None:
+    def delete_workers(self) -> None:
+        """Shutdown workers queueu and delete the queueu and all workers."""
+        if self.worker_queue is not None:
+            self.worker_queue.shutdown(True)
+            self.worker_queue = None
+
+        if self.workers is not None:
+            for worker in self.workers:
+                worker.cancel("Deleted")
+            self.workers = None
+
+    async def close(self) -> None:
+        """Close efd_client connection and delete workers."""
+        if self.efd_client is not None:
+            await self.efd_client.close()
+            self.delete_workers()
+            logging.info("Closed connection to %s", self.efd_name)
+
+    async def replay(self, efd_name: str, timepoint: Time, duration: TimeDelta) -> None:
         """
         Load data into cache. Starts multiple tasks to load data to speed up
         the process.
 
         Parameters
         ----------
-        efd : `str`
+        efd_name : `str`
             EFD name.
         timepoint : `Time`
             Requested (exact) time. After replay ends, the call guarantees data
@@ -157,14 +191,11 @@ class Player(QObject):
             Interval length. This is the prefered length of the cache around
             timepoint.
         """
-
-        async def create_efd_cache(efd: str) -> None:
-            self.cache = EfdCache(self.sal, efd)
-
-        if self.cache is None or self.cache.efd != efd:
-            logging.info("Initializing the EFD connection client to %s.", efd)
-            cache_create_task = asyncio.create_task(create_efd_cache(efd))
-            await cache_create_task
+        if self.cache is None or self.efd_name != efd_name:
+            logging.info("Initializing the EFD connection tp %s.", efd_name)
+            self.efd_client = EfdClient(efd_name)
+            self.efd_name = efd_name
+            self.cache = EfdCache(self.sal, self.efd_client)
             assert self.cache is not None
 
         await self.cache.cleanup()
@@ -173,6 +204,10 @@ class Player(QObject):
         self.downloads = 0
 
         reported_ranges: list[tuple[Time, Time]] = []
+
+        self.create_workers()
+
+        assert self.worker_queue is not None
 
         for request in self.cache.new_requests(timepoint, duration):
             await self.worker_queue.put((request, timepoint))
@@ -213,11 +248,6 @@ class Player(QObject):
         """
         Stops all requests.
         """
-        while not self.worker_queue.empty():
-            self.worker_queue.get_nowait()
-            self.worker_queue.task_done()
-
-        for worker in self.workers:
-            worker.cancel("Requested to stop download.")
+        self.delete_workers()
 
         self.create_workers()

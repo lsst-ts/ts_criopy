@@ -45,13 +45,16 @@ class EfdCache:
     Parameters
     ----------
     sal : `MetaSAL`
-        SAL object. Provideds topics names.
-    efd : `str`
-        EFD name.
+        SAL object. Provideds topics names (telemetry() and events() and SAL
+        name.
+    efd_client : `EfdClient`
+        EFD client.
     max_span : `float`, optional
         Maximum cache size in seconds. When data further from the current cache
         start or end are requested, the cache content will be deleted. Default
         to 600 seconds = 10 minutes.
+    num_tasks: `int`, optional
+        Number of parallel tasks to query for new cache data. Defaults to 10.
 
     Attributes
     ----------
@@ -64,15 +67,14 @@ class EfdCache:
     def __init__(
         self,
         sal: "MetaSAL",
-        efd: str,
+        efd_client: EfdClient,
         max_span: float = 600,
         num_tasks: int = 10,
     ):
         super().__init__()
         self.name = sal.remote.salinfo.name
-        self.efd = efd
 
-        self.efd_client = EfdClient(self.efd)
+        self.efd_client = efd_client
         self.max_span = TimeDelta(max_span, format="sec")
 
         self.telemetry = {t: EfdTopicCache() for t in sal.telemetry()}
@@ -129,10 +131,13 @@ class EfdCache:
                 self.__shall_delete.append(request)
         except Exception as ex:
             logging.error(
-                "Error while fetching %s - no data retrieved: %s",
+                "Error while fetching %s (%s to %s) - no data retrieved: %s",
                 request.topic,
+                request.start.isot,
+                request.end.isot,
                 str(ex),
             )
+            raise ex
 
     async def cleanup(self) -> None:
         """
